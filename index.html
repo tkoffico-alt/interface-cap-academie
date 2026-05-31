@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cap Académie | L'intelligence au service de l'autonomie</title>
+    <style>
+        /* L'Esthétique du Vide */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FAFAFA; /* Un blanc cassé très pur et doux */
+            color: #333333; /* Gris anthracite pour reposer le regard */
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* L'En-tête : Le rappel de l'identité */
+        header {
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            background-color: #FFFFFF;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #2C3E50;
+        }
+
+        .devise {
+            font-size: 12px;
+            color: #7F8C8D;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* Le Réceptacle de l'Agent Dify */
+        main {
+            flex-grow: 1;
+            width: 100%;
+            max-width: 900px; /* Conserve une marge pour laisser le vide exister autour */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Le Cadre d'Intégration (L'Iframe) */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            background-color: #FFFFFF;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <!-- L'écusson et le texte s'affichent ici -->
+        <div class="logo">🛡️ CAP ACADÉMIE</div>
+        <div class="devise">L'intelligence au service de l'autonomie</div>
+    </header>
+
+    <main>
+        <!-- REMPLACEZ L'ATTRIBUT "src" PAR LE LIEN FOURNI PAR DIFY DANS L'ONGLET "INTÉGRER" -->
+        <iframe
+            src="VOTRE_LIEN_DIFY_ICI"
+            allow="microphone; camera"
+            title="Répétiteur Cap Académie">
+        </iframe>
+    </main>
+
+</body>
+</html>
