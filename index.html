@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cap Académie - Le Sas d'Accueil</title>
     <style>
-        /* --- FONDATIONS ET RESPIRATION --- */
+        /* --- FONDATIONS (Correction de la hauteur) --- */
         * {
             margin: 0;
             padding: 0;
@@ -13,24 +13,29 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
-        body {
-            /* Un dégradé subtil et apaisant, mêlant un gris perle à un bleu aurore très léger */
-            background: linear-gradient(135deg, #F0F4F8 0%, #D9E2EC 100%);
-            color: #0F172A;
-            line-height: 1.6;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Empêche le double défilement */
         }
 
-        /* --- L'EN-TÊTE (La Signature) --- */
+        body {
+            /* L'Extraordinaire : Un dégradé profond évoquant l'encre et la nuit */
+            background: linear-gradient(135deg, #020617 0%, #0F172A 50%, #172554 100%);
+            color: #F8FAFC;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- L'EN-TÊTE (Mode Nuit) --- */
         header {
-            background-color: #FFFFFF;
+            background-color: rgba(2, 6, 23, 0.7);
+            backdrop-filter: blur(12px);
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #E5E7EB;
+            border-bottom: 1px solid #1E293B;
+            flex-shrink: 0; /* Empêche l'en-tête de s'écraser */
         }
 
         .brand {
@@ -39,13 +44,12 @@
             gap: 1rem;
         }
 
-        /* L'emplacement réservé au sceau / logo */
         .signature-placeholder {
             width: 32px;
             height: 32px;
-            background-color: #F1F5F9;
+            background-color: #1E293B;
             border-radius: 4px;
-            border: 1px dashed #CBD5E1;
+            border: 1px dashed #475569;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -54,48 +58,56 @@
         .brand h1 {
             font-size: 1.25rem;
             font-weight: 700;
-            color: #0F172A;
+            color: #FFFFFF;
         }
 
         .badge-pilote {
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            background-color: #F1F5F9;
+            background-color: #1E293B;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-weight: 600;
-            color: #64748B;
+            color: #94A3B8;
         }
 
         /* --- LE VESTIBULE (Vue d'Accueil) --- */
         #home-view {
-            max-width: 1000px;
-            margin: 0 auto;
+            flex: 1;
+            overflow-y: auto; /* Défilement uniquement dans le sas */
             padding: 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .container-sas {
+            max-width: 1000px;
+            width: 100%;
             display: flex;
             flex-direction: column;
             gap: 4rem;
         }
 
-        /* 1. Le Fronton */
         .hero {
             text-align: center;
         }
         .hero h2 {
             font-size: 2.5rem;
             font-weight: 800;
-            color: #0F172A;
+            color: #FFFFFF;
             margin-bottom: 1rem;
         }
         .hero p {
             font-size: 1.1rem;
-            color: #475569;
+            color: #94A3B8;
             max-width: 600px;
             margin: 0 auto;
         }
 
-        /* 2. La Croisée des Chemins (Les Portes) */
+        /* La Clarté : Les Cartes blanches sur fond sombre */
         .doors {
             display: flex;
             gap: 2rem;
@@ -103,25 +115,27 @@
         }
         .door-card {
             background-color: #FFFFFF;
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #0F172A;
+            border: none;
             border-radius: 12px;
             padding: 2rem;
             width: 100%;
             max-width: 400px;
             text-align: center;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); /* Une ombre plus douce et ample */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .door-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.6);
         }
         .door-card h3 {
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
+            color: #0F172A;
         }
         .door-card p {
-            color: #64748B;
+            color: #475569;
             margin-bottom: 1.5rem;
             font-size: 0.95rem;
         }
@@ -141,7 +155,6 @@
             background-color: #1D4ED8;
         }
 
-        /* 3 & 4. Le Parchemin et Le Mur des Nouvelles */
         .info-section {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -149,20 +162,18 @@
         }
         .info-box {
             background-color: #FFFFFF;
-            border: 1px solid #E5E7EB;
+            color: #0F172A;
             border-radius: 12px;
             padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
         .info-box h4 {
             font-size: 1.1rem;
             margin-bottom: 1rem;
-            color: #0F172A;
             border-bottom: 2px solid #F1F5F9;
             padding-bottom: 0.5rem;
         }
-        .info-box ul {
-            list-style-type: none;
-        }
+        .info-box ul { list-style-type: none; }
         .info-box li {
             position: relative;
             padding-left: 1.5rem;
@@ -182,18 +193,20 @@
             border-left: 4px solid #2563EB;
         }
 
-        /* --- L'ESPACE DE TRAVAIL (Iframe cachée par défaut) --- */
+        /* --- L'ESPACE DE TRAVAIL (Correction du Bug visuel) --- */
         #app-view {
             display: none;
-            flex: 1;
+            flex: 1; /* Prend tout l'espace restant sous l'en-tête */
             flex-direction: column;
-            height: calc(100vh - 70px); /* 100vh - hauteur du header */
+            background-color: #F9FAFB; /* Fond clair pour l'espace de travail */
         }
         .toolbar {
-            background-color: #F1F5F9;
+            background-color: #FFFFFF;
             padding: 0.5rem 2rem;
             display: flex;
             justify-content: flex-start;
+            border-bottom: 1px solid #E5E7EB;
+            flex-shrink: 0;
         }
         .btn-retour {
             background: none;
@@ -206,17 +219,17 @@
             gap: 0.5rem;
             font-size: 0.9rem;
         }
-        .btn-retour:hover {
-            color: #0F172A;
-        }
+        .btn-retour:hover { color: #0F172A; }
+        
         .iframe-container {
-            flex: 1;
+            flex: 1; /* Force le conteneur à s'étirer au maximum */
             width: 100%;
+            height: 100%;
             position: relative;
         }
         iframe {
             width: 100%;
-            height: 100%;
+            height: 100%; /* L'iframe remplit désormais tout son conteneur */
             border: none;
             display: none;
         }
@@ -224,14 +237,9 @@
             display: block;
         }
 
-        /* Responsivité pour téléphones */
         @media (max-width: 768px) {
-            .info-section {
-                grid-template-columns: 1fr;
-            }
-            .doors {
-                flex-direction: column;
-            }
+            .info-section { grid-template-columns: 1fr; }
+            .doors { flex-direction: column; }
         }
     </style>
 </head>
@@ -247,56 +255,53 @@
 
     <!-- LE SAS D'ACCUEIL -->
     <div id="home-view">
-        
-        <!-- Le Fronton -->
-        <section class="hero">
-            <h2>L'intelligence au service de l'autonomie</h2>
-            <p>Bienvenue dans le sanctuaire de la Cap Académie. Cet espace réunit l'approche par compétences pour les enseignants et l'accompagnement silencieux pour les élèves.</p>
-        </section>
+        <div class="container-sas">
+            <section class="hero">
+                <h2>L'intelligence au service de l'autonomie</h2>
+                <p>Bienvenue dans le sanctuaire de la Cap Académie. Cet espace réunit l'approche par compétences pour les enseignants et l'accompagnement silencieux pour les élèves.</p>
+            </section>
 
-        <!-- Les Portes -->
-        <section class="doors">
-            <div class="door-card">
-                <h3>Espace Élève</h3>
-                <p>Le Répétiteur vous guide pas à pas vers la compréhension, sans jamais donner la réponse immédiatement.</p>
-                <button class="btn-entrer" onclick="openSpace('eleve')">Ouvrir la porte</button>
-            </div>
-            
-            <div class="door-card">
-                <h3>Espace Enseignant</h3>
-                <p>Le Concepteur génère des évaluations et des corrigés rigoureusement conformes à l'Approche Par Compétences.</p>
-                <button class="btn-entrer" style="background-color: #0F172A;" onclick="openSpace('enseignant')">Ouvrir la porte</button>
-            </div>
-        </section>
+            <section class="doors">
+                <div class="door-card">
+                    <h3>Espace Élève</h3>
+                    <p>Le Répétiteur vous guide pas à pas vers la compréhension, sans jamais donner la réponse immédiatement.</p>
+                    <button class="btn-entrer" onclick="openSpace('eleve')">Ouvrir la porte</button>
+                </div>
+                
+                <div class="door-card">
+                    <h3>Espace Enseignant</h3>
+                    <p>Le Concepteur génère des évaluations et des corrigés rigoureusement conformes à l'Approche Par Compétences.</p>
+                    <button class="btn-entrer" style="background-color: #0F172A;" onclick="openSpace('enseignant')">Ouvrir la porte</button>
+                </div>
+            </section>
 
-        <section class="info-section">
-            <!-- Le Parchemin (Notice) -->
-            <div class="info-box">
-                <h4>Notice & Mode d'emploi</h4>
-                <ul>
-                    <strong>Pour l'Élève :</strong>
-                    <li>Ne demandez pas au Répétiteur de faire le devoir à votre place. Demandez-lui plutôt : <em>"Comment commencer cet exercice ?"</em> ou <em>"Je ne comprends pas cette règle."</em></li>
-                    <li>Prenez le temps de lire ses explications avant de répondre.</li>
-                    <br>
-                    <strong>Pour l'Enseignant :</strong>
-                    <li>Soyez précis dans vos requêtes. Mentionnez le niveau (ex: 3ème, Terminale D), le chapitre concerné, et la durée souhaitée.</li>
-                    <li>L'outil génère les mathématiques en langage formel, prêtes à être copiées.</li>
-                </ul>
-            </div>
+            <section class="info-section">
+                <div class="info-box">
+                    <h4>Notice & Mode d'emploi</h4>
+                    <ul>
+                        <strong>Pour l'Élève :</strong>
+                        <li>Ne demandez pas au Répétiteur de faire le devoir à votre place. Demandez-lui : <em>"Comment commencer cet exercice ?"</em></li>
+                        <li>Prenez le temps de lire ses explications avant de répondre.</li>
+                        <br>
+                        <strong>Pour l'Enseignant :</strong>
+                        <li>Soyez précis dans vos requêtes (Niveau, Chapitre, Durée).</li>
+                        <li>L'outil génère les mathématiques en langage formel, prêtes à être copiées.</li>
+                    </ul>
+                </div>
 
-            <!-- Le Mur des Nouvelles -->
-            <div class="info-box news-box">
-                <h4>Journal de Bord</h4>
-                <ul>
-                    <li><strong>Version 1.0 (Pilote)</strong><br>La plateforme est actuellement en phase de test.</li>
-                    <li>Le module "Vecteurs et Translations" est pleinement opérationnel.</li>
-                    <li>Des mises à jour sur le comportement des modèles sont effectuées régulièrement pour affiner la pédagogie.</li>
-                </ul>
-            </div>
-        </section>
+                <div class="info-box news-box">
+                    <h4>Journal de Bord</h4>
+                    <ul>
+                        <li><strong>Version 1.0 (Pilote)</strong><br>La plateforme est en phase de test.</li>
+                        <li>Le module mathématique est pleinement opérationnel.</li>
+                        <li>Mises à jour régulières pour affiner la pédagogie.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
     </div>
 
-    <!-- L'ESPACE DE TRAVAIL (Masqué au chargement) -->
+    <!-- L'ESPACE DE TRAVAIL -->
     <div id="app-view">
         <div class="toolbar">
             <button class="btn-retour" onclick="goHome()">
@@ -305,35 +310,27 @@
         </div>
         
         <div class="iframe-container">
-            <!-- Remplacer les attributs src par les liens Dify -->
+            <!-- N'oublie pas de remettre tes liens ici -->
             <iframe id="iframe-eleve" src="https://udify.app/chat/R3owY1VnZZs9xP2n" allow="microphone; camera"></iframe>
             <iframe id="iframe-enseignant" src="https://udify.app/chat/HuNsNQfH35LmfqHO" allow="microphone; camera"></iframe>
         </div>
     </div>
 
     <script>
-        // La mécanique d'ouverture des portes et le cadenas
         function openSpace(space) {
-            
-            // Le Cadenas pour l'Espace Enseignant
             if (space === 'enseignant') {
                 let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
-                
-                // Le mot de passe actuel est Cap2026
                 if (codeSecret !== "Cap2026") {
                     alert("Mot de passe incorrect. L'accès à ce sanctuaire est restreint.");
-                    return; // Stoppe l'ouverture
+                    return; 
                 }
             }
 
-            // Si le code est bon (ou si c'est l'élève), on masque le sas et on affiche l'application
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
 
-            // On masque toutes les iframes
             document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
 
-            // On affiche l'iframe demandée
             if (space === 'eleve') {
                 document.getElementById('iframe-eleve').classList.add('active');
             } else if (space === 'enseignant') {
@@ -341,13 +338,9 @@
             }
         }
 
-        // La mécanique de retour au sas
         function goHome() {
-            // On masque l'application et on réaffiche le sas
             document.getElementById('app-view').style.display = 'none';
             document.getElementById('home-view').style.display = 'flex';
-            
-            // On désactive les iframes pour arrêter leur activité
             document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
         }
     </script>
