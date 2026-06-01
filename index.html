@@ -152,18 +152,29 @@
 
     <script>
         function switchSpace(space, button) {
-            // Désactiver tous les boutons et toutes les iframes
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
-
-            // Activer l'élément choisi
-            button.classList.add('active');
-            if (space === 'eleve') {
-                document.getElementById('iframe-eleve').classList.add('active');
-            } else if (space === 'enseignant') {
-                document.getElementById('iframe-enseignant').classList.add('active');
-            }
+    // Le Cadenas pour l'Espace Enseignant
+    if (space === 'enseignant') {
+        let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
+        
+        // Remplace 'Cap2026' par le mot de passe de ton choix
+        if (codeSecret !== "Cap2026") {
+            alert("Mot de passe incorrect. L'accès à ce sanctuaire est restreint.");
+            return; // Cette ligne bloque l'action, l'onglet ne s'ouvre pas
         }
+    }
+
+    // Désactiver tous les boutons et toutes les iframes
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+
+    // Activer l'élément choisi
+    button.classList.add('active');
+    if (space === 'eleve') {
+        document.getElementById('iframe-eleve').classList.add('active');
+    } else if (space === 'enseignant') {
+        document.getElementById('iframe-enseignant').classList.add('active');
+    }
+}
     </script>
 
 </body>
