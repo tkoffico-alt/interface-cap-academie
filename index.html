@@ -14,7 +14,8 @@
         }
 
         body {
-            background-color: #F9FAFB;
+            /* Un dégradé subtil et apaisant, mêlant un gris perle à un bleu aurore très léger */
+            background: linear-gradient(135deg, #F0F4F8 0%, #D9E2EC 100%);
             color: #0F172A;
             line-height: 1.6;
             display: flex;
@@ -102,14 +103,14 @@
         }
         .door-card {
             background-color: #FFFFFF;
-            border: 1px solid #E5E7EB;
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 12px;
             padding: 2rem;
             width: 100%;
             max-width: 400px;
             text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); /* Une ombre plus douce et ample */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .door-card:hover {
             transform: translateY(-5px);
