@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cap Académie</title>
+    <title>Cap Académie - Le Sas d'Accueil</title>
     <style>
-        /* Réinitialisation et Fondations */
+        /* --- FONDATIONS ET RESPIRATION --- */
         * {
             margin: 0;
             padding: 0;
@@ -16,13 +16,13 @@
         body {
             background-color: #F9FAFB;
             color: #0F172A;
-            height: 100vh;
+            line-height: 1.6;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            min-height: 100vh;
         }
 
-        /* En-tête Minimaliste */
+        /* --- L'EN-TÊTE (La Signature) --- */
         header {
             background-color: #FFFFFF;
             padding: 1rem 2rem;
@@ -30,24 +30,34 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #E5E7EB;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 1rem;
+        }
+
+        /* L'emplacement réservé au sceau / logo */
+        .signature-placeholder {
+            width: 32px;
+            height: 32px;
+            background-color: #F1F5F9;
+            border-radius: 4px;
+            border: 1px dashed #CBD5E1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .brand h1 {
             font-size: 1.25rem;
             font-weight: 700;
-            letter-spacing: -0.025em;
             color: #0F172A;
         }
 
-        .brand span {
-            font-size: 0.75rem;
+        .badge-pilote {
+            font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             background-color: #F1F5F9;
@@ -57,62 +67,170 @@
             color: #64748B;
         }
 
-        /* Système de Navigation par Onglets */
-        .navigation {
+        /* --- LE VESTIBULE (Vue d'Accueil) --- */
+        #home-view {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
             display: flex;
-            background-color: #F1F5F9;
-            padding: 0.25rem;
-            border-radius: 8px;
+            flex-direction: column;
+            gap: 4rem;
         }
 
-        .tab-button {
-            border: none;
-            background: none;
-            padding: 0.5rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #64748B;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s ease;
+        /* 1. Le Fronton */
+        .hero {
+            text-align: center;
+        }
+        .hero h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0F172A;
+            margin-bottom: 1rem;
+        }
+        .hero p {
+            font-size: 1.1rem;
+            color: #475569;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        .tab-button.active {
-            background-color: #FFFFFF;
-            color: #2563EB;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Zone Principale (L'Écran de l'Intelligence) */
-        main {
-            flex: 1;
-            padding: 1.5rem;
+        /* 2. La Croisée des Chemins (Les Portes) */
+        .doors {
             display: flex;
+            gap: 2rem;
             justify-content: center;
-            align-items: center;
+        }
+        .door-card {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .door-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .door-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .door-card p {
+            color: #64748B;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        .btn-entrer {
+            background-color: #2563EB;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s ease;
+        }
+        .btn-entrer:hover {
+            background-color: #1D4ED8;
         }
 
-        .container {
-            width: 100%;
-            height: 100%;
-            max-width: 1400px;
+        /* 3 & 4. Le Parchemin et Le Mur des Nouvelles */
+        .info-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        .info-box {
             background-color: #FFFFFF;
-            border-radius: 12px;
             border: 1px solid #E5E7EB;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            overflow: hidden;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        .info-box h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #0F172A;
+            border-bottom: 2px solid #F1F5F9;
+            padding-bottom: 0.5rem;
+        }
+        .info-box ul {
+            list-style-type: none;
+        }
+        .info-box li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+        .info-box li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #2563EB;
+            font-weight: bold;
+        }
+        .news-box {
+            background-color: #F8FAFC;
+            border-left: 4px solid #2563EB;
+        }
+
+        /* --- L'ESPACE DE TRAVAIL (Iframe cachée par défaut) --- */
+        #app-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            height: calc(100vh - 70px); /* 100vh - hauteur du header */
+        }
+        .toolbar {
+            background-color: #F1F5F9;
+            padding: 0.5rem 2rem;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .btn-retour {
+            background: none;
+            border: none;
+            color: #475569;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .btn-retour:hover {
+            color: #0F172A;
+        }
+        .iframe-container {
+            flex: 1;
+            width: 100%;
             position: relative;
         }
-
         iframe {
             width: 100%;
             height: 100%;
             border: none;
             display: none;
         }
-
         iframe.active {
             display: block;
+        }
+
+        /* Responsivité pour téléphones */
+        @media (max-width: 768px) {
+            .info-section {
+                grid-template-columns: 1fr;
+            }
+            .doors {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -120,61 +238,117 @@
 
     <header>
         <div class="brand">
-            <!-- L'emplacement du futur logo reste vierge et pur -->
+            <div class="signature-placeholder" title="Emplacement du futur sceau"></div>
             <h1>Cap Académie</h1>
-            <span>Pilote</span>
-        </div>
-
-        <div class="navigation">
-            <button class="tab-button active" onclick="switchSpace('eleve', this)">Espace Élève</button>
-            <button class="tab-button" onclick="switchSpace('enseignant', this)">Espace Enseignant</button>
+            <span class="badge-pilote">Pilote</span>
         </div>
     </header>
 
-    <main>
-        <div class="container">
-            <!-- IFRAME DE L'ÉLÈVE (Le Répétiteur) -->
-            <iframe 
-                id="iframe-eleve" 
-                class="active"
-                src="https://udify.app/chat/R3owY1VnZZs9xP2n" 
-                allow="microphone; camera">
-            </iframe>
+    <!-- LE SAS D'ACCUEIL -->
+    <div id="home-view">
+        
+        <!-- Le Fronton -->
+        <section class="hero">
+            <h2>L'intelligence au service de l'autonomie</h2>
+            <p>Bienvenue dans le sanctuaire de la Cap Académie. Cet espace réunit l'approche par compétences pour les enseignants et l'accompagnement silencieux pour les élèves.</p>
+        </section>
 
-            <!-- IFRAME DE L'ENSEIGNANT (Le Concepteur avec mot de passe natif Dify) -->
-            <iframe 
-                id="iframe-enseignant" 
-                src="https://udify.app/chat/HuNsNQfH35LmfqHO" 
-                allow="microphone; camera">
-            </iframe>
+        <!-- Les Portes -->
+        <section class="doors">
+            <div class="door-card">
+                <h3>Espace Élève</h3>
+                <p>Le Répétiteur vous guide pas à pas vers la compréhension, sans jamais donner la réponse immédiatement.</p>
+                <button class="btn-entrer" onclick="openSpace('eleve')">Ouvrir la porte</button>
+            </div>
+            
+            <div class="door-card">
+                <h3>Espace Enseignant</h3>
+                <p>Le Concepteur génère des évaluations et des corrigés rigoureusement conformes à l'Approche Par Compétences.</p>
+                <button class="btn-entrer" style="background-color: #0F172A;" onclick="openSpace('enseignant')">Ouvrir la porte</button>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <!-- Le Parchemin (Notice) -->
+            <div class="info-box">
+                <h4>Notice & Mode d'emploi</h4>
+                <ul>
+                    <strong>Pour l'Élève :</strong>
+                    <li>Ne demandez pas au Répétiteur de faire le devoir à votre place. Demandez-lui plutôt : <em>"Comment commencer cet exercice ?"</em> ou <em>"Je ne comprends pas cette règle."</em></li>
+                    <li>Prenez le temps de lire ses explications avant de répondre.</li>
+                    <br>
+                    <strong>Pour l'Enseignant :</strong>
+                    <li>Soyez précis dans vos requêtes. Mentionnez le niveau (ex: 3ème, Terminale D), le chapitre concerné, et la durée souhaitée.</li>
+                    <li>L'outil génère les mathématiques en langage formel, prêtes à être copiées.</li>
+                </ul>
+            </div>
+
+            <!-- Le Mur des Nouvelles -->
+            <div class="info-box news-box">
+                <h4>Journal de Bord</h4>
+                <ul>
+                    <li><strong>Version 1.0 (Pilote)</strong><br>La plateforme est actuellement en phase de test.</li>
+                    <li>Le module "Vecteurs et Translations" est pleinement opérationnel.</li>
+                    <li>Des mises à jour sur le comportement des modèles sont effectuées régulièrement pour affiner la pédagogie.</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <!-- L'ESPACE DE TRAVAIL (Masqué au chargement) -->
+    <div id="app-view">
+        <div class="toolbar">
+            <button class="btn-retour" onclick="goHome()">
+                ← Retour au Sas d'accueil
+            </button>
         </div>
-    </main>
+        
+        <div class="iframe-container">
+            <!-- Remplacer les attributs src par les liens Dify -->
+            <iframe id="iframe-eleve" src="https://udify.app/chat/R3owY1VnZZs9xP2n" allow="microphone; camera"></iframe>
+            <iframe id="iframe-enseignant" src="https://udify.app/chat/HuNsNQfH35LmfqHO" allow="microphone; camera"></iframe>
+        </div>
+    </div>
 
     <script>
-        function switchSpace(space, button) {
-    // Le Cadenas pour l'Espace Enseignant
-    if (space === 'enseignant') {
-        let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
-        
-        // Remplace 'Cap2026' par le mot de passe de ton choix
-        if (codeSecret !== "Cap2026") {
-            alert("Mot de passe incorrect. L'accès à ce sanctuaire est restreint.");
-            return; // Cette ligne bloque l'action, l'onglet ne s'ouvre pas
+        // La mécanique d'ouverture des portes et le cadenas
+        function openSpace(space) {
+            
+            // Le Cadenas pour l'Espace Enseignant
+            if (space === 'enseignant') {
+                let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
+                
+                // Le mot de passe actuel est Cap2026
+                if (codeSecret !== "Cap2026") {
+                    alert("Mot de passe incorrect. L'accès à ce sanctuaire est restreint.");
+                    return; // Stoppe l'ouverture
+                }
+            }
+
+            // Si le code est bon (ou si c'est l'élève), on masque le sas et on affiche l'application
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('app-view').style.display = 'flex';
+
+            // On masque toutes les iframes
+            document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+
+            // On affiche l'iframe demandée
+            if (space === 'eleve') {
+                document.getElementById('iframe-eleve').classList.add('active');
+            } else if (space === 'enseignant') {
+                document.getElementById('iframe-enseignant').classList.add('active');
+            }
         }
-    }
 
-    // Désactiver tous les boutons et toutes les iframes
-    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
-
-    // Activer l'élément choisi
-    button.classList.add('active');
-    if (space === 'eleve') {
-        document.getElementById('iframe-eleve').classList.add('active');
-    } else if (space === 'enseignant') {
-        document.getElementById('iframe-enseignant').classList.add('active');
-    }
-}
+        // La mécanique de retour au sas
+        function goHome() {
+            // On masque l'application et on réaffiche le sas
+            document.getElementById('app-view').style.display = 'none';
+            document.getElementById('home-view').style.display = 'flex';
+            
+            // On désactive les iframes pour arrêter leur activité
+            document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+        }
     </script>
 
 </body>
