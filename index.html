@@ -317,15 +317,31 @@
     </div>
 
     <script>
+        <script>
         function openSpace(space) {
+            
+            // Le Cadenas pour l'Espace Enseignant
             if (space === 'enseignant') {
                 let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
+                
                 if (codeSecret !== "Cap2026") {
                     alert("Mot de passe incorrect. L'accès à ce sanctuaire est restreint.");
                     return; 
                 }
             }
 
+            // Le Cadenas pour l'Espace Élève
+            if (space === 'eleve') {
+                let codeSecret = prompt("Veuillez saisir le code d'accès de l'Espace Élève :");
+                
+                // Le mot de passe temporaire pour l'élève (à modifier selon ta volonté)
+                if (codeSecret !== "Eleve2026") {
+                    alert("Code d'accès incorrect. L'entrée nécessite un abonnement valide.");
+                    return; 
+                }
+            }
+
+            // Si le code est bon, le voile s'ouvre
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
 
