@@ -44,15 +44,12 @@
             gap: 1rem;
         }
 
-        .signature-placeholder {
-            width: 32px;
-            height: 32px;
-            background-color: #1E293B;
-            border-radius: 4px;
-            border: 1px dashed #475569;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .logo-signature {
+            height: 40px; /* Hauteur ajustée pour l'en-tête */
+            width: auto;
+            border-radius: 6px;
+            object-fit: contain;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); /* Un léger halo lumineux */
         }
 
         .brand h1 {
@@ -247,7 +244,8 @@
 
     <header>
         <div class="brand">
-            <div class="signature-placeholder" title="Emplacement du futur sceau"></div>
+            <!-- Remplacer la ligne de la div signature-placeholder par celle-ci : -->
+            <img src="Logo 2 Cap Académie.jpeg" alt="Sceau Cap Académie" class="logo-signature">
             <h1>Cap Académie</h1>
             <span class="badge-pilote">Pilote</span>
         </div>
