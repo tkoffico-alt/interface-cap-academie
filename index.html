@@ -100,7 +100,7 @@
         .hero p {
             font-size: 1.1rem;
             color: #94A3B8;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
@@ -195,7 +195,7 @@
             display: none;
             flex: 1;
             flex-direction: column;
-            background-color: #F9FAFB; /* Fond clair pour le confort visuel de lecture */
+            background-color: #F9FAFB;
         }
         
         .toolbar {
@@ -221,9 +221,8 @@
         }
         .btn-retour:hover { color: #0F172A; }
 
-        /* Navigation exclusive pour le Bureau de l'Enseignant */
         .teacher-navigation {
-            display: none; /* Activé dynamiquement en JavaScript */
+            display: none;
             gap: 0.75rem;
             margin-left: auto;
         }
@@ -292,19 +291,19 @@
         <div class="container-sas">
             <section class="hero">
                 <h2>L'intelligence au service de l'autonomie</h2>
-                <p>Bienvenue dans le sanctuaire de la Cap Académie. Cet espace réunit l'approche par compétences pour les enseignants et l'accompagnement silencieux pour les élèves.</p>
+                <p>Bienvenue dans le sanctuaire de la Cap Académie. Pour cette phase de lancement, notre accompagnement se concentre rigoureusement sur les <strong>Mathématiques</strong> et la <strong>Physique-Chimie</strong> pour les classes charnières de <strong>3ème</strong> et de <strong>Terminale (Séries A1, A2, C et D)</strong>.</p>
             </section>
 
             <section class="doors">
                 <div class="door-card">
                     <h3>Espace Élève</h3>
-                    <p>Le Répétiteur vous guide pas à pas vers la compréhension, sans jamais donner la réponse immédiatement.</p>
+                    <p>Le Répétiteur vous guide pas à pas en Maths et Physique-Chimie, et déploie sa double boussole pour votre orientation post-BEPC et post-BAC.</p>
                     <button class="btn-entrer" onclick="openSpace('eleve')">Ouvrir la porte</button>
                 </div>
                 
                 <div class="door-card">
                     <h3>Espace Enseignant</h3>
-                    <p>Le Concepteur génère des évaluations et des corrigés rigoureusement conformes à l'Approche Par Compétences.</p>
+                    <p>Vos trois assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC selon les exigences des niveaux 3ème et Terminale.</p>
                     <button class="btn-entrer" style="background-color: #0F172A;" onclick="openSpace('enseignant')">Ouvrir la porte</button>
                 </div>
             </section>
@@ -313,22 +312,24 @@
                 <div class="info-box">
                     <h4>Notice & Mode d'emploi</h4>
                     <ul>
-                        <strong>Pour l'Élève :</strong>
-                        <li>Ne demandez pas au Répétiteur de faire le devoir à votre place. Demandez-lui : <em>"Comment commencer cet exercice ?"</em></li>
-                        <li>Prenez le temps de lire ses explications avant de répondre.</li>
+                        <strong>Pour l'Élève & les Parents :</strong>
+                        <li>Le Répétiteur est calibré spécifiquement pour les programmes de Maths et Physique-Chimie de 3ème et Terminale (A1, A2, C, D). Ne lui demandez pas les réponses directes, laissez-le guider votre raisonnement.</li>
+                        <li><strong>Bilan d'Orientation :</strong> Que vous prépariez le passage au Lycée (post-BEPC) ou les Grandes Écoles et Universités (post-BAC), cliquez sur le bouton cible (🎯) pour déclencher l'analyse de vos prédispositions.</li>
                         <br>
                         <strong>Pour l'Enseignant :</strong>
-                        <li>Soyez précis dans vos requêtes (Niveau, Chapitre, Durée).</li>
-                        <li>L'outil génère les mathématiques en langage formel, prêtes à être copiées.</li>
+                        <li>Vos agents sont interactifs : répondez à leurs questions courtes au début de l'échange pour obtenir un document conforme à la classe visée (3ème ou Terminale).</li>
+                        <li>L'Atelier crée vos devoirs, la Forge bâtit vos fiches de leçons, et le Cabinet d'Étude répond à vos questions pédagogiques.</li>
+                        <li>Chaque document est généré en texte brut pur, prêt à être copié et collé proprement dans Microsoft Word.</li>
                     </ul>
                 </div>
 
                 <div class="info-box news-box">
                     <h4>Journal de Bord</h4>
                     <ul>
-                        <li><strong>Version 1.0 (Pilote)</strong><br>La plateforme est en phase de test.</li>
-                        <li>Le module mathématique est pleinement opérationnel.</li>
-                        <li>Mises à jour régulières pour affiner la pédagogie.</li>
+                        <li><strong>Version 1.2 (Lancement local)</strong><br>Déploiement des modules de Mathématiques et Physique-Chimie pour les classes de 3ème et Terminales (A1, A2, C, D).</li>
+                        <li>Double boussole d'orientation opérationnelle : profils post-BEPC et perspectives universitaires post-BAC.</li>
+                        <li>Verrous d'étanchéité et protocoles de clarification activés sur les profils Enseignants.</li>
+                        <li>Optimisation du formatage de texte brut (Zéro LaTeX) pour l'export direct sous Word.</li>
                     </ul>
                 </div>
             </section>
@@ -364,9 +365,10 @@
             <!-- La Forge des Leçons (Le Maître Pédagogue Universel) -->
             <iframe id="iframe-forge" src="https://udify.app/chat/lCFVOcp9m5mPyHD7" allow="microphone; camera"></iframe>
             
-            <!-- Le Cabinet d'Étude (En attente de son propre Agent) -->
+            <!-- Le Cabinet d'Étude (Le Consultant Pédagogique) -->
             <iframe id="iframe-cabinet" src="https://udify.app/chat/HuNsNQfH35LmfqHO" allow="microphone; camera"></iframe>
         </div>
+    </div>
 
     <script>
         function openSpace(space) {
@@ -391,37 +393,29 @@
                 }
             }
 
-            // Si la clé est valide, l'espace se déploie
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
 
-            // Dissimulation et nettoyage des flux précédents
             document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
             document.getElementById('teacher-tabs-container').style.display = 'none';
 
             if (space === 'eleve') {
                 document.getElementById('iframe-eleve').classList.add('active');
             } else if (space === 'enseignant') {
-                // Révélation de la barre d'onglets spécifique
                 document.getElementById('teacher-tabs-container').style.display = 'flex';
-                // L'Atelier s'ouvre en premier lieu par défaut
                 switchTeacherTool('atelier');
             }
         }
 
-        // Gestion de la navigation interne au Bureau Enseignant
         function switchTeacherTool(toolID) {
-            // Désactivation de tous les flux Enseignant
             document.getElementById('iframe-atelier').classList.remove('active');
             document.getElementById('iframe-forge').classList.remove('active');
             document.getElementById('iframe-cabinet').classList.remove('active');
             
-            // Retrait du focus visuel des onglets
             document.getElementById('tab-atelier').classList.remove('active');
             document.getElementById('tab-forge').classList.remove('active');
             document.getElementById('tab-cabinet').classList.remove('active');
             
-            // Activation ciblée du flux et de son onglet correspondant
             if (toolID === 'atelier') {
                 document.getElementById('iframe-atelier').classList.add('active');
                 document.getElementById('tab-atelier').classList.add('active');
