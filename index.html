@@ -377,21 +377,23 @@
     <script>
         function openSpace(space) {
             
-            // Le Cadenas pour l'Espace Enseignant
+            // Le Cadenas Obscurci pour l'Espace Enseignant
             if (space === 'enseignant') {
                 let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
                 
-                if (codeSecret !== "Cap2026") {
+                // On encode la saisie avant de la comparer à l'empreinte
+                if (codeSecret === null || btoa(codeSecret) !== "Q2FwMjAyNg==") {
                     alert("Mot de passe incorrect. L'accès à ce sanctuaire est restreint.");
                     return; 
                 }
             }
 
-            // Le Cadenas pour l'Espace Élève
+            // Le Cadenas Obscurci pour l'Espace Élève
             if (space === 'eleve') {
                 let codeSecret = prompt("Veuillez saisir le code d'accès de l'Espace Élève :");
                 
-                if (codeSecret !== "Eleve2026") {
+                // On encode la saisie avant de la comparer à l'empreinte
+                if (codeSecret === null || btoa(codeSecret) !== "RWxldmUyMDI2") {
                     alert("Code d'accès incorrect. L'entrée nécessite un abonnement valide.");
                     return; 
                 }
