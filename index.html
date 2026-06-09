@@ -22,7 +22,6 @@
         }
 
         body {
-            /* Le Fondamental : Dégradé profond évoquant l'encre et la nuit */
             background: linear-gradient(135deg, #020617 0%, #0F172A 50%, #172554 100%);
             color: #F8FAFC;
             display: flex;
@@ -157,12 +156,16 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
+            /* Transition fluide pour l'effet d'illumination */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* 💡 L'EFFET D'ILLUMINATION BLEUE AU SURVOL */
         .door-card:hover {
             transform: translateY(-5px);
-            background-color: rgba(30, 41, 59, 0.6);
-            border-color: rgba(148, 163, 184, 0.3);
+            background-color: rgba(30, 41, 59, 0.7);
+            border-color: #3B82F6; /* Bordure bleue */
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.4); /* Halo lumineux bleu */
         }
 
         .icon-wrapper {
@@ -278,7 +281,7 @@
             display: none;
             flex: 1;
             flex-direction: column;
-            background-color: #020617; /* Fond parfaitement sombre pour les iframes */
+            background-color: #020617;
         }
         
         .toolbar {
@@ -457,7 +460,6 @@
                 ← Retour au Sas d'accueil
             </button>
 
-            <!-- Le bouton Plein Écran Universel -->
             <button id="btn-fullscreen" class="btn-fullscreen" onclick="toggleFullScreen()">
                 ⛶ Mode Plein Écran
             </button>
@@ -489,7 +491,7 @@
     <script>
         function openSpace(space) {
             
-            // Le Cadenas Obscurci pour l'Espace Enseignant (Rigoureusement restauré)
+            // Le Cadenas pour l'Espace Enseignant
             if (space === 'enseignant') {
                 let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
                 
@@ -499,7 +501,7 @@
                 }
             }
 
-            // Le Cadenas Obscurci pour l'Espace Élève (Rigoureusement restauré)
+            // Le Cadenas pour l'Espace Élève
             if (space === 'eleve') {
                 let codeSecret = prompt("Veuillez saisir le code d'accès de l'Espace Élève :");
                 
@@ -544,7 +546,6 @@
                 document.getElementById('tab-cabinet').classList.add('active');
             }
             
-            // Si on change d'outil alors qu'on est en plein écran, on réapplique le plein écran au nouvel outil
             if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
                 let activeIframe = document.querySelector('iframe.active');
                 if (activeIframe.requestFullscreen) {
@@ -570,7 +571,6 @@
             }
         }
 
-        // Le moteur Plein Écran Universel (Cible la fenêtre active, élève ou enseignant)
         function toggleFullScreen() {
             let activeIframe = document.querySelector('iframe.active');
             if (!activeIframe) return;
