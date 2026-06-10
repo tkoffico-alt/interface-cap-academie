@@ -385,11 +385,26 @@
             .toolbar { flex-direction: column; gap: 1rem; align-items: stretch; }
             .teacher-navigation { margin-left: 0; justify-content: center; flex-wrap: wrap; }
             .btn-fullscreen { margin-left: 0; justify-content: center; }
-        }
+      /* --- FILIGRANE EDUKATCHAT --- */
+.watermark-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('logo-edukatchat.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 40%; /* Taille du logo (40% de l'écran) */
+    opacity: 0.04; /* Opacité réglée à 4% pour un effet fantôme */
+    pointer-events: none; /* Rend l'image intouchable pour ne pas bloquer les clics */
+    z-index: 0; /* Place l'image tout au fond du Sanctuaire */
+}
     </style>
 </head>
 <body>
-
+<!-- Sceau en Filigrane -->
+<div class="watermark-background"></div>
     <header>
         <div class="brand">
            <img src="logo-edukatchat.png" alt="Sceau EdukaTchat" class="logo-signature">
