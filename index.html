@@ -381,25 +381,27 @@
         @media (max-width: 900px) {
             .info-section { grid-template-columns: 1fr; }
         }
-        @media (max-width: 768px) {
+       @media (max-width: 768px) {
             .toolbar { flex-direction: column; gap: 1rem; align-items: stretch; }
             .teacher-navigation { margin-left: 0; justify-content: center; flex-wrap: wrap; }
             .btn-fullscreen { margin-left: 0; justify-content: center; }
-      /* --- FILIGRANE EDUKATCHAT --- */
-.watermark-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image: url('logo-edukatchat.png');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: 40%; /* Taille du logo (40% de l'écran) */
-    opacity: 0.04; /* Opacité réglée à 4% pour un effet fantôme */
-    pointer-events: none; /* Rend l'image intouchable pour ne pas bloquer les clics */
-    z-index: 0; /* Place l'image tout au fond du Sanctuaire */
-}
+        } /* <-- C'EST CETTE ACCOLADE QUI MANQUAIT POUR FERMER LE BLOC MOBILE */
+
+        /* --- FILIGRANE EDUKATCHAT --- */
+        .watermark-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('logo-edukatchat.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 40%; 
+            opacity: 0.04; 
+            pointer-events: none; 
+            z-index: 0; 
+        }
     </style>
 </head>
 <body>
