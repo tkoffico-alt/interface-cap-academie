@@ -387,7 +387,7 @@
             .btn-fullscreen { margin-left: 0; justify-content: center; }
         } /* <-- C'EST CETTE ACCOLADE QUI MANQUAIT POUR FERMER LE BLOC MOBILE */
 
-       /* --- FILIGRANE EDUKATCHAT MAGISTRAL --- */
+     /* --- FILIGRANE EDUKATCHAT MAGISTRAL --- */
         .watermark-background {
             position: fixed;
             top: 0;
@@ -397,14 +397,14 @@
             background-image: url('logo-edukatchat.png');
             background-repeat: no-repeat;
             background-position: center center;
-            background-size: cover; /* Force l'image à remplir absolument tout l'écran */
-            opacity: 0.08; /* Visibilité remontée à 8% pour être bien perçue */
+            background-size: cover; 
+            opacity: 0.15; /* Visibilité pratiquement doublée */
             pointer-events: none; 
             z-index: 0; 
             
-            /* Le secret pour faire disparaître les contours carrés de l'image */
-            -webkit-mask-image: radial-gradient(circle, black 30%, transparent 80%);
-            mask-image: radial-gradient(circle, black 30%, transparent 80%);
+            /* On élargit la zone nette au centre avant le fondu */
+            -webkit-mask-image: radial-gradient(circle, black 40%, transparent 90%);
+            mask-image: radial-gradient(circle, black 40%, transparent 90%);
         }
     </style>
 </head>
