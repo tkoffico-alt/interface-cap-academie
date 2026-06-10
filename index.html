@@ -387,7 +387,7 @@
             .btn-fullscreen { margin-left: 0; justify-content: center; }
         } /* <-- C'EST CETTE ACCOLADE QUI MANQUAIT POUR FERMER LE BLOC MOBILE */
 
-       /* --- FILIGRANE EDUKATCHAT AMÉLIORÉ --- */
+       /* --- FILIGRANE EDUKATCHAT MAGISTRAL --- */
         .watermark-background {
             position: fixed;
             top: 0;
@@ -397,12 +397,14 @@
             background-image: url('logo-edukatchat.png');
             background-repeat: no-repeat;
             background-position: center center;
-            background-size: 55%; /* Taille majestueuse couvrant les cartes */
-            opacity: 0.02; /* Opacité très subtile (2%) */
-            mix-blend-mode: screen; /* Fait disparaître les contours carrés de l'image */
-            filter: blur(3px); /* Effet de profondeur de champ */
+            background-size: cover; /* Force l'image à remplir absolument tout l'écran */
+            opacity: 0.08; /* Visibilité remontée à 8% pour être bien perçue */
             pointer-events: none; 
             z-index: 0; 
+            
+            /* Le secret pour faire disparaître les contours carrés de l'image */
+            -webkit-mask-image: radial-gradient(circle, black 30%, transparent 80%);
+            mask-image: radial-gradient(circle, black 30%, transparent 80%);
         }
     </style>
 </head>
