@@ -144,12 +144,23 @@
             transition: all 0.3s ease;
         }
 
-        /* Grille des 4 Portes */
-        .doors {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.5rem;
-        }
+     /* Grille des 4 Portes - Alignement 2 par 2 */
+.doors {
+    display: grid;
+    /* Force 2 colonnes égales sur les écrans moyens et grands */
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+    gap: 2rem;
+    justify-content: center;
+    max-width: 800px; /* Ajout d'une largeur max pour garder les cartes compactes */
+    margin: 0 auto;
+}
+
+/* Ajustement pour mobile : retour à 1 colonne si nécessaire */
+@media (max-width: 768px) {
+    .doors {
+        grid-template-columns: 1fr;
+    }
+}
 
         .door-card {
             display: flex;
