@@ -1,12 +1,10 @@
-<!-- 🪷 Sceau de l'Artisan - Œuvre EdukaTchat -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EdukaTchat | Le sanctuaire numérique de l'enseignement ivoirien</title>
-    <!-- Favicon EdukaTchat -->
-   <link rel="icon" type="image/png" href="logo-edukatchat.png">
+    <link rel="icon" type="image/png" href="logo-edukatchat.png">
     <style>
         /* --- FONDATIONS --- */
         * {
@@ -101,7 +99,7 @@
         }
 
         .container-sas {
-            max-width: 1100px;
+            max-width: 1200px;
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -147,7 +145,7 @@
         /* Grille des Portes */
         .doors {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
         }
 
@@ -156,17 +154,19 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            /* Transition fluide pour l'effet d'illumination */
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 💡 L'EFFET D'ILLUMINATION BLEUE AU SURVOL */
         .door-card:hover {
             transform: translateY(-5px);
             background-color: rgba(30, 41, 59, 0.7);
-            border-color: #3B82F6; /* Bordure bleue */
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.4); /* Halo lumineux bleu */
         }
+
+        /* Spécificités par carte au survol */
+        .sas:hover { border-color: #10B981; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.3); }
+        .eleve:hover { border-color: #3B82F6; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.4); }
+        .enseignant:hover { border-color: #A855F7; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(168, 85, 247, 0.4); }
+        .parents:hover { border-color: #94A3B8; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(148, 163, 184, 0.4); }
 
         .icon-wrapper {
             width: 4rem;
@@ -179,6 +179,7 @@
             font-size: 1.8rem;
         }
 
+        .sas .icon-wrapper { background-color: rgba(16, 185, 129, 0.1); color: #34D399; }
         .eleve .icon-wrapper { background-color: rgba(59, 130, 246, 0.1); color: #60A5FA; }
         .enseignant .icon-wrapper { background-color: rgba(168, 85, 247, 0.1); color: #C084FC; }
         .parents .icon-wrapper { background-color: rgba(148, 163, 184, 0.1); color: #94A3B8; }
@@ -210,6 +211,9 @@
             transition: background-color 0.2s ease;
         }
 
+        .sas .btn-entrer { background-color: #10B981; }
+        .sas .btn-entrer:hover { background-color: #059669; }
+        
         .eleve .btn-entrer { background-color: #3B82F6; }
         .eleve .btn-entrer:hover { background-color: #2563EB; }
         
@@ -381,11 +385,11 @@
         @media (max-width: 900px) {
             .info-section { grid-template-columns: 1fr; }
         }
-       @media (max-width: 768px) {
+        @media (max-width: 768px) {
             .toolbar { flex-direction: column; gap: 1rem; align-items: stretch; }
             .teacher-navigation { margin-left: 0; justify-content: center; flex-wrap: wrap; }
             .btn-fullscreen { margin-left: 0; justify-content: center; }
-        } /* <-- C'EST CETTE ACCOLADE QUI MANQUAIT POUR FERMER LE BLOC MOBILE */
+        }
 
      /* --- FILIGRANE EDUKATCHAT MAGISTRAL --- */
         .watermark-background {
@@ -398,18 +402,15 @@
             background-repeat: no-repeat;
             background-position: center center;
             background-size: cover; 
-            opacity: 0.15; /* Visibilité pratiquement doublée */
+            opacity: 0.15;
             pointer-events: none; 
             z-index: 0; 
-            
-            /* On élargit la zone nette au centre avant le fondu */
             -webkit-mask-image: radial-gradient(circle, black 40%, transparent 90%);
             mask-image: radial-gradient(circle, black 40%, transparent 90%);
         }
     </style>
 </head>
 <body>
-<!-- Sceau en Filigrane -->
 <div class="watermark-background"></div>
     <header>
         <div class="brand">
@@ -429,24 +430,31 @@
             </section>
 
            <section class="doors">
+                <div class="glass-card door-card sas">
+                    <div class="icon-wrapper">🧭</div>
+                    <h3>Le Sas de Préparation</h3>
+                    <p>Accès gratuit à votre Boussole d'Orientation et simulation d'examen. Sans engagement.</p>
+                    <button class="btn-entrer" onclick="openSpace('sas')">Entrer Librement</button>
+                </div>
+
                 <div class="glass-card door-card eleve">
-                    <div class="icon-wrapper">🎓</div>
-                    <h3>Espace Élève</h3>
-                    <p>Le Répétiteur vous guide pas à pas en Maths, Physique-Chimie et SVT, et déploie sa double boussole pour votre orientation post-BEPC et post-BAC.</p>
-                    <button class="btn-entrer" onclick="openSpace('eleve')">Franchir la Porte</button>
+                    <div class="icon-wrapper">🏛️</div>
+                    <h3>L'Académie EdukaTchat</h3>
+                    <p>L'espace premium. Accédez au Répétiteur, au Maître Pédagogue et aux évaluations complètes.</p>
+                    <button class="btn-entrer" onclick="openSpace('eleve')">Déverrouiller l'Accès</button>
                 </div>
                 
                 <div class="glass-card door-card enseignant">
                     <div class="icon-wrapper">🔮</div>
                     <h3>Cabinet Enseignant</h3>
-                    <p>Vos trois assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC selon les exigences des niveaux 3ème et Terminale.</p>
+                    <p>Vos trois assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC.</p>
                     <button class="btn-entrer" onclick="openSpace('enseignant')">Entrer au Cabinet</button>
                 </div>
 
                 <div class="glass-card door-card parents">
                     <div class="icon-wrapper">🛡️</div>
                     <h3>Bureau des Parents</h3>
-                    <p>Scellez l'alliance d'apprentissage. Définissez les horaires et les disciplines pour activer le suivi bienveillant de votre enfant.</p>
+                    <p>Scellez l'alliance d'apprentissage. Définissez les horaires pour activer le suivi bienveillant de votre enfant.</p>
                     <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Ouvrir le registre</button>
                 </div>
             </section>
@@ -466,8 +474,8 @@
                     <h4>📌 Journal de Bord</h4>
                     <ul>
                         <li><strong>Version 1.2 (Lancement local)</strong><br>Déploiement des modules de Mathématiques, Physique-Chimie et SVT pour les classes de 3ème et Terminales.</li>
+                        <li>Création du "Sas de Préparation" (Accès libre).</li>
                         <li>Double boussole d'orientation opérationnelle (post-BEPC et post-BAC).</li>
-                        <li>Verrous d'étanchéité et protocoles de clarification activés.</li>
                         <li>Optimisation du formatage de texte brut (Zéro LaTeX) pour l'export Word.</li>
                     </ul>
                 </div>
@@ -478,7 +486,7 @@
     <div id="app-view">
         <div class="toolbar">
             <button class="btn-retour" onclick="goHome()">
-                ← Retour au Sas d'accueil
+                ← Retour au menu
             </button>
 
             <button id="btn-fullscreen" class="btn-fullscreen" onclick="toggleFullScreen()">
@@ -499,10 +507,10 @@
         </div>
         
         <div class="iframe-container">
-            <!-- Porte Unique Élève -->
+            <iframe id="iframe-sas" src="https://udify.app/chatbot/943El1BSq5VlqArB" allow="microphone; camera"></iframe>
+
             <iframe id="iframe-eleve" src="https://udify.app/chat/R3owY1VnZZs9xP2n" allow="microphone; camera"></iframe>
             
-            <!-- Les Assistances Enseignants -->
             <iframe id="iframe-atelier" src="https://udify.app/chat/bYaJc7kzuGptJSn5" allow="microphone; camera"></iframe>
             <iframe id="iframe-forge" src="https://udify.app/chat/lCFVOcp9m5mPyHD7" allow="microphone; camera"></iframe>
             <iframe id="iframe-cabinet" src="https://udify.app/chat/HuNsNQfH35LmfqHO" allow="microphone; camera"></iframe>
@@ -522,15 +530,17 @@
                 }
             }
 
-            // Le Cadenas pour l'Espace Élève
+            // Le Cadenas pour l'Académie EdukaTchat (Premium Élève)
             if (space === 'eleve') {
-                let codeSecret = prompt("Veuillez saisir le code d'accès de l'Espace Élève :");
+                let codeSecret = prompt("Veuillez saisir la clé de l'Académie EdukaTchat :");
                 
-                if (codeSecret === null || btoa(codeSecret) !== "RWxldmUyMDI2") {
-                    alert("Code d'accès incorrect. L'entrée nécessite un abonnement valide.");
+                if (codeSecret === null || btoa(codeSecret) !== "RWxldmUyMDI2") { // Correspond à Eleve2026
+                    alert("Le sceau reste inviolé : clé d'accès incorrecte.");
                     return; 
                 }
             }
+
+            // Note: Si space === 'sas', aucune vérification n'est effectuée (Accès Libre)
 
             // Transition visuelle
             document.getElementById('home-view').style.display = 'none';
@@ -539,7 +549,9 @@
             document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
             document.getElementById('teacher-tabs-container').style.display = 'none';
 
-            if (space === 'eleve') {
+            if (space === 'sas') {
+                document.getElementById('iframe-sas').classList.add('active');
+            } else if (space === 'eleve') {
                 document.getElementById('iframe-eleve').classList.add('active');
             } else if (space === 'enseignant') {
                 document.getElementById('teacher-tabs-container').style.display = 'flex';
@@ -615,6 +627,5 @@
             }
         }
     </script>
-
 </body>
 </html>
