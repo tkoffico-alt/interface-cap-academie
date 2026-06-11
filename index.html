@@ -16,7 +16,7 @@
 
         html, body {
             height: 100%;
-            overflow: hidden;
+            overflow: auto; /* Modifié pour permettre le défilement naturel si l'écran est petit */
         }
 
         body {
@@ -24,6 +24,7 @@
             color: #F8FAFC;
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
         }
 
         /* --- L'EN-TÊTE TRANSLUCIDE --- */
@@ -37,6 +38,7 @@
             border-bottom: 1px solid rgba(51, 65, 85, 0.5);
             flex-shrink: 0;
             position: relative;
+            z-index: 10;
         }
 
         .brand {
@@ -91,11 +93,11 @@
         /* --- LE SAS D'ACCUEIL --- */
         #home-view {
             flex: 1;
-            overflow-y: auto;
             padding: 3rem 2rem;
             display: flex;
             flex-direction: column;
             align-items: center;
+            z-index: 10;
         }
 
         .container-sas {
@@ -142,11 +144,11 @@
             transition: all 0.3s ease;
         }
 
-        /* Grille des Portes */
+        /* Grille des 4 Portes */
         .doors {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
         }
 
         .door-card {
@@ -185,7 +187,7 @@
         .parents .icon-wrapper { background-color: rgba(148, 163, 184, 0.1); color: #94A3B8; }
 
         .door-card h3 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 600;
             color: #F8FAFC;
             margin-bottom: 0.75rem;
@@ -193,8 +195,8 @@
 
         .door-card p {
             color: #94A3B8;
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
             line-height: 1.5;
             flex-grow: 1;
         }
@@ -204,7 +206,7 @@
             padding: 0.8rem 1.5rem;
             border-radius: 8px;
             border: none;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: #FFFFFF;
             cursor: pointer;
@@ -286,6 +288,7 @@
             flex: 1;
             flex-direction: column;
             background-color: #020617;
+            height: 100vh;
         }
         
         .toolbar {
@@ -367,7 +370,6 @@
         .iframe-container {
             flex: 1;
             width: 100%;
-            height: 100%;
             position: relative;
         }
         
@@ -391,7 +393,7 @@
             .btn-fullscreen { margin-left: 0; justify-content: center; }
         }
 
-     /* --- FILIGRANE EDUKATCHAT MAGISTRAL --- */
+        /* --- FILIGRANE EDUKATCHAT --- */
         .watermark-background {
             position: fixed;
             top: 0;
@@ -454,7 +456,7 @@
                 <div class="glass-card door-card parents">
                     <div class="icon-wrapper">🛡️</div>
                     <h3>Bureau des Parents</h3>
-                    <p>Scellez l'alliance d'apprentissage. Définissez les horaires pour activer le suivi bienveillant de votre enfant.</p>
+                    <p>Scellez l'alliance d'apprentissage. Définissez les horaires pour activer le suivi bienveillant.</p>
                     <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Ouvrir le registre</button>
                 </div>
             </section>
@@ -464,9 +466,9 @@
                     <h4>📜 Notice & Mode d'emploi</h4>
                     <p>EdukaTchat allie <strong>l'exigence du programme ivoirien</strong> à la sérénité d'un accompagnement personnalisé pour transformer les doutes en compétences durables.</p>
                     <ul>
-                        <li><strong>L'Assiduité Transparente (La Sentinelle) :</strong> Dès la connexion via son matricule, le système croise silencieusement l'heure d'arrivée avec le registre parental. L'accueil s'adapte avec bienveillance, garantissant un suivi rigoureux.</li>
-                        <li><strong>L'Exigence Maïeutique :</strong> Le Répétiteur ne fournit aucune solution directe. Face à une difficulté, il fragmente le problème et guide l'élève pour qu'il construise son propre raisonnement.</li>
-                        <li><strong>Le Bilan Pédagogique Continu :</strong> À l'issue de chaque session, un rapport détaillé (sujet, intensité, attitude) vous est transmis. Le Répétiteur propose également des bilans d'orientation profonds.</li>
+                        <li><strong>Le Sas de Préparation (Accès Libre) :</strong> Un espace de test ouvert à tous. Il permet d'accéder à la Boussole d'Orientation et d'expérimenter une simulation pédagogique flash sans abonnement.</li>
+                        <li><strong>L'Académie (Espace Premium) :</strong> L'accès complet et scellé. Croisé avec le registre parental, il offre l'accompagnement maïeutique complet du Répétiteur et des bilans pédagogiques détaillés.</li>
+                        <li><strong>L'Exigence Maïeutique :</strong> Face à une difficulté, nos IA ne fournissent aucune solution directe. Elles fragmentent le problème et guident l'élève pour qu'il construise son propre raisonnement.</li>
                     </ul>
                 </div>
 
@@ -474,7 +476,7 @@
                     <h4>📌 Journal de Bord</h4>
                     <ul>
                         <li><strong>Version 1.2 (Lancement local)</strong><br>Déploiement des modules de Mathématiques, Physique-Chimie et SVT pour les classes de 3ème et Terminales.</li>
-                        <li>Création du "Sas de Préparation" (Accès libre).</li>
+                        <li>Création du "Sas de Préparation" (Accès libre et sécurisé).</li>
                         <li>Double boussole d'orientation opérationnelle (post-BEPC et post-BAC).</li>
                         <li>Optimisation du formatage de texte brut (Zéro LaTeX) pour l'export Word.</li>
                     </ul>
@@ -540,9 +542,10 @@
                 }
             }
 
-            // Note: Si space === 'sas', aucune vérification n'est effectuée (Accès Libre)
+            // Note: Si space === 'sas', l'accès est libre et passe directement à la suite.
 
             // Transition visuelle
+            document.body.style.overflow = 'hidden'; // Empêche le scroll quand le chat est ouvert
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
 
@@ -590,6 +593,7 @@
         }
 
         function goHome() {
+            document.body.style.overflow = 'auto'; // Restaure le scroll pour le menu principal
             document.getElementById('app-view').style.display = 'none';
             document.getElementById('home-view').style.display = 'flex';
             document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
