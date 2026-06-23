@@ -419,7 +419,7 @@
             mask-image: radial-gradient(circle, black 40%, transparent 90%);
         }
 
-        /* --- STYLES DU SAS SUR MESURE (VOIE DE L'API) --- */
+        /* --- STYLES SUR MESURE (VOIE DE L'API) --- */
         .custom-chat-container {
             display: none; 
             flex-direction: column;
@@ -494,11 +494,10 @@
             transition: border-color 0.2s ease;
         }
         
-       .chat-input-area input:focus {
+        .chat-input-area input:focus {
             border-color: #3B82F6;
-        } /* <-- L'accolade qui manquait était ici ! */
+        }
 
-        /* Correction de la distorsion du bouton de transmission */
         .chat-input-area .btn-entrer {
             width: auto; 
             white-space: nowrap;
@@ -634,7 +633,7 @@
                     <div class="message system-message">Bienvenue dans le Sas de Préparation. Posez votre question pour commencer.</div>
                 </div>
                 <div class="chat-input-area">
-                    <button class="btn-attachment" onclick="triggerVisionUpsell()" title="Joindre un manuscrit">
+                    <button class="btn-attachment" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un manuscrit">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                         </svg>
@@ -642,16 +641,53 @@
                     <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
                     <button class="btn-entrer" onclick="sendSasMessage()">Transmettre</button>
                 </div>
+            </div>
+
+            <div id="container-atelier-custom" class="custom-chat-container">
+                <div id="atelier-chat-history" class="chat-history">
+                    <div class="message system-message">Bienvenue dans l'Atelier. Je suis le Concepteur Universel. Précisez votre matière, classe et durée pour concevoir une évaluation APC.</div>
+                </div>
+                <div class="chat-input-area">
+                    <button class="btn-attachment" onclick="triggerVisionUpsell('atelier-chat-history')" title="Joindre un texte source">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    </button>
+                    <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
+                    <button class="btn-entrer" onclick="sendTeacherMessage('atelier')">Transmettre</button>
+                </div>
+            </div>
+
+            <div id="container-forge-custom" class="custom-chat-container">
+                <div id="forge-chat-history" class="chat-history">
+                    <div class="message system-message">Bienvenue dans la Forge. Je suis le Maître Pédagogue Universel. Précisez votre contexte pour structurer votre fiche de leçon.</div>
+                </div>
+                <div class="chat-input-area">
+                    <button class="btn-attachment" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    </button>
+                    <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
+                    <button class="btn-entrer" onclick="sendTeacherMessage('forge')">Transmettre</button>
+                </div>
+            </div>
+
+            <div id="container-cabinet-custom" class="custom-chat-container">
+                <div id="cabinet-chat-history" class="chat-history">
+                    <div class="message system-message">Bienvenue dans le Cabinet d'Étude. Je suis le Consultant Pédagogique. Quelle difficulté rencontrez-vous dans votre enseignement ?</div>
+                </div>
+                <div class="chat-input-area">
+                    <button class="btn-attachment" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    </button>
+                    <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
+                    <button class="btn-entrer" onclick="sendTeacherMessage('cabinet')">Transmettre</button>
+                </div>
+            </div>
             
             <iframe id="iframe-eleve" src="https://udify.app/chat/R3owY1VnZZs9xP2n" allow="microphone; camera"></iframe>
-            <iframe id="iframe-atelier" src="https://udify.app/chat/bYaJc7kzuGptJSn5" allow="microphone; camera"></iframe>
-            <iframe id="iframe-forge" src="https://udify.app/chat/lCFVOcp9m5mPyHD7" allow="microphone; camera"></iframe>
-            <iframe id="iframe-cabinet" src="https://udify.app/chat/HuNsNQfH35LmfqHO" allow="microphone; camera"></iframe>
         </div>
     </div>
 
     <script>
-       function openSpace(space) {
+        function openSpace(space) {
             
             // Le cadenas de l'Espace Enseignant a été retiré pour le Freemium
 
@@ -669,6 +705,9 @@
 
             document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
             document.getElementById('container-sas-custom').classList.remove('active');
+            document.getElementById('container-atelier-custom').classList.remove('active');
+            document.getElementById('container-forge-custom').classList.remove('active');
+            document.getElementById('container-cabinet-custom').classList.remove('active');
             document.getElementById('teacher-tabs-container').style.display = 'none';
 
             if (space === 'sas') {
@@ -682,31 +721,32 @@
         }
 
         function switchTeacherTool(toolID) {
-            document.getElementById('iframe-atelier').classList.remove('active');
-            document.getElementById('iframe-forge').classList.remove('active');
-            document.getElementById('iframe-cabinet').classList.remove('active');
+            document.getElementById('container-atelier-custom').classList.remove('active');
+            document.getElementById('container-forge-custom').classList.remove('active');
+            document.getElementById('container-cabinet-custom').classList.remove('active');
             
             document.getElementById('tab-atelier').classList.remove('active');
             document.getElementById('tab-forge').classList.remove('active');
             document.getElementById('tab-cabinet').classList.remove('active');
             
             if (toolID === 'atelier') {
-                document.getElementById('iframe-atelier').classList.add('active');
+                document.getElementById('container-atelier-custom').classList.add('active');
                 document.getElementById('tab-atelier').classList.add('active');
             } else if (toolID === 'forge') {
-                document.getElementById('iframe-forge').classList.add('active');
+                document.getElementById('container-forge-custom').classList.add('active');
                 document.getElementById('tab-forge').classList.add('active');
             } else if (toolID === 'cabinet') {
-                document.getElementById('iframe-cabinet').classList.add('active');
+                document.getElementById('container-cabinet-custom').classList.add('active');
                 document.getElementById('tab-cabinet').classList.add('active');
             }
             
+            // Gestion du plein écran
             if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
-                let activeIframe = document.querySelector('iframe.active');
-                if (activeIframe && activeIframe.requestFullscreen) {
-                    activeIframe.requestFullscreen();
-                } else if (activeIframe && activeIframe.webkitRequestFullscreen) {
-                    activeIframe.webkitRequestFullscreen();
+                let activeContainer = document.querySelector('.custom-chat-container.active') || document.querySelector('iframe.active');
+                if (activeContainer && activeContainer.requestFullscreen) {
+                    activeContainer.requestFullscreen();
+                } else if (activeContainer && activeContainer.webkitRequestFullscreen) {
+                    activeContainer.webkitRequestFullscreen();
                 }
             }
         }
@@ -718,6 +758,9 @@
             
             document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
             document.getElementById('container-sas-custom').classList.remove('active');
+            document.getElementById('container-atelier-custom').classList.remove('active');
+            document.getElementById('container-forge-custom').classList.remove('active');
+            document.getElementById('container-cabinet-custom').classList.remove('active');
             document.getElementById('teacher-tabs-container').style.display = 'none';
 
             if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
@@ -730,7 +773,7 @@
         }
 
         function toggleFullScreen() {
-            let activeElement = document.querySelector('iframe.active') || document.querySelector('.custom-chat-container.active');
+            let activeElement = document.querySelector('.custom-chat-container.active') || document.querySelector('iframe.active');
             if (!activeElement) return;
             
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
@@ -752,7 +795,19 @@
             }
         }
 
-        // --- LOGIQUE DU SAS SUR MESURE (CONNEXION API) ---
+        // --- LEVIER DE CONVERSION (TROMBONE) ---
+        function triggerVisionUpsell(chatHistoryId) {
+            const chatHistory = document.getElementById(chatHistoryId);
+            
+            const botUpsellDiv = document.createElement('div');
+            botUpsellDiv.className = 'message bot-message';
+            botUpsellDiv.innerHTML = "<strong>L'Œil du Maître est verrouillé.</strong><br><br>L'analyse visuelle de manuscrits ou de supports photographiés est une capacité avancée strictement réservée à <strong>l'accès Premium</strong>.<br><br>Pour bénéficier de cette fonctionnalité, veuillez déverrouiller l'Académie ou le Cabinet Premium.";
+            
+            chatHistory.appendChild(botUpsellDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // --- LOGIQUE DU SAS SUR MESURE ---
         let sasConversationId = ""; 
 
         function handleSasKeyPress(event) {
@@ -761,17 +816,6 @@
             }
         }
 
-function triggerVisionUpsell() {
-            const chatHistory = document.getElementById('sas-chat-history');
-            
-            // Création immédiate d'un message système dans le chat (sans consommer de requête API)
-            const botUpsellDiv = document.createElement('div');
-            botUpsellDiv.className = 'message bot-message';
-            botUpsellDiv.innerHTML = "<strong>L'Œil du Maître est verrouillé.</strong><br><br>L'analyse visuelle de manuscrits et de photographies d'exercices est une capacité avancée strictement réservée à <strong>l'Académie EdukaTchat</strong>.<br><br>Pour bénéficier de cette fonctionnalité, veuillez déverrouiller l'accès Premium.";
-            
-            chatHistory.appendChild(botUpsellDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        }
         async function sendSasMessage() {
             const inputField = document.getElementById('sas-user-input');
             const message = inputField.value.trim();
@@ -779,7 +823,6 @@ function triggerVisionUpsell() {
 
             const chatHistory = document.getElementById('sas-chat-history');
 
-            // 1. Affiche la requête de l'élève
             const userMsgDiv = document.createElement('div');
             userMsgDiv.className = 'message user-message';
             userMsgDiv.textContent = message;
@@ -788,16 +831,13 @@ function triggerVisionUpsell() {
             inputField.value = '';
             chatHistory.scrollTop = chatHistory.scrollHeight; 
 
-            // 2. Affiche l'indicateur de méditation
             const botLoadingDiv = document.createElement('div');
             botLoadingDiv.className = 'message bot-message';
             botLoadingDiv.textContent = "Le Conseiller analyse votre demande...";
             chatHistory.appendChild(botLoadingDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // 3. Transmission vers le serveur FastAPI (Render)
             try {
-                // Modifiez l'URL si nécessaire selon l'adresse de votre backend Render
                 const response = await fetch('https://cap-academie-gateway.onrender.com/api/sas/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -808,11 +848,8 @@ function triggerVisionUpsell() {
                 });
 
                 const data = await response.json();
-                
-                // 4. Affiche la réponse maïeutique
                 botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
                 
-                // 5. Maintien de la continuité du dialogue
                 if (data.conversation_id) {
                     sasConversationId = data.conversation_id;
                 }
@@ -820,6 +857,66 @@ function triggerVisionUpsell() {
             } catch (error) {
                 botLoadingDiv.textContent = "La connexion au sanctuaire a été interrompue. Le réseau est instable.";
                 console.error("Erreur de transmission Sas:", error);
+            }
+            
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // --- LOGIQUE DES OUTILS ENSEIGNANT ---
+        let teacherConversationIds = {
+            'atelier': "",
+            'forge': "",
+            'cabinet': ""
+        };
+
+        function handleTeacherKeyPress(event, outil) {
+            if (event.key === 'Enter') {
+                sendTeacherMessage(outil);
+            }
+        }
+
+        async function sendTeacherMessage(outil) {
+            const inputField = document.getElementById(`${outil}-user-input`);
+            const message = inputField.value.trim();
+            if (!message) return;
+
+            const chatHistory = document.getElementById(`${outil}-chat-history`);
+
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'message user-message';
+            userMsgDiv.textContent = message;
+            chatHistory.appendChild(userMsgDiv);
+            
+            inputField.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight; 
+
+            const botLoadingDiv = document.createElement('div');
+            botLoadingDiv.className = 'message bot-message';
+            botLoadingDiv.textContent = "L'Assistant rassemble son savoir...";
+            chatHistory.appendChild(botLoadingDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                const response = await fetch('https://cap-academie-gateway.onrender.com/api/enseignant/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        query: message, 
+                        conversation_id: teacherConversationIds[outil],
+                        outil: outil
+                    })
+                });
+
+                const data = await response.json();
+                botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
+                
+                if (data.conversation_id) {
+                    teacherConversationIds[outil] = data.conversation_id;
+                }
+                
+            } catch (error) {
+                botLoadingDiv.textContent = "La connexion au Cabinet a été interrompue. Le réseau est instable.";
+                console.error("Erreur de transmission Enseignant:", error);
             }
             
             chatHistory.scrollTop = chatHistory.scrollHeight;
