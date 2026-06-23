@@ -494,17 +494,41 @@
             transition: border-color 0.2s ease;
         }
         
-        .chat-input-area input:focus {
+       .chat-input-area input:focus {
             border-color: #3B82F6;
-       /* Correction de la distorsion du bouton de transmission */
+        } /* <-- L'accolade qui manquait était ici ! */
+
+        /* Correction de la distorsion du bouton de transmission */
         .chat-input-area .btn-entrer {
-            width: auto; /* Empêche le bouton d'écraser le champ de texte */
+            width: auto; 
             white-space: nowrap;
-            background-color: #3B82F6; /* Restaure la couleur bleue */
+            background-color: #3B82F6; 
         }
         
         .chat-input-area .btn-entrer:hover {
             background-color: #2563EB;
+        }
+
+        /* Style du Trombone de Conversion */
+        .btn-attachment {
+            background: transparent;
+            border: none;
+            color: #94A3B8;
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+        }
+
+        .btn-attachment:hover {
+            color: #60A5FA;
+        }
+
+        .btn-attachment svg {
+            width: 24px;
+            height: 24px;
         }
     </style>
 </head>
@@ -610,10 +634,14 @@
                     <div class="message system-message">Bienvenue dans le Sas de Préparation. Posez votre question pour commencer.</div>
                 </div>
                 <div class="chat-input-area">
+                    <button class="btn-attachment" onclick="triggerVisionUpsell()" title="Joindre un manuscrit">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                    </button>
                     <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
                     <button class="btn-entrer" onclick="sendSasMessage()">Transmettre</button>
                 </div>
-            </div>
             
             <iframe id="iframe-eleve" src="https://udify.app/chat/R3owY1VnZZs9xP2n" allow="microphone; camera"></iframe>
             <iframe id="iframe-atelier" src="https://udify.app/chat/bYaJc7kzuGptJSn5" allow="microphone; camera"></iframe>
@@ -739,6 +767,17 @@
             }
         }
 
+function triggerVisionUpsell() {
+            const chatHistory = document.getElementById('sas-chat-history');
+            
+            // Création immédiate d'un message système dans le chat (sans consommer de requête API)
+            const botUpsellDiv = document.createElement('div');
+            botUpsellDiv.className = 'message bot-message';
+            botUpsellDiv.innerHTML = "<strong>L'Œil du Maître est verrouillé.</strong><br><br>L'analyse visuelle de manuscrits et de photographies d'exercices est une capacité avancée strictement réservée à <strong>l'Académie EdukaTchat</strong>.<br><br>Pour bénéficier de cette fonctionnalité, veuillez déverrouiller l'accès Premium.";
+            
+            chatHistory.appendChild(botUpsellDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
         async function sendSasMessage() {
             const inputField = document.getElementById('sas-user-input');
             const message = inputField.value.trim();
