@@ -651,15 +651,9 @@
     </div>
 
     <script>
-        function openSpace(space) {
+       function openSpace(space) {
             
-            if (space === 'enseignant') {
-                let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
-                if (codeSecret === null || btoa(codeSecret) !== "Q2FwMjAyNg==") {
-                    alert("Mot de passe incorrect. L'accès à ce sanctuaire est restreint.");
-                    return; 
-                }
-            }
+            // Le cadenas de l'Espace Enseignant a été retiré pour le Freemium
 
             if (space === 'eleve') {
                 let codeSecret = prompt("Veuillez saisir la clé de l'Académie EdukaTchat :");
