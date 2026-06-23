@@ -384,3 +384,404 @@
         iframe {
             width: 100%;
             height: 100%;
+            border: none;
+            display: none;
+        }
+        
+        iframe.active {
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            .info-section { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .toolbar { flex-direction: column; gap: 1rem; align-items: stretch; }
+            .teacher-navigation { margin-left: 0; justify-content: center; flex-wrap: wrap; }
+            .btn-fullscreen { margin-left: 0; justify-content: center; }
+        }
+
+        /* --- FILIGRANE EDUKATCHAT --- */
+        .watermark-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('logo-edukatchat.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover; 
+            opacity: 0.15;
+            pointer-events: none; 
+            z-index: 0; 
+            -webkit-mask-image: radial-gradient(circle, black 40%, transparent 90%);
+            mask-image: radial-gradient(circle, black 40%, transparent 90%);
+        }
+
+        /* --- STYLES DU SAS SUR MESURE (VOIE DE L'API) --- */
+        .custom-chat-container {
+            display: none; 
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            background-color: #020617;
+        }
+        
+        .custom-chat-container.active {
+            display: flex; 
+        }
+        
+        .chat-history {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 1rem;
+            border-radius: 8px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background-color: #3B82F6;
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            background-color: #1E293B;
+            border: 1px solid #334155;
+            color: #E2E8F0;
+            border-bottom-left-radius: 0;
+            white-space: pre-wrap; 
+        }
+        
+        .system-message {
+            align-self: center;
+            background-color: transparent;
+            color: #94A3B8;
+            font-style: italic;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        
+        .chat-input-area {
+            display: flex;
+            padding: 1rem 2rem;
+            background-color: #0F172A;
+            border-top: 1px solid #1E293B;
+            gap: 1rem;
+        }
+        
+        .chat-input-area input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background-color: #020617;
+            color: #F8FAFC;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        
+        .chat-input-area input:focus {
+            border-color: #3B82F6;
+        }
+    </style>
+</head>
+<body>
+<div class="watermark-background"></div>
+    <header>
+        <div class="brand">
+           <img src="logo-edukatchat.png" alt="Sceau EdukaTchat" class="logo-signature">
+            <div class="brand-text">
+                <h1>EdukaTchat <span class="badge-pilote">Pilote</span></h1>
+                <p>Le Sanctuaire Numérique de l'Enseignement Ivoirien</p>
+            </div>
+        </div>
+    </header>
+
+    <div id="home-view">
+        <div class="container-sas">
+            <section class="hero">
+                <h2>L'intelligence au service de l'autonomie</h2>
+                <p>Bienvenue dans le sanctuaire d'EdukaTchat. Pour cette phase de lancement, notre accompagnement se concentre rigoureusement sur les <strong>Mathématiques</strong>, la <strong>Physique-Chimie</strong> et les <strong>Sciences de la Vie et de la Terre (SVT)</strong> pour les classes charnières de <strong>3ème</strong> et de <strong>Terminale (Séries A1, A2, C et D)</strong>.</p>
+            </section>
+
+           <section class="doors">
+                <div class="glass-card door-card sas">
+                    <div class="icon-wrapper">🧭</div>
+                    <h3>Le Sas de Préparation</h3>
+                    <p>Accès gratuit pour préparer sereinement vos devoirs, simuler vos examens et découvrir votre profil d'orientation.</p>
+                    <button class="btn-entrer" onclick="openSpace('sas')">Entrer Librement</button>
+                </div>
+
+                <div class="glass-card door-card eleve">
+                    <div class="icon-wrapper">🏛️</div>
+                    <h3>L'Académie EdukaTchat</h3>
+                    <p>L'espace premium. Accédez au Répétiteur, au Maître Pédagogue et aux évaluations complètes.</p>
+                    <button class="btn-entrer" onclick="openSpace('eleve')">Déverrouiller l'Accès</button>
+                </div>
+                
+                <div class="glass-card door-card enseignant">
+                    <div class="icon-wrapper">🔮</div>
+                    <h3>Cabinet Enseignant</h3>
+                    <p>Vos trois assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC.</p>
+                    <button class="btn-entrer" onclick="openSpace('enseignant')">Entrer au Cabinet</button>
+                </div>
+
+                <div class="glass-card door-card parents">
+                    <div class="icon-wrapper">🛡️</div>
+                    <h3>Bureau des Parents</h3>
+                    <p>Scellez l'alliance d'apprentissage. Définissez les horaires pour activer le suivi bienveillant.</p>
+                    <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Ouvrir le registre</button>
+                </div>
+            </section>
+
+            <section class="info-section">
+               <div class="glass-card info-box">
+                    <h4>📜 Notice & Mode d'emploi</h4>
+                    <p>EdukaTchat allie <strong>l'exigence du programme ivoirien</strong> à la sérénité d'un accompagnement personnalisé pour transformer les doutes en compétences durables.</p>
+                    <ul>
+                        <li><strong>Le Sas de Préparation (Accès Libre) :</strong> Un espace d'accueil ouvert à tous. Il permet aux élèves de préparer leurs devoirs quotidiens, d'expérimenter nos simulations pédagogiques flash et d'accéder à la Boussole d'Orientation sans abonnement.</li>
+                        <li><strong>L'Académie (Espace Premium) :</strong> L'accès complet et scellé. Croisé avec le registre parental, il offre l'accompagnement maïeutique complet du Répétiteur et des bilans pédagogiques détaillés.</li>
+                        <li><strong>L'Exigence Maïeutique :</strong> Face à une difficulté, nos IA ne fournissent aucune solution directe. Elles fragmentent le problème et guident l'élève pour qu'il construise son propre raisonnement.</li>
+                    </ul>
+                </div>
+
+                <div class="glass-card info-box news-box">
+                    <h4>📌 Journal de Bord</h4>
+                    <ul>
+                        <li><strong>Version 1.2 (Lancement local)</strong><br>Déploiement des modules de Mathématiques, Physique-Chimie et SVT pour les classes de 3ème et Terminales.</li>
+                        <li>Création du "Sas de Préparation" (Accès libre et sécurisé).</li>
+                        <li>Double boussole d'orientation opérationnelle (post-BEPC et post-BAC).</li>
+                        <li>Optimisation du formatage de texte brut (Zéro LaTeX) pour l'export Word.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="app-view">
+        <div class="toolbar">
+            <button class="btn-retour" onclick="goHome()">
+                ← Retour au menu
+            </button>
+
+            <button id="btn-fullscreen" class="btn-fullscreen" onclick="toggleFullScreen()">
+                ⛶ Mode Plein Écran
+            </button>
+            
+            <div id="teacher-tabs-container" class="teacher-navigation">
+                <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')">
+                    ❖ L'Atelier des Évaluations
+                </button>
+                <button id="tab-forge" class="tab-btn" onclick="switchTeacherTool('forge')">
+                    ✦ La Forge des Leçons
+                </button>
+                <button id="tab-cabinet" class="tab-btn" onclick="switchTeacherTool('cabinet')">
+                    ⚜ Le Cabinet d'Étude
+                </button>
+            </div>
+        </div>
+        
+        <div class="iframe-container">
+            <div id="container-sas-custom" class="custom-chat-container">
+                <div id="sas-chat-history" class="chat-history">
+                    <div class="message system-message">Bienvenue dans le Sas de Préparation. Posez votre question pour commencer.</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
+                    <button class="btn-entrer" onclick="sendSasMessage()">Transmettre</button>
+                </div>
+            </div>
+            
+            <iframe id="iframe-eleve" src="https://udify.app/chat/R3owY1VnZZs9xP2n" allow="microphone; camera"></iframe>
+            <iframe id="iframe-atelier" src="https://udify.app/chat/bYaJc7kzuGptJSn5" allow="microphone; camera"></iframe>
+            <iframe id="iframe-forge" src="https://udify.app/chat/lCFVOcp9m5mPyHD7" allow="microphone; camera"></iframe>
+            <iframe id="iframe-cabinet" src="https://udify.app/chat/HuNsNQfH35LmfqHO" allow="microphone; camera"></iframe>
+        </div>
+    </div>
+
+    <script>
+        function openSpace(space) {
+            
+            if (space === 'enseignant') {
+                let codeSecret = prompt("Veuillez saisir le mot de passe de l'Espace Enseignant :");
+                if (codeSecret === null || btoa(codeSecret) !== "Q2FwMjAyNg==") {
+                    alert("Mot de passe incorrect. L'accès à ce sanctuaire est restreint.");
+                    return; 
+                }
+            }
+
+            if (space === 'eleve') {
+                let codeSecret = prompt("Veuillez saisir la clé de l'Académie EdukaTchat :");
+                if (codeSecret === null || btoa(codeSecret) !== "RWxldmUyMDI2") { 
+                    alert("Le sceau reste inviolé : clé d'accès incorrecte.");
+                    return; 
+                }
+            }
+
+            document.body.style.overflow = 'hidden'; 
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('app-view').style.display = 'flex';
+
+            document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+            document.getElementById('container-sas-custom').classList.remove('active');
+            document.getElementById('teacher-tabs-container').style.display = 'none';
+
+            if (space === 'sas') {
+                document.getElementById('container-sas-custom').classList.add('active');
+            } else if (space === 'eleve') {
+                document.getElementById('iframe-eleve').classList.add('active');
+            } else if (space === 'enseignant') {
+                document.getElementById('teacher-tabs-container').style.display = 'flex';
+                switchTeacherTool('atelier');
+            }
+        }
+
+        function switchTeacherTool(toolID) {
+            document.getElementById('iframe-atelier').classList.remove('active');
+            document.getElementById('iframe-forge').classList.remove('active');
+            document.getElementById('iframe-cabinet').classList.remove('active');
+            
+            document.getElementById('tab-atelier').classList.remove('active');
+            document.getElementById('tab-forge').classList.remove('active');
+            document.getElementById('tab-cabinet').classList.remove('active');
+            
+            if (toolID === 'atelier') {
+                document.getElementById('iframe-atelier').classList.add('active');
+                document.getElementById('tab-atelier').classList.add('active');
+            } else if (toolID === 'forge') {
+                document.getElementById('iframe-forge').classList.add('active');
+                document.getElementById('tab-forge').classList.add('active');
+            } else if (toolID === 'cabinet') {
+                document.getElementById('iframe-cabinet').classList.add('active');
+                document.getElementById('tab-cabinet').classList.add('active');
+            }
+            
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                let activeIframe = document.querySelector('iframe.active');
+                if (activeIframe && activeIframe.requestFullscreen) {
+                    activeIframe.requestFullscreen();
+                } else if (activeIframe && activeIframe.webkitRequestFullscreen) {
+                    activeIframe.webkitRequestFullscreen();
+                }
+            }
+        }
+
+        function goHome() {
+            document.body.style.overflow = 'auto'; 
+            document.getElementById('app-view').style.display = 'none';
+            document.getElementById('home-view').style.display = 'flex';
+            
+            document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+            document.getElementById('container-sas-custom').classList.remove('active');
+            document.getElementById('teacher-tabs-container').style.display = 'none';
+
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        function toggleFullScreen() {
+            let activeElement = document.querySelector('iframe.active') || document.querySelector('.custom-chat-container.active');
+            if (!activeElement) return;
+            
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                if (activeElement.requestFullscreen) {
+                    activeElement.requestFullscreen();
+                } else if (activeElement.webkitRequestFullscreen) {
+                    activeElement.webkitRequestFullscreen();
+                } else if (activeElement.mozRequestFullScreen) {
+                    activeElement.mozRequestFullScreen();
+                } else if (activeElement.msRequestFullscreen) {
+                    activeElement.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        // --- LOGIQUE DU SAS SUR MESURE (CONNEXION API) ---
+        let sasConversationId = ""; 
+
+        function handleSasKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendSasMessage();
+            }
+        }
+
+        async function sendSasMessage() {
+            const inputField = document.getElementById('sas-user-input');
+            const message = inputField.value.trim();
+            if (!message) return;
+
+            const chatHistory = document.getElementById('sas-chat-history');
+
+            // 1. Affiche la requête de l'élève
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'message user-message';
+            userMsgDiv.textContent = message;
+            chatHistory.appendChild(userMsgDiv);
+            
+            inputField.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight; 
+
+            // 2. Affiche l'indicateur de méditation
+            const botLoadingDiv = document.createElement('div');
+            botLoadingDiv.className = 'message bot-message';
+            botLoadingDiv.textContent = "Le Conseiller analyse votre demande...";
+            chatHistory.appendChild(botLoadingDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // 3. Transmission vers le serveur FastAPI (Render)
+            try {
+                // Modifiez l'URL si nécessaire selon l'adresse de votre backend Render
+                const response = await fetch('https://cap-academie-gateway.onrender.com/api/sas/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        query: message, 
+                        conversation_id: sasConversationId 
+                    })
+                });
+
+                const data = await response.json();
+                
+                // 4. Affiche la réponse maïeutique
+                botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
+                
+                // 5. Maintien de la continuité du dialogue
+                if (data.conversation_id) {
+                    sasConversationId = data.conversation_id;
+                }
+                
+            } catch (error) {
+                botLoadingDiv.textContent = "La connexion au sanctuaire a été interrompue. Le réseau est instable.";
+                console.error("Erreur de transmission Sas:", error);
+            }
+            
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    </script>
+</body>
+</html>
