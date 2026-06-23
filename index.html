@@ -522,7 +522,15 @@
         </div>
         
         <div class="iframe-container">
-    <iframe id="iframe-sas" src="https://udify.app/chatbot/djGMaR4cok1D6uUw" allow="microphone; camera"></iframe>
+    <div id="container-sas-custom" class="custom-chat-container" style="display: none;">
+    <div id="sas-chat-history" class="chat-history">
+        <div class="message system-message">Bienvenue dans le Sas de Préparation. Posez votre question pour commencer.</div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
+        <button class="btn-entrer" onclick="sendSasMessage()">Transmettre</button>
+    </div>
+</div>
             <iframe id="iframe-eleve" src="https://udify.app/chat/R3owY1VnZZs9xP2n" allow="microphone; camera"></iframe>
             
             <iframe id="iframe-atelier" src="https://udify.app/chat/bYaJc7kzuGptJSn5" allow="microphone; camera"></iframe>
