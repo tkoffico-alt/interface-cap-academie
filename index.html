@@ -496,6 +496,15 @@
         
         .chat-input-area input:focus {
             border-color: #3B82F6;
+       /* Correction de la distorsion du bouton de transmission */
+        .chat-input-area .btn-entrer {
+            width: auto; /* Empêche le bouton d'écraser le champ de texte */
+            white-space: nowrap;
+            background-color: #3B82F6; /* Restaure la couleur bleue */
+        }
+        
+        .chat-input-area .btn-entrer:hover {
+            background-color: #2563EB;
         }
     </style>
 </head>
