@@ -529,10 +529,109 @@
             width: 24px;
             height: 24px;
         }
+
+        /* --- HARMONIE VISUELLE : THÈME CLAIR --- */
+        body.light-theme {
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 50%, #BAE6FD 100%);
+            color: #0F172A;
+        }
+        body.light-theme header {
+            background-color: rgba(255, 255, 255, 0.6);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+        }
+        body.light-theme .brand-text h1, body.light-theme .hero h2, 
+        body.light-theme .door-card h3, body.light-theme .info-box h4 { color: #0F172A; }
+        body.light-theme .brand-text p, body.light-theme .door-card p { color: #475569; }
+        body.light-theme .hero p, body.light-theme .hero strong, 
+        body.light-theme .info-box p, body.light-theme .info-box li { color: #334155; }
+        body.light-theme .info-box li strong { color: #0F172A; }
+        body.light-theme .glass-card {
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(203, 213, 225, 0.8);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        body.light-theme .info-box h4 { border-bottom-color: rgba(148, 163, 184, 0.4); }
+        body.light-theme #app-view, body.light-theme .custom-chat-container { background-color: #F8FAFC; }
+        body.light-theme .toolbar {
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        body.light-theme .btn-retour, body.light-theme .btn-theme-toggle {
+            border-color: #CBD5E1;
+            color: #475569;
+        }
+        body.light-theme .btn-retour:hover, body.light-theme .btn-theme-toggle:hover {
+            background-color: #F1F5F9;
+            color: #0F172A;
+        }
+        body.light-theme .tab-btn { color: #64748B; }
+        body.light-theme .tab-btn:hover { color: #0F172A; background-color: #F1F5F9; }
+        body.light-theme .chat-input-area {
+            background-color: #FFFFFF;
+            border-top: 1px solid #E2E8F0;
+        }
+        body.light-theme .chat-input-area input {
+            background-color: #F8FAFC;
+            color: #0F172A;
+            border-color: #CBD5E1;
+        }
+        body.light-theme .bot-message {
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            color: #334155;
+        }
+        body.light-theme .system-message, body.light-theme .btn-attachment { color: #64748B; }
+
+        /* --- LE SCEAU D'AUTHENTIFICATION (MODALE PREMIUM) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(2, 6, 23, 0.8); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            position: relative; max-width: 400px; width: 90%; text-align: center;
+            transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem; background: none; border: none;
+            color: #94A3B8; font-size: 1.5rem; cursor: pointer; transition: color 0.2s ease;
+        }
+        .modal-close:hover { color: #F8FAFC; }
+        .modal-content h3 { color: #F8FAFC; font-size: 1.4rem; margin-bottom: 1rem; }
+        body.light-theme .modal-content h3 { color: #0F172A; }
+        .modal-content p { color: #94A3B8; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5; }
+        .input-matricule {
+            width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid #3B82F6;
+            background-color: rgba(2, 6, 23, 0.6); color: #F8FAFC; font-size: 1rem; text-align: center;
+            letter-spacing: 2px; margin-bottom: 1rem; outline: none; transition: box-shadow 0.2s ease;
+        }
+        body.light-theme .input-matricule { background-color: #FFFFFF; color: #0F172A; border-color: #CBD5E1; }
+        .input-matricule:focus { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .feedback-text { margin-top: 1rem; font-size: 0.85rem; min-height: 20px; font-weight: 500; }
     </style>
 </head>
 <body>
 <div class="watermark-background"></div>
+
+    <div id="premium-modal" class="modal-overlay">
+        <div class="glass-card modal-content">
+            <button class="modal-close" onclick="closePremiumModal()">×</button>
+            <h3>Le Sceau Premium</h3>
+            <p>Veuillez saisir votre Matricule personnel pour lever définitivement les limites du sanctuaire.</p>
+            <input type="password" id="matricule-input" class="input-matricule" placeholder="Ex: EDU-987654" onkeypress="handleMatriculeKeyPress(event)">
+            <button class="btn-entrer" style="background-color: #3B82F6; width: 100%;" onclick="verifyMatricule()">Authentifier</button>
+            <div id="modal-feedback" class="feedback-text"></div>
+            
+            <p style="margin-top: 1.5rem; font-size: 0.8rem;">
+                Vous n'avez pas encore de Sceau ? <br>
+                <a href="#" target="_blank" style="color: #60A5FA; text-decoration: none; font-weight: bold;">Accéder au Guichet d'Abonnement</a>
+            </p>
+        </div>
+    </div>
+
     <header>
         <div class="brand">
            <img src="logo-edukatchat.png" alt="Sceau EdukaTchat" class="logo-signature">
@@ -608,6 +707,10 @@
         <div class="toolbar">
             <button class="btn-retour" onclick="goHome()">
                 ← Retour au menu
+            </button>
+
+            <button id="btn-theme" class="btn-retour btn-theme-toggle" style="margin-left: 1rem;" onclick="toggleTheme()">
+                Mode Clair
             </button>
 
             <button id="btn-fullscreen" class="btn-fullscreen" onclick="toggleFullScreen()">
@@ -689,8 +792,6 @@
     <script>
         function openSpace(space) {
             
-            // Le cadenas de l'Espace Enseignant a été retiré pour le Freemium
-
             if (space === 'eleve') {
                 let codeSecret = prompt("Veuillez saisir la clé de l'Académie EdukaTchat :");
                 if (codeSecret === null || btoa(codeSecret) !== "RWxldmUyMDI2") { 
@@ -795,13 +896,84 @@
             }
         }
 
-        // --- LEVIER DE CONVERSION (TROMBONE) ---
+        // --- HARMONIE VISUELLE (MÉMOIRE DU THÈME) ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('eduka_theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                updateThemeButtonUI(true);
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light-theme');
+            localStorage.setItem('eduka_theme', isLight ? 'light' : 'dark');
+            updateThemeButtonUI(isLight);
+        }
+
+        function updateThemeButtonUI(isLight) {
+            const themeBtn = document.getElementById('btn-theme');
+            if (themeBtn) {
+                if (isLight) {
+                    themeBtn.innerHTML = "Mode Sombre";
+                } else {
+                    themeBtn.innerHTML = "Mode Clair";
+                }
+            }
+        }
+
+        // Éveil de la mémoire dès l'ouverture du sanctuaire
+        document.addEventListener('DOMContentLoaded', initTheme);
+
+        // --- LOGIQUE DU SCEAU PREMIUM (LA SERRURE) ---
+        function openPremiumModal() {
+            document.getElementById('premium-modal').classList.add('active');
+            setTimeout(() => document.getElementById('matricule-input').focus(), 100);
+        }
+
+        function closePremiumModal() {
+            document.getElementById('premium-modal').classList.remove('active');
+            document.getElementById('modal-feedback').textContent = '';
+            document.getElementById('matricule-input').value = '';
+        }
+
+        function handleMatriculeKeyPress(event) {
+            if (event.key === 'Enter') {
+                verifyMatricule();
+            }
+        }
+
+        async function verifyMatricule() {
+            const matricule = document.getElementById('matricule-input').value.trim();
+            const feedback = document.getElementById('modal-feedback');
+            
+            if(!matricule) {
+                feedback.textContent = "Le Sceau ne peut être vide.";
+                feedback.style.color = "#F87171"; // Rouge erreur
+                return;
+            }
+            
+            feedback.textContent = "Interrogation des archives en cours...";
+            feedback.style.color = "#60A5FA"; // Bleu attente
+            
+            // NOTE POUR L'ARCHITECTE :
+            // C'est ici que nous coderons (à l'Étape 4) l'appel vers FastAPI 
+            // pour vérifier le Matricule dans Google Sheets.
+            // Pour l'instant, nous simulons une vérification visuelle.
+            
+            setTimeout(() => {
+                feedback.innerHTML = "Le Cerveau (FastAPI) n'est pas encore relié pour vérifier le code <strong>" + matricule + "</strong>. (Étape 4 à venir).";
+                feedback.style.color = "#FBBF24"; // Jaune avertissement
+            }, 1500);
+        }
+
+        // --- LEVIER DE CONVERSION (TROMBONE MODIFIÉ POUR DÉCLENCHER LA SERRURE) ---
         function triggerVisionUpsell(chatHistoryId) {
             const chatHistory = document.getElementById(chatHistoryId);
             
             const botUpsellDiv = document.createElement('div');
             botUpsellDiv.className = 'message bot-message';
-            botUpsellDiv.innerHTML = "<strong>L'Œil du Maître est verrouillé.</strong><br><br>L'analyse visuelle de manuscrits ou de supports photographiés est une capacité avancée strictement réservée à <strong>l'accès Premium</strong>.<br><br>Pour bénéficier de cette fonctionnalité, veuillez déverrouiller l'Académie ou le Cabinet Premium.";
+            botUpsellDiv.innerHTML = "<strong>L'Œil du Maître est verrouillé.</strong><br><br>L'analyse visuelle de manuscrits ou de supports photographiés est une capacité avancée strictement réservée à <strong>l'accès Premium</strong>.<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Déverrouiller avec un Sceau</button>";
             
             chatHistory.appendChild(botUpsellDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -908,8 +1080,14 @@
                 });
 
                 const data = await response.json();
-                botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
                 
+                // Gérer l'invitation à s'abonner depuis FastAPI s'il n'y a plus de quota
+                if (data.answer && data.answer.includes("votre quota") || data.answer.includes("épuisé")) {
+                     botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Déverrouiller avec un Sceau</button>";
+                } else {
+                     botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
+                }
+
                 if (data.conversation_id) {
                     teacherConversationIds[outil] = data.conversation_id;
                 }
