@@ -581,9 +581,6 @@
             color: #334155;
         }
         body.light-theme .system-message, body.light-theme .btn-attachment { color: #64748B; }
-        body.light-theme .modal-content p { color: #475569; }
-        body.light-theme .modal-close { color: #64748B; }
-        body.light-theme .modal-close:hover { color: #0F172A; }
 
         /* --- LE SCEAU D'AUTHENTIFICATION (MODALE PREMIUM) --- */
         .modal-overlay {
@@ -614,6 +611,9 @@
         body.light-theme .input-matricule { background-color: #FFFFFF; color: #0F172A; border-color: #CBD5E1; }
         .input-matricule:focus { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
         .feedback-text { margin-top: 1rem; font-size: 0.85rem; min-height: 20px; font-weight: 500; }
+        body.light-theme .modal-content p { color: #475569; }
+        body.light-theme .modal-close { color: #64748B; }
+        body.light-theme .modal-close:hover { color: #0F172A; }
     </style>
 </head>
 <body>
@@ -991,6 +991,7 @@
                 console.error("Erreur de vérification du Sceau:", error);
             }
         }
+
         // --- LEVIER DE CONVERSION (TROMBONE MODIFIÉ POUR DÉCLENCHER LA SERRURE) ---
         function triggerVisionUpsell(chatHistoryId) {
             const chatHistory = document.getElementById(chatHistoryId);
@@ -1033,13 +1034,17 @@
             chatHistory.appendChild(botLoadingDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
+            // On récupère le Sceau s'il existe dans la mémoire du navigateur
+            const sceau = localStorage.getItem('eduka_sceau') || "";
+
             try {
                 const response = await fetch('https://cap-academie-gateway.onrender.com/api/sas/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         query: message, 
-                        conversation_id: sasConversationId 
+                        conversation_id: sasConversationId,
+                        matricule: sceau
                     })
                 });
 
@@ -1092,6 +1097,9 @@
             chatHistory.appendChild(botLoadingDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
+            // On récupère le Sceau s'il existe
+            const sceau = localStorage.getItem('eduka_sceau') || "";
+
             try {
                 const response = await fetch('https://cap-academie-gateway.onrender.com/api/enseignant/chat', {
                     method: 'POST',
@@ -1099,7 +1107,8 @@
                     body: JSON.stringify({ 
                         query: message, 
                         conversation_id: teacherConversationIds[outil],
-                        outil: outil
+                        outil: outil,
+                        matricule: sceau
                     })
                 });
 
