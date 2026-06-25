@@ -959,17 +959,38 @@
             feedback.textContent = "Interrogation des archives en cours...";
             feedback.style.color = "#60A5FA"; // Bleu attente
             
-            // NOTE POUR L'ARCHITECTE :
-            // C'est ici que nous coderons (à l'Étape 4) l'appel vers FastAPI 
-            // pour vérifier le Matricule dans Google Sheets.
-            // Pour l'instant, nous simulons une vérification visuelle.
-            
-            setTimeout(() => {
-                feedback.innerHTML = "Le Cerveau (FastAPI) n'est pas encore relié pour vérifier le code <strong>" + matricule + "</strong>. (Étape 4 à venir).";
-                feedback.style.color = "#FBBF24"; // Jaune avertissement
-            }, 1500);
-        }
+            try {
+                // Appel au Cerveau (FastAPI)
+                const response = await fetch('https://cap-academie-gateway.onrender.com/api/verify-sceau', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matricule: matricule })
+                });
 
+                const data = await response.json();
+                
+                if (data.status === "valid") {
+                    feedback.textContent = data.message;
+                    feedback.style.color = "#10B981"; // Vert succès
+                    
+                    // On grave le Sceau dans la mémoire du navigateur
+                    localStorage.setItem('eduka_sceau', matricule);
+                    
+                    // On ferme la fenêtre après un court délai pour que l'utilisateur lise le message
+                    setTimeout(() => {
+                        closePremiumModal();
+                    }, 1500);
+                } else {
+                    // Affichage des messages d'erreur (invalide, expiré, etc.)
+                    feedback.textContent = data.message;
+                    feedback.style.color = "#F87171"; // Rouge erreur
+                }
+            } catch (error) {
+                feedback.textContent = "La connexion au registre a échoué. Le réseau est instable.";
+                feedback.style.color = "#F87171";
+                console.error("Erreur de vérification du Sceau:", error);
+            }
+        }
         // --- LEVIER DE CONVERSION (TROMBONE MODIFIÉ POUR DÉCLENCHER LA SERRURE) ---
         function triggerVisionUpsell(chatHistoryId) {
             const chatHistory = document.getElementById(chatHistoryId);
