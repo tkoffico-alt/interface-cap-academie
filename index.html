@@ -582,14 +582,14 @@
         }
         body.light-theme .system-message, body.light-theme .btn-attachment { color: #64748B; }
 
-        /* --- LE SCEAU D'AUTHENTIFICATION (MODALE PREMIUM) --- */
+        /* --- LE MATRICULE D'AUTHENTIFICATION (MODALE PREMIUM) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: rgba(2, 6, 23, 0.8); backdrop-filter: blur(8px);
-            display: flex; justify-content: center; align-items: center;
+            display: none; justify-content: center; align-items: center;
             z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; display: flex; }
         .modal-content {
             position: relative; max-width: 400px; width: 90%; text-align: center;
             transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -625,12 +625,12 @@
             <h3>Accès Premium</h3>
             <p>Veuillez saisir votre Matricule Premium pour déverrouiller l'ensemble des ressources pédagogiques.</p>
             <input type="password" id="matricule-input" class="input-matricule" placeholder="Ex: EDU-987654" onkeypress="handleMatriculeKeyPress(event)">
-            <button class="btn-entrer" style="background-color: #3B82F6; width: 100%;" onclick="verifyMatricule()">Authentifier</button>
+            <button class="btn-entrer" style="background-color: #3B82F6; width: 100%; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;" onclick="verifyMatricule()">Authentifier</button>
             <div id="modal-feedback" class="feedback-text"></div>
             
             <p style="margin-top: 1.5rem; font-size: 0.8rem;">
                 Vous n'avez pas encore de Matricule ? <br>
-                <a href="VOTRE_LIEN_TALLY" target="_blank" style="color: #60A5FA; text-decoration: none; font-weight: bold;">Accéder au Guichet d'Abonnement</a>
+                <a href="https://tally.so/r/RGgdb4" target="_blank" style="color: #60A5FA; text-decoration: none; font-weight: bold;">Accéder au Guichet d'Abonnement</a>
             </p>
         </div>
     </div>
@@ -798,7 +798,7 @@
             if (space === 'eleve') {
                 let codeSecret = prompt("Veuillez saisir la clé de l'Académie EdukaTchat :");
                 if (codeSecret === null || btoa(codeSecret) !== "RWxldmUyMDI2") { 
-                    alert("Le sceau reste inviolé : clé d'accès incorrecte.");
+                    alert("L'accès reste verrouillé : clé incorrecte.");
                     return; 
                 }
             }
@@ -844,7 +844,6 @@
                 document.getElementById('tab-cabinet').classList.add('active');
             }
             
-            // Gestion du plein écran
             if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
                 let activeContainer = document.querySelector('.custom-chat-container.active') || document.querySelector('iframe.active');
                 if (activeContainer && activeContainer.requestFullscreen) {
@@ -928,7 +927,9 @@
         // Éveil de la mémoire dès l'ouverture du sanctuaire
         document.addEventListener('DOMContentLoaded', initTheme);
 
-        // --- LOGIQUE DU SCEAU PREMIUM (LA SERRURE) ---
+        // =======================================================================
+        // ❖ SERRURE DU SANCTUAIRE : GESTION DU MATRICULE PREMIUM ❖
+        // =======================================================================
         function openPremiumModal() {
             document.getElementById('premium-modal').classList.add('active');
             setTimeout(() => document.getElementById('matricule-input').focus(), 100);
@@ -951,12 +952,12 @@
             const feedback = document.getElementById('modal-feedback');
             
             if(!matricule) {
-                feedback.textContent = "Le Sceau ne peut être vide.";
+                feedback.textContent = "Le Matricule ne peut être vide.";
                 feedback.style.color = "#F87171"; // Rouge erreur
                 return;
             }
             
-            feedback.textContent = "Interrogation des archives en cours...";
+            feedback.textContent = "Vérification de votre Matricule en cours...";
             feedback.style.color = "#60A5FA"; // Bleu attente
             
             try {
@@ -973,7 +974,7 @@
                     feedback.textContent = data.message;
                     feedback.style.color = "#10B981"; // Vert succès
                     
-                    // On grave le Sceau dans la mémoire du navigateur
+                    // On grave le Matricule dans la mémoire du navigateur
                     localStorage.setItem('eduka_sceau', matricule);
                     
                     // On ferme la fenêtre après un court délai pour que l'utilisateur lise le message
@@ -988,7 +989,7 @@
             } catch (error) {
                 feedback.textContent = "La connexion au registre a échoué. Le réseau est instable.";
                 feedback.style.color = "#F87171";
-                console.error("Erreur de vérification du Sceau:", error);
+                console.error("Erreur de vérification du Matricule:", error);
             }
         }
 
@@ -998,7 +999,7 @@
             
             const botUpsellDiv = document.createElement('div');
             botUpsellDiv.className = 'message bot-message';
-            botUpsellDiv.innerHTML = "<strong>L'Œil du Maître est verrouillé.</strong><br><br>L'analyse visuelle de manuscrits ou de supports photographiés est une capacité avancée strictement réservée à <strong>l'accès Premium</strong>.<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Déverrouiller avec un Sceau</button>";
+            botUpsellDiv.innerHTML = "<strong>L'Œil du Maître est verrouillé.</strong><br><br>L'analyse visuelle de manuscrits ou de supports photographiés est une capacité avancée strictement réservée à <strong>l'accès Premium</strong>.<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Matricule Premium</button>";
             
             chatHistory.appendChild(botUpsellDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -1034,7 +1035,7 @@
             chatHistory.appendChild(botLoadingDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // On récupère le Sceau s'il existe dans la mémoire du navigateur
+            // On récupère le Matricule s'il existe dans la mémoire du navigateur
             const sceau = localStorage.getItem('eduka_sceau') || "";
 
             try {
@@ -1097,7 +1098,7 @@
             chatHistory.appendChild(botLoadingDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // On récupère le Sceau s'il existe
+            // On récupère le Matricule s'il existe
             const sceau = localStorage.getItem('eduka_sceau') || "";
 
             try {
@@ -1116,7 +1117,7 @@
                 
                 // Gérer l'invitation à s'abonner depuis FastAPI s'il n'y a plus de quota
                 if (data.answer && data.answer.includes("votre quota") || data.answer.includes("épuisé")) {
-                     botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Déverrouiller avec un Sceau</button>";
+                     botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Matricule Premium</button>";
                 } else {
                      botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
                 }
