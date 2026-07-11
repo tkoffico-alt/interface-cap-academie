@@ -780,19 +780,20 @@
             </div>
 
             <div id="container-cabinet-custom" class="custom-chat-container">
-                <div id="cabinet-chat-history" class="chat-history">
-                    <div class="message system-message">Bienvenue dans le Cabinet d'Étude. Je suis le Consultant Pédagogique. Quelle difficulté rencontrez-vous dans votre enseignement ?</div>
-                </div>
-                <div class="chat-input-area">
-                    <button class="btn-attachment" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                    </button>
-                    <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
-                    <button class="btn-entrer" onclick="sendTeacherMessage('cabinet')">Transmettre</button>
-                </div>
+            <div id="cabinet-chat-history" class="chat-history">
+                <div class="message system-message">Bienvenue dans le Cabinet d'Étude. Je suis le Consultant Pédagogique. Quelle difficulté rencontrez-vous dans votre enseignement ?</div>
             </div>
-            
-            <iframe id="iframe-eleve" src="https://udify.app/chat/R3owY1VnZZs9xP2n" allow="microphone; camera"></iframe>
+            <div class="chat-input-area">
+                <button class="btn-attachment" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                </button>
+                <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
+                <button class="btn-entrer" onclick="sendTeacherMessage('cabinet')">Transmettre</button>
+            </div>
+        </div>
+        
+        <iframe id="iframe-eleve" src="http://178.238.224.136:8080/chat/E8bAkzoJHpI9LFqR" allow="microphone; camera"></iframe>
+
         </div>
     </div>
 
