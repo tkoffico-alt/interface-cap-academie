@@ -816,7 +816,7 @@
                     });
                     const data = await response.json();
                     
-                    if (data.status !== "valid") {
+                    if (data.valide !== true) {
                         alert("Votre Code d'accès a expiré ou est invalide. Veuillez vous identifier à nouveau.");
                         localStorage.removeItem('eduka_sceau');
                         pendingSpaceToOpen = 'eleve';
@@ -996,7 +996,7 @@
 
                 const data = await response.json();
                 
-                if (data.status === "valid") {
+                if (data.valide === true) {
                     feedback.textContent = data.message;
                     feedback.style.color = "#10B981"; // Vert succès
                     
