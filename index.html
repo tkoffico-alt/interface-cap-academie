@@ -463,6 +463,7 @@
             color: #E2E8F0;
             border-bottom-left-radius: 0;
             white-space: pre-wrap; 
+            word-wrap: break-word; /* Force le texte à revenir à la ligne sans déborder */
         }
         
         .system-message {
@@ -653,13 +654,24 @@
         }
 
         /* --- LE FILTRE DE PURIFICATION POUR L'IMPRIMANTE --- */
-        @media print {
+       @media print {
             body * {
-                visibility: hidden; /* Rend tout invisible par défaut */
+                visibility: hidden;
             }
+            
+            /* Règle vitale : Libérer les hauteurs pour permettre la pagination sur papier */
+            html, body, #app-view, .iframe-container, .custom-chat-container, .chat-history {
+                height: auto !important;
+                min-height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+                position: relative !important;
+            }
+            
             .print-section, .print-section * {
-                visibility: visible; /* Ne rend visible que le document */
+                visibility: visible;
             }
+            
             .print-section {
                 position: absolute;
                 left: 0;
@@ -670,9 +682,12 @@
                 border: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                white-space: pre-wrap !important;
+                word-wrap: break-word !important;
             }
+            
             .message-actions {
-                display: none !important; /* Cache les boutons sur le papier */
+                display: none !important;
             }
         }
     </style>
@@ -1261,32 +1276,37 @@
 
         function telechargerPDF(bouton) {
             const documentDiv = bouton.closest('.bot-message');
+            const actions = documentDiv.querySelector('.message-actions');
             
-            // On crée un clone pour ne pas modifier l'affichage à l'écran
-            const elementAConvertir = documentDiv.cloneNode(true);
+            // 1. On masque les boutons temporairement aux yeux de la caméra
+            if (actions) actions.style.display = 'none';
             
-            // On retire les boutons du PDF final
-            const actions = elementAConvertir.querySelector('.message-actions');
-            if (actions) actions.remove();
+            // 2. On sauvegarde l'esthétique sombre d'origine
+            const originalBg = documentDiv.style.backgroundColor;
+            const originalColor = documentDiv.style.color;
+            const originalBorder = documentDiv.style.border;
             
-            // On force un fond blanc et un texte noir pour le PDF
-            elementAConvertir.style.backgroundColor = '#FFFFFF';
-            elementAConvertir.style.color = '#000000';
-            elementAConvertir.style.padding = '20px';
-            elementAConvertir.style.border = 'none';
-            elementAConvertir.style.fontFamily = 'Arial, sans-serif';
+            // 3. On applique la lumière (fond blanc, texte noir) sur le vrai document
+            documentDiv.style.backgroundColor = '#FFFFFF';
+            documentDiv.style.color = '#000000';
+            documentDiv.style.border = 'none';
             
-            // Paramètres du PDF
             const options = {
-                margin:       10,
+                margin:       15,
                 filename:     'Document_EdukaTchat.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
+                html2canvas:  { scale: 2, useCORS: true }, 
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            // Lancement de la conversion
-            html2pdf().set(options).from(elementAConvertir).save();
+            // 4. On capture la véritable lumière de l'écran
+            html2pdf().set(options).from(documentDiv).save().then(() => {
+                // 5. On restaure l'ombre et les boutons dès que le fichier est forgé
+                if (actions) actions.style.display = 'flex';
+                documentDiv.style.backgroundColor = originalBg;
+                documentDiv.style.color = originalColor;
+                documentDiv.style.border = originalBorder;
+            });
         }
     </script>
 </body>
