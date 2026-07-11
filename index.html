@@ -432,21 +432,25 @@
             display: flex; 
         }
         
+        /* ESTHÉTIQUE DU LECTEUR : Conteneur central et aéré */
         .chat-history {
             flex: 1;
+            width: 100%;
+            max-width: 1000px; /* Centrage et largeur noble */
+            margin: 0 auto;
             padding: 2rem;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
         }
         
         .message {
-            max-width: 80%;
-            padding: 1rem;
-            border-radius: 8px;
-            line-height: 1.5;
-            font-size: 0.95rem;
+            max-width: 90%; /* Respiration dans le conteneur */
+            padding: 1.2rem 1.5rem;
+            border-radius: 12px;
+            line-height: 1.6;
+            font-size: 1rem;
         }
         
         .user-message {
@@ -463,7 +467,7 @@
             color: #E2E8F0;
             border-bottom-left-radius: 0;
             white-space: pre-wrap; 
-            word-wrap: break-word; /* Force le texte à revenir à la ligne sans déborder */
+            word-wrap: break-word; /* Protection contre les débordements */
         }
         
         .system-message {
@@ -475,37 +479,54 @@
             font-size: 0.85rem;
         }
         
+        /* ESTHÉTIQUE DE LA BARRE DE SAISIE : Alignement central parfait */
         .chat-input-area {
-            display: flex;
-            padding: 1rem 2rem;
+            width: 100%;
             background-color: #0F172A;
             border-top: 1px solid #1E293B;
-            gap: 1rem;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: center; /* Centre le wrapper interne */
         }
         
-        .chat-input-area input {
+        .chat-input-wrapper {
+            display: flex;
+            width: 100%;
+            max-width: 1000px; /* Aligné avec l'historique */
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .chat-input-wrapper input {
             flex: 1;
-            padding: 0.8rem 1rem;
+            padding: 0.9rem 1.2rem;
             border-radius: 8px;
             border: 1px solid #334155;
             background-color: #020617;
             color: #F8FAFC;
-            font-size: 0.95rem;
+            font-size: 1rem;
             outline: none;
             transition: border-color 0.2s ease;
         }
         
-        .chat-input-area input:focus {
+        .chat-input-wrapper input:focus {
             border-color: #3B82F6;
         }
 
-        .chat-input-area .btn-entrer {
+        .chat-input-wrapper .btn-entrer {
             width: auto; 
             white-space: nowrap;
             background-color: #3B82F6; 
+            padding: 0.9rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
         
-        .chat-input-area .btn-entrer:hover {
+        .chat-input-wrapper .btn-entrer:hover {
             background-color: #2563EB;
         }
 
@@ -527,8 +548,8 @@
         }
 
         .btn-attachment svg {
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
         }
 
         /* --- HARMONIE VISUELLE : THÈME CLAIR --- */
@@ -571,7 +592,7 @@
             background-color: #FFFFFF;
             border-top: 1px solid #E2E8F0;
         }
-        body.light-theme .chat-input-area input {
+        body.light-theme .chat-input-wrapper input {
             background-color: #F8FAFC;
             color: #0F172A;
             border-color: #CBD5E1;
@@ -615,6 +636,7 @@
         body.light-theme .modal-content p { color: #475569; }
         body.light-theme .modal-close { color: #64748B; }
         body.light-theme .modal-close:hover { color: #0F172A; }
+        
         /* --- BOUTONS D'ACTION (IMPRIMER & PDF) --- */
         .message-actions {
             display: flex;
@@ -821,13 +843,15 @@
                     <div class="message system-message">Bienvenue dans l'Espace de Préparation. Posez votre question pour commencer.</div>
                 </div>
                 <div class="chat-input-area">
-                    <button class="btn-attachment" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un document">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                        </svg>
-                    </button>
-                    <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
-                    <button class="btn-entrer" onclick="sendSasMessage()">Transmettre</button>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un document">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                        </button>
+                        <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
+                        <button class="btn-entrer" onclick="sendSasMessage()">Transmettre</button>
+                    </div>
                 </div>
             </div>
 
@@ -836,11 +860,13 @@
                     <div class="message system-message">Bienvenue dans l'Atelier. Je suis le Concepteur Universel. Précisez votre matière, classe et durée pour concevoir une évaluation APC.</div>
                 </div>
                 <div class="chat-input-area">
-                    <button class="btn-attachment" onclick="triggerVisionUpsell('atelier-chat-history')" title="Joindre un texte source">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                    </button>
-                    <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
-                    <button class="btn-entrer" onclick="sendTeacherMessage('atelier')">Transmettre</button>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment" onclick="triggerVisionUpsell('atelier-chat-history')" title="Joindre un texte source">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
+                        <button class="btn-entrer" onclick="sendTeacherMessage('atelier')">Transmettre</button>
+                    </div>
                 </div>
             </div>
 
@@ -849,26 +875,30 @@
                     <div class="message system-message">Bienvenue dans la Forge. Je suis l'Assistant Pédagogique. Précisez votre contexte pour structurer votre fiche de leçon.</div>
                 </div>
                 <div class="chat-input-area">
-                    <button class="btn-attachment" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                    </button>
-                    <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
-                    <button class="btn-entrer" onclick="sendTeacherMessage('forge')">Transmettre</button>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
+                        <button class="btn-entrer" onclick="sendTeacherMessage('forge')">Transmettre</button>
+                    </div>
                 </div>
             </div>
 
             <div id="container-cabinet-custom" class="custom-chat-container">
-            <div id="cabinet-chat-history" class="chat-history">
-                <div class="message system-message">Bienvenue dans le Cabinet d'Étude. Je suis le Consultant Pédagogique. Quelle difficulté rencontrez-vous dans votre enseignement ?</div>
+                <div id="cabinet-chat-history" class="chat-history">
+                    <div class="message system-message">Bienvenue dans le Cabinet d'Étude. Je suis le Consultant Pédagogique. Quelle difficulté rencontrez-vous dans votre enseignement ?</div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
+                        <button class="btn-entrer" onclick="sendTeacherMessage('cabinet')">Transmettre</button>
+                    </div>
+                </div>
             </div>
-            <div class="chat-input-area">
-                <button class="btn-attachment" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                </button>
-                <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
-                <button class="btn-entrer" onclick="sendTeacherMessage('cabinet')">Transmettre</button>
-            </div>
-        </div>
         
         <iframe id="iframe-eleve" src="http://178.238.224.136:8080/chat/E8bAkzoJHpI9LFqR" allow="microphone; camera"></iframe>
 
@@ -1212,7 +1242,6 @@
 
             const sceau = localStorage.getItem('eduka_sceau') || "";
 
-          // ... (Le début de la fonction sendTeacherMessage reste identique) ...
             try {
                 const response = await fetch('https://cap-academie-gateway.onrender.com/api/enseignant/chat', {
                     method: 'POST',
@@ -1276,36 +1305,50 @@
 
         function telechargerPDF(bouton) {
             const documentDiv = bouton.closest('.bot-message');
-            const actions = documentDiv.querySelector('.message-actions');
             
-            // 1. On masque les boutons temporairement aux yeux de la caméra
-            if (actions) actions.style.display = 'none';
+            // 1. Création d'un clone parfait
+            const clone = documentDiv.cloneNode(true);
             
-            // 2. On sauvegarde l'esthétique sombre d'origine
-            const originalBg = documentDiv.style.backgroundColor;
-            const originalColor = documentDiv.style.color;
-            const originalBorder = documentDiv.style.border;
+            // 2. Nettoyage du clone (retrait des boutons)
+            const actions = clone.querySelector('.message-actions');
+            if (actions) actions.remove();
             
-            // 3. On applique la lumière (fond blanc, texte noir) sur le vrai document
-            documentDiv.style.backgroundColor = '#FFFFFF';
-            documentDiv.style.color = '#000000';
-            documentDiv.style.border = 'none';
+            // 3. Application d'un style strict et lumineux pour le PDF
+            clone.style.backgroundColor = '#FFFFFF';
+            clone.style.color = '#000000';
+            clone.style.padding = '30px'; 
+            clone.style.fontFamily = 'Arial, sans-serif';
+            clone.style.fontSize = '14px'; 
+            clone.style.lineHeight = '1.6';
             
+            // 4. Positionnement absolu pour échapper au décalage de l'ascenseur (Scroll)
+            const tempContainer = document.createElement('div');
+            tempContainer.style.position = 'absolute';
+            tempContainer.style.top = '0';
+            tempContainer.style.left = '0';
+            tempContainer.style.width = '800px'; // Fixe la largeur pour un retour à la ligne net
+            tempContainer.style.zIndex = '-9999';
+            tempContainer.style.visibility = 'hidden'; 
+            
+            tempContainer.appendChild(clone);
+            document.body.appendChild(tempContainer); // Ajout au DOM pour que l'outil de capture puisse le lire
+            
+            // Paramètres de forge
             const options = {
-                margin:       15,
+                margin:       [15, 15, 15, 15],
                 filename:     'Document_EdukaTchat.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, 
+                html2canvas:  { 
+                    scale: 2, 
+                    scrollY: 0, // Force le démarrage du cliché au point zéro de la page
+                    useCORS: true 
+                }, 
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            // 4. On capture la véritable lumière de l'écran
-            html2pdf().set(options).from(documentDiv).save().then(() => {
-                // 5. On restaure l'ombre et les boutons dès que le fichier est forgé
-                if (actions) actions.style.display = 'flex';
-                documentDiv.style.backgroundColor = originalBg;
-                documentDiv.style.color = originalColor;
-                documentDiv.style.border = originalBorder;
+            // 5. Capture et destruction des traces
+            html2pdf().set(options).from(clone).save().then(() => {
+                document.body.removeChild(tempContainer);
             });
         }
     </script>
