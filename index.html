@@ -809,7 +809,7 @@
 
                 // Si un code est présent, on vérifie discrètement sa validité via l'API
                 try {
-                    const response = await fetch('http://178.238.224.136:8000/verifier-sceau', {
+                    const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ sceau: codeAcces })
@@ -988,7 +988,7 @@
             
             try {
                 // Appel au serveur (FastAPI)
-                const response = await fetch('http://178.238.224.136:8000/verifier-sceau', {
+                const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sceau: matricule })
