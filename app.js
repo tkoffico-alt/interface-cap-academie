@@ -397,6 +397,7 @@ async function sendTeacherMessage(outil) {
 
         const data = await response.json();
         
+        /* EdukaTchat - Propriété Intellectuelle Exclusive */
         if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
              botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
         } else {
@@ -406,6 +407,7 @@ async function sendTeacherMessage(outil) {
                  const actionsDiv = document.createElement('div');
                  actionsDiv.className = 'message-actions';
                  actionsDiv.innerHTML = `
+                     <button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier pour Word</button>
                      <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer</button>
                      <button class="btn-action-doc" onclick="telechargerPDF(this)">📄 Télécharger en PDF</button>
                  `;
@@ -505,4 +507,34 @@ function telechargerPDF(bouton) {
             document.body.style.overflow = originalBodyOverflow;
         });
     }, 500);
+}
+/* ॐ EdukaTchat - Propriété Intellectuelle Exclusive ॐ */
+function copierTexte(bouton) {
+    // 1. Identification de la source
+    const documentDiv = bouton.closest('.bot-message');
+    const clone = documentDiv.cloneNode(true);
+    const actions = clone.querySelector('.message-actions');
+    if (actions) actions.remove();
+
+    // 2. Extraction de l'essence textuelle (conserve les sauts de ligne naturels)
+    const texteBrut = clone.innerText;
+
+    // 3. Transmission au presse-papiers de l'utilisateur
+    navigator.clipboard.writeText(texteBrut).then(() => {
+        // Confirmation visuelle paisible
+        const texteOriginal = bouton.innerHTML;
+        bouton.innerHTML = "✨ Texte copié !";
+        bouton.style.color = "#10B981"; // La couleur de l'harmonie et du succès
+        bouton.style.borderColor = "#10B981";
+        
+        // Retour à l'état initial après un souffle (2 secondes)
+        setTimeout(() => {
+            bouton.innerHTML = texteOriginal;
+            bouton.style.color = "";
+            bouton.style.borderColor = "";
+        }, 2000);
+    }).catch(err => {
+        console.error("L'énergie n'a pu être transmise :", err);
+        alert("La copie automatique a échoué. Veuillez sélectionner le texte manuellement.");
+    });
 }
