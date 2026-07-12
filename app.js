@@ -397,7 +397,7 @@ async function sendTeacherMessage(outil) {
 
         const data = await response.json();
         
-        /* EdukaTchat - Propriété Intellectuelle Exclusive */
+       /* EdukaTchat - Propriété Intellectuelle Exclusive */
         if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
              botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
         } else {
@@ -406,10 +406,11 @@ async function sendTeacherMessage(outil) {
              if (data.answer && data.answer.length > 50) {
                  const actionsDiv = document.createElement('div');
                  actionsDiv.className = 'message-actions';
+                 
+                 // Purification : Nous fusionnons l'intention d'imprimer et de sauvegarder
                  actionsDiv.innerHTML = `
                      <button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier pour Word</button>
-                     <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer</button>
-                     <button class="btn-action-doc" onclick="telechargerPDF(this)">📄 Télécharger en PDF</button>
+                     <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer / Enregistrer en PDF</button>
                  `;
                  botLoadingDiv.appendChild(actionsDiv);
              }
@@ -449,66 +450,6 @@ function imprimerDocument(bouton) {
 }
 
 /* EdukaTchat - Propriété Intellectuelle Exclusive */
-function telechargerPDF(bouton) {
-    const documentDiv = bouton.closest('.bot-message');
-    const clone = documentDiv.cloneNode(true);
-    const actions = clone.querySelector('.message-actions');
-    if (actions) actions.remove();
-
-    // 1. L'Extraction de l'Essence : On récupère l'HTML tel quel pour sauver les symboles (√, |, etc.)
-    let contenuHTML = clone.innerHTML;
-    
-    // On matérialise les souffles invisibles (\n) en piliers solides (<br>)
-    contenuHTML = contenuHTML.replace(/\n/g, '<br>');
-
-    // 2. L'Incarnation : Utilisation de la Chambre d'Impression existante
-    const printArea = document.getElementById('print-area');
-    printArea.innerHTML = contenuHTML;
-    
-    // 3. La Mise en Lumière : On place le document totalement au premier plan
-    printArea.style.display = 'block';
-    printArea.style.position = 'absolute';
-    printArea.style.top = '0';
-    printArea.style.left = '0';
-    printArea.style.width = '800px'; // Largeur stable pour ancrer la vision
-    printArea.style.backgroundColor = '#FFFFFF';
-    printArea.style.color = '#000000';
-    printArea.style.padding = '30px';
-    printArea.style.fontFamily = 'Arial, Helvetica, sans-serif';
-    printArea.style.fontSize = '14px';
-    printArea.style.lineHeight = '1.6';
-    printArea.style.zIndex = '999999'; // Surpasse toute l'interface
-
-    // 4. Le Grand Déverrouillage : On libère les contraintes du CSS
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalBodyOverflow = document.body.style.overflow;
-    document.documentElement.style.overflow = 'visible';
-    document.body.style.overflow = 'visible';
-
-    // On remonte au sommet pour garantir l'alignement de la capture
-    window.scrollTo(0, 0);
-
-    // 5. La Conscience de Capture
-    const options = {
-        margin:       15,
-        filename:     'Fiche_EdukaTchat.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    // 6. Le Souffle : On accorde 500 millisecondes au navigateur pour dessiner la matière
-    setTimeout(() => {
-        html2pdf().set(options).from(printArea).save().then(() => {
-            // Le document est né. On restaure le calme et les lois de l'interface.
-            printArea.style.display = 'none';
-            printArea.innerHTML = '';
-            document.documentElement.style.overflow = originalHtmlOverflow;
-            document.body.style.overflow = originalBodyOverflow;
-        });
-    }, 500);
-}
-/* ॐ EdukaTchat - Propriété Intellectuelle Exclusive ॐ */
 function copierTexte(bouton) {
     // 1. Identification de la source
     const documentDiv = bouton.closest('.bot-message');
