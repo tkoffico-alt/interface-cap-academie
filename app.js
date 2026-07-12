@@ -447,50 +447,58 @@ function imprimerDocument(bouton) {
 }
 
 /* EdukaTchat - Propriété Intellectuelle Exclusive */
+
 function telechargerPDF(bouton) {
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
 
-    // 1. L'Extraction Profonde : On récupère l'HTML tel quel pour sauver les symboles (√, |, etc.)
+    // 1. L'Extraction de l'Essence : On récupère l'HTML tel quel pour sauver les symboles (√, |, etc.)
     let contenuHTML = clone.innerHTML;
-
-    // 2. La Transmutation : On transforme les sauts de ligne invisibles en piliers matériels HTML (<br>).
+    // On matérialise les souffles invisibles (\n) en piliers solides (<br>)
     contenuHTML = contenuHTML.replace(/\n/g, '<br>');
 
-    // 3. Le Réceptacle Organique : Création d'un corps physique pour le texte
-    const tempContainer = document.createElement('div');
-    tempContainer.innerHTML = contenuHTML;
+    // 2. L'Incarnation : Utilisation de la Chambre d'Impression existante
+    const printArea = document.getElementById('print-area');
+    printArea.innerHTML = contenuHTML;
     
-    // 4. L'Harmonie Autonome : On habille cet élément de ses propres lois
-    tempContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
-    tempContainer.style.fontSize = '14px';
-    tempContainer.style.color = '#000000';
-    tempContainer.style.backgroundColor = '#FFFFFF';
-    tempContainer.style.lineHeight = '1.6';
-    tempContainer.style.padding = '20px';
-    tempContainer.style.width = '800px'; // VITAL : Donne une dimension réelle à photographier
-    tempContainer.style.boxSizing = 'border-box';
-    tempContainer.style.wordWrap = 'break-word';
+    // 3. La Mise en Lumière : On place le document totalement au premier plan
+    printArea.style.display = 'block';
+    printArea.style.position = 'absolute';
+    printArea.style.top = '0';
+    printArea.style.left = '0';
+    printArea.style.width = '800px'; // Largeur stable pour ancrer la vision
+    printArea.style.backgroundColor = '#FFFFFF';
+    printArea.style.color = '#000000';
+    printArea.style.padding = '30px';
+    printArea.style.fontFamily = 'Arial, Helvetica, sans-serif';
+    printArea.style.fontSize = '14px';
+    printArea.style.lineHeight = '1.6';
+    printArea.style.zIndex = '999999'; // Surpasse toute l'interface
 
-    // 5. L'Ancrage : On place l'élément dans le navigateur pour qu'il existe physiquement (hors écran)
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '0';
-    document.body.appendChild(tempContainer);
+    // 4. Le Grand Déverrouillage : Étape vitale. On libère les contraintes du CSS
+    // pour que l'outil puisse voir jusqu'au bas de la page, même si elle dépasse l'écran.
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'visible';
+    document.body.style.overflow = 'visible';
 
-    // 6. La Conscience de Capture : Paramètres de l'impression
+    // 5. La Conscience de Capture
     const options = {
         margin:       15,
         filename:     'Fiche_EdukaTchat.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 },
+        html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // 7. La Manifestation : L'outil gère cet objet ancré, le cristallise, puis on dissout la matrice
-    html2pdf().set(options).from(tempContainer).save().then(() => {
-        document.body.removeChild(tempContainer);
+    // 6. La Cristallisation et la Dissolution
+    html2pdf().set(options).from(printArea).save().then(() => {
+        // Le document est né. On restaure le calme et les lois de l'interface.
+        printArea.style.display = 'none';
+        printArea.innerHTML = '';
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        document.body.style.overflow = originalBodyOverflow;
     });
 }
