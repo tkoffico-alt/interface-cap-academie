@@ -133,7 +133,6 @@
             color: #F8FAFC;
         }
 
-        /* L'Esthétique Glassmorphism pour toutes les cartes */
         .glass-card {
             background-color: rgba(30, 41, 59, 0.4);
             border: 1px solid rgba(71, 85, 105, 0.4);
@@ -144,7 +143,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Grille des 4 Portes - Alignement Parfait */
         .doors {
             display: grid;
             grid-template-columns: repeat(2, minmax(300px, 1fr));
@@ -249,7 +247,6 @@
         .parents .btn-entrer { background-color: #475569; }
         .parents .btn-entrer:hover { background-color: #334155; }
 
-        /* Section Informations */
         .info-section {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -306,7 +303,7 @@
             top: -2px;
         }
 
-        /* --- L'ESPACE DE TRAVAIL (CALQUE ABSOLU ET FLUIDE) --- */
+        /* --- L'ESPACE DE TRAVAIL --- */
         #app-view {
             display: none;
             flex-direction: column;
@@ -455,7 +452,6 @@
             mask-image: radial-gradient(circle, black 40%, transparent 90%);
         }
 
-        /* ESTHÉTIQUE DU LECTEUR ET DÉFILEMENT ACTIF */
         .chat-history {
             flex: 1;
             width: 100%;
@@ -503,7 +499,6 @@
             font-size: 0.85rem;
         }
         
-        /* ESTHÉTIQUE DE LA BARRE DE SAISIE */
         .chat-input-area {
             width: 100%;
             background-color: #0F172A;
@@ -698,12 +693,40 @@
             background-color: rgba(59, 130, 246, 0.1);
             color: #1D4ED8;
         }
+
+        /* --- LE FILTRE DE PURIFICATION POUR L'IMPRIMANTE --- */
+        #print-area { display: none; }
+        @media print {
+            /* On détruit virtuellement toute l'interface */
+            body > *:not(#print-area) {
+                display: none !important;
+            }
+
+            /* On libère l'espace du navigateur pour autoriser la pagination */
+            html, body {
+                background: #FFFFFF !important;
+                height: auto !important;
+                width: auto !important;
+                overflow: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Seule la zone d'impression pure est visible */
+            #print-area {
+                display: block !important;
+                width: 100% !important;
+            }
+        }
     </style>
     <!-- Bibliothèque pour la génération de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-<div class="watermark-background"></div>
+    <div class="watermark-background"></div>
+    
+    <!-- CHAMBRE D'IMPRESSION SECRÈTE -->
+    <div id="print-area"></div>
 
     <div id="premium-modal" class="modal-overlay">
         <div class="glass-card modal-content">
@@ -1332,7 +1355,7 @@
         }
 
         // =======================================================================
-        // ❖ OUTILS D'ÉDITION (IMPRESSION ET PDF) PURIFIÉS ❖
+        // ❖ OUTILS D'ÉDITION PURES (ANTI-ILLUSION) ❖
         // =======================================================================
         function imprimerDocument(bouton) {
             const documentDiv = bouton.closest('.bot-message');
@@ -1341,42 +1364,12 @@
             if (actions) actions.remove();
 
             const texteBrut = clone.innerText;
+            const texteSecurise = texteBrut.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-            // Ouvre une fenêtre pure, débarrassée de l'interface
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(`
-                    <html>
-                    <head>
-                        <title>Document EdukaTchat</title>
-                        <style>
-                            body {
-                                font-family: Arial, sans-serif;
-                                font-size: 12pt;
-                                line-height: 1.5;
-                                color: #000;
-                                background: #fff;
-                                white-space: pre-wrap;
-                                word-wrap: break-word;
-                                padding: 20px;
-                                margin: 0;
-                            }
-                        </style>
-                    </head>
-                    <body>${texteBrut.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body>
-                    </html>
-                `);
-                printWindow.document.close();
-                printWindow.focus();
-                
-                // Laisse le temps au navigateur de générer la page avant d'imprimer
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 250);
-            } else {
-                alert("Veuillez autoriser les pop-ups de votre navigateur pour imprimer.");
-            }
+            const printArea = document.getElementById('print-area');
+            printArea.innerHTML = `<div style="font-family: Arial, sans-serif; font-size: 12pt; color: #000; background: #fff; white-space: pre-wrap; word-wrap: break-word;">${texteSecurise}</div>`;
+
+            window.print();
         }
 
         function telechargerPDF(bouton) {
@@ -1385,31 +1378,28 @@
             const actions = clone.querySelector('.message-actions');
             if (actions) actions.remove();
 
-            // Récupération du texte avec ses sauts de ligne naturels
-            const texteBrut = clone.innerText;
+            // Extraction pure : on récupère le texte et on protège les retours à la ligne
+            let texteBrut = clone.innerText;
+            texteBrut = texteBrut.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            texteBrut = texteBrut.replace(/\n/g, '<br>');
 
-            // Création d'un conteneur PDF pur (que l'on n'attache PAS à l'écran)
-            const pdfContainer = document.createElement('div');
-            pdfContainer.style.backgroundColor = '#FFFFFF';
-            pdfContainer.style.color = '#000000';
-            pdfContainer.style.padding = '20px'; 
-            pdfContainer.style.fontFamily = 'Arial, sans-serif';
-            pdfContainer.style.fontSize = '12pt'; 
-            pdfContainer.style.lineHeight = '1.6';
-            
-            // On convertit les sauts de ligne texte en sauts de ligne HTML (<br>)
-            pdfContainer.innerHTML = texteBrut.replace(/\n/g, '<br>');
-            
+            // On crée un document PDF sous forme de texte brut HTML, libre de toute interface
+            const htmlString = `
+                <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #000000; background-color: #FFFFFF; line-height: 1.6; padding: 20px; white-space: pre-wrap; word-wrap: break-word; width: 100%;">
+                    ${texteBrut}
+                </div>
+            `;
+
             const options = {
                 margin:       15,
                 filename:     'Fiche_EdukaTchat.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 }, 
+                html2canvas:  { scale: 2 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-            
-            // L'outil prend le cliché en mémoire et livre le fichier
-            html2pdf().set(options).from(pdfContainer).save();
+
+            // L'outil prend le HTML pur (hors écran) et le transforme en PDF
+            html2pdf().set(options).from(htmlString).save();
         }
     </script>
 </body>
