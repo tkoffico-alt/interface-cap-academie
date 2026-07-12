@@ -1385,29 +1385,20 @@
             const actions = clone.querySelector('.message-actions');
             if (actions) actions.remove();
 
+            // Récupération du texte avec ses sauts de ligne naturels
             const texteBrut = clone.innerText;
 
-            // Création d'une toile parfaitement visible mais dissimulée sous l'interface
+            // Création d'un conteneur PDF pur (que l'on n'attache PAS à l'écran)
             const pdfContainer = document.createElement('div');
             pdfContainer.style.backgroundColor = '#FFFFFF';
             pdfContainer.style.color = '#000000';
-            pdfContainer.style.padding = '30px'; 
+            pdfContainer.style.padding = '20px'; 
             pdfContainer.style.fontFamily = 'Arial, sans-serif';
             pdfContainer.style.fontSize = '12pt'; 
-            pdfContainer.style.lineHeight = '1.5';
-            pdfContainer.style.width = '800px'; 
-            pdfContainer.style.whiteSpace = 'pre-wrap';
-            pdfContainer.style.wordWrap = 'break-word';
+            pdfContainer.style.lineHeight = '1.6';
             
-            // Placement absolu sous le calque principal
-            pdfContainer.style.position = 'absolute';
-            pdfContainer.style.top = '0';
-            pdfContainer.style.left = '0';
-            pdfContainer.style.zIndex = '-1000';
-
-            // Injection sécurisée du texte
-            pdfContainer.textContent = texteBrut;
-            document.body.appendChild(pdfContainer); 
+            // On convertit les sauts de ligne texte en sauts de ligne HTML (<br>)
+            pdfContainer.innerHTML = texteBrut.replace(/\n/g, '<br>');
             
             const options = {
                 margin:       15,
@@ -1417,10 +1408,8 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            // Capture et destruction de la toile
-            html2pdf().set(options).from(pdfContainer).save().then(() => {
-                document.body.removeChild(pdfContainer);
-            });
+            // L'outil prend le cliché en mémoire et livre le fichier
+            html2pdf().set(options).from(pdfContainer).save();
         }
     </script>
 </body>
