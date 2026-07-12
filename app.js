@@ -447,45 +447,31 @@ function imprimerDocument(bouton) {
 }
 
 /* EdukaTchat - Propriété Intellectuelle Exclusive */
-
 function telechargerPDF(bouton) {
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
 
-    // Nous préservons le code HTML interne pour garder le formatage et les symboles intacts
-    const contenu = clone.innerHTML;
+    // 1. L'essence : Nous capturons le HTML interne pour préserver la richesse des symboles mathématiques
+    const contenuHTML = clone.innerHTML;
 
-    // Création d'une matrice temporaire dans le monde physique du navigateur
-    const tempContainer = document.createElement('div');
-    tempContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
-    tempContainer.style.fontSize = '12pt';
-    tempContainer.style.color = '#000000';
-    tempContainer.style.backgroundColor = '#FFFFFF';
-    tempContainer.style.padding = '20mm';
-    tempContainer.style.width = '210mm'; // Calibrage exact pour le format A4
-    tempContainer.style.whiteSpace = 'pre-wrap'; // Préserve la respiration naturelle des sauts de ligne
-    tempContainer.style.wordWrap = 'break-word';
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px'; // Discrétion absolue (hors écran)
-    tempContainer.style.top = '0';
-    
-    // Injection de la connaissance
-    tempContainer.innerHTML = contenu;
-    document.body.appendChild(tempContainer);
+    // 2. Le réceptacle : Une matrice sous forme de chaîne de caractères, sans attache physique à l'écran
+    const htmlString = `
+        <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #000000; background-color: #FFFFFF; line-height: 1.6; padding: 20px; white-space: pre-wrap; word-wrap: break-word;">
+            ${contenuHTML}
+        </div>
+    `;
 
-    // Configuration de la conscience de capture
+    // 3. L'intention : Configuration de la capture sans contrainte d'affichage
     const options = {
-        margin:       0,
+        margin:       15, // Marge harmonieuse
         filename:     'Fiche_EdukaTchat.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, windowWidth: 1024 },
+        html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // Capture fidèle, matérialisation, puis dissolution de la matrice
-    html2pdf().set(options).from(tempContainer).save().then(() => {
-        document.body.removeChild(tempContainer);
-    });
+    // 4. La manifestation : Le moteur ingère l'esprit (htmlString) et matérialise le document
+    html2pdf().set(options).from(htmlString).save();
 }
