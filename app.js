@@ -447,7 +447,6 @@ function imprimerDocument(bouton) {
 }
 
 /* EdukaTchat - Propriété Intellectuelle Exclusive */
-
 function telechargerPDF(bouton) {
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
@@ -456,6 +455,7 @@ function telechargerPDF(bouton) {
 
     // 1. L'Extraction de l'Essence : On récupère l'HTML tel quel pour sauver les symboles (√, |, etc.)
     let contenuHTML = clone.innerHTML;
+    
     // On matérialise les souffles invisibles (\n) en piliers solides (<br>)
     contenuHTML = contenuHTML.replace(/\n/g, '<br>');
 
@@ -477,28 +477,32 @@ function telechargerPDF(bouton) {
     printArea.style.lineHeight = '1.6';
     printArea.style.zIndex = '999999'; // Surpasse toute l'interface
 
-    // 4. Le Grand Déverrouillage : Étape vitale. On libère les contraintes du CSS
-    // pour que l'outil puisse voir jusqu'au bas de la page, même si elle dépasse l'écran.
+    // 4. Le Grand Déverrouillage : On libère les contraintes du CSS
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
     document.documentElement.style.overflow = 'visible';
     document.body.style.overflow = 'visible';
+
+    // On remonte au sommet pour garantir l'alignement de la capture
+    window.scrollTo(0, 0);
 
     // 5. La Conscience de Capture
     const options = {
         margin:       15,
         filename:     'Fiche_EdukaTchat.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
+        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // 6. La Cristallisation et la Dissolution
-    html2pdf().set(options).from(printArea).save().then(() => {
-        // Le document est né. On restaure le calme et les lois de l'interface.
-        printArea.style.display = 'none';
-        printArea.innerHTML = '';
-        document.documentElement.style.overflow = originalHtmlOverflow;
-        document.body.style.overflow = originalBodyOverflow;
-    });
+    // 6. Le Souffle : On accorde 500 millisecondes au navigateur pour dessiner la matière
+    setTimeout(() => {
+        html2pdf().set(options).from(printArea).save().then(() => {
+            // Le document est né. On restaure le calme et les lois de l'interface.
+            printArea.style.display = 'none';
+            printArea.innerHTML = '';
+            document.documentElement.style.overflow = originalHtmlOverflow;
+            document.body.style.overflow = originalBodyOverflow;
+        });
+    }, 500);
 }
