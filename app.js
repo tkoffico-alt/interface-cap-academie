@@ -453,25 +453,35 @@ function telechargerPDF(bouton) {
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
 
-    // 1. L'essence : Nous capturons le HTML interne pour préserver la richesse des symboles mathématiques
-    const contenuHTML = clone.innerHTML;
+    // 1. L'Extraction Profonde : On récupère l'HTML tel quel pour sauver les symboles (√, |, etc.)
+    let contenuHTML = clone.innerHTML;
 
-    // 2. Le réceptacle : Une matrice sous forme de chaîne de caractères, sans attache physique à l'écran
-    const htmlString = `
-        <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #000000; background-color: #FFFFFF; line-height: 1.6; padding: 20px; white-space: pre-wrap; word-wrap: break-word;">
-            ${contenuHTML}
-        </div>
-    `;
+    // 2. La Transmutation : On transforme les sauts de ligne invisibles en piliers matériels HTML (<br>).
+    // Cela libère l'outil de capture de sa dépendance au CSS "white-space: pre-wrap" qui causait le vide.
+    contenuHTML = contenuHTML.replace(/\n/g, '<br>');
 
-    // 3. L'intention : Configuration de la capture sans contrainte d'affichage
+    // 3. Le Réceptacle Organique : On crée un véritable élément du DOM, et non une simple chaîne de texte.
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = contenuHTML;
+    
+    // 4. L'Harmonie Autonome : On habille cet élément de ses propres lois, sans dépendre du thème global.
+    tempContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
+    tempContainer.style.fontSize = '14px';
+    tempContainer.style.color = '#000000';
+    tempContainer.style.backgroundColor = '#FFFFFF';
+    tempContainer.style.lineHeight = '1.6';
+    // Les <br> faisant désormais le travail, nous n'avons plus besoin de pre-wrap
+    tempContainer.style.wordWrap = 'break-word';
+
+    // 5. La Conscience de Capture : Paramètres de l'impression
     const options = {
-        margin:       15, // Marge harmonieuse
+        margin:       15,
         filename:     'Fiche_EdukaTchat.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // 4. La manifestation : Le moteur ingère l'esprit (htmlString) et matérialise le document
-    html2pdf().set(options).from(htmlString).save();
+    // 6. La Manifestation : L'outil gère naturellement cet objet DOM isolé et le cristallise en PDF.
+    html2pdf().set(options).from(tempContainer).save();
 }
