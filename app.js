@@ -295,6 +295,7 @@ function handleSasKeyPress(event) {
     }
 }
 
+/* ॐ EdukaTchat - Propriété Intellectuelle Exclusive ॐ */
 async function sendSasMessage() {
     const inputField = document.getElementById('sas-user-input');
     const message = inputField.value.trim();
@@ -330,7 +331,20 @@ async function sendSasMessage() {
         });
 
         const data = await response.json();
+        
+        // Manifestation du texte
         botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
+        
+        // Injection des outils d'édition si la réponse a une consistance suffisante
+        if (data.answer && data.answer.length > 50) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = `
+                <button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier pour Word</button>
+                <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer / Enregistrer en PDF</button>
+            `;
+            botLoadingDiv.appendChild(actionsDiv);
+        }
         
         if (data.conversation_id) {
             sasConversationId = data.conversation_id;
