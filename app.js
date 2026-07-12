@@ -457,31 +457,40 @@ function telechargerPDF(bouton) {
     let contenuHTML = clone.innerHTML;
 
     // 2. La Transmutation : On transforme les sauts de ligne invisibles en piliers matériels HTML (<br>).
-    // Cela libère l'outil de capture de sa dépendance au CSS "white-space: pre-wrap" qui causait le vide.
     contenuHTML = contenuHTML.replace(/\n/g, '<br>');
 
-    // 3. Le Réceptacle Organique : On crée un véritable élément du DOM, et non une simple chaîne de texte.
+    // 3. Le Réceptacle Organique : Création d'un corps physique pour le texte
     const tempContainer = document.createElement('div');
     tempContainer.innerHTML = contenuHTML;
     
-    // 4. L'Harmonie Autonome : On habille cet élément de ses propres lois, sans dépendre du thème global.
+    // 4. L'Harmonie Autonome : On habille cet élément de ses propres lois
     tempContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
     tempContainer.style.fontSize = '14px';
     tempContainer.style.color = '#000000';
     tempContainer.style.backgroundColor = '#FFFFFF';
     tempContainer.style.lineHeight = '1.6';
-    // Les <br> faisant désormais le travail, nous n'avons plus besoin de pre-wrap
+    tempContainer.style.padding = '20px';
+    tempContainer.style.width = '800px'; // VITAL : Donne une dimension réelle à photographier
+    tempContainer.style.boxSizing = 'border-box';
     tempContainer.style.wordWrap = 'break-word';
 
-    // 5. La Conscience de Capture : Paramètres de l'impression
+    // 5. L'Ancrage : On place l'élément dans le navigateur pour qu'il existe physiquement (hors écran)
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    document.body.appendChild(tempContainer);
+
+    // 6. La Conscience de Capture : Paramètres de l'impression
     const options = {
         margin:       15,
         filename:     'Fiche_EdukaTchat.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
+        html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // 6. La Manifestation : L'outil gère naturellement cet objet DOM isolé et le cristallise en PDF.
-    html2pdf().set(options).from(tempContainer).save();
+    // 7. La Manifestation : L'outil gère cet objet ancré, le cristallise, puis on dissout la matrice
+    html2pdf().set(options).from(tempContainer).save().then(() => {
+        document.body.removeChild(tempContainer);
+    });
 }
