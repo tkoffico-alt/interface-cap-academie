@@ -15,8 +15,8 @@
         }
 
         html, body {
-            height: 100%;
-            overflow: auto; 
+            overflow-x: hidden;
+            background-color: #020617; 
         }
 
         body {
@@ -144,7 +144,7 @@
             transition: all 0.3s ease;
         }
 
-        /* Grille des 4 Portes - Alignement 2 par 2 */
+        /* Grille des 4 Portes - Alignement Parfait */
         .doors {
             display: grid;
             grid-template-columns: repeat(2, minmax(300px, 1fr));
@@ -165,7 +165,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            height: 100%; /* Force toutes les cartes à la même hauteur */
+            height: 100%; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -207,15 +207,23 @@
             font-size: 0.9rem;
             margin-bottom: 1.5rem;
             line-height: 1.5;
-            flex-grow: 1; /* Pousse la zone d'action vers le bas */
+            flex-grow: 1; 
         }
         
+        /* Conteneur d'action pour symétrie parfaite des boutons */
         .card-action-area {
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
             margin-top: auto; 
+        }
+
+        .action-footer {
+            min-height: 24px;
+            margin-top: 0.75rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .btn-entrer {
@@ -299,13 +307,17 @@
             top: -2px;
         }
 
-        /* --- L'ESPACE DE TRAVAIL --- */
+        /* --- L'ESPACE DE TRAVAIL (CALQUE ABSOLU ET FLUIDE) --- */
         #app-view {
             display: none;
-            flex: 1;
             flex-direction: column;
             background-color: #020617;
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100vw;
             height: 100vh;
+            z-index: 100;
         }
         
         .toolbar {
@@ -384,10 +396,27 @@
             color: #C084FC;
         }
         
+        /* Hiérarchie Flexbox pour autoriser le défilement fluide */
         .iframe-container {
             flex: 1;
             width: 100%;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; 
+        }
+
+        .custom-chat-container {
+            display: none; 
+            flex-direction: column;
+            width: 100%;
+            flex: 1;
+            min-height: 0; 
+            background-color: #020617;
+        }
+        
+        .custom-chat-container.active {
+            display: flex; 
         }
         
         iframe {
@@ -428,20 +457,7 @@
             mask-image: radial-gradient(circle, black 40%, transparent 90%);
         }
 
-        /* --- STYLES SUR MESURE (VOIE DE L'API) --- */
-        .custom-chat-container {
-            display: none; 
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-            background-color: #020617;
-        }
-        
-        .custom-chat-container.active {
-            display: flex; 
-        }
-        
-        /* ESTHÉTIQUE DU LECTEUR : Conteneur central et aéré */
+        /* ESTHÉTIQUE DU LECTEUR ET DÉFILEMENT ACTIF */
         .chat-history {
             flex: 1;
             width: 100%;
@@ -452,6 +468,7 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            min-height: 0; 
         }
         
         .message {
@@ -488,7 +505,7 @@
             font-size: 0.85rem;
         }
         
-        /* ESTHÉTIQUE DE LA BARRE DE SAISIE : Alignement central parfait */
+        /* ESTHÉTIQUE DE LA BARRE DE SAISIE */
         .chat-input-area {
             width: 100%;
             background-color: #0F172A;
@@ -496,6 +513,7 @@
             padding: 1.5rem 2rem;
             display: flex;
             justify-content: center; 
+            flex-shrink: 0;
         }
         
         .chat-input-wrapper {
@@ -539,7 +557,6 @@
             background-color: #2563EB;
         }
 
-        /* Style du Trombone */
         .btn-attachment {
             background: transparent;
             border: none;
@@ -686,39 +703,19 @@
 
         /* --- LE FILTRE DE PURIFICATION POUR L'IMPRIMANTE --- */
        @media print {
-            body * {
-                visibility: hidden;
-            }
-            
+            body * { visibility: hidden; }
             html, body, #app-view, .iframe-container, .custom-chat-container, .chat-history {
-                height: auto !important;
-                min-height: auto !important;
-                overflow: visible !important;
-                display: block !important;
-                position: relative !important;
+                height: auto !important; min-height: auto !important;
+                overflow: visible !important; display: block !important; position: relative !important;
             }
-            
-            .print-section, .print-section * {
-                visibility: visible;
-            }
-            
+            .print-section, .print-section * { visibility: visible; }
             .print-section {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                color: black !important;
-                background: white !important;
-                border: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                white-space: pre-wrap !important;
-                word-wrap: break-word !important;
+                position: absolute; left: 0; top: 0; width: 100%;
+                color: black !important; background: white !important; border: none !important;
+                padding: 0 !important; margin: 0 !important;
+                white-space: pre-wrap !important; word-wrap: break-word !important;
             }
-            
-            .message-actions {
-                display: none !important;
-            }
+            .message-actions { display: none !important; }
         }
     </style>
     <!-- Bibliothèque pour la génération de PDF -->
@@ -735,14 +732,12 @@
             <input type="password" id="matricule-input" class="input-matricule" placeholder="Ex: EDU-ABCD1" onkeypress="handleMatriculeKeyPress(event)">
             <button class="btn-entrer" style="background-color: #3B82F6; width: 100%; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;" onclick="verifyMatricule()">Valider l'accès</button>
             <div id="modal-feedback" class="feedback-text"></div>
-            
             <p style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #475569;">
-    Vous n'avez pas encore de Code d'accès ?<br>
-    <a href="https://tally.so/r/RGgdb4" target="_blank" style="color: #2563EB; text-decoration: underline; font-weight: bold; margin-top: 8px; display: inline-block; font-size: 0.95rem;">
-        Accéder au Guichet d'Abonnement
-    </a>
-</p>
-
+                Vous n'avez pas encore de Code d'accès ?<br>
+                <a href="https://tally.so/r/RGgdb4" target="_blank" style="color: #2563EB; text-decoration: underline; font-weight: bold; margin-top: 8px; display: inline-block; font-size: 0.95rem;">
+                    Accéder au Guichet d'Abonnement
+                </a>
+            </p>
         </div>
     </div>
 
@@ -770,6 +765,7 @@
                     <p>Accès gratuit pour préparer sereinement vos devoirs, simuler vos examens et découvrir votre profil d'orientation.</p>
                     <div class="card-action-area">
                         <button class="btn-entrer" onclick="openSpace('sas')">Accès Libre</button>
+                        <div class="action-footer"></div>
                     </div>
                 </div>
 
@@ -779,6 +775,7 @@
                     <p>L'espace académique complet. Accédez aux assistants virtuels pédagogiques et aux évaluations complètes.</p>
                     <div class="card-action-area">
                         <button class="btn-entrer" onclick="openSpace('eleve')">Déverrouiller l'Accès</button>
+                        <div class="action-footer"></div>
                     </div>
                 </div>
                 
@@ -788,7 +785,9 @@
                     <p>Vos trois assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC.</p>
                     <div class="card-action-area">
                         <button class="btn-entrer" onclick="openSpace('enseignant')">Accéder à l'Espace</button>
-                        <a href="https://tally.so/r/RGgdb4" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace Enseignant</a>
+                        <div class="action-footer">
+                            <a href="https://tally.so/r/RGgdb4" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace Enseignant</a>
+                        </div>
                     </div>
                 </div>
 
@@ -798,6 +797,7 @@
                     <p>Suivez la progression de votre enfant. Définissez les horaires pour activer le suivi pédagogique.</p>
                     <div class="card-action-area">
                         <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Accéder à l'Espace</button>
+                        <div class="action-footer"></div>
                     </div>
                 </div>
             </section>
@@ -956,7 +956,6 @@
                 }
             }
 
-            document.body.style.overflow = 'hidden'; 
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
 
@@ -1011,7 +1010,6 @@
         }
 
         function goHome() {
-            document.body.style.overflow = 'auto'; 
             document.getElementById('app-view').style.display = 'none';
             document.getElementById('home-view').style.display = 'flex';
             
@@ -1127,7 +1125,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
-            restoreChatHistories(); // Restaure l'historique dès le chargement de la page
+            restoreChatHistories(); 
         });
 
         // =======================================================================
@@ -1196,7 +1194,6 @@
             }
         }
 
-        // --- LEVIER DE CONVERSION (TROMBONE MODIFIÉ) ---
         function triggerVisionUpsell(chatHistoryId) {
             const chatHistory = document.getElementById(chatHistoryId);
             
@@ -1207,7 +1204,6 @@
             chatHistory.appendChild(botUpsellDiv);
             scrollToBottom(chatHistoryId);
             
-            // Sauvegarde l'historique après l'insertion du message du système
             const outil = chatHistoryId.split('-')[0];
             saveChatHistory(outil);
         }
@@ -1262,13 +1258,11 @@
                     sasConversationId = data.conversation_id;
                 }
                 
-                // ➔ GRAVURE DANS LA MÉMOIRE LOCALE
                 saveChatHistory('sas');
                 
             } catch (error) {
                 botLoadingDiv.textContent = "La connexion à la plateforme a été interrompue. Le réseau est instable.";
                 console.error("Erreur de transmission Sas:", error);
-                // On sauvegarde aussi les erreurs pour éviter de perdre le message de l'utilisateur
                 saveChatHistory('sas');
             }
             
@@ -1345,7 +1339,6 @@
                     teacherConversationIds[outil] = data.conversation_id;
                 }
                 
-                // ➔ GRAVURE DANS LA MÉMOIRE LOCALE
                 saveChatHistory(outil);
                 
             } catch (error) {
@@ -1358,7 +1351,7 @@
         }
 
         // =======================================================================
-        // ❖ OUTILS D'ÉDITION (IMPRESSION ET PDF) ❖
+        // ❖ OUTILS D'ÉDITION (IMPRESSION ET PDF) PURIFIÉS ❖
         // =======================================================================
         function imprimerDocument(bouton) {
             const documentDiv = bouton.closest('.bot-message');
@@ -1369,44 +1362,45 @@
 
         function telechargerPDF(bouton) {
             const documentDiv = bouton.closest('.bot-message');
-            const clone = documentDiv.cloneNode(true);
-            const actions = clone.querySelector('.message-actions');
             
+            // 1. On nettoie le texte pur
+            const clonePourNettoyage = documentDiv.cloneNode(true);
+            const actions = clonePourNettoyage.querySelector('.message-actions');
             if (actions) actions.remove();
+            const texteBrut = clonePourNettoyage.textContent.trim();
             
-            clone.style.backgroundColor = '#FFFFFF';
-            clone.style.color = '#000000';
-            clone.style.padding = '30px'; 
-            clone.style.fontFamily = 'Arial, sans-serif';
-            clone.style.fontSize = '14px'; 
-            clone.style.lineHeight = '1.6';
+            // 2. On crée un document PDF parfait (non attaché à l'écran)
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.backgroundColor = '#FFFFFF';
+            pdfContainer.style.color = '#000000';
+            pdfContainer.style.padding = '20px 30px'; 
+            pdfContainer.style.fontFamily = 'Arial, sans-serif';
+            pdfContainer.style.fontSize = '14px'; 
+            pdfContainer.style.lineHeight = '1.6';
+            pdfContainer.style.width = '100%';
             
-            const tempContainer = document.createElement('div');
-            tempContainer.style.position = 'absolute';
-            tempContainer.style.top = '0';
-            tempContainer.style.left = '0';
-            tempContainer.style.width = '800px'; 
-            tempContainer.style.zIndex = '-9999';
-            tempContainer.style.visibility = 'hidden'; 
-            
-            tempContainer.appendChild(clone);
-            document.body.appendChild(tempContainer); 
+            // 3. Découpage intelligent pour éviter les textes coupés en deux par le saut de page
+            const lignes = texteBrut.split('\n');
+            lignes.forEach(ligne => {
+                const paragraphe = document.createElement('div');
+                paragraphe.textContent = ligne === '' ? ' ' : ligne; 
+                paragraphe.style.minHeight = ligne === '' ? '14px' : 'auto';
+                paragraphe.style.pageBreakInside = 'avoid'; // Empêche la coupure au milieu d'une ligne
+                paragraphe.style.marginBottom = '4px';
+                pdfContainer.appendChild(paragraphe);
+            });
             
             const options = {
                 margin:       [15, 15, 15, 15],
                 filename:     'Document_EdukaTchat.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { 
-                    scale: 2, 
-                    scrollY: 0, 
-                    useCORS: true 
-                }, 
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { scale: 2, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
             
-            html2pdf().set(options).from(clone).save().then(() => {
-                document.body.removeChild(tempContainer);
-            });
+            // 4. Capture instantanée sans toucher à l'interface visuelle
+            html2pdf().set(options).from(pdfContainer).save();
         }
     </script>
 </body>
