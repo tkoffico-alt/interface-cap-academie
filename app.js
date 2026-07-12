@@ -295,11 +295,21 @@ function handleSasKeyPress(event) {
     }
 }
 
-/* ॐ EdukaTchat - Propriété Intellectuelle Exclusive ॐ */
+/* EdukaTchat - Propriété Intellectuelle Exclusive */
+
 async function sendSasMessage() {
     const inputField = document.getElementById('sas-user-input');
+    // Nous ciblons le bouton situé juste après le champ de saisie
+    const button = inputField.nextElementSibling; 
     const message = inputField.value.trim();
+    
     if (!message) return;
+
+    // 1. Le Silence : On désactive les contrôles pour prévenir la surcharge
+    inputField.disabled = true;
+    button.disabled = true;
+    button.style.opacity = '0.5';
+    button.style.cursor = 'not-allowed';
 
     const chatHistory = document.getElementById('sas-chat-history');
 
@@ -319,6 +329,10 @@ async function sendSasMessage() {
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
 
+    // 2. La Maîtrise du Temps : Création d'une limite de 30 secondes
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
         const response = await fetch('https://cap-academie-gateway.onrender.com/api/sas/chat', {
             method: 'POST',
@@ -327,15 +341,17 @@ async function sendSasMessage() {
                 query: message, 
                 conversation_id: sasConversationId,
                 matricule: sceau
-            })
+            }),
+            signal: controller.signal // On relie la requête au contrôleur de temps
         });
 
+        // Le souffle est revenu à temps, on annule le compte à rebours
+        clearTimeout(timeoutId); 
+        
         const data = await response.json();
         
-        // Manifestation du texte
         botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
         
-        // Injection des outils d'édition si la réponse a une consistance suffisante
         if (data.answer && data.answer.length > 50) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
@@ -353,12 +369,26 @@ async function sendSasMessage() {
         saveChatHistory('sas');
         
     } catch (error) {
-        botLoadingDiv.textContent = "La connexion à la plateforme a été interrompue. Le réseau est instable.";
+        clearTimeout(timeoutId);
+        
+        // On vérifie si l'erreur provient de notre cordon de sécurité
+        if (error.name === 'AbortError') {
+            botLoadingDiv.textContent = "Le délai d'attente est dépassé. Le réseau semble saturé, veuillez réessayer.";
+        } else {
+            botLoadingDiv.textContent = "La connexion à la plateforme a été interrompue. Le réseau est instable.";
+        }
         console.error("Erreur de transmission Sas:", error);
         saveChatHistory('sas');
+        
+    } finally {
+        // 3. Le Réveil : On restaure l'énergie de l'interface quoi qu'il arrive
+        inputField.disabled = false;
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        inputField.focus(); // On replace le curseur naturellement
+        scrollToBottom('sas-chat-history');
     }
-    
-    scrollToBottom('sas-chat-history');
 }
 
 // --- LOGIQUE DES OUTILS ENSEIGNANT ---
@@ -374,10 +404,21 @@ function handleTeacherKeyPress(event, outil) {
     }
 }
 
+/* ॐ EdukaTchat - Propriété Intellectuelle Exclusive ॐ */
+
 async function sendTeacherMessage(outil) {
     const inputField = document.getElementById(`${outil}-user-input`);
+    // Le canal de transmission se trouve dans le prolongement direct du champ
+    const button = inputField.nextElementSibling;
     const message = inputField.value.trim();
+    
     if (!message) return;
+
+    // 1. Le Silence : Suspension des actions pour préserver la quiétude du serveur
+    inputField.disabled = true;
+    button.disabled = true;
+    button.style.opacity = '0.5';
+    button.style.cursor = 'not-allowed';
 
     const chatHistory = document.getElementById(`${outil}-chat-history`);
 
@@ -397,6 +438,10 @@ async function sendTeacherMessage(outil) {
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
 
+    // 2. La Maîtrise du Temps : Cordon de sécurité de 30 secondes
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
         const response = await fetch('https://cap-academie-gateway.onrender.com/api/enseignant/chat', {
             method: 'POST',
@@ -406,8 +451,12 @@ async function sendTeacherMessage(outil) {
                 conversation_id: teacherConversationIds[outil],
                 outil: outil,
                 matricule: sceau
-            })
+            }),
+            signal: controller.signal // L'ancrage au fil du temps
         });
+
+        // La réponse s'est manifestée avant la limite, on libère le temps
+        clearTimeout(timeoutId);
 
         const data = await response.json();
         
@@ -416,11 +465,10 @@ async function sendTeacherMessage(outil) {
         } else {
              botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
              
+             // Révélation des outils d'appropriation si la matière est dense
              if (data.answer && data.answer.length > 50) {
                  const actionsDiv = document.createElement('div');
                  actionsDiv.className = 'message-actions';
-                 
-                 // Purification : Nous fusionnons l'intention d'imprimer et de sauvegarder
                  actionsDiv.innerHTML = `
                      <button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier pour Word</button>
                      <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer / Enregistrer en PDF</button>
@@ -436,12 +484,26 @@ async function sendTeacherMessage(outil) {
         saveChatHistory(outil);
         
     } catch (error) {
-        botLoadingDiv.textContent = "La connexion à l'Espace a été interrompue. Le réseau est instable.";
+        clearTimeout(timeoutId);
+        
+        // Compréhension de la nature de la rupture
+        if (error.name === 'AbortError') {
+            botLoadingDiv.textContent = "Le délai d'attente est dépassé. L'énergie du réseau fluctue, veuillez formuler votre demande à nouveau.";
+        } else {
+            botLoadingDiv.textContent = "La connexion à l'Espace a été interrompue. Le lien s'est dispersé.";
+        }
         console.error("Erreur de transmission Enseignant:", error);
         saveChatHistory(outil);
+        
+    } finally {
+        // 3. Le Réveil : Restauration absolue de l'équilibre de l'interface
+        inputField.disabled = false;
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        inputField.focus(); 
+        scrollToBottom(`${outil}-chat-history`);
     }
-    
-    scrollToBottom(`${outil}-chat-history`);
 }
 
 // =======================================================================
