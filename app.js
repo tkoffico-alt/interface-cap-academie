@@ -446,49 +446,46 @@ function imprimerDocument(bouton) {
     window.print();
 }
 
+/* EdukaTchat - Propriété Intellectuelle Exclusive */
+
 function telechargerPDF(bouton) {
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
 
-    // 1. Extraction du texte pur
-    const texteBrut = clone.innerText;
+    // Nous préservons le code HTML interne pour garder le formatage et les symboles intacts
+    const contenu = clone.innerHTML;
 
-    // 2. Initialisation de jsPDF (issue du CDN)
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-    });
-
-    // 3. Configuration de la forme
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-
-    // 4. Gestion des marges et du flux d'écriture
-    const margin = 15;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const textWidth = pageWidth - (margin * 2);
+    // Création d'une matrice temporaire dans le monde physique du navigateur
+    const tempContainer = document.createElement('div');
+    tempContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
+    tempContainer.style.fontSize = '12pt';
+    tempContainer.style.color = '#000000';
+    tempContainer.style.backgroundColor = '#FFFFFF';
+    tempContainer.style.padding = '20mm';
+    tempContainer.style.width = '210mm'; // Calibrage exact pour le format A4
+    tempContainer.style.whiteSpace = 'pre-wrap'; // Préserve la respiration naturelle des sauts de ligne
+    tempContainer.style.wordWrap = 'break-word';
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px'; // Discrétion absolue (hors écran)
+    tempContainer.style.top = '0';
     
-    // Fractionnement spirituel : on coupe le texte selon la largeur disponible
-    const splitText = doc.splitTextToSize(texteBrut, textWidth);
+    // Injection de la connaissance
+    tempContainer.innerHTML = contenu;
+    document.body.appendChild(tempContainer);
 
-    let cursorY = margin;
-    const lineHeight = 6;
+    // Configuration de la conscience de capture
+    const options = {
+        margin:       0,
+        filename:     'Fiche_EdukaTchat.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, windowWidth: 1024 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
-    // 5. Gravure ligne par ligne, avec création d'un nouvel espace (page) si nécessaire
-    for (let i = 0; i < splitText.length; i++) {
-        if (cursorY > pageHeight - margin) {
-            doc.addPage();
-            cursorY = margin;
-        }
-        doc.text(splitText[i], margin, cursorY);
-        cursorY += lineHeight;
-    }
-
-    // 6. Matérialisation du fichier
-    doc.save('Fiche_EdukaTchat.pdf');
+    // Capture fidèle, matérialisation, puis dissolution de la matrice
+    html2pdf().set(options).from(tempContainer).save().then(() => {
+        document.body.removeChild(tempContainer);
+    });
 }
