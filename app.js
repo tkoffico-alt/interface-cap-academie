@@ -397,7 +397,6 @@ async function sendTeacherMessage(outil) {
 
         const data = await response.json();
         
-       /* EdukaTchat - Propriété Intellectuelle Exclusive */
         if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
              botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
         } else {
@@ -449,7 +448,6 @@ function imprimerDocument(bouton) {
     window.print();
 }
 
-/* EdukaTchat - Propriété Intellectuelle Exclusive */
 function copierTexte(bouton) {
     // 1. Identification de la source
     const documentDiv = bouton.closest('.bot-message');
