@@ -210,7 +210,6 @@
             flex-grow: 1; 
         }
         
-        /* Conteneur d'action pour symétrie parfaite des boutons */
         .card-action-area {
             width: 100%;
             display: flex;
@@ -396,7 +395,6 @@
             color: #C084FC;
         }
         
-        /* Hiérarchie Flexbox pour autoriser le défilement fluide */
         .iframe-container {
             flex: 1;
             width: 100%;
@@ -699,23 +697,6 @@
         body.light-theme .btn-action-doc:hover {
             background-color: rgba(59, 130, 246, 0.1);
             color: #1D4ED8;
-        }
-
-        /* --- LE FILTRE DE PURIFICATION POUR L'IMPRIMANTE --- */
-       @media print {
-            body * { visibility: hidden; }
-            html, body, #app-view, .iframe-container, .custom-chat-container, .chat-history {
-                height: auto !important; min-height: auto !important;
-                overflow: visible !important; display: block !important; position: relative !important;
-            }
-            .print-section, .print-section * { visibility: visible; }
-            .print-section {
-                position: absolute; left: 0; top: 0; width: 100%;
-                color: black !important; background: white !important; border: none !important;
-                padding: 0 !important; margin: 0 !important;
-                white-space: pre-wrap !important; word-wrap: break-word !important;
-            }
-            .message-actions { display: none !important; }
         }
     </style>
     <!-- Bibliothèque pour la génération de PDF -->
@@ -1355,52 +1336,91 @@
         // =======================================================================
         function imprimerDocument(bouton) {
             const documentDiv = bouton.closest('.bot-message');
-            documentDiv.classList.add('print-section');
-            window.print();
-            documentDiv.classList.remove('print-section');
+            const clone = documentDiv.cloneNode(true);
+            const actions = clone.querySelector('.message-actions');
+            if (actions) actions.remove();
+
+            const texteBrut = clone.innerText;
+
+            // Ouvre une fenêtre pure, débarrassée de l'interface
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Document EdukaTchat</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                font-size: 12pt;
+                                line-height: 1.5;
+                                color: #000;
+                                background: #fff;
+                                white-space: pre-wrap;
+                                word-wrap: break-word;
+                                padding: 20px;
+                                margin: 0;
+                            }
+                        </style>
+                    </head>
+                    <body>${texteBrut.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                
+                // Laisse le temps au navigateur de générer la page avant d'imprimer
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 250);
+            } else {
+                alert("Veuillez autoriser les pop-ups de votre navigateur pour imprimer.");
+            }
         }
 
         function telechargerPDF(bouton) {
             const documentDiv = bouton.closest('.bot-message');
-            
-            // 1. On nettoie le texte pur
-            const clonePourNettoyage = documentDiv.cloneNode(true);
-            const actions = clonePourNettoyage.querySelector('.message-actions');
+            const clone = documentDiv.cloneNode(true);
+            const actions = clone.querySelector('.message-actions');
             if (actions) actions.remove();
-            const texteBrut = clonePourNettoyage.textContent.trim();
-            
-            // 2. On crée un document PDF parfait (non attaché à l'écran)
+
+            const texteBrut = clone.innerText;
+
+            // Création d'une toile parfaitement visible mais dissimulée sous l'interface
             const pdfContainer = document.createElement('div');
             pdfContainer.style.backgroundColor = '#FFFFFF';
             pdfContainer.style.color = '#000000';
-            pdfContainer.style.padding = '20px 30px'; 
+            pdfContainer.style.padding = '30px'; 
             pdfContainer.style.fontFamily = 'Arial, sans-serif';
-            pdfContainer.style.fontSize = '14px'; 
-            pdfContainer.style.lineHeight = '1.6';
-            pdfContainer.style.width = '100%';
+            pdfContainer.style.fontSize = '12pt'; 
+            pdfContainer.style.lineHeight = '1.5';
+            pdfContainer.style.width = '800px'; 
+            pdfContainer.style.whiteSpace = 'pre-wrap';
+            pdfContainer.style.wordWrap = 'break-word';
             
-            // 3. Découpage intelligent pour éviter les textes coupés en deux par le saut de page
-            const lignes = texteBrut.split('\n');
-            lignes.forEach(ligne => {
-                const paragraphe = document.createElement('div');
-                paragraphe.textContent = ligne === '' ? ' ' : ligne; 
-                paragraphe.style.minHeight = ligne === '' ? '14px' : 'auto';
-                paragraphe.style.pageBreakInside = 'avoid'; // Empêche la coupure au milieu d'une ligne
-                paragraphe.style.marginBottom = '4px';
-                pdfContainer.appendChild(paragraphe);
-            });
+            // Placement absolu sous le calque principal
+            pdfContainer.style.position = 'absolute';
+            pdfContainer.style.top = '0';
+            pdfContainer.style.left = '0';
+            pdfContainer.style.zIndex = '-1000';
+
+            // Injection sécurisée du texte
+            pdfContainer.textContent = texteBrut;
+            document.body.appendChild(pdfContainer); 
             
             const options = {
-                margin:       [15, 15, 15, 15],
-                filename:     'Document_EdukaTchat.pdf',
+                margin:       15,
+                filename:     'Fiche_EdukaTchat.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, 
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                html2canvas:  { scale: 2 }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            // 4. Capture instantanée sans toucher à l'interface visuelle
-            html2pdf().set(options).from(pdfContainer).save();
+            // Capture et destruction de la toile
+            html2pdf().set(options).from(pdfContainer).save().then(() => {
+                document.body.removeChild(pdfContainer);
+            });
         }
     </script>
 </body>
