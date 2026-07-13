@@ -1,18 +1,25 @@
 /* EdukaTchat - Propriété Intellectuelle Exclusive */
 
 let pendingSpaceToOpen = null;
+let avatarActif = "general"; // Mémorise l'avatar choisi
+let espaceActuel = "";       // Mémorise la porte choisie
+
+// =======================================================================
+// ❖ LA GESTION DES ESPACES ET DE L'AIGUILLAGE ❖
+// =======================================================================
 
 async function openSpace(space) {
-    
+    espaceActuel = space; // On enregistre immédiatement l'espace demandé
+
     if (space === 'eleve') {
         const codeAcces = localStorage.getItem('eduka_sceau');
         
         if (!codeAcces) {
             pendingSpaceToOpen = 'eleve';
             openPremiumModal();
-            return; 
+            return;
         }
-
+        
         try {
             const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
                 method: 'POST',
@@ -21,38 +28,68 @@ async function openSpace(space) {
             });
             const data = await response.json();
             
-            if (data.valide !== true) {
-                alert("Votre Code d'accès a expiré ou est invalide. Veuillez vous identifier à nouveau.");
-                localStorage.removeItem('eduka_sceau');
-                pendingSpaceToOpen = 'eleve';
+            if (data.valide) {
+                // Le sceau est valide : on ouvre le vestibule !
+                document.getElementById('discipline-modal').classList.add('active');
+            } else {
                 openPremiumModal();
-                return;
             }
         } catch (error) {
-            alert("Erreur de connexion au serveur pour la vérification de votre accès.");
-            return;
+            console.error("Erreur de vérification", error);
         }
-    }
 
+    } else if (space === 'sas') {
+        // Pour le Sas (accès libre), on ouvre directement le vestibule
+        document.getElementById('discipline-modal').classList.add('active');
+
+    } else if (space === 'enseignant') {
+        // L'Espace Enseignant n'a pas de vestibule, il s'ouvre directement
+        document.getElementById('home-view').style.display = 'none';
+        document.getElementById('app-view').style.display = 'flex';
+        
+        document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+        document.getElementById('container-sas-custom').classList.remove('active');
+        document.getElementById('teacher-tabs-container').style.display = 'flex';
+        switchTeacherTool('atelier');
+    }
+}
+
+function fermerVestibule() {
+    document.getElementById('discipline-modal').classList.remove('active');
+}
+
+function entrerDansLeChat(matiereChoisie) {
+    avatarActif = matiereChoisie;
+    fermerVestibule();
+    
+    // On masque l'accueil et on affiche l'espace de travail
     document.getElementById('home-view').style.display = 'none';
     document.getElementById('app-view').style.display = 'flex';
 
+    // ❖ NETTOYAGE VISUEL GLOBAL ❖
     document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
     document.getElementById('container-sas-custom').classList.remove('active');
     document.getElementById('container-atelier-custom').classList.remove('active');
     document.getElementById('container-forge-custom').classList.remove('active');
     document.getElementById('container-cabinet-custom').classList.remove('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
-
-    if (space === 'sas') {
+    
+    // On active le bon conteneur selon l'espace (Sas ou Élève)
+    if(espaceActuel === 'sas') {
         document.getElementById('container-sas-custom').classList.add('active');
         scrollToBottom('sas-chat-history');
-    } else if (space === 'eleve') {
+    } else if (espaceActuel === 'eleve') {
         document.getElementById('iframe-eleve').classList.add('active');
-    } else if (space === 'enseignant') {
-        document.getElementById('teacher-tabs-container').style.display = 'flex';
-        switchTeacherTool('atelier');
     }
+}
+
+function formaterNomMatiere(code) {
+    const noms = {
+        'maths': 'Mathématiques', 'physique': 'Physique-Chimie', 'svt': 'SVT',
+        'francais': 'Français', 'philosophie': 'Philosophie', 'histoire_geo': 'Histoire-Géo',
+        'edhc': 'EDHC', 'anglais': 'Anglais', 'espagnol': 'Espagnol', 'allemand': 'Allemand'
+    };
+    return noms[code] || 'cette discipline';
 }
 
 function switchTeacherTool(toolID) {
@@ -286,7 +323,9 @@ function triggerVisionUpsell(chatHistoryId) {
     saveChatHistory(outil);
 }
 
-// --- LOGIQUE DE L'ESPACE DE PRÉPARATION ---
+// =======================================================================
+// ❖ LOGIQUE DE L'ESPACE DE PRÉPARATION (LE SAS) ❖
+// =======================================================================
 let sasConversationId = ""; 
 
 function handleSasKeyPress(event) {
@@ -295,17 +334,14 @@ function handleSasKeyPress(event) {
     }
 }
 
-/* EdukaTchat - Propriété Intellectuelle Exclusive */
-
 async function sendSasMessage() {
     const inputField = document.getElementById('sas-user-input');
-    // Nous ciblons le bouton situé juste après le champ de saisie
     const button = inputField.nextElementSibling; 
     const message = inputField.value.trim();
     
     if (!message) return;
 
-    // 1. Le Silence : On désactive les contrôles pour prévenir la surcharge
+    // Le Silence : On désactive les contrôles
     inputField.disabled = true;
     button.disabled = true;
     button.style.opacity = '0.5';
@@ -329,7 +365,7 @@ async function sendSasMessage() {
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
 
-    // 2. La Maîtrise du Temps : Création d'une limite de 30 secondes
+    // La Maîtrise du Temps : Limite de 30 secondes
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -340,12 +376,12 @@ async function sendSasMessage() {
             body: JSON.stringify({ 
                 query: message, 
                 conversation_id: sasConversationId,
-                matricule: sceau
+                matricule: sceau,
+                avatar: avatarActif // L'INJECTION DE L'AIGUILLAGE EST ICI
             }),
-            signal: controller.signal // On relie la requête au contrôleur de temps
+            signal: controller.signal 
         });
 
-        // Le souffle est revenu à temps, on annule le compte à rebours
         clearTimeout(timeoutId); 
         
         const data = await response.json();
@@ -371,7 +407,6 @@ async function sendSasMessage() {
     } catch (error) {
         clearTimeout(timeoutId);
         
-        // On vérifie si l'erreur provient de notre cordon de sécurité
         if (error.name === 'AbortError') {
             botLoadingDiv.textContent = "Le délai d'attente est dépassé. Le réseau semble saturé, veuillez réessayer.";
         } else {
@@ -381,17 +416,19 @@ async function sendSasMessage() {
         saveChatHistory('sas');
         
     } finally {
-        // 3. Le Réveil : On restaure l'énergie de l'interface quoi qu'il arrive
+        // Le Réveil : On restaure l'énergie de l'interface
         inputField.disabled = false;
         button.disabled = false;
         button.style.opacity = '1';
         button.style.cursor = 'pointer';
-        inputField.focus(); // On replace le curseur naturellement
+        inputField.focus(); 
         scrollToBottom('sas-chat-history');
     }
 }
 
-// --- LOGIQUE DES OUTILS ENSEIGNANT ---
+// =======================================================================
+// ❖ LOGIQUE DES OUTILS ENSEIGNANT ❖
+// =======================================================================
 let teacherConversationIds = {
     'atelier': "",
     'forge': "",
@@ -404,17 +441,13 @@ function handleTeacherKeyPress(event, outil) {
     }
 }
 
-/* ॐ EdukaTchat - Propriété Intellectuelle Exclusive ॐ */
-
 async function sendTeacherMessage(outil) {
     const inputField = document.getElementById(`${outil}-user-input`);
-    // Le canal de transmission se trouve dans le prolongement direct du champ
     const button = inputField.nextElementSibling;
     const message = inputField.value.trim();
     
     if (!message) return;
 
-    // 1. Le Silence : Suspension des actions pour préserver la quiétude du serveur
     inputField.disabled = true;
     button.disabled = true;
     button.style.opacity = '0.5';
@@ -438,7 +471,6 @@ async function sendTeacherMessage(outil) {
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
 
-    // 2. La Maîtrise du Temps : Cordon de sécurité de 30 secondes
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -452,10 +484,9 @@ async function sendTeacherMessage(outil) {
                 outil: outil,
                 matricule: sceau
             }),
-            signal: controller.signal // L'ancrage au fil du temps
+            signal: controller.signal 
         });
 
-        // La réponse s'est manifestée avant la limite, on libère le temps
         clearTimeout(timeoutId);
 
         const data = await response.json();
@@ -465,7 +496,6 @@ async function sendTeacherMessage(outil) {
         } else {
              botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
              
-             // Révélation des outils d'appropriation si la matière est dense
              if (data.answer && data.answer.length > 50) {
                  const actionsDiv = document.createElement('div');
                  actionsDiv.className = 'message-actions';
@@ -486,7 +516,6 @@ async function sendTeacherMessage(outil) {
     } catch (error) {
         clearTimeout(timeoutId);
         
-        // Compréhension de la nature de la rupture
         if (error.name === 'AbortError') {
             botLoadingDiv.textContent = "Le délai d'attente est dépassé. L'énergie du réseau fluctue, veuillez formuler votre demande à nouveau.";
         } else {
@@ -496,7 +525,6 @@ async function sendTeacherMessage(outil) {
         saveChatHistory(outil);
         
     } finally {
-        // 3. Le Réveil : Restauration absolue de l'équilibre de l'interface
         inputField.disabled = false;
         button.disabled = false;
         button.style.opacity = '1';
@@ -525,24 +553,19 @@ function imprimerDocument(bouton) {
 }
 
 function copierTexte(bouton) {
-    // 1. Identification de la source
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
 
-    // 2. Extraction de l'essence textuelle (conserve les sauts de ligne naturels)
     const texteBrut = clone.innerText;
 
-    // 3. Transmission au presse-papiers de l'utilisateur
     navigator.clipboard.writeText(texteBrut).then(() => {
-        // Confirmation visuelle paisible
         const texteOriginal = bouton.innerHTML;
         bouton.innerHTML = "✨ Texte copié !";
-        bouton.style.color = "#10B981"; // La couleur de l'harmonie et du succès
+        bouton.style.color = "#10B981"; 
         bouton.style.borderColor = "#10B981";
         
-        // Retour à l'état initial après un souffle (2 secondes)
         setTimeout(() => {
             bouton.innerHTML = texteOriginal;
             bouton.style.color = "";
