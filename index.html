@@ -48,7 +48,7 @@
         <div class="container-sas">
             <section class="hero">
                 <h2>L'intelligence au service de l'autonomie</h2>
-                <p>Bienvenue sur la plateforme EdukaTchat. Pour cette phase de lancement, notre accompagnement se concentre rigoureusement sur les <strong>Mathématiques</strong>, la <strong>Physique-Chimie</strong> et les <strong>Sciences de la Vie et de la Terre (SVT)</strong> pour les classes charnières de <strong>3ème</strong> et de <strong>Terminale (Séries A1, A2, C et D)</strong>.</p>
+                <p>Bienvenue sur l'Académie EdukaTchat. Notre accompagnement s'étend désormais à <strong>l'ensemble des disciplines de l'enseignement secondaire général</strong>, de la <strong>6ème à la Terminale</strong>, dans le strict respect de l'Approche Par Compétences (APC) ivoirienne.</p>
             </section>
 
            <section class="doors">
@@ -109,16 +109,43 @@
                 <div class="glass-card info-box news-box">
                     <h4>📌 Journal de Bord</h4>
                     <ul>
-                        <li><strong>Version 1.2 (Lancement local)</strong><br>Déploiement des modules de Mathématiques, Physique-Chimie et SVT pour les classes de 3ème et Terminales.</li>
+                        <li><strong>Version 2.0 (Lancement Global)</strong><br>Déploiement intégral de toutes les matières du secondaire général (de la 6ème à la Terminale).</li>
+                        <li>Intégration des 5 Pôles d'Excellence : Sciences Exactes, Sciences Expérimentales, Lettres & Sciences Humaines, Langues Vivantes, et Arts.</li>
+                        <li>Activation de la passerelle d'aiguillage silencieux pour une précision pédagogique absolue.</li>
                         <li>Création de "L'Espace de Préparation" (Accès libre et sécurisé).</li>
-                        <li>Double guide d'orientation opérationnel (post-BEPC et post-BAC).</li>
-                        <li>Optimisation du formatage de texte brut pour l'export Word.</li>
                     </ul>
                 </div>
             </section>
         </div>
     </div>
-
+<!-- LE VESTIBULE DES DISCIPLINES (Aiguillage) -->
+    <div id="discipline-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="fermerVestibule()">×</button>
+            <h3>Choix de la Discipline</h3>
+            <p>Sélectionne la matière que tu souhaites explorer aujourd'hui :</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 20px;">
+                <!-- Pôle Sciences Exactes -->
+                <button class="btn-action-doc" style="justify-content: center;" onclick="entrerDansLeChat('maths')">Mathématiques</button>
+                <button class="btn-action-doc" style="justify-content: center;" onclick="entrerDansLeChat('physique')">Physique-Chimie</button>
+                
+                <!-- Pôle Sciences Expérimentales -->
+                <button class="btn-action-doc" style="justify-content: center; border-color: #10B981; color: #10B981;" onclick="entrerDansLeChat('svt')">SVT</button>
+                
+                <!-- Pôle Lettres & Sciences Humaines -->
+                <button class="btn-action-doc" style="justify-content: center; border-color: #A855F7; color: #A855F7;" onclick="entrerDansLeChat('francais')">Français</button>
+                <button class="btn-action-doc" style="justify-content: center; border-color: #A855F7; color: #A855F7;" onclick="entrerDansLeChat('philosophie')">Philosophie</button>
+                <button class="btn-action-doc" style="justify-content: center; border-color: #A855F7; color: #A855F7;" onclick="entrerDansLeChat('histoire_geo')">Histoire-Géo</button>
+                <button class="btn-action-doc" style="justify-content: center; border-color: #A855F7; color: #A855F7;" onclick="entrerDansLeChat('edhc')">EDHC</button>
+                
+                <!-- Pôle Langues Vivantes -->
+                <button class="btn-action-doc" style="justify-content: center; border-color: #F59E0B; color: #F59E0B;" onclick="entrerDansLeChat('anglais')">Anglais</button>
+                <button class="btn-action-doc" style="justify-content: center; border-color: #F59E0B; color: #F59E0B;" onclick="entrerDansLeChat('espagnol')">Espagnol</button>
+                <button class="btn-action-doc" style="justify-content: center; border-color: #F59E0B; color: #F59E0B;" onclick="entrerDansLeChat('allemand')">Allemand</button>
+            </div>
+        </div>
+    </div>
     <div id="app-view">
         <div class="toolbar">
             <button class="btn-retour" onclick="goHome()">
