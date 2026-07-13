@@ -74,12 +74,25 @@ function entrerDansLeChat(matiereChoisie) {
     document.getElementById('container-cabinet-custom').classList.remove('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
     
-    // On active le bon conteneur selon l'espace (Sas ou Élève)
-    if(espaceActuel === 'sas') {
+    // ❖ L'UNIFICATION DES ESPACES ❖
+    // Le Sas et l'Académie utilisent désormais la même interface native majestueuse.
+    // C'est le serveur Python qui fera la différence grâce à la présence ou non du Code d'accès.
+    if(espaceActuel === 'sas' || espaceActuel === 'eleve') {
         document.getElementById('container-sas-custom').classList.add('active');
+        
+        // Formuler un message de bienvenue adapté à l'espace
+        const chatHistory = document.getElementById('sas-chat-history');
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.className = 'message system-message';
+        
+        if (espaceActuel === 'eleve') {
+            welcomeDiv.innerHTML = `Bienvenue dans l'Académie Premium. Le Répétiteur de <strong>${formaterNomMatiere(matiereChoisie)}</strong> est à votre écoute.`;
+        } else {
+            welcomeDiv.innerHTML = `Bienvenue dans l'Espace de Préparation. Le Répétiteur de <strong>${formaterNomMatiere(matiereChoisie)}</strong> est prêt.`;
+        }
+        
+        chatHistory.appendChild(welcomeDiv);
         scrollToBottom('sas-chat-history');
-    } else if (espaceActuel === 'eleve') {
-        document.getElementById('iframe-eleve').classList.add('active');
     }
 }
 
