@@ -18,7 +18,8 @@ body {
     color: #F8FAFC;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    /* L'élévation : 100dvh s'adapte à la barre mobile */
+    min-height: 100dvh;
 }
 
 /* --- L'EN-TÊTE TRANSLUCIDE --- */
@@ -306,7 +307,8 @@ header {
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    /* L'élévation absolue de l'espace de travail */
+    height: 100dvh;
     z-index: 100;
 }
 
@@ -434,7 +436,7 @@ iframe.active {
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     background-image: url('logo-edukatchat.png');
     background-repeat: no-repeat;
     background-position: center center;
@@ -498,6 +500,8 @@ iframe.active {
     background-color: #0F172A;
     border-top: 1px solid #1E293B;
     padding: 1.5rem 2rem;
+    /* La protection de la zone de sécurité (iOS et nouveaux Android) */
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
     display: flex;
     justify-content: center; 
     flex-shrink: 0;
@@ -619,7 +623,7 @@ body.light-theme .system-message, body.light-theme .btn-attachment { color: #647
 
 /* --- MODALE PREMIUM --- */
 .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
     background-color: rgba(2, 6, 23, 0.8); backdrop-filter: blur(8px);
     display: none; justify-content: center; align-items: center;
     z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
