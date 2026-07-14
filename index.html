@@ -17,23 +17,6 @@
     <!-- CHAMBRE D'IMPRESSION SECRÈTE -->
     <div id="print-area"></div>
 
-    <div id="premium-modal" class="modal-overlay">
-        <div class="glass-card modal-content">
-            <button class="modal-close" onclick="closePremiumModal()">×</button>
-            <h3>Accès Académique</h3>
-            <p>Veuillez saisir votre Code d'accès pour déverrouiller l'ensemble des ressources pédagogiques.</p>
-            <input type="password" id="matricule-input" class="input-matricule" placeholder="Ex: EDU-ABCD1" onkeypress="handleMatriculeKeyPress(event)">
-            <button class="btn-entrer" style="background-color: #3B82F6; width: 100%; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;" onclick="verifyMatricule()">Valider l'accès</button>
-            <div id="modal-feedback" class="feedback-text"></div>
-            <p style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #475569;">
-                Vous n'avez pas encore de Code d'accès ?<br>
-                <a href="https://tally.so/r/ODE4rA" target="_blank" style="color: #2563EB; text-decoration: underline; font-weight: bold; margin-top: 8px; display: inline-block; font-size: 0.95rem;">
-                    Accéder au Guichet d'Abonnement
-                </a>
-            </p>
-        </div>
-    </div>
-
     <header>
         <div class="brand">
            <img src="logo-edukatchat.png" alt="Logo EdukaTchat" class="logo-signature">
@@ -118,12 +101,33 @@
             </section>
         </div>
     </div>
-<!-- LE VESTIBULE DES DISCIPLINES (Aiguillage) -->
+
+    <!-- 1. MODALE CODE D'ACCÈS PREMIUM (Avec lien dynamique) -->
+    <div id="premium-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 400px; text-align: center;">
+            <button class="modal-close" onclick="closePremiumModal()">×</button>
+            <h3 style="margin-bottom: 15px;">Accès Académique</h3>
+            <p style="margin-bottom: 25px; color: #4B5563;">Veuillez saisir votre Code d'accès pour déverrouiller l'ensemble des ressources pédagogiques.</p>
+            
+            <input type="text" id="matricule-input" class="input-matricule" placeholder="Ex: EDU-ABCD1" onkeypress="handleMatriculeKeyPress(event)" style="width: 100%; text-align: center; letter-spacing: 2px; font-weight: bold; margin-bottom: 15px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+            
+            <button class="btn-entrer" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; font-size: 1.1em; padding: 10px; border: none; border-radius: 5px; cursor: pointer;" onclick="verifyMatricule()">Valider l'accès</button>
+            
+            <p id="modal-feedback" class="feedback-text" style="margin-top: 15px; font-weight: bold; min-height: 20px;"></p>
+            
+            <div style="margin-top: 20px; font-size: 0.9em; color: #6B7280;">
+                Vous n'avez pas encore de Code d'accès ?<br>
+                <a id="lien-abonnement-dynamique" href="#" style="color: #3B82F6; font-weight: bold; text-decoration: underline; margin-top: 8px; display: inline-block;" target="_blank">Accéder au Guichet d'Abonnement</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MODALE CHOIX DE LA DISCIPLINE (13 matières) -->
     <div id="discipline-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 600px;">
             <button class="modal-close" onclick="fermerVestibule()">×</button>
-            <h3>Choix de la Discipline</h3>
-            <p>Sélectionne la matière que tu souhaites explorer aujourd'hui :</p>
+            <h3 style="margin-bottom: 15px; text-align: center;">Choix de la Discipline</h3>
+            <p style="margin-bottom: 25px; color: #4B5563; text-align: center;">Sélectionne la matière que tu souhaites explorer aujourd'hui :</p>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 20px;">
                 <!-- Pôle Sciences Exactes -->
@@ -151,33 +155,35 @@
             </div>
         </div>
     </div>
-    <!-- LE VOILE DE L'ILLUSION (Questionnaire Alibi) -->
+
+    <!-- 3. LE VOILE DE L'ILLUSION (Questionnaire Alibi) -->
     <div id="profil-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 500px;">
-            <h3>Configuration de la session</h3>
-            <p>Afin d'adapter notre pédagogie à ton profil, merci de nous éclairer sur ces deux points :</p>
+            <h3 style="text-align: center;">Configuration de la session</h3>
+            <p style="text-align: center; color: #4B5563;">Afin d'adapter notre pédagogie à ton profil, merci de nous éclairer sur ces deux points :</p>
             
             <div style="margin-top: 20px; text-align: left;">
                 <label style="font-weight: bold; color: #374151;">Comment as-tu l'habitude de réviser à la maison ?</label>
-                <select id="habitudes-revision" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 20px; background-color: #F3F4F6;" onchange="verifierFormulaire()">
-    <option value="">-- Choisis une option --</option>
-    <option value="Dans le silence total">Dans le silence total</option>
-    <option value="En écoutant de la musique">En écoutant de la musique</option>
-    <option value="En groupe ou avec un proche">En groupe ou avec un proche</option>
-</select>
+                <select id="habitudes-revision" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 20px; background-color: #F3F4F6; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" onchange="verifierFormulaire()">
+                    <option value="">-- Choisis une option --</option>
+                    <option value="Dans le silence total">Dans le silence total</option>
+                    <option value="En écoutant de la musique">En écoutant de la musique</option>
+                    <option value="En groupe ou avec un proche">En groupe ou avec un proche</option>
+                </select>
 
                 <label style="font-weight: bold; color: #374151;">Comment te sens-tu à l'approche d'un devoir important ?</label>
-                <select id="gestion-stress" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 25px; background-color: #F3F4F6;" onchange="verifierFormulaire()">
-    <option value="">-- Choisis une option --</option>
-    <option value="Calme et méthodique">Calme et méthodique</option>
-    <option value="Un peu anxieux mais concentré">Un peu anxieux mais concentré</option>
-    <option value="Souvent submergé par le stress">Souvent submergé par le stress</option>
-</select>
+                <select id="gestion-stress" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 25px; background-color: #F3F4F6; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" onchange="verifierFormulaire()">
+                    <option value="">-- Choisis une option --</option>
+                    <option value="Calme et méthodique">Calme et méthodique</option>
+                    <option value="Un peu anxieux mais concentré">Un peu anxieux mais concentré</option>
+                    <option value="Souvent submergé par le stress">Souvent submergé par le stress</option>
+                </select>
             </div>
             
-            <button id="btn-commencer" class="btn-action-doc" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; font-size: 1.1em; opacity: 0.5; cursor: not-allowed;" onclick="validerProfilEtEntrer()" disabled>Commencer le Chat</button>
+            <button id="btn-commencer" class="btn-action-doc" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; font-size: 1.1em; opacity: 0.5; cursor: not-allowed; padding: 12px; border: none; border-radius: 5px;" onclick="validerProfilEtEntrer()" disabled>Commencer le Chat</button>
         </div>
     </div>
+
     <div id="app-view">
         <div class="toolbar">
             <button class="btn-retour" onclick="goHome()">
