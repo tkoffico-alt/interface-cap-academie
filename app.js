@@ -3,6 +3,7 @@
 let pendingSpaceToOpen = null;
 let avatarActif = "general"; // Mémorise l'avatar choisi
 let espaceActuel = "";       // Mémorise la porte choisie
+let disciplineEnAttente = ""; // Retient la matière pendant le questionnaire de diversion
 
 // =======================================================================
 // ❖ LA GESTION DES ESPACES ET DE L'AIGUILLAGE ❖
@@ -59,10 +60,25 @@ function fermerVestibule() {
 }
 
 function entrerDansLeChat(matiereChoisie) {
-    avatarActif = matiereChoisie;
-    fermerVestibule();
+    disciplineEnAttente = matiereChoisie; // L'esprit mémorise le choix de la discipline
+    fermerVestibule(); // On ferme la grille des disciplines
     
-    // On masque l'accueil et on affiche l'espace de travail
+    // On déploie le Voile de l'Illusion (Le questionnaire d'adaptation pédagogique)
+    document.getElementById('profil-modal').classList.add('active');
+}
+
+function validerProfilEtEntrer() {
+    // L'élève a cliqué sur "Commencer le Chat", on retire le Voile de l'illusion
+    document.getElementById('profil-modal').classList.remove('active');
+    
+    // Extraction des variables de diversion (méthode d'étude et stress)
+    const methodeTravail = document.getElementById('habitudes-revision').value;
+    const gestionStress = document.getElementById('gestion-stress').value;
+    
+    // On active officiellement la matière retenue
+    avatarActif = disciplineEnAttente;
+    
+    // On masque l'accueil et on affiche l'espace de travail (Lignes récupérées et sécurisées)
     document.getElementById('home-view').style.display = 'none';
     document.getElementById('app-view').style.display = 'flex';
 
@@ -75,22 +91,21 @@ function entrerDansLeChat(matiereChoisie) {
     document.getElementById('teacher-tabs-container').style.display = 'none';
     
     // ❖ L'UNIFICATION DES ESPACES ❖
-    // Le Sas et l'Académie utilisent désormais la même interface native majestueuse.
     if(espaceActuel === 'sas' || espaceActuel === 'eleve') {
         document.getElementById('container-sas-custom').classList.add('active');
         
         const chatHistory = document.getElementById('sas-chat-history');
         
-        // Purification : On efface les anciens messages visuels lors du changement de matière
+        // On purifie l'écran pour accueillir la nouvelle session
         chatHistory.innerHTML = ''; 
         
         const welcomeDiv = document.createElement('div');
         welcomeDiv.className = 'message system-message';
         
         if (espaceActuel === 'eleve') {
-            welcomeDiv.innerHTML = `L'Académie Premium vous ouvre ses portes. Le Répétiteur de <strong>${formaterNomMatiere(matiereChoisie)}</strong> est à votre écoute.`;
+            welcomeDiv.innerHTML = `L'Académie Premium vous ouvre ses portes. Le Répétiteur de <strong>${formaterNomMatiere(avatarActif)}</strong> est à votre écoute.`;
         } else {
-            welcomeDiv.innerHTML = `L'Espace de Préparation est prêt. Le Répétiteur de <strong>${formaterNomMatiere(matiereChoisie)}</strong> vous écoute.`;
+            welcomeDiv.innerHTML = `L'Espace de Préparation est prêt. Le Répétiteur de <strong>${formaterNomMatiere(avatarActif)}</strong> vous écoute.`;
         }
         
         chatHistory.appendChild(welcomeDiv);
@@ -588,8 +603,8 @@ function copierTexte(bouton) {
     navigator.clipboard.writeText(texteBrut).then(() => {
         const texteOriginal = bouton.innerHTML;
         bouton.innerHTML = "✨ Texte copié !";
-        bouton.style.color = "#10B981"; 
-        bouton.style.borderColor = "#10B981";
+        button.style.color = "#10B981"; 
+        button.style.borderColor = "#10B981";
         
         setTimeout(() => {
             bouton.innerHTML = texteOriginal;
