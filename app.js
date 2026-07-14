@@ -408,7 +408,11 @@ async function sendSasMessage() {
             sasConversationIds[avatarActif] = data.conversation_id;
         }
         
-        botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
+        // On prépare le fondu
+botLoadingDiv.style.opacity = '0'; 
+botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
+// On déclenche l'animation douce
+botLoadingDiv.classList.add('apparition-fluide');
         
         if (data.answer && data.answer.length > 50) {
             const actionsDiv = document.createElement('div');
@@ -498,7 +502,9 @@ async function sendTeacherMessage(outil) {
         if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
              botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
         } else {
-             botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
+             botLoadingDiv.style.opacity = '0';
+botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
+botLoadingDiv.classList.add('apparition-fluide');
              if (data.answer && data.answer.length > 50) {
                  const actionsDiv = document.createElement('div');
                  actionsDiv.className = 'message-actions';
