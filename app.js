@@ -637,3 +637,18 @@ function copierTexte(bouton) {
         alert("La copie automatique a échoué. Veuillez sélectionner le texte manuellement.");
     });
 }
+function verifierFormulaire() {
+    const habitude = document.getElementById('habitudes-revision').value;
+    const stress = document.getElementById('gestion-stress').value;
+    const bouton = document.getElementById('btn-commencer');
+    
+    if (habitude !== "" && stress !== "") {
+        bouton.disabled = false;
+        bouton.style.opacity = '1';
+        bouton.style.cursor = 'pointer';
+    } else {
+        bouton.disabled = true;
+        bouton.style.opacity = '0.5';
+        bouton.style.cursor = 'not-allowed';
+    }
+}
