@@ -383,7 +383,7 @@ async function sendSasMessage() {
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-        const response = await fetch('https://cap-academie-gateway.onrender.com/api/sas/chat', {
+        const response = await fetch('https://api.edukatchat.org/api/sas/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -488,7 +488,7 @@ async function sendTeacherMessage(outil) {
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-        const response = await fetch('https://cap-academie-gateway.onrender.com/api/enseignant/chat', {
+        const response = await fetch('https://api.edukatchat.org/api/enseignant/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
