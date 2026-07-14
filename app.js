@@ -10,30 +10,26 @@ let disciplineEnAttente = ""; // Retient la matière pendant le questionnaire de
 // =======================================================================
 
 async function openSpace(space) {
-    espaceActuel = space; // On enregistre immédiatement l'espace demandé
+    espaceActuel = space; 
 
     if (space === 'eleve') {
         const codeAcces = localStorage.getItem('eduka_sceau');
         
         if (!codeAcces) {
-            // Aucun code en mémoire : l'affichage de la modale est instantané
             pendingSpaceToOpen = 'eleve';
             openPremiumModal();
             return;
         }
         
-        // ❖ L'ILLUSION DE FLUIDITÉ ❖
-        // L'élève a un code en mémoire. Au lieu de figer l'écran pendant 5 secondes,
-        // on ouvre la modale immédiatement pour masquer le temps de réflexion du serveur.
+        // Illusion de fluidité : on affiche la modale immédiatement pour masquer l'attente
         openPremiumModal();
         const feedback = document.getElementById('modal-feedback');
         if (feedback) {
             feedback.textContent = "Authentification automatique en cours...";
-            feedback.style.color = "#60A5FA"; // Bleu serein
+            feedback.style.color = "#60A5FA"; 
         }
         
         try {
-            // Le serveur Python prend environ 5 secondes pour vérifier la base de données
             const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -42,31 +38,27 @@ async function openSpace(space) {
             const data = await response.json();
             
             if (data.valide) {
-                // Le sceau est toujours valide : on ferme la modale et on ouvre le vestibule
                 closePremiumModal();
                 document.getElementById('discipline-modal').classList.add('active');
             } else {
-                // Le sceau n'est plus valide (expiré/supprimé) : on purge la mémoire
                 localStorage.removeItem('eduka_sceau');
                 if (feedback) {
                     feedback.textContent = "Votre précédent accès a expiré. Veuillez saisir un nouveau Code.";
-                    feedback.style.color = "#F59E0B"; // Orange d'alerte
+                    feedback.style.color = "#F59E0B"; 
                 }
             }
         } catch (error) {
             console.error("Erreur de vérification", error);
             if (feedback) {
                 feedback.textContent = "Le réseau est instable. Impossible de vérifier l'accès.";
-                feedback.style.color = "#F87171"; // Rouge d'erreur
+                feedback.style.color = "#F87171"; 
             }
         }
 
     } else if (space === 'sas') {
-        // Pour le Sas (accès libre), on ouvre directement le vestibule
         document.getElementById('discipline-modal').classList.add('active');
 
     } else if (space === 'enseignant') {
-        // L'Espace Enseignant n'a pas de vestibule, il s'ouvre directement
         document.getElementById('home-view').style.display = 'none';
         document.getElementById('app-view').style.display = 'flex';
         
@@ -76,34 +68,29 @@ async function openSpace(space) {
         switchTeacherTool('atelier');
     }
 }
+
 function fermerVestibule() {
     document.getElementById('discipline-modal').classList.remove('active');
 }
 
 function entrerDansLeChat(matiereChoisie) {
-    disciplineEnAttente = matiereChoisie; // L'esprit mémorise le choix de la discipline
-    fermerVestibule(); // On ferme la grille des disciplines
-    
-    // On déploie le Voile de l'Illusion (Le questionnaire d'adaptation pédagogique)
+    disciplineEnAttente = matiereChoisie; 
+    fermerVestibule(); 
     document.getElementById('profil-modal').classList.add('active');
 }
 
 function validerProfilEtEntrer() {
-    // L'élève a cliqué sur "Commencer le Chat", on retire le Voile de l'illusion
     document.getElementById('profil-modal').classList.remove('active');
     
-    // Extraction des variables de diversion (méthode d'étude et stress)
+    // Extraction des variables de diversion
     const methodeTravail = document.getElementById('habitudes-revision').value;
     const gestionStress = document.getElementById('gestion-stress').value;
     
-    // On active officiellement la matière retenue
     avatarActif = disciplineEnAttente;
     
-    // On masque l'accueil et on affiche l'espace de travail (Lignes récupérées et sécurisées)
     document.getElementById('home-view').style.display = 'none';
     document.getElementById('app-view').style.display = 'flex';
 
-    // ❖ NETTOYAGE VISUEL GLOBAL ❖
     document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
     document.getElementById('container-sas-custom').classList.remove('active');
     document.getElementById('container-atelier-custom').classList.remove('active');
@@ -111,13 +98,10 @@ function validerProfilEtEntrer() {
     document.getElementById('container-cabinet-custom').classList.remove('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
     
-    // ❖ L'UNIFICATION DES ESPACES ❖
     if(espaceActuel === 'sas' || espaceActuel === 'eleve') {
         document.getElementById('container-sas-custom').classList.add('active');
         
         const chatHistory = document.getElementById('sas-chat-history');
-        
-        // On purifie l'écran pour accueillir la nouvelle session
         chatHistory.innerHTML = ''; 
         
         const welcomeDiv = document.createElement('div');
@@ -187,37 +171,6 @@ function goHome() {
     document.getElementById('container-forge-custom').classList.remove('active');
     document.getElementById('container-cabinet-custom').classList.remove('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
-
-    if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        }
-    }
-}
-
-function toggleFullScreen() {
-    let activeElement = document.querySelector('.custom-chat-container.active') || document.querySelector('iframe.active');
-    if (!activeElement) return;
-    
-    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-        if (activeElement.requestFullscreen) {
-            activeElement.requestFullscreen();
-        } else if (activeElement.webkitRequestFullscreen) {
-            activeElement.webkitRequestFullscreen();
-        } else if (activeElement.mozRequestFullScreen) {
-            activeElement.mozRequestFullScreen();
-        } else if (activeElement.msRequestFullscreen) {
-            activeElement.msRequestFullscreen();
-        }
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        }
-    }
 }
 
 function scrollToBottom(elementId) {
@@ -236,7 +189,6 @@ function saveChatHistory(outil) {
         localStorage.setItem(`eduka_chat_${outil}`, historyDiv.innerHTML);
         
         if (outil === 'sas') {
-            // Sérialisation du dictionnaire des mémoires
             localStorage.setItem(`eduka_conv_sas`, JSON.stringify(sasConversationIds));
         } else {
             localStorage.setItem(`eduka_conv_${outil}`, teacherConversationIds[outil]);
@@ -259,7 +211,6 @@ function restoreChatHistories() {
         if (savedConvId) {
             if (outil === 'sas') {
                 try {
-                    // Résurrection du dictionnaire des mémoires
                     sasConversationIds = JSON.parse(savedConvId);
                 } catch (e) {
                     sasConversationIds = {};
@@ -271,29 +222,11 @@ function restoreChatHistories() {
     });
 }
 
-// --- HARMONIE VISUELLE (MÉMOIRE DU THÈME) ---
 function initTheme() {
     const savedTheme = localStorage.getItem('eduka_theme');
     if (savedTheme === 'light') {
         document.body.classList.add('light-theme');
         updateThemeButtonUI(true);
-    }
-}
-
-function toggleTheme() {
-    const isLight = document.body.classList.toggle('light-theme');
-    localStorage.setItem('eduka_theme', isLight ? 'light' : 'dark');
-    updateThemeButtonUI(isLight);
-}
-
-function updateThemeButtonUI(isLight) {
-    const themeBtn = document.getElementById('btn-theme');
-    if (themeBtn) {
-        if (isLight) {
-            themeBtn.innerHTML = "Mode Sombre";
-        } else {
-            themeBtn.innerHTML = "Mode Clair";
-        }
     }
 }
 
@@ -303,9 +236,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =======================================================================
-// ❖ GESTION DU CODE D'ACCÈS ❖
+// ❖ GESTION DU CODE D'ACCÈS ET DES MODALES ❖
 // =======================================================================
 function openPremiumModal() {
+    // Aiguillage dynamique du lien d'abonnement
+    const lien = document.getElementById('lien-abonnement-dynamique');
+    if (lien) {
+        if (espaceActuel === 'enseignant') {
+            lien.href = "https://tally.so/r/RGgdb4"; // <-- Modifie cette ligne
+            lien.textContent = "Accéder au Cabinet (Enseignants)";
+        } else {
+            lien.href = "https://tally.so/r/ODE4rA"; // <-- Modifie cette ligne
+            lien.textContent = "Accéder au Bureau des Parents";
+        }
+    }
+
     document.getElementById('premium-modal').classList.add('active');
     setTimeout(() => document.getElementById('matricule-input').focus(), 100);
 }
@@ -364,7 +309,6 @@ async function verifyMatricule() {
     } catch (error) {
         feedback.textContent = "La connexion au serveur a échoué. Veuillez vérifier votre réseau.";
         feedback.style.color = "#F87171";
-        console.error("Erreur de vérification du Code:", error);
     }
 }
 
@@ -373,7 +317,13 @@ function triggerVisionUpsell(chatHistoryId) {
     
     const botUpsellDiv = document.createElement('div');
     botUpsellDiv.className = 'message bot-message';
-    botUpsellDiv.innerHTML = "<strong>L'analyse visuelle est restreinte.</strong><br><br>L'analyse visuelle de documents ou de supports photographiés est une fonctionnalité avancée réservée à <strong>l'accès complet</strong>.<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
+    botUpsellDiv.innerHTML = `
+        <div style="font-size: 0.9em; line-height: 1.4;">
+            <strong>📸 Analyse visuelle restreinte</strong><br>
+            Cette fonction avancée requiert l'accès complet.<br>
+            <button onclick='openPremiumModal()' style='margin-top: 8px; padding: 6px 12px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9em;'>Saisir le Code</button>
+        </div>
+    `;
     
     chatHistory.appendChild(botUpsellDiv);
     scrollToBottom(chatHistoryId);
@@ -385,12 +335,10 @@ function triggerVisionUpsell(chatHistoryId) {
 // =======================================================================
 // ❖ LOGIQUE DE L'ESPACE DE PRÉPARATION (LE SAS) ❖
 // =======================================================================
-let sasConversationIds = {}; // Le réceptacle multiple des mémoires
+let sasConversationIds = {}; 
 
 function handleSasKeyPress(event) {
-    if (event.key === 'Enter') {
-        sendSasMessage();
-    }
+    if (event.key === 'Enter') sendSasMessage();
 }
 
 async function sendSasMessage() {
@@ -400,7 +348,6 @@ async function sendSasMessage() {
     
     if (!message) return;
 
-    // Le Silence : On désactive les contrôles
     inputField.disabled = true;
     button.disabled = true;
     button.style.opacity = '0.5';
@@ -423,8 +370,6 @@ async function sendSasMessage() {
     scrollToBottom('sas-chat-history');
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
-
-    // La Maîtrise du Temps : Limite de 30 secondes
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -434,7 +379,6 @@ async function sendSasMessage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 query: message, 
-                // On utilise la mémoire spécifique à l'avatar, ou un vide si c'est le début
                 conversation_id: sasConversationIds[avatarActif] || "", 
                 matricule: sceau,
                 avatar: avatarActif
@@ -443,11 +387,9 @@ async function sendSasMessage() {
         });
 
         clearTimeout(timeoutId); 
-        
         const data = await response.json();
         
         if (data.conversation_id) {
-            // On enregistre l'ID retourné par Dify dans le compartiment de la matière
             sasConversationIds[avatarActif] = data.conversation_id;
         }
         
@@ -462,22 +404,13 @@ async function sendSasMessage() {
             `;
             botLoadingDiv.appendChild(actionsDiv);
         }
-        
         saveChatHistory('sas');
         
     } catch (error) {
         clearTimeout(timeoutId);
-        
-        if (error.name === 'AbortError') {
-            botLoadingDiv.textContent = "Le délai d'attente est dépassé. Le réseau semble saturé, veuillez réessayer.";
-        } else {
-            botLoadingDiv.textContent = "La connexion à la plateforme a été interrompue. Le réseau est instable.";
-        }
-        console.error("Erreur de transmission Sas:", error);
+        botLoadingDiv.textContent = error.name === 'AbortError' ? "Le délai d'attente est dépassé. Le réseau semble saturé." : "La connexion à la plateforme a été interrompue.";
         saveChatHistory('sas');
-        
     } finally {
-        // Le Réveil : On restaure l'énergie de l'interface
         inputField.disabled = false;
         button.disabled = false;
         button.style.opacity = '1';
@@ -497,9 +430,7 @@ let teacherConversationIds = {
 };
 
 function handleTeacherKeyPress(event, outil) {
-    if (event.key === 'Enter') {
-        sendTeacherMessage(outil);
-    }
+    if (event.key === 'Enter') sendTeacherMessage(outil);
 }
 
 async function sendTeacherMessage(outil) {
@@ -515,7 +446,6 @@ async function sendTeacherMessage(outil) {
     button.style.cursor = 'not-allowed';
 
     const chatHistory = document.getElementById(`${outil}-chat-history`);
-
     const userMsgDiv = document.createElement('div');
     userMsgDiv.className = 'message user-message';
     userMsgDiv.textContent = message;
@@ -531,7 +461,6 @@ async function sendTeacherMessage(outil) {
     scrollToBottom(`${outil}-chat-history`);
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -549,14 +478,12 @@ async function sendTeacherMessage(outil) {
         });
 
         clearTimeout(timeoutId);
-
         const data = await response.json();
         
         if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
              botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
         } else {
              botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
-             
              if (data.answer && data.answer.length > 50) {
                  const actionsDiv = document.createElement('div');
                  actionsDiv.className = 'message-actions';
@@ -571,20 +498,12 @@ async function sendTeacherMessage(outil) {
         if (data.conversation_id) {
             teacherConversationIds[outil] = data.conversation_id;
         }
-        
         saveChatHistory(outil);
         
     } catch (error) {
         clearTimeout(timeoutId);
-        
-        if (error.name === 'AbortError') {
-            botLoadingDiv.textContent = "Le délai d'attente est dépassé. L'énergie du réseau fluctue, veuillez formuler votre demande à nouveau.";
-        } else {
-            botLoadingDiv.textContent = "La connexion à l'Espace a été interrompue. Le lien s'est dispersé.";
-        }
-        console.error("Erreur de transmission Enseignant:", error);
+        botLoadingDiv.textContent = error.name === 'AbortError' ? "Le délai d'attente est dépassé. L'énergie du réseau fluctue." : "La connexion à l'Espace a été interrompue.";
         saveChatHistory(outil);
-        
     } finally {
         inputField.disabled = false;
         button.disabled = false;
@@ -596,7 +515,7 @@ async function sendTeacherMessage(outil) {
 }
 
 // =======================================================================
-// ❖ OUTILS D'ÉDITION PURES (GÉNÉRATION TEXTUELLE) ❖
+// ❖ OUTILS D'ÉDITION PURES ET VALIDATION ❖
 // =======================================================================
 function imprimerDocument(bouton) {
     const documentDiv = bouton.closest('.bot-message');
@@ -609,7 +528,6 @@ function imprimerDocument(bouton) {
 
     const printArea = document.getElementById('print-area');
     printArea.innerHTML = `<div style="font-family: Arial, sans-serif; font-size: 12pt; color: #000; background: #fff; white-space: pre-wrap; word-wrap: break-word;">${texteSecurise}</div>`;
-
     window.print();
 }
 
@@ -624,8 +542,8 @@ function copierTexte(bouton) {
     navigator.clipboard.writeText(texteBrut).then(() => {
         const texteOriginal = bouton.innerHTML;
         bouton.innerHTML = "✨ Texte copié !";
-        button.style.color = "#10B981"; 
-        button.style.borderColor = "#10B981";
+        bouton.style.color = "#10B981"; 
+        bouton.style.borderColor = "#10B981";
         
         setTimeout(() => {
             bouton.innerHTML = texteOriginal;
@@ -633,10 +551,10 @@ function copierTexte(bouton) {
             bouton.style.borderColor = "";
         }, 2000);
     }).catch(err => {
-        console.error("L'énergie n'a pu être transmise :", err);
         alert("La copie automatique a échoué. Veuillez sélectionner le texte manuellement.");
     });
 }
+
 function verifierFormulaire() {
     const habitude = document.getElementById('habitudes-revision').value;
     const stress = document.getElementById('gestion-stress').value;
