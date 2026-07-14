@@ -101,8 +101,10 @@ function entrerDansLeChat(matiereChoisie) {
 function formaterNomMatiere(code) {
     const noms = {
         'maths': 'Mathématiques', 'physique': 'Physique-Chimie', 'svt': 'SVT',
+        'tice': 'TICE (Informatique)',
         'francais': 'Français', 'philosophie': 'Philosophie', 'histoire_geo': 'Histoire-Géo',
-        'edhc': 'EDHC', 'anglais': 'Anglais', 'espagnol': 'Espagnol', 'allemand': 'Allemand'
+        'edhc': 'EDHC', 'anglais': 'Anglais', 'espagnol': 'Espagnol', 'allemand': 'Allemand',
+        'musique': 'Éducation Musicale', 'arts_plastiques': 'Arts Plastiques'
     };
     return noms[code] || 'cette discipline';
 }
