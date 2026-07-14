@@ -16,12 +16,24 @@ async function openSpace(space) {
         const codeAcces = localStorage.getItem('eduka_sceau');
         
         if (!codeAcces) {
+            // Aucun code en mémoire : l'affichage de la modale est instantané
             pendingSpaceToOpen = 'eleve';
             openPremiumModal();
             return;
         }
         
+        // ❖ L'ILLUSION DE FLUIDITÉ ❖
+        // L'élève a un code en mémoire. Au lieu de figer l'écran pendant 5 secondes,
+        // on ouvre la modale immédiatement pour masquer le temps de réflexion du serveur.
+        openPremiumModal();
+        const feedback = document.getElementById('modal-feedback');
+        if (feedback) {
+            feedback.textContent = "Authentification automatique en cours...";
+            feedback.style.color = "#60A5FA"; // Bleu serein
+        }
+        
         try {
+            // Le serveur Python prend environ 5 secondes pour vérifier la base de données
             const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -30,13 +42,23 @@ async function openSpace(space) {
             const data = await response.json();
             
             if (data.valide) {
-                // Le sceau est valide : on ouvre le vestibule !
+                // Le sceau est toujours valide : on ferme la modale et on ouvre le vestibule
+                closePremiumModal();
                 document.getElementById('discipline-modal').classList.add('active');
             } else {
-                openPremiumModal();
+                // Le sceau n'est plus valide (expiré/supprimé) : on purge la mémoire
+                localStorage.removeItem('eduka_sceau');
+                if (feedback) {
+                    feedback.textContent = "Votre précédent accès a expiré. Veuillez saisir un nouveau Code.";
+                    feedback.style.color = "#F59E0B"; // Orange d'alerte
+                }
             }
         } catch (error) {
             console.error("Erreur de vérification", error);
+            if (feedback) {
+                feedback.textContent = "Le réseau est instable. Impossible de vérifier l'accès.";
+                feedback.style.color = "#F87171"; // Rouge d'erreur
+            }
         }
 
     } else if (space === 'sas') {
@@ -54,7 +76,6 @@ async function openSpace(space) {
         switchTeacherTool('atelier');
     }
 }
-
 function fermerVestibule() {
     document.getElementById('discipline-modal').classList.remove('active');
 }
