@@ -76,19 +76,21 @@ function entrerDansLeChat(matiereChoisie) {
     
     // ❖ L'UNIFICATION DES ESPACES ❖
     // Le Sas et l'Académie utilisent désormais la même interface native majestueuse.
-    // C'est le serveur Python qui fera la différence grâce à la présence ou non du Code d'accès.
     if(espaceActuel === 'sas' || espaceActuel === 'eleve') {
         document.getElementById('container-sas-custom').classList.add('active');
         
-        // Formuler un message de bienvenue adapté à l'espace
         const chatHistory = document.getElementById('sas-chat-history');
+        
+        // Purification : On efface les anciens messages visuels lors du changement de matière
+        chatHistory.innerHTML = ''; 
+        
         const welcomeDiv = document.createElement('div');
         welcomeDiv.className = 'message system-message';
         
         if (espaceActuel === 'eleve') {
-            welcomeDiv.innerHTML = `Bienvenue dans l'Académie Premium. Le Répétiteur de <strong>${formaterNomMatiere(matiereChoisie)}</strong> est à votre écoute.`;
+            welcomeDiv.innerHTML = `L'Académie Premium vous ouvre ses portes. Le Répétiteur de <strong>${formaterNomMatiere(matiereChoisie)}</strong> est à votre écoute.`;
         } else {
-            welcomeDiv.innerHTML = `Bienvenue dans l'Espace de Préparation. Le Répétiteur de <strong>${formaterNomMatiere(matiereChoisie)}</strong> est prêt.`;
+            welcomeDiv.innerHTML = `L'Espace de Préparation est prêt. Le Répétiteur de <strong>${formaterNomMatiere(matiereChoisie)}</strong> vous écoute.`;
         }
         
         chatHistory.appendChild(welcomeDiv);
@@ -196,7 +198,8 @@ function saveChatHistory(outil) {
         localStorage.setItem(`eduka_chat_${outil}`, historyDiv.innerHTML);
         
         if (outil === 'sas') {
-            localStorage.setItem(`eduka_conv_sas`, sasConversationId);
+            // Sérialisation du dictionnaire des mémoires
+            localStorage.setItem(`eduka_conv_sas`, JSON.stringify(sasConversationIds));
         } else {
             localStorage.setItem(`eduka_conv_${outil}`, teacherConversationIds[outil]);
         }
@@ -217,7 +220,12 @@ function restoreChatHistories() {
         const savedConvId = localStorage.getItem(`eduka_conv_${outil}`);
         if (savedConvId) {
             if (outil === 'sas') {
-                sasConversationId = savedConvId;
+                try {
+                    // Résurrection du dictionnaire des mémoires
+                    sasConversationIds = JSON.parse(savedConvId);
+                } catch (e) {
+                    sasConversationIds = {};
+                }
             } else {
                 teacherConversationIds[outil] = savedConvId;
             }
@@ -339,7 +347,7 @@ function triggerVisionUpsell(chatHistoryId) {
 // =======================================================================
 // ❖ LOGIQUE DE L'ESPACE DE PRÉPARATION (LE SAS) ❖
 // =======================================================================
-let sasConversationId = ""; 
+let sasConversationIds = {}; // Le réceptacle multiple des mémoires
 
 function handleSasKeyPress(event) {
     if (event.key === 'Enter') {
@@ -388,9 +396,10 @@ async function sendSasMessage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 query: message, 
-                conversation_id: sasConversationId,
+                // On utilise la mémoire spécifique à l'avatar, ou un vide si c'est le début
+                conversation_id: sasConversationIds[avatarActif] || "", 
                 matricule: sceau,
-                avatar: avatarActif // L'INJECTION DE L'AIGUILLAGE EST ICI
+                avatar: avatarActif
             }),
             signal: controller.signal 
         });
@@ -398,6 +407,11 @@ async function sendSasMessage() {
         clearTimeout(timeoutId); 
         
         const data = await response.json();
+        
+        if (data.conversation_id) {
+            // On enregistre l'ID retourné par Dify dans le compartiment de la matière
+            sasConversationIds[avatarActif] = data.conversation_id;
+        }
         
         botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
         
@@ -409,10 +423,6 @@ async function sendSasMessage() {
                 <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer / Enregistrer en PDF</button>
             `;
             botLoadingDiv.appendChild(actionsDiv);
-        }
-        
-        if (data.conversation_id) {
-            sasConversationId = data.conversation_id;
         }
         
         saveChatHistory('sas');
