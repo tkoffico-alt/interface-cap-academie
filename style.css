@@ -711,3 +711,18 @@ body.light-theme .btn-action-doc:hover {
         width: 100% !important;
     }
 }
+/* ❖ L'APPARITION FLUIDE DES MESSAGES ❖ */
+.apparition-fluide {
+    animation: fonduDeroule 0.8s ease-out forwards;
+}
+
+@keyframes fonduDeroule {
+    0% { 
+        opacity: 0; 
+        transform: translateY(15px); /* Le texte commence légèrement plus bas */
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0); /* Il remonte à sa position naturelle */
+    }
+}
