@@ -229,7 +229,22 @@ function initTheme() {
         updateThemeButtonUI(true);
     }
 }
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-theme');
+    localStorage.setItem('eduka_theme', isLight ? 'light' : 'dark');
+    updateThemeButtonUI(isLight);
+}
 
+function updateThemeButtonUI(isLight) {
+    const themeBtn = document.getElementById('btn-theme');
+    if (themeBtn) {
+        if (isLight) {
+            themeBtn.innerHTML = "Mode Sombre";
+        } else {
+            themeBtn.innerHTML = "Mode Clair";
+        }
+    }
+}
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     restoreChatHistories(); 
