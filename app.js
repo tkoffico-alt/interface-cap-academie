@@ -642,10 +642,10 @@ function imprimerDocument(bouton) {
             ${contenuHTML}
             
             <!-- Injection du Sceau en fin de document -->
-            <div style="margin-top: 50px; text-align: center; border-top: 2px solid #E5E7EB; padding-top: 20px; white-space: normal;">
-                <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; margin-bottom: 10px;">
-                <br><strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px;">EdukaTchat</strong>
-                <br><span style="font-size: 10pt; color: #6B7280;">© Propriété Intellectuelle Exclusive | Document officiel généré par IA</span>
+            <div style="margin-top: 50px; text-align: center; border-top: 2px solid #E5E7EB; padding-top: 20px; white-space: normal; line-height: 1.2;">
+                <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; display: block; margin: 0 auto;">
+                <strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px; display: block; margin-top: 5px;">EdukaTchat</strong>
+                <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 3px;">© Propriété Intellectuelle Exclusive | Document officiel généré par IA</span>
             </div>
         </div>`;
     
