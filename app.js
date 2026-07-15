@@ -715,3 +715,36 @@ function verifierFormulaire() {
         bouton.style.cursor = 'not-allowed';
     }
 }
+// =======================================================================
+// ❖ GESTION DU PLEIN ÉCRAN ❖
+// =======================================================================
+function toggleFullScreen() {
+    const doc = window.document;
+    const docEl = doc.documentElement; // Cible l'intégralité de la page
+    const btn = document.getElementById('btn-fullscreen');
+
+    const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+    if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        // Entrer en plein écran
+        if (requestFullScreen) {
+            requestFullScreen.call(docEl);
+            if (btn) btn.innerHTML = "⛶ Quitter Plein Écran";
+        }
+    } else {
+        // Quitter le plein écran
+        if (cancelFullScreen) {
+            cancelFullScreen.call(doc);
+            if (btn) btn.innerHTML = "⛶ Plein Écran";
+        }
+    }
+}
+
+// Écouteur pour remettre le bon texte si l'utilisateur quitte avec la touche "Échap"
+document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('btn-fullscreen');
+    if (!document.fullscreenElement && btn) {
+        btn.innerHTML = "⛶ Plein Écran";
+    }
+});
