@@ -593,17 +593,32 @@ async function sendTeacherMessage(outil) {
 // =======================================================================
 // ❖ OUTILS D'ÉDITION PURES ET VALIDATION ❖
 // =======================================================================
+// ❖ LE SCEAU DU CRÉATEUR ❖
+// Remplace le lien ci-dessous par l'adresse de ton image copiée sur GitHub
+const urlSceau = "https://github.com/tkoffico-alt/interface-cap-academie/blob/main/logo-signature-doc.png?raw=true"; 
+
 function imprimerDocument(bouton) {
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
 
-    const texteBrut = clone.innerText;
-    const texteSecurise = texteBrut.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // On récupère le texte avec sa belle mise en forme HTML
+    const contenuHTML = clone.innerHTML;
 
     const printArea = document.getElementById('print-area');
-    printArea.innerHTML = `<div style="font-family: Arial, sans-serif; font-size: 12pt; color: #000; background: #fff; white-space: pre-wrap; word-wrap: break-word;">${texteSecurise}</div>`;
+    printArea.innerHTML = `
+        <div style="font-family: Arial, sans-serif; font-size: 12pt; color: #000; background: #fff; padding: 20px;">
+            ${contenuHTML}
+            
+            <!-- Injection du Sceau en fin de document -->
+            <div style="margin-top: 50px; text-align: center; border-top: 2px solid #E5E7EB; padding-top: 20px;">
+                <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; margin-bottom: 10px;">
+                <br><strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px;">EdukaTchat</strong>
+                <br><span style="font-size: 10pt; color: #6B7280;">© Propriété Intellectuelle Exclusive | Document officiel généré par IA</span>
+            </div>
+        </div>`;
+    
     window.print();
 }
 
@@ -613,24 +628,49 @@ function copierTexte(bouton) {
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
 
+    const contenuHTML = clone.innerHTML;
     const texteBrut = clone.innerText;
 
-    navigator.clipboard.writeText(texteBrut).then(() => {
-        const texteOriginal = bouton.innerHTML;
-        bouton.innerHTML = "✨ Texte copié !";
-        bouton.style.color = "#10B981"; 
-        bouton.style.borderColor = "#10B981";
-        
-        setTimeout(() => {
-            bouton.innerHTML = texteOriginal;
-            bouton.style.color = "";
-            bouton.style.borderColor = "";
-        }, 2000);
-    }).catch(err => {
-        alert("La copie automatique a échoué. Veuillez sélectionner le texte manuellement.");
-    });
+    // Le sceau invisible qui apparaîtra dans Word
+    const signatureHTML = `
+        <br><br>
+        <div style="text-align: center; font-family: Arial, sans-serif; border-top: 2px solid #E5E7EB; padding-top: 20px;">
+            <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; margin-bottom: 10px;">
+            <br><strong style="font-size: 14pt; color: #1F2937;">EdukaTchat</strong>
+            <br><span style="font-size: 10pt; color: #6B7280;">© Propriété Intellectuelle Exclusive</span>
+        </div>`;
+
+    // Création d'un colis riche pour le presse-papier (Préserve le gras, les tableaux et l'image)
+    const blobHtml = new Blob([contenuHTML + signatureHTML], { type: "text/html" });
+    const blobText = new Blob([texteBrut + "\n\n© EdukaTchat - Propriété Intellectuelle Exclusive"], { type: "text/plain" });
+
+    try {
+        const data = [new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })];
+        navigator.clipboard.write(data).then(() => {
+            animerBoutonCopie(bouton);
+        });
+    } catch (err) {
+        // Bouclier de secours si le navigateur est ancien
+        navigator.clipboard.writeText(texteBrut + "\n\n© EdukaTchat - Propriété Intellectuelle").then(() => {
+            animerBoutonCopie(bouton);
+        });
+    }
 }
 
+function animerBoutonCopie(bouton) {
+    const texteOriginal = bouton.innerHTML;
+    bouton.innerHTML = "✨ Document et Sceau copiés !";
+    bouton.style.color = "#10B981"; 
+    bouton.style.borderColor = "#10B981";
+    
+    setTimeout(() => {
+        bouton.innerHTML = texteOriginal;
+        bouton.style.color = "";
+        bouton.style.borderColor = "";
+    }, 2000);
+}
+
+// Conserve ta fonction verifierFormulaire() existante juste en dessous
 function verifierFormulaire() {
     const habitude = document.getElementById('habitudes-revision').value;
     const stress = document.getElementById('gestion-stress').value;
