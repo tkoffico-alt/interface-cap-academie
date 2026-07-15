@@ -607,12 +607,42 @@ function imprimerDocument(bouton) {
     const contenuHTML = clone.innerHTML;
 
     const printArea = document.getElementById('print-area');
+    
+    // On injecte les règles de respiration (CSS) et le contenu
     printArea.innerHTML = `
-        <div style="font-family: Arial, sans-serif; font-size: 12pt; color: #000; background: #fff; padding: 20px;">
+        <style>
+            .document-aere {
+                font-family: Arial, sans-serif; 
+                font-size: 12pt; 
+                color: #000; 
+                background: #fff; 
+                padding: 20px; 
+                line-height: 1.6; /* Aère l'espace entre les lignes */
+                white-space: pre-wrap; /* Force le respect des sauts de ligne invisibles */
+            }
+            .document-aere h1, .document-aere h2, .document-aere h3, .document-aere h4 {
+                margin-top: 1.5em; 
+                margin-bottom: 0.5em; 
+                color: #1F2937;
+            }
+            .document-aere p {
+                margin-bottom: 1em; /* Espace entre les paragraphes */
+            }
+            .document-aere ul, .document-aere ol {
+                margin-top: 0.5em;
+                margin-bottom: 1em;
+                padding-left: 20px;
+            }
+            .document-aere li {
+                margin-bottom: 0.5em; /* Espace entre les puces */
+            }
+        </style>
+        
+        <div class="document-aere">
             ${contenuHTML}
             
             <!-- Injection du Sceau en fin de document -->
-            <div style="margin-top: 50px; text-align: center; border-top: 2px solid #E5E7EB; padding-top: 20px;">
+            <div style="margin-top: 50px; text-align: center; border-top: 2px solid #E5E7EB; padding-top: 20px; white-space: normal;">
                 <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; margin-bottom: 10px;">
                 <br><strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px;">EdukaTchat</strong>
                 <br><span style="font-size: 10pt; color: #6B7280;">© Propriété Intellectuelle Exclusive | Document officiel généré par IA</span>
