@@ -379,14 +379,12 @@ async function sendSasMessage() {
     scrollToBottom('sas-chat-history');
 
     const botLoadingDiv = document.createElement('div');
-    botLoadingDiv.className = 'message bot-message';
-    botLoadingDiv.textContent = "L'Assistant analyse votre demande...";
+    botLoadingDiv.className = 'message bot-message apparition-fluide'; // Animation d'apparition
+    botLoadingDiv.textContent = "L'Assistant prépare l'Espace...";
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom('sas-chat-history');
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
         const response = await fetch('https://api.edukatchat.org/api/sas/chat', {
@@ -397,24 +395,52 @@ async function sendSasMessage() {
                 conversation_id: sasConversationIds[avatarActif] || "", 
                 matricule: sceau,
                 avatar: avatarActif
-            }),
-            signal: controller.signal 
+            })
         });
 
-        clearTimeout(timeoutId); 
-        const data = await response.json();
+        const contentType = response.headers.get("content-type");
         
-        if (data.conversation_id) {
-            sasConversationIds[avatarActif] = data.conversation_id;
+        // 1. Si l'accès est bloqué (quota dépassé) = Réponse classique
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            botLoadingDiv.textContent = data.answer || "Une erreur est survenue.";
+            if (data.conversation_id) sasConversationIds[avatarActif] = data.conversation_id;
+        } 
+        // 2. Si le réseau s'ouvre (Mode Streaming)
+        else {
+            botLoadingDiv.textContent = ""; // On efface le texte de préparation
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunkStr = decoder.decode(value, { stream: true });
+                const lines = chunkStr.split('\n');
+                
+                for (let line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const dataObj = JSON.parse(line.substring(6));
+                            if (dataObj.event === 'message' || dataObj.event === 'agent_message') {
+                                // L'écriture fluide s'opère ici, caractère par caractère
+                                botLoadingDiv.textContent += (dataObj.answer || "");
+                                scrollToBottom('sas-chat-history');
+                            }
+                            if (dataObj.conversation_id) {
+                                sasConversationIds[avatarActif] = dataObj.conversation_id;
+                            }
+                        } catch(e) {
+                            // Ignorer les fragments incomplets
+                        }
+                    }
+                }
+            }
         }
-        
-        // On prépare le fondu
-botLoadingDiv.style.opacity = '0'; 
-botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
-// On déclenche l'animation douce
-botLoadingDiv.classList.add('apparition-fluide');
-        
-        if (data.answer && data.answer.length > 50) {
+
+        // Ajout des outils d'édition à la fin du flux
+        if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
             actionsDiv.innerHTML = `
@@ -426,8 +452,7 @@ botLoadingDiv.classList.add('apparition-fluide');
         saveChatHistory('sas');
         
     } catch (error) {
-        clearTimeout(timeoutId);
-        botLoadingDiv.textContent = error.name === 'AbortError' ? "Le délai d'attente est dépassé. Le réseau semble saturé." : "La connexion à la plateforme a été interrompue.";
+        botLoadingDiv.textContent = "La connexion à la plateforme a été interrompue. Les flux sont perturbés.";
         saveChatHistory('sas');
     } finally {
         inputField.disabled = false;
@@ -438,7 +463,6 @@ botLoadingDiv.classList.add('apparition-fluide');
         scrollToBottom('sas-chat-history');
     }
 }
-
 // =======================================================================
 // ❖ LOGIQUE DES OUTILS ENSEIGNANT ❖
 // =======================================================================
@@ -474,14 +498,12 @@ async function sendTeacherMessage(outil) {
     scrollToBottom(`${outil}-chat-history`);
 
     const botLoadingDiv = document.createElement('div');
-    botLoadingDiv.className = 'message bot-message';
-    botLoadingDiv.textContent = "L'Assistant prépare sa réponse...";
+    botLoadingDiv.className = 'message bot-message apparition-fluide'; // Animation d'apparition
+    botLoadingDiv.textContent = "Le Cabinet compile les données...";
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom(`${outil}-chat-history`);
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
         const response = await fetch('https://api.edukatchat.org/api/enseignant/chat', {
@@ -489,41 +511,69 @@ async function sendTeacherMessage(outil) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 query: message, 
-                conversation_id: teacherConversationIds[outil],
+                conversation_id: teacherConversationIds[outil] || "",
                 outil: outil,
                 matricule: sceau
-            }),
-            signal: controller.signal 
+            })
         });
 
-        clearTimeout(timeoutId);
-        const data = await response.json();
+        const contentType = response.headers.get("content-type");
         
-        if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
-             botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
-        } else {
-             botLoadingDiv.style.opacity = '0';
-botLoadingDiv.textContent = data.answer || "Une erreur est survenue lors de l'analyse.";
-botLoadingDiv.classList.add('apparition-fluide');
-             if (data.answer && data.answer.length > 50) {
-                 const actionsDiv = document.createElement('div');
-                 actionsDiv.className = 'message-actions';
-                 actionsDiv.innerHTML = `
-                     <button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier pour Word</button>
-                     <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer / Enregistrer en PDF</button>
-                 `;
-                 botLoadingDiv.appendChild(actionsDiv);
-             }
+        // 1. Gestion des quotas (Message classique)
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
+                botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
+            } else {
+                botLoadingDiv.textContent = data.answer || "Une erreur est survenue.";
+            }
+            if (data.conversation_id) teacherConversationIds[outil] = data.conversation_id;
+        } 
+        // 2. Le Flux Continu de l'Enseignant
+        else {
+            botLoadingDiv.textContent = ""; 
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunkStr = decoder.decode(value, { stream: true });
+                const lines = chunkStr.split('\n');
+                
+                for (let line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const dataObj = JSON.parse(line.substring(6));
+                            if (dataObj.event === 'message' || dataObj.event === 'agent_message') {
+                                botLoadingDiv.textContent += (dataObj.answer || "");
+                                scrollToBottom(`${outil}-chat-history`);
+                            }
+                            if (dataObj.conversation_id) {
+                                teacherConversationIds[outil] = dataObj.conversation_id;
+                            }
+                        } catch(e) {}
+                    }
+                }
+            }
         }
 
-        if (data.conversation_id) {
-            teacherConversationIds[outil] = data.conversation_id;
+        // Ajout des outils d'édition
+        if (botLoadingDiv.textContent.length > 50) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = `
+                <button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier pour Word</button>
+                <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer / Enregistrer en PDF</button>
+            `;
+            botLoadingDiv.appendChild(actionsDiv);
         }
+        
         saveChatHistory(outil);
         
     } catch (error) {
-        clearTimeout(timeoutId);
-        botLoadingDiv.textContent = error.name === 'AbortError' ? "Le délai d'attente est dépassé. L'énergie du réseau fluctue." : "La connexion à l'Espace a été interrompue.";
+        botLoadingDiv.textContent = "La connexion à l'Espace a été interrompue.";
         saveChatHistory(outil);
     } finally {
         inputField.disabled = false;
@@ -534,7 +584,6 @@ botLoadingDiv.classList.add('apparition-fluide');
         scrollToBottom(`${outil}-chat-history`);
     }
 }
-
 // =======================================================================
 // ❖ OUTILS D'ÉDITION PURES ET VALIDATION ❖
 // =======================================================================
