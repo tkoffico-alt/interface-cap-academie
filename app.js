@@ -408,7 +408,9 @@ async function sendSasMessage() {
         } 
         // 2. Si le réseau s'ouvre (Mode Streaming)
         else {
-            botLoadingDiv.textContent = ""; // On efface le texte de préparation
+            botLoadingDiv.innerHTML = ""; // On efface le texte de préparation
+            let texteIntegralSas = ""; // ❖ Le réceptacle d'énergie
+            
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
             
@@ -424,8 +426,9 @@ async function sendSasMessage() {
                         try {
                             const dataObj = JSON.parse(line.substring(6));
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message') {
-                                // L'écriture fluide s'opère ici, caractère par caractère
-                                botLoadingDiv.textContent += (dataObj.answer || "");
+                                // ❖ L'accumulation et la traduction instantanée
+                                texteIntegralSas += (dataObj.answer || "");
+                                botLoadingDiv.innerHTML = marked.parse(texteIntegralSas);
                                 scrollToBottom('sas-chat-history');
                             }
                             if (dataObj.conversation_id) {
@@ -438,7 +441,6 @@ async function sendSasMessage() {
                 }
             }
         }
-
         // Ajout des outils d'édition à la fin du flux
         if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
@@ -531,7 +533,9 @@ async function sendTeacherMessage(outil) {
         } 
         // 2. Le Flux Continu de l'Enseignant
         else {
-            botLoadingDiv.textContent = ""; 
+            botLoadingDiv.innerHTML = ""; 
+            let texteIntegralTeacher = ""; // ❖ Le réceptacle d'énergie
+            
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
             
@@ -547,7 +551,9 @@ async function sendTeacherMessage(outil) {
                         try {
                             const dataObj = JSON.parse(line.substring(6));
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message') {
-                                botLoadingDiv.textContent += (dataObj.answer || "");
+                                // ❖ L'accumulation et la traduction instantanée
+                                texteIntegralTeacher += (dataObj.answer || "");
+                                botLoadingDiv.innerHTML = marked.parse(texteIntegralTeacher);
                                 scrollToBottom(`${outil}-chat-history`);
                             }
                             if (dataObj.conversation_id) {
