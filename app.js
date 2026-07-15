@@ -608,7 +608,7 @@ function imprimerDocument(bouton) {
 
     const printArea = document.getElementById('print-area');
     
-    // On injecte les règles de respiration (CSS) et le contenu
+   // On injecte les règles de respiration (CSS) et le contenu
     printArea.innerHTML = `
         <style>
             .document-aere {
@@ -647,10 +647,10 @@ function imprimerDocument(bouton) {
                 <strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px; display: block; margin-top: -12px;">EdukaTchat</strong>
                 <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 2px;">© Propriété Intellectuelle Exclusive | Document officiel généré par IA</span>
             </div>
+        </div>`;
     
     window.print();
 }
-
 function copierTexte(bouton) {
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
