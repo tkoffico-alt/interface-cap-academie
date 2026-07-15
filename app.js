@@ -664,9 +664,9 @@ function copierTexte(bouton) {
     const signatureHTML = `
         <br><br>
         <div style="text-align: center; font-family: Arial, sans-serif; border-top: 2px solid #E5E7EB; padding-top: 20px;">
-            <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; margin-bottom: 10px;">
-            <br><strong style="font-size: 14pt; color: #1F2937;">EdukaTchat</strong>
-            <br><span style="font-size: 10pt; color: #6B7280;">© Propriété Intellectuelle Exclusive</span>
+            <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; display: block; margin: 0 auto;">
+            <strong style="font-size: 14pt; color: #1F2937; display: block; margin-top: -12px;">EdukaTchat</strong>
+            <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 2px;">© Propriété Intellectuelle Exclusive</span>
         </div>`;
 
     // Création d'un colis riche pour le presse-papier (Préserve le gras, les tableaux et l'image)
