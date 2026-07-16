@@ -432,6 +432,7 @@ iframe.active {
 
 /* --- FILIGRANE EDUKATCHAT --- */
 .watermark-background {
+    background-image: url('logo-fond.png');
     position: fixed;
     top: 0;
     left: 0;
