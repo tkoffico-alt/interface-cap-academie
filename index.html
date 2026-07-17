@@ -76,10 +76,11 @@
                         <div class="action-footer"></div>
                     </div>
                 </div>
-               <div class="glass-card door-card" onclick="openModal('mo-modal')">
-    <div class="door-icon">🧭</div>
-    <h3>Moyenne d'Orientation</h3>
-    <p>Simulez votre trajectoire et vos chances de passage en 2nde.</p>
+               <div class="glass-card door-card" style="grid-column: 1 / -1; justify-self: center; width: 100%; max-width: 450px; margin-top: 20px; border-bottom: 3px solid #3B82F6;">
+    <div class="door-icon" style="font-size: 2em; margin-bottom: 10px;">🧭</div>
+    <h3 style="margin-bottom: 10px;">Moyenne d'Orientation</h3>
+    <p style="margin-bottom: 20px;">Simulez votre trajectoire et vos chances de passage en 2nde.</p>
+    <button class="btn-entrer" onclick="ouvrirBoussole()" style="width: 100%;">Déverrouiller la Boussole</button>
 </div>
             </section>
 
@@ -315,7 +316,7 @@
     <!-- Modale Moyenne d'Orientation -->
 <div id="mo-modal" class="modal" style="display:none;">
     <div class="glass-card modal-content" style="max-width: 600px;">
-        <span class="close-btn" onclick="closeModal('mo-modal')">&times;</span>
+        <span class="close-btn" onclick="fermerBoussole()">&times;</span>
         <h2 style="color: #3B82F6; text-align: center; margin-bottom: 20px;">Boussole d'Orientation</h2>
         <p style="text-align: center; font-size: 0.9em; color: #6B7280; margin-bottom: 20px;">Saisis tes moyennes annuelles et tes prévisions au BEPC.</p>
 
