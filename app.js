@@ -813,3 +813,11 @@ function calculerMO() {
     
     resultContainer.style.display = "block";
 }
+// Ouverture et fermeture de la Boussole
+function ouvrirBoussole() {
+    document.getElementById('mo-modal').classList.add('active');
+}
+
+function fermerBoussole() {
+    document.getElementById('mo-modal').classList.remove('active');
+}
