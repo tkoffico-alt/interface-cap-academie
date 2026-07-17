@@ -727,3 +727,27 @@ body.light-theme .btn-action-doc:hover {
         transform: translateY(0); /* Il remonte à sa position naturelle */
     }
 }
+/* Le nouveau bouton minimaliste d'envoi */
+.btn-envoyer-icon {
+    background-color: #3B82F6;
+    color: white;
+    border: none;
+    border-radius: 8px; /* Bords adoucis */
+    width: 42px; /* Un carré parfait */
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0; /* Ne se compresse jamais sur mobile */
+    transition: opacity 0.3s ease, transform 0.1s ease;
+}
+
+.btn-envoyer-icon:active {
+    transform: scale(0.95); /* Léger effet d'appui */
+}
+
+.btn-envoyer-icon:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
