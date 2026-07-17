@@ -763,60 +763,67 @@ function fermerBoussole() {
         modal.style.display = 'none';
     }
 }
-// La Maïeutique de l'Orientation
+// La Maïeutique de l'Orientation (avec Conscience Temporelle)
 function calculerMO() {
-    // Fonction utilitaire pour lire les champs (remplace le vide par 0)
     const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
 
-    // Récupération des notes
-    const frAn = getVal('mo-fr-an');
-    const frBepc = getVal('mo-fr-bepc');
+    const frAn = getVal('mo-fr-an'), frBepc = getVal('mo-fr-bepc');
+    const mathAn = getVal('mo-math-an'), mathBepc = getVal('mo-math-bepc');
+    const pcAn = getVal('mo-pc-an'), pcBepc = getVal('mo-pc-bepc');
+    const angAn = getVal('mo-ang-an'), angBepcE = getVal('mo-ang-bepc-e'), angBepcO = getVal('mo-ang-bepc-o');
 
-    const mathAn = getVal('mo-math-an');
-    const mathBepc = getVal('mo-math-bepc');
-
-    const pcAn = getVal('mo-pc-an');
-    const pcBepc = getVal('mo-pc-bepc');
-
-    const angAn = getVal('mo-ang-an');
-    const angBepcE = getVal('mo-ang-bepc-e');
-    const angBepcO = getVal('mo-ang-bepc-o');
-
-    // Le calcul de la note d'Anglais au BEPC (Moyenne Écrit et Oral)
     const angBepc = (angBepcE > 0 || angBepcO > 0) ? (angBepcE + angBepcO) / 2 : 0;
 
-    // Application stricte des coefficients (Formule DOB)
-    const totalFr = (frAn + frBepc) * 2;
-    const totalMath = (mathAn + mathBepc) * 2;
-    const totalPc = (pcAn + pcBepc) * 1;
-    const totalAng = (angAn + angBepc) * 1;
-
-    // L'équilibre final
-    const grandTotal = totalFr + totalMath + totalPc + totalAng;
+    const grandTotal = ((frAn + frBepc) * 2) + ((mathAn + mathBepc) * 2) + ((pcAn + pcBepc) * 1) + ((angAn + angBepc) * 1);
     const mo = (grandTotal / 12).toFixed(2);
 
-    // Préparation de l'affichage
     const resultContainer = document.getElementById('mo-result-container');
     const scoreDisplay = document.getElementById('mo-score-display');
     const adviceDisplay = document.getElementById('mo-advice-display');
 
     scoreDisplay.textContent = mo;
     
-    // La Sagesse du Résultat
+    // Détection du temps : Mois actuels de Juillet (6) à Septembre (8)
+    const moisActuel = new Date().getMonth(); 
+    const estPeriodePostBepc = (moisActuel >= 6 && moisActuel <= 8);
+
     let conseil = "";
-    if (mo < 10) {
-        conseil = "Ta dynamique actuelle est fragile. Ne cède pas à l'angoisse, il est encore temps de cibler tes lacunes. Concentre-toi sur tes fondamentaux en sciences. L'Académie est là pour t'accompagner pas à pas.";
-        resultContainer.style.borderLeftColor = "#EF4444"; // Rouge subtil
-    } else if (mo >= 10 && mo < 12) {
-        conseil = "Tu es dans la course. Ton profil ouvre naturellement les portes de la série A. Si ton ambition se porte vers la série C, c'est le moment d'accentuer tes efforts en logique et en mathématiques.";
-        resultContainer.style.borderLeftColor = "#F59E0B"; // Or
+    let actionHTML = "";
+
+    if (estPeriodePostBepc) {
+        // --- LE VERDICT DE FIN D'ANNÉE ---
+        if (mo < 10) {
+            conseil = "Les épreuves sont terminées. La marche était un peu haute cette année, mais chaque échec porte en lui les graines de ta future réussite. Repose-toi, l'Académie sera là pour t'aider à forger ton succès l'année prochaine.";
+            resultContainer.style.borderLeftColor = "#6B7280"; // Gris neutre et apaisant
+        } else if (mo >= 10 && mo < 12) {
+            conseil = "Félicitations, l'essentiel est accompli. Ton passage en Seconde est validé. Ton profil littéraire et linguistique t'ouvre naturellement les portes de la série A. Profite d'un repos mérité.";
+            resultContainer.style.borderLeftColor = "#F59E0B"; // Or
+        } else {
+            conseil = "C'est une victoire éclatante. Les portes de la prestigieuse série Scientifique (C) te sont grandes ouvertes. Savoure cette réussite, ton esprit logique a triomphé.";
+            resultContainer.style.borderLeftColor = "#10B981"; // Vert émeraude
+        }
+        // Pas de bouton de révision en plein été, juste l'option de fermer
+        actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background: transparent; border: 1px solid #3B82F6; color: #3B82F6; border-radius: 5px; cursor:pointer;">Fermer et méditer sur ces résultats</button>`;
+        
     } else {
-        conseil = "Excellente trajectoire. Les portes de la Seconde C te sont ouvertes. Maintiens ce niveau de clarté et d'exigence, car ton profil est taillé pour l'excellence scientifique.";
-        resultContainer.style.borderLeftColor = "#10B981"; // Vert émeraude
+        // --- LE TEMPS DE LA PRÉPARATION (Octobre à Juin) ---
+        if (mo < 10) {
+            conseil = "Ta dynamique actuelle est fragile. Ne laisse pas l'angoisse s'installer, il est encore temps d'agir. Cible tes lacunes en Sciences dès aujourd'hui.";
+            resultContainer.style.borderLeftColor = "#EF4444"; // Rouge subtil
+            actionHTML = `<button onclick="fermerBoussole(); window.scrollTo(0, document.body.scrollHeight);" style="margin-top:20px; padding: 10px; width:100%; background-color: #EF4444; color: white; border: none; border-radius: 5px; cursor:pointer;">Rejoindre l'Académie pour m'entraîner</button>`;
+        } else if (mo >= 10 && mo < 12) {
+            conseil = "Tu es dans la course. Ton profil est équilibré. Cependant, pour sécuriser une place en série C, il faut intensifier ton entraînement logique et mathématique.";
+            resultContainer.style.borderLeftColor = "#F59E0B"; // Or
+            actionHTML = `<button onclick="fermerBoussole();" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer;">Consolider mes acquis</button>`;
+        } else {
+            conseil = "Excellente trajectoire. Tu as le profil pour l'excellence scientifique. Maintiens ta rigueur, le succès t'attend.";
+            resultContainer.style.borderLeftColor = "#10B981"; // Vert émeraude
+            actionHTML = `<button onclick="fermerBoussole();" style="margin-top:20px; padding: 10px; width:100%; background-color: #10B981; color: white; border: none; border-radius: 5px; cursor:pointer;">Continuer vers l'excellence</button>`;
+        }
     }
 
-    adviceDisplay.textContent = conseil;
+    // Injection du conseil et du bouton dynamique
+    adviceDisplay.innerHTML = conseil + actionHTML;
     
-    // Dévoilement du résultat
     resultContainer.style.display = "block";
 }
