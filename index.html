@@ -76,6 +76,11 @@
                         <div class="action-footer"></div>
                     </div>
                 </div>
+               <div class="glass-card door-card" onclick="openModal('mo-modal')">
+    <div class="door-icon">🧭</div>
+    <h3>Moyenne d'Orientation</h3>
+    <p>Simulez votre trajectoire et vos chances de passage en 2nde.</p>
+</div>
             </section>
 
             <section class="info-section">
@@ -307,5 +312,58 @@
             <a href="cgu.html" style="color: #3B82F6; text-decoration: none;">Conditions Générales d'Utilisation (CGU)</a>
         </div>
     </footer>
+    <!-- Modale Moyenne d'Orientation -->
+<div id="mo-modal" class="modal" style="display:none;">
+    <div class="glass-card modal-content" style="max-width: 600px;">
+        <span class="close-btn" onclick="closeModal('mo-modal')">&times;</span>
+        <h2 style="color: #3B82F6; text-align: center; margin-bottom: 20px;">Boussole d'Orientation</h2>
+        <p style="text-align: center; font-size: 0.9em; color: #6B7280; margin-bottom: 20px;">Saisis tes moyennes annuelles et tes prévisions au BEPC.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+            
+            <!-- Français -->
+            <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px; color: #1F2937;">Français (Coeff 2)</h4>
+                <input type="number" id="mo-fr-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                <input type="number" id="mo-fr-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+            </div>
+
+            <!-- Mathématiques -->
+            <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px; color: #1F2937;">Mathématiques (Coeff 2)</h4>
+                <input type="number" id="mo-math-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                <input type="number" id="mo-math-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+            </div>
+
+            <!-- Physique-Chimie -->
+            <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px; color: #1F2937;">Physique-Chimie (Coeff 1)</h4>
+                <input type="number" id="mo-pc-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                <input type="number" id="mo-pc-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+            </div>
+
+            <!-- Anglais -->
+            <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px; color: #1F2937;">Anglais (Coeff 1)</h4>
+                <input type="number" id="mo-ang-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                <div style="display:flex; gap:5px;">
+                    <input type="number" id="mo-ang-bepc-e" placeholder="Écrit" step="0.01" style="width:50%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <input type="number" id="mo-ang-bepc-o" placeholder="Oral" step="0.01" style="width:50%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="btn-entrer" onclick="calculerMO()" style="width: 100%; padding: 12px; font-size: 1.1em;">Révéler ma Moyenne</button>
+        </div>
+
+        <!-- Zone d'affichage du résultat -->
+        <div id="mo-result-container" style="display: none; margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center; border-left: 4px solid #3B82F6;">
+            <p style="margin: 0; color: #6B7280; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">Moyenne d'Orientation</p>
+            <h3 id="mo-score-display" style="font-size: 2.5em; color: #1F2937; margin: 5px 0;"></h3>
+            <p id="mo-advice-display" style="margin-top: 15px; color: #374151; font-style: italic; line-height: 1.5;"></p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
