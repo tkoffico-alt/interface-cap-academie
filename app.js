@@ -748,3 +748,60 @@ document.addEventListener('fullscreenchange', () => {
         btn.innerHTML = "⛶ Plein Écran";
     }
 });
+// La Maïeutique de l'Orientation
+function calculerMO() {
+    // Fonction utilitaire pour lire les champs (remplace le vide par 0)
+    const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+
+    // Récupération des notes
+    const frAn = getVal('mo-fr-an');
+    const frBepc = getVal('mo-fr-bepc');
+
+    const mathAn = getVal('mo-math-an');
+    const mathBepc = getVal('mo-math-bepc');
+
+    const pcAn = getVal('mo-pc-an');
+    const pcBepc = getVal('mo-pc-bepc');
+
+    const angAn = getVal('mo-ang-an');
+    const angBepcE = getVal('mo-ang-bepc-e');
+    const angBepcO = getVal('mo-ang-bepc-o');
+
+    // Le calcul de la note d'Anglais au BEPC (Moyenne Écrit et Oral)
+    const angBepc = (angBepcE > 0 || angBepcO > 0) ? (angBepcE + angBepcO) / 2 : 0;
+
+    // Application stricte des coefficients (Formule DOB)
+    const totalFr = (frAn + frBepc) * 2;
+    const totalMath = (mathAn + mathBepc) * 2;
+    const totalPc = (pcAn + pcBepc) * 1;
+    const totalAng = (angAn + angBepc) * 1;
+
+    // L'équilibre final
+    const grandTotal = totalFr + totalMath + totalPc + totalAng;
+    const mo = (grandTotal / 12).toFixed(2);
+
+    // Préparation de l'affichage
+    const resultContainer = document.getElementById('mo-result-container');
+    const scoreDisplay = document.getElementById('mo-score-display');
+    const adviceDisplay = document.getElementById('mo-advice-display');
+
+    scoreDisplay.textContent = mo;
+    
+    // La Sagesse du Résultat
+    let conseil = "";
+    if (mo < 10) {
+        conseil = "Ta dynamique actuelle est fragile. Ne cède pas à l'angoisse, il est encore temps de cibler tes lacunes. Concentre-toi sur tes fondamentaux en sciences. L'Académie est là pour t'accompagner pas à pas.";
+        resultContainer.style.borderLeftColor = "#EF4444"; // Rouge subtil
+    } else if (mo >= 10 && mo < 12) {
+        conseil = "Tu es dans la course. Ton profil ouvre naturellement les portes de la série A. Si ton ambition se porte vers la série C, c'est le moment d'accentuer tes efforts en logique et en mathématiques.";
+        resultContainer.style.borderLeftColor = "#F59E0B"; // Or
+    } else {
+        conseil = "Excellente trajectoire. Les portes de la Seconde C te sont ouvertes. Maintiens ce niveau de clarté et d'exigence, car ton profil est taillé pour l'excellence scientifique.";
+        resultContainer.style.borderLeftColor = "#10B981"; // Vert émeraude
+    }
+
+    adviceDisplay.textContent = conseil;
+    
+    // Dévoilement du résultat
+    resultContainer.style.display = "block";
+}
