@@ -748,21 +748,7 @@ document.addEventListener('fullscreenchange', () => {
         btn.innerHTML = "⛶ Plein Écran";
     }
 });
-// La respiration de la Boussole d'Orientation
-function ouvrirBoussole() {
-    const modal = document.getElementById('mo-modal');
-    if(modal) {
-        // 'flex' permet souvent de centrer la fenêtre si ton CSS est conçu ainsi
-        modal.style.display = 'flex'; 
-    }
-}
 
-function fermerBoussole() {
-    const modal = document.getElementById('mo-modal');
-    if(modal) {
-        modal.style.display = 'none';
-    }
-}
 // La Maïeutique de l'Orientation (avec Conscience Temporelle)
 function calculerMO() {
     const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
