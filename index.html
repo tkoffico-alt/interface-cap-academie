@@ -76,6 +76,17 @@
                         <div class="action-footer"></div>
                     </div>
                 </div>
+
+               <!-- Carte de l'Atelier de l'Orateur -->
+<div class="glass-card door-card">
+    <div class="icon-wrapper" style="background: rgba(17, 24, 39, 0.1); color: #111827;">🎙️</div>
+    <h3 style="color: #111827;">Atelier de l'Orateur</h3>
+    <p>Sculptez votre éloquence. Préparez vos oraux (BEPC/Bac) et affrontez les questions de notre jury virtuel.</p>
+    <div class="card-action-area">
+        <button class="btn-entrer" onclick="ouvrirAtelier()" style="background-color: #111827; color: white; border: none;">Entrer dans l'Atelier</button>
+        <div class="action-footer"></div>
+    </div>
+</div>
                <div class="glass-card door-card" style="grid-column: 1 / -1; justify-self: center; width: 100%; max-width: 450px; margin-top: 20px; border-bottom: 3px solid #F59E0B;">
     <div class="door-icon" style="font-size: 2em; margin-bottom: 10px;">🧭</div>
     <h3 style="margin-bottom: 10px;">Moyenne d'Orientation</h3>
@@ -363,6 +374,38 @@
             <p style="margin: 0; color: #6B7280; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">Moyenne d'Orientation</p>
             <h3 id="mo-score-display" style="font-size: 2.5em; color: #1F2937; margin: 5px 0;"></h3>
             <p id="mo-advice-display" style="margin-top: 15px; color: #374151; font-style: italic; line-height: 1.5;"></p>
+        </div>
+    </div>
+</div>
+    <!-- Modale Atelier de l'Orateur -->
+<div id="orateur-modal" class="modal-overlay">
+    <div class="glass-card modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto; background-color: #F9F9F9; border: 1px solid #E5E7EB;">
+        <button class="modal-close" onclick="fermerAtelier()" style="color: #111827;">×</button>
+        
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">🖋️</div>
+            <h2 style="color: #111827; font-family: 'Georgia', serif; font-weight: normal; letter-spacing: 1px;">L'Atelier de l'Orateur</h2>
+            <p style="color: #6B7280; font-style: italic; font-size: 0.95em;">"La parole est l'ombre de l'action."</p>
+            <hr style="border: none; border-top: 1px solid #D1D5DB; width: 50%; margin: 15px auto;">
+        </div>
+
+        <div style="margin-bottom: 20px; text-align: left;">
+            <label style="font-weight: bold; color: #374151; display: block; margin-bottom: 8px;">1. L'Œuvre ou le Sujet étudié :</label>
+            <input type="text" id="orateur-sujet" placeholder="Ex: Cahier d'un retour au pays natal (Aimé Césaire)" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #9CA3AF; background: transparent; color: #111827;">
+        </div>
+
+        <div style="margin-bottom: 25px; text-align: left;">
+            <label style="font-weight: bold; color: #374151; display: block; margin-bottom: 8px;">2. Le Cadre de l'Épreuve :</label>
+            <select id="orateur-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #9CA3AF; background: transparent; color: #111827;">
+                <option value="">-- Choisissez l'arène --</option>
+                <option value="bepc">Oral du BEPC</option>
+                <option value="bac">Oral du Baccalauréat (Français)</option>
+                <option value="expose">Exposé libre en classe</option>
+            </select>
+        </div>
+
+        <div style="text-align: center;">
+            <button onclick="invoquerJury()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #111827; color: #F9F9F9; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Faire face au Jury (IA)</button>
         </div>
     </div>
 </div>
