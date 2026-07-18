@@ -363,6 +363,41 @@ async function sendSasMessage() {
     
     if (!message) return;
 
+    // =================================================================
+    // ❖ LE GARDIEN DU QUOTA JOURNALIER (Espace Libre) ❖
+    // =================================================================
+    const QUOTA_MAX = 10;
+    const aujourdhui = new Date().toLocaleDateString(); 
+    
+    let suiviQuota = JSON.parse(localStorage.getItem('eduka_quota_sas')) || { date: aujourdhui, requetes: 0 };
+
+    if (suiviQuota.date !== aujourdhui) {
+        suiviQuota = { date: aujourdhui, requetes: 0 }; 
+    }
+
+    if (suiviQuota.requetes >= QUOTA_MAX) {
+        const chatHistory = document.getElementById('sas-chat-history');
+        const botUpsellDiv = document.createElement('div');
+        botUpsellDiv.className = 'message bot-message apparition-fluide';
+        
+        botUpsellDiv.innerHTML = `
+            <div style="font-size: 0.95em; line-height: 1.5; color: #B45309; background: #FEF3C7; padding: 15px; border-radius: 8px; border-left: 4px solid #F59E0B;">
+                <strong>⏳ L'Énergie du jour est épuisée</strong><br><br>
+                Tu as atteint ta limite de ${QUOTA_MAX} requêtes gratuites pour aujourd'hui. L'esprit a besoin de repos pour assimiler le savoir.<br><br>
+                Reviens <strong>demain dès 00h00</strong> pour un nouveau cycle de préparation, ou demande à tes parents de déverrouiller l'Académie Premium pour un accompagnement sans limite.
+                <button onclick='openPremiumModal()' style='display: block; width: 100%; margin-top: 15px; padding: 10px; background-color: #F59E0B; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center;'>Déverrouiller l'Accès Complet</button>
+            </div>
+        `;
+        
+        chatHistory.appendChild(botUpsellDiv);
+        scrollToBottom('sas-chat-history');
+        inputField.value = '';
+        return; 
+    }
+
+    suiviQuota.requetes++;
+    localStorage.setItem('eduka_quota_sas', JSON.stringify(suiviQuota));
+    // =================================================================
     inputField.disabled = true;
     button.disabled = true;
     button.style.opacity = '0.5';
