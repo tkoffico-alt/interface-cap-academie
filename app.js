@@ -880,14 +880,31 @@ function fermerAtelier() {
 }
 
 function invoquerJury() {
-    const sujet = document.getElementById('orateur-sujet').value;
+    const sujet = document.getElementById('orateur-sujet').value.trim();
     const cadre = document.getElementById('orateur-cadre').value;
     
+    // 1. Le Verrou de Sécurité
     if(!sujet || !cadre) {
-        alert("Veuillez renseigner le sujet et le cadre de l'épreuve avant d'entrer.");
+        alert("Veuillez renseigner le sujet et le cadre de l'épreuve avant d'entrer dans l'arène.");
         return;
     }
     
-    // Le code pour transférer ces données au Répétiteur sera forgé ici lors de la prochaine étape.
-    alert("Le développement de l'âme de l'IA est en cours. Bientôt, le Jury vous répondra.");
+    // 2. Le Lien du Sanctuaire (À Remplacer par ton lien Dify)
+    // Va dans Dify > Accès API > "Lien public" ou "Web App URL" de ton Examinateur
+    const urlDifyExaminateur = "http://178.238.224.136/chat/UEtRcXzRm3NKj4rq";
+    
+    // 3. L'Encodage des Variables
+    // Nous transformons le texte pour qu'il puisse voyager sans erreur dans un lien web
+    const sujetEncode = encodeURIComponent(sujet);
+    const cadreEncode = encodeURIComponent(cadre);
+    
+    // 4. La Fusion
+    const urlFinale = `${urlDifyExaminateur}?sujet_etudie=${sujetEncode}&cadre_epreuve=${cadreEncode}`;
+    
+    // 5. L'Ouverture des Portes
+    // Ouvre le chat de l'Examinateur dans un nouvel onglet spacieux et dédié
+    window.open(urlFinale, '_blank');
+    
+    // Ferme la petite fenêtre de configuration sur ton site
+    fermerAtelier(); 
 }
