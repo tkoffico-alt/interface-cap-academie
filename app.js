@@ -868,3 +868,26 @@ function ouvrirBoussole() {
 function fermerBoussole() {
     document.getElementById('mo-modal').classList.remove('active');
 }
+// =======================================================================
+// ❖ LA RESPIRATION DE L'ATELIER (OUVERTURE ET FERMETURE) ❖
+// =======================================================================
+function ouvrirAtelier() {
+    document.getElementById('orateur-modal').classList.add('active');
+}
+
+function fermerAtelier() {
+    document.getElementById('orateur-modal').classList.remove('active');
+}
+
+function invoquerJury() {
+    const sujet = document.getElementById('orateur-sujet').value;
+    const cadre = document.getElementById('orateur-cadre').value;
+    
+    if(!sujet || !cadre) {
+        alert("Veuillez renseigner le sujet et le cadre de l'épreuve avant d'entrer.");
+        return;
+    }
+    
+    // Le code pour transférer ces données au Répétiteur sera forgé ici lors de la prochaine étape.
+    alert("Le développement de l'âme de l'IA est en cours. Bientôt, le Jury vous répondra.");
+}
