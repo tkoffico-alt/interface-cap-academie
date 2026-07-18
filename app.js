@@ -749,7 +749,7 @@ document.addEventListener('fullscreenchange', () => {
     }
 });
 
-// La Maïeutique de l'Orientation (avec Conscience Temporelle)
+// La Maïeutique de l'Orientation (Version Avancée avec Équilibre des Profils)
 function calculerMO() {
     const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
 
@@ -760,7 +760,11 @@ function calculerMO() {
 
     const angBepc = (angBepcE > 0 || angBepcO > 0) ? (angBepcE + angBepcO) / 2 : 0;
 
-    const grandTotal = ((frAn + frBepc) * 2) + ((mathAn + mathBepc) * 2) + ((pcAn + pcBepc) * 1) + ((angAn + angBepc) * 1);
+    // Calcul des poids pour mesurer la tendance
+    const poidsLitteraire = ((frAn + frBepc) * 2) + ((angAn + angBepc) * 1);
+    const poidsScientifique = ((mathAn + mathBepc) * 2) + ((pcAn + pcBepc) * 1);
+
+    const grandTotal = poidsLitteraire + poidsScientifique;
     const mo = (grandTotal / 12).toFixed(2);
 
     const resultContainer = document.getElementById('mo-result-container');
@@ -779,45 +783,39 @@ function calculerMO() {
     if (estPeriodePostBepc) {
         // --- LE VERDICT DE FIN D'ANNÉE ---
         if (mo < 10) {
-            conseil = "Les épreuves sont terminées. La marche était un peu haute cette année, mais chaque échec porte en lui les graines de ta future réussite. Repose-toi, l'Académie sera là pour t'aider à forger ton succès l'année prochaine.";
-            resultContainer.style.borderLeftColor = "#6B7280"; // Gris neutre et apaisant
+            conseil = "Les épreuves sont terminées. La marche était un peu haute cette année, mais chaque échec porte les graines de ta future réussite. Repose-toi, l'Académie t'aidera l'année prochaine.";
+            resultContainer.style.borderLeftColor = "#6B7280"; 
+            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #6B7280; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et méditer</button>`;
         } else if (mo >= 10 && mo < 12) {
-            conseil = "Félicitations, l'essentiel est accompli. Ton passage en Seconde est validé. Ton profil littéraire et linguistique t'ouvre naturellement les portes de la série A. Profite d'un repos mérité.";
-            resultContainer.style.borderLeftColor = "#F59E0B"; // Or
+            conseil = "Félicitations, l'essentiel est accompli. Ton passage en Seconde est validé. Ton profil t'ouvre naturellement les portes de la série Littéraire (A). Profite d'un repos mérité.";
+            resultContainer.style.borderLeftColor = "#F59E0B"; 
+            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et célébrer</button>`;
         } else {
-            conseil = "C'est une victoire éclatante. Les portes de la prestigieuse série Scientifique (C) te sont grandes ouvertes. Savoure cette réussite, ton esprit logique a triomphé.";
-            resultContainer.style.borderLeftColor = "#10B981"; // Vert émeraude
+            if (poidsLitteraire > poidsScientifique) {
+                conseil = "Brillante réussite ! Ton profil est fortement marqué par les Lettres, t'assurant la série A. Cependant, ton excellente moyenne globale t'ouvre également les portes de la prestigieuse série Scientifique (C) si tel est ton choix.";
+            } else {
+                conseil = "Une victoire éclatante ! Ton esprit logique a triomphé. Les portes de la série Scientifique (C) te sont grandes ouvertes, te laissant le champ libre pour l'excellence.";
+            }
+            resultContainer.style.borderLeftColor = "#10B981"; 
+            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #10B981; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et célébrer</button>`;
         }
-        // Pas de bouton de révision en plein été, juste l'option de fermer
-        actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background: transparent; border: 1px solid #3B82F6; color: #3B82F6; border-radius: 5px; cursor:pointer;">Fermer et méditer sur ces résultats</button>`;
-        
     } else {
         // --- LE TEMPS DE LA PRÉPARATION (Octobre à Juin) ---
         if (mo < 10) {
-            conseil = "Ta dynamique actuelle est fragile. Ne laisse pas l'angoisse s'installer, il est encore temps d'agir. Cible tes lacunes en Sciences dès aujourd'hui.";
-            resultContainer.style.borderLeftColor = "#EF4444"; // Rouge subtil
-            actionHTML = `<button onclick="fermerBoussole(); window.scrollTo(0, document.body.scrollHeight);" style="margin-top:20px; padding: 10px; width:100%; background-color: #EF4444; color: white; border: none; border-radius: 5px; cursor:pointer;">Rejoindre l'Académie pour m'entraîner</button>`;
+            conseil = "Ta dynamique actuelle est fragile. Ne laisse pas l'angoisse s'installer, il est encore temps d'agir. Cible tes lacunes dès aujourd'hui.";
+            resultContainer.style.borderLeftColor = "#EF4444"; 
+            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active'); window.scrollTo(0, document.body.scrollHeight);" style="margin-top:20px; padding: 10px; width:100%; background-color: #EF4444; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Rejoindre l'Académie</button>`;
         } else if (mo >= 10 && mo < 12) {
-            conseil = "Tu es dans la course. Ton profil est équilibré. Cependant, pour sécuriser une place en série C, il faut intensifier ton entraînement logique et mathématique.";
-            resultContainer.style.borderLeftColor = "#F59E0B"; // Or
-            actionHTML = `<button onclick="fermerBoussole();" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer;">Consolider mes acquis</button>`;
+            conseil = "Tu es dans la course. Ton profil est équilibré pour la série A. Cependant, pour sécuriser une place en série C, il faut intensifier ton entraînement mathématique.";
+            resultContainer.style.borderLeftColor = "#F59E0B"; 
+            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Consolider mes acquis</button>`;
         } else {
-            conseil = "Excellente trajectoire. Tu as le profil pour l'excellence scientifique. Maintiens ta rigueur, le succès t'attend.";
-            resultContainer.style.borderLeftColor = "#10B981"; // Vert émeraude
-            actionHTML = `<button onclick="fermerBoussole();" style="margin-top:20px; padding: 10px; width:100%; background-color: #10B981; color: white; border: none; border-radius: 5px; cursor:pointer;">Continuer vers l'excellence</button>`;
+            conseil = "Excellente trajectoire. Que ton cœur penche vers les Lettres ou les Sciences, tes efforts actuels te garantissent le choix. Maintiens cette rigueur.";
+            resultContainer.style.borderLeftColor = "#3B82F6"; 
+            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #3B82F6; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Continuer vers l'excellence</button>`;
         }
     }
 
-    // Injection du conseil et du bouton dynamique
     adviceDisplay.innerHTML = conseil + actionHTML;
-    
     resultContainer.style.display = "block";
-}
-// Ouverture et fermeture de la Boussole
-function ouvrirBoussole() {
-    document.getElementById('mo-modal').classList.add('active');
-}
-
-function fermerBoussole() {
-    document.getElementById('mo-modal').classList.remove('active');
 }
