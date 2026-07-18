@@ -749,7 +749,7 @@ document.addEventListener('fullscreenchange', () => {
     }
 });
 
-// La Maïeutique de l'Orientation (Version Avancée avec Équilibre des Profils)
+// La Maïeutique de l'Orientation (Version Holistique)
 function calculerMO() {
     const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
 
@@ -760,7 +760,6 @@ function calculerMO() {
 
     const angBepc = (angBepcE > 0 || angBepcO > 0) ? (angBepcE + angBepcO) / 2 : 0;
 
-    // Calcul des poids pour mesurer la tendance
     const poidsLitteraire = ((frAn + frBepc) * 2) + ((angAn + angBepc) * 1);
     const poidsScientifique = ((mathAn + mathBepc) * 2) + ((pcAn + pcBepc) * 1);
 
@@ -773,23 +772,29 @@ function calculerMO() {
 
     scoreDisplay.textContent = mo;
     
-    // Détection du temps : Mois actuels de Juillet (6) à Septembre (8)
     const moisActuel = new Date().getMonth(); 
     const estPeriodePostBepc = (moisActuel >= 6 && moisActuel <= 8);
+    
+    // Vérification de l'appartenance à l'Académie (Le Sceau)
+    const possedeSceau = localStorage.getItem('eduka_sceau') !== null;
+    let directiveCognitive = "";
+    
+    if (possedeSceau) {
+        directiveCognitive = "<br><br><span style='color: #4B5563; font-size: 0.95em;'><strong>✧ Quête d'Orientation :</strong> Retourne dans ton Espace Élève et communique ce score à ton Répétiteur. Demande-lui de confronter cette moyenne avec ton profil cognitif profond pour découvrir ta véritable voie.</span>";
+    }
 
     let conseil = "";
     let actionHTML = "";
 
     if (estPeriodePostBepc) {
-        // --- LE VERDICT DE FIN D'ANNÉE ---
         if (mo < 10) {
             conseil = "Les épreuves sont terminées. La marche était un peu haute cette année, mais chaque échec porte les graines de ta future réussite. Repose-toi, l'Académie t'aidera l'année prochaine.";
             resultContainer.style.borderLeftColor = "#6B7280"; 
-            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #6B7280; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et méditer</button>`;
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #6B7280; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et méditer</button>`;
         } else if (mo >= 10 && mo < 12) {
             conseil = "Félicitations, l'essentiel est accompli. Ton passage en Seconde est validé. Ton profil t'ouvre naturellement les portes de la série Littéraire (A). Profite d'un repos mérité.";
             resultContainer.style.borderLeftColor = "#F59E0B"; 
-            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et célébrer</button>`;
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer la Boussole</button>`;
         } else {
             if (poidsLitteraire > poidsScientifique) {
                 conseil = "Brillante réussite ! Ton profil est fortement marqué par les Lettres, t'assurant la série A. Cependant, ton excellente moyenne globale t'ouvre également les portes de la prestigieuse série Scientifique (C) si tel est ton choix.";
@@ -797,29 +802,27 @@ function calculerMO() {
                 conseil = "Une victoire éclatante ! Ton esprit logique a triomphé. Les portes de la série Scientifique (C) te sont grandes ouvertes, te laissant le champ libre pour l'excellence.";
             }
             resultContainer.style.borderLeftColor = "#10B981"; 
-            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #10B981; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et célébrer</button>`;
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #10B981; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer la Boussole</button>`;
         }
     } else {
-        // --- LE TEMPS DE LA PRÉPARATION (Octobre à Juin) ---
         if (mo < 10) {
             conseil = "Ta dynamique actuelle est fragile. Ne laisse pas l'angoisse s'installer, il est encore temps d'agir. Cible tes lacunes dès aujourd'hui.";
             resultContainer.style.borderLeftColor = "#EF4444"; 
-            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active'); window.scrollTo(0, document.body.scrollHeight);" style="margin-top:20px; padding: 10px; width:100%; background-color: #EF4444; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Rejoindre l'Académie</button>`;
+            actionHTML = `<button onclick="fermerBoussole(); window.scrollTo(0, document.body.scrollHeight);" style="margin-top:20px; padding: 10px; width:100%; background-color: #EF4444; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et agir</button>`;
         } else if (mo >= 10 && mo < 12) {
             conseil = "Tu es dans la course. Ton profil est équilibré pour la série A. Cependant, pour sécuriser une place en série C, il faut intensifier ton entraînement mathématique.";
             resultContainer.style.borderLeftColor = "#F59E0B"; 
-            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Consolider mes acquis</button>`;
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer la Boussole</button>`;
         } else {
             conseil = "Excellente trajectoire. Que ton cœur penche vers les Lettres ou les Sciences, tes efforts actuels te garantissent le choix. Maintiens cette rigueur.";
             resultContainer.style.borderLeftColor = "#3B82F6"; 
-            actionHTML = `<button onclick="document.getElementById('mo-modal').classList.remove('active')" style="margin-top:20px; padding: 10px; width:100%; background-color: #3B82F6; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Continuer vers l'excellence</button>`;
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #3B82F6; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer la Boussole</button>`;
         }
     }
 
-    adviceDisplay.innerHTML = conseil + actionHTML;
+    adviceDisplay.innerHTML = conseil + directiveCognitive + actionHTML;
     resultContainer.style.display = "block";
 }
-
 // =======================================================================
 // ❖ LA RESPIRATION DE LA BOUSSOLE (OUVERTURE ET FERMETURE) ❖
 // =======================================================================
