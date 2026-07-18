@@ -891,7 +891,7 @@ function invoquerJury() {
     
     // 2. Le Lien du Sanctuaire (À Remplacer par ton lien Dify)
     // Va dans Dify > Accès API > "Lien public" ou "Web App URL" de ton Examinateur
-    const urlDifyExaminateur = "http://178.238.224.136/chat/UEtRcXzRm3NKj4rq";
+   const urlDifyExaminateur = "http://178.238.224.136:8080/chat/UEtRcXzRm3NKj4rq";
     
     // 3. L'Encodage des Variables
     // Nous transformons le texte pour qu'il puisse voyager sans erreur dans un lien web
