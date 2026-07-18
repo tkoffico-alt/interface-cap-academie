@@ -258,10 +258,10 @@ function openPremiumModal() {
     const lien = document.getElementById('lien-abonnement-dynamique');
     if (lien) {
         if (espaceActuel === 'enseignant') {
-            lien.href = "https://tally.so/r/RGgdb4"; // <-- Modifie cette ligne
+            lien.href = "https://tally.so/r/RGgdb4"; 
             lien.textContent = "Accéder au Cabinet (Enseignants)";
         } else {
-            lien.href = "https://tally.so/r/ODE4rA"; // <-- Modifie cette ligne
+            lien.href = "https://tally.so/r/ODE4rA"; 
             lien.textContent = "Accéder au Bureau des Parents";
         }
     }
@@ -818,4 +818,15 @@ function calculerMO() {
 
     adviceDisplay.innerHTML = conseil + actionHTML;
     resultContainer.style.display = "block";
+}
+
+// =======================================================================
+// ❖ LA RESPIRATION DE LA BOUSSOLE (OUVERTURE ET FERMETURE) ❖
+// =======================================================================
+function ouvrirBoussole() {
+    document.getElementById('mo-modal').classList.add('active');
+}
+
+function fermerBoussole() {
+    document.getElementById('mo-modal').classList.remove('active');
 }
