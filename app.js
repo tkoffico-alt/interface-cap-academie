@@ -884,6 +884,9 @@ function fermerAtelier() {
 // ❖ L'ARÈNE DE L'EXAMINATEUR (FOCUS MODE) ❖
 // =======================================================================
 function invoquerJury() {
+    // 0. VÉRIFICATION DU GARDIEN (Nouveauté)
+    if (!checkAtelierQuota()) return;
+
     // 1. Récupération des valeurs saisies dans le formulaire
     const sujet = document.getElementById('orateur-sujet').value;
     const cadre = document.getElementById('orateur-cadre').value;
@@ -899,7 +902,7 @@ function invoquerJury() {
     // 2. Dissiper le formulaire initial proprement
     fermerAtelier();
 
-   // 3. Le Pont d'Invocation SÉCURISÉ
+    // 3. Le Pont d'Invocation SÉCURISÉ
     const urlDifyExaminateur = "https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq";
     const urlFinale = `${urlDifyExaminateur}?sujet_etudie=${sujetEncode}&cadre_epreuve=${cadreEncode}`;
 
@@ -949,6 +952,31 @@ function checkAtelierQuota() {
     }
 
     // Incrémentation
+    quotaAtelier.requetes++;
+    localStorage.setItem('eduka_quota_atelier', JSON.stringify(quotaAtelier));
+    return true;
+}
+function checkAtelierQuota() {
+    // Si l'utilisateur a déjà un code "sceau" (Premium), il est libre
+    if (localStorage.getItem('eduka_sceau')) return true;
+
+    const QUOTA_MAX_ATELIER = 3; // Limite fixée à 3 essais par jour
+    const aujourdhui = new Date().toLocaleDateString();
+    
+    let quotaAtelier = JSON.parse(localStorage.getItem('eduka_quota_atelier')) || { date: aujourdhui, requetes: 0 };
+
+    if (quotaAtelier.date !== aujourdhui) {
+        quotaAtelier = { date: aujourdhui, requetes: 0 };
+    }
+
+    if (quotaAtelier.requetes >= QUOTA_MAX_ATELIER) {
+        alert("Tu as atteint ta limite de 3 essais gratuits pour l'Atelier aujourd'hui. Le savoir demande un Sceau pour continuer sans limite.");
+        // Remplace par ta vraie fonction d'ouverture de modale si elle a un autre nom
+        if (typeof openPremiumModal === 'function') openPremiumModal(); 
+        return false;
+    }
+
+    // Incrémentation du compteur
     quotaAtelier.requetes++;
     localStorage.setItem('eduka_quota_atelier', JSON.stringify(quotaAtelier));
     return true;
