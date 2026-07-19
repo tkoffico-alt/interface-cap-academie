@@ -85,7 +85,7 @@
                 <h3>Atelier de Philosophie</h3>
                 <p>Affûtez votre dialectique. Structurez vos dissertations avec l'exigence des grands penseurs.</p>
                 <div class="card-action-area">
-                    <button class="btn-entrer" onclick="alert('L\'Atelier de Philosophie est actuellement en cours de forge. Ouverture imminente.')" style="background-color: #4F46E5; color: white;">Bientôt Disponible</button>
+                    <button class="btn-entrer" onclick="ouvrirPhilo()" style="background-color: #4F46E5; color: white; border: none;">Entrer dans l'Atelier</button>
                     <div class="action-footer"></div>
                 </div>
             </div>
@@ -96,7 +96,7 @@
                 <h3>Atelier des Sciences</h3>
                 <p>Le laboratoire virtuel. Résolvez vos équations et validez vos hypothèses par la méthode stricte.</p>
                 <div class="card-action-area">
-                    <button class="btn-entrer" onclick="alert('Le Laboratoire des Sciences est en cours de calibration. Ouverture imminente.')" style="background-color: #059669; color: white;">Bientôt Disponible</button>
+                    <button class="btn-entrer" onclick="ouvrirSciences()" style="background-color: #059669; color: white; border: none;">Entrer au Laboratoire</button>
                     <div class="action-footer"></div>
                 </div>
             </div>
@@ -477,6 +477,63 @@
     
     <!-- Le Miroir de l'IA (Iframe) -->
     <iframe id="iframe-examinateur" class="eduka-iframe" src="" frameborder="0" allow="microphone"></iframe>
+</div>
+    <!-- Modale Atelier de Philosophie -->
+<div id="philo-modal" class="modal-overlay">
+    <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+        <button class="modal-close" onclick="fermerPhilo()" style="color: #0F172A;">×</button>
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">🦉</div>
+            <h2 style="color: #0F172A; font-family: 'Georgia', serif; font-weight: normal;">Le Maître de la Dialectique</h2>
+            <p style="color: #64748B; font-style: italic; font-size: 0.95em;">"La sagesse commence dans l'émerveillement."</p>
+            <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+        </div>
+        <div style="margin-bottom: 20px; text-align: left;">
+            <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">1. Sujet ou Thème :</label>
+            <input type="text" id="philo-sujet" placeholder="Ex: La conscience, L'État, ou l'énoncé d'un sujet..." style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+        </div>
+        <div style="margin-bottom: 25px; text-align: left;">
+            <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">2. Type d'exercice :</label>
+            <select id="philo-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+                <option value="">-- Choisissez le format --</option>
+                <option value="dissertation">Dissertation Philosophique</option>
+                <option value="commentaire">Commentaire de Texte</option>
+                <option value="concept">Explication d'un Concept</option>
+            </select>
+        </div>
+        <div style="text-align: center;">
+            <button onclick="invoquerMaitrePhilo()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #4F46E5; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Consulter le Maître</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Atelier des Sciences -->
+<div id="sciences-modal" class="modal-overlay">
+    <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+        <button class="modal-close" onclick="fermerSciences()" style="color: #0F172A;">×</button>
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">🧬</div>
+            <h2 style="color: #0F172A; font-family: 'Georgia', serif; font-weight: normal;">Le Laboratoire des Sciences</h2>
+            <p style="color: #64748B; font-style: italic; font-size: 0.95em;">"La logique vous mènera de A à B. L'imagination vous mènera partout."</p>
+            <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+        </div>
+        <div style="margin-bottom: 20px; text-align: left;">
+            <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">1. Chapitre ou Problème :</label>
+            <input type="text" id="sciences-sujet" placeholder="Ex: Cinématique, Calcul de pH, Équations..." style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+        </div>
+        <div style="margin-bottom: 25px; text-align: left;">
+            <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">2. Type d'assistance :</label>
+            <select id="sciences-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+                <option value="">-- Choisissez l'approche --</option>
+                <option value="resolution">Méthode de résolution (Exercice)</option>
+                <option value="demonstration">Démonstration de cours</option>
+                <option value="formule">Explication d'une formule</option>
+            </select>
+        </div>
+        <div style="text-align: center;">
+            <button onclick="invoquerLaboratoire()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #059669; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Entrer au Laboratoire</button>
+        </div>
+    </div>
 </div>
 </body>
 </html>
