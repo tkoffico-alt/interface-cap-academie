@@ -880,31 +880,38 @@ function fermerAtelier() {
 }
 
 function invoquerJury() {
-    const sujet = document.getElementById('orateur-sujet').value.trim();
-    const cadre = document.getElementById('orateur-cadre').value;
-    
-    // 1. Le Verrou de Sécurité
-    if(!sujet || !cadre) {
-        alert("Veuillez renseigner le sujet et le cadre de l'épreuve avant d'entrer dans l'arène.");
+    // 1. Récupération et vérification des variables (adapte les IDs selon ton HTML)
+    const sujet = document.getElementById('sujet').value;
+    const cadre = document.getElementById('cadre').value;
+
+    if (!sujet || !cadre) {
+        alert("Veuillez remplir le sujet et le cadre de l'épreuve avant de faire face au jury.");
         return;
     }
-    
-    // 2. Le Lien du Sanctuaire (À Remplacer par ton lien Dify)
-    // Va dans Dify > Accès API > "Lien public" ou "Web App URL" de ton Examinateur
-   const urlDifyExaminateur = "http://178.238.224.136:8080/chat/UEtRcXzRm3NKj4rq";
-    
-    // 3. L'Encodage des Variables
-    // Nous transformons le texte pour qu'il puisse voyager sans erreur dans un lien web
+
     const sujetEncode = encodeURIComponent(sujet);
     const cadreEncode = encodeURIComponent(cadre);
-    
-    // 4. La Fusion
+
+    // 2. Le Pont d'Invocation (Ton URL exacte avec le port 8080)
+    const urlDifyExaminateur = "http://178.238.224.136:8080/chat/UEtRcXzRm3NKj4rq";
     const urlFinale = `${urlDifyExaminateur}?sujet_etudie=${sujetEncode}&cadre_epreuve=${cadreEncode}`;
-    
-    // 5. L'Ouverture des Portes
-    // Ouvre le chat de l'Examinateur dans un nouvel onglet spacieux et dédié
-    window.open(urlFinale, '_blank');
-    
-    // Ferme la petite fenêtre de configuration sur ton site
-    fermerAtelier(); 
+
+    // 3. Identification de l'architecture
+    const conteneur = document.getElementById("arene-conteneur");
+    const iframe = document.getElementById("iframe-examinateur");
+    const loader = document.getElementById("souffle-attente");
+
+    // 4. L'Éveil : On affiche l'arène vide et on lance le souffle d'attente
+    conteneur.className = "eduka-arene-active";
+    loader.style.display = "flex";
+    iframe.style.opacity = "0"; // L'Iframe reste invisible le temps de charger
+
+    // 5. Injection de la conscience (chargement du lien)
+    iframe.src = urlFinale;
+
+    // 6. La Révélation : Dès que la fenêtre est chargée, l'attente cesse
+    iframe.onload = function() {
+        loader.style.display = "none";
+        iframe.style.opacity = "1"; // Révélation en douceur grâce au CSS
+    };
 }
