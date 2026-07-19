@@ -256,7 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // ❖ GESTION DU CODE D'ACCÈS ET DES MODALES ❖
 // =======================================================================
 function openPremiumModal() {
-    // Aiguillage dynamique du lien d'abonnement
     const lien = document.getElementById('lien-abonnement-dynamique');
     if (lien) {
         if (espaceActuel === 'enseignant') {
@@ -365,9 +364,6 @@ async function sendSasMessage() {
     
     if (!message) return;
 
-    // =================================================================
-    // ❖ LE GARDIEN DU QUOTA JOURNALIER (Espace Libre) ❖
-    // =================================================================
     const QUOTA_MAX = 10;
     const aujourdhui = new Date().toLocaleDateString(); 
     
@@ -399,7 +395,7 @@ async function sendSasMessage() {
 
     suiviQuota.requetes++;
     localStorage.setItem('eduka_quota_sas', JSON.stringify(suiviQuota));
-    // =================================================================
+
     inputField.disabled = true;
     button.disabled = true;
     button.style.opacity = '0.5';
@@ -416,7 +412,7 @@ async function sendSasMessage() {
     scrollToBottom('sas-chat-history');
 
     const botLoadingDiv = document.createElement('div');
-    botLoadingDiv.className = 'message bot-message apparition-fluide'; // Animation d'apparition
+    botLoadingDiv.className = 'message bot-message apparition-fluide';
     botLoadingDiv.textContent = "L'Assistant prépare l'Espace...";
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom('sas-chat-history');
@@ -437,16 +433,14 @@ async function sendSasMessage() {
 
         const contentType = response.headers.get("content-type");
         
-        // 1. Si l'accès est bloqué (quota dépassé) = Réponse classique
         if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
             botLoadingDiv.textContent = data.answer || "Une erreur est survenue.";
             if (data.conversation_id) sasConversationIds[avatarActif] = data.conversation_id;
         } 
-        // 2. Si le réseau s'ouvre (Mode Streaming)
         else {
-            botLoadingDiv.innerHTML = ""; // On efface le texte de préparation
-            let texteIntegralSas = ""; // ❖ Le réceptacle d'énergie
+            botLoadingDiv.innerHTML = "";
+            let texteIntegralSas = ""; 
             
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
@@ -463,7 +457,6 @@ async function sendSasMessage() {
                         try {
                             const dataObj = JSON.parse(line.substring(6));
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message') {
-                                // ❖ L'accumulation et la traduction instantanée
                                 texteIntegralSas += (dataObj.answer || "");
                                 botLoadingDiv.innerHTML = marked.parse(texteIntegralSas);
                                 scrollToBottom('sas-chat-history');
@@ -471,14 +464,12 @@ async function sendSasMessage() {
                             if (dataObj.conversation_id) {
                                 sasConversationIds[avatarActif] = dataObj.conversation_id;
                             }
-                        } catch(e) {
-                            // Ignorer les fragments incomplets
-                        }
+                        } catch(e) {}
                     }
                 }
             }
         }
-        // Ajout des outils d'édition à la fin du flux
+        
         if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
@@ -538,7 +529,7 @@ async function sendTeacherMessage(outil) {
     scrollToBottom(`${outil}-chat-history`);
 
     const botLoadingDiv = document.createElement('div');
-    botLoadingDiv.className = 'message bot-message apparition-fluide'; // Animation d'apparition
+    botLoadingDiv.className = 'message bot-message apparition-fluide';
     botLoadingDiv.textContent = "Le Cabinet compile les données...";
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom(`${outil}-chat-history`);
@@ -559,7 +550,6 @@ async function sendTeacherMessage(outil) {
 
         const contentType = response.headers.get("content-type");
         
-        // 1. Gestion des quotas (Message classique)
         if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
             if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
@@ -569,10 +559,9 @@ async function sendTeacherMessage(outil) {
             }
             if (data.conversation_id) teacherConversationIds[outil] = data.conversation_id;
         } 
-        // 2. Le Flux Continu de l'Enseignant
         else {
             botLoadingDiv.innerHTML = ""; 
-            let texteIntegralTeacher = ""; // ❖ Le réceptacle d'énergie
+            let texteIntegralTeacher = ""; 
             
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
@@ -589,7 +578,6 @@ async function sendTeacherMessage(outil) {
                         try {
                             const dataObj = JSON.parse(line.substring(6));
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message') {
-                                // ❖ L'accumulation et la traduction instantanée
                                 texteIntegralTeacher += (dataObj.answer || "");
                                 botLoadingDiv.innerHTML = marked.parse(texteIntegralTeacher);
                                 scrollToBottom(`${outil}-chat-history`);
@@ -603,7 +591,6 @@ async function sendTeacherMessage(outil) {
             }
         }
 
-        // Ajout des outils d'édition
         if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
@@ -632,7 +619,6 @@ async function sendTeacherMessage(outil) {
 // =======================================================================
 // ❖ OUTILS D'ÉDITION PURES ET VALIDATION ❖
 // =======================================================================
-// ❖ LE SCEAU DU CRÉATEUR ❖
 const urlSceau = "https://github.com/tkoffico-alt/interface-cap-academie/blob/main/logo-signature-doc.png?raw=true"; 
 
 function imprimerDocument(bouton) {
@@ -641,12 +627,10 @@ function imprimerDocument(bouton) {
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
 
-    // On récupère le texte avec sa belle mise en forme HTML
     const contenuHTML = clone.innerHTML;
 
     const printArea = document.getElementById('print-area');
     
-   // On injecte les règles de respiration (CSS) et le contenu
     printArea.innerHTML = `
         <style>
             .document-aere {
@@ -655,8 +639,8 @@ function imprimerDocument(bouton) {
                 color: #000; 
                 background: #fff; 
                 padding: 20px; 
-                line-height: 1.6; /* Aère l'espace entre les lignes */
-                white-space: pre-wrap; /* Force le respect des sauts de ligne invisibles */
+                line-height: 1.6; 
+                white-space: pre-wrap; 
             }
             .document-aere h1, .document-aere h2, .document-aere h3, .document-aere h4 {
                 margin-top: 1.5em; 
@@ -664,7 +648,7 @@ function imprimerDocument(bouton) {
                 color: #1F2937;
             }
             .document-aere p {
-                margin-bottom: 1em; /* Espace entre les paragraphes */
+                margin-bottom: 1em; 
             }
             .document-aere ul, .document-aere ol {
                 margin-top: 0.5em;
@@ -672,14 +656,13 @@ function imprimerDocument(bouton) {
                 padding-left: 20px;
             }
             .document-aere li {
-                margin-bottom: 0.5em; /* Espace entre les puces */
+                margin-bottom: 0.5em; 
             }
         </style>
         
         <div class="document-aere">
             ${contenuHTML}
             
-            <!-- Injection du Sceau en fin de document -->
             <div style="margin-top: 50px; text-align: center; border-top: 2px solid #E5E7EB; padding-top: 20px; white-space: normal; line-height: 1.2;">
                 <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; display: block; margin: 0 auto;">
                 <strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px; display: block; margin-top: -12px;">EdukaTchat</strong>
@@ -699,7 +682,6 @@ function copierTexte(bouton) {
     const contenuHTML = clone.innerHTML;
     const texteBrut = clone.innerText;
 
-    // Le sceau invisible qui apparaîtra dans Word
     const signatureHTML = `
         <br><br>
         <div style="text-align: center; font-family: Arial, sans-serif; border-top: 2px solid #E5E7EB; padding-top: 20px;">
@@ -708,7 +690,6 @@ function copierTexte(bouton) {
             <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 2px;">© Propriété Intellectuelle Exclusive</span>
         </div>`;
 
-    // Création d'un colis riche pour le presse-papier
     const blobHtml = new Blob([contenuHTML + signatureHTML], { type: "text/html" });
     const blobText = new Blob([texteBrut + "\n\n© EdukaTchat - Propriété Intellectuelle Exclusive"], { type: "text/plain" });
 
@@ -718,7 +699,6 @@ function copierTexte(bouton) {
             animerBoutonCopie(bouton);
         });
     } catch (err) {
-        // Bouclier de secours si le navigateur est ancien
         navigator.clipboard.writeText(texteBrut + "\n\n© EdukaTchat - Propriété Intellectuelle").then(() => {
             animerBoutonCopie(bouton);
         });
@@ -883,8 +863,35 @@ function fermerAtelier() {
 // =======================================================================
 // ❖ L'ARÈNE DE L'EXAMINATEUR (FOCUS MODE) ❖
 // =======================================================================
+
+// Fonction de vérification du quota spécifique à l'Atelier
+function checkAtelierQuota() {
+    // Si l'utilisateur a déjà un code "sceau" (Premium), il est libre
+    if (localStorage.getItem('eduka_sceau')) return true;
+
+    const QUOTA_MAX_ATELIER = 3; // Limite fixée à 3 essais par jour
+    const aujourdhui = new Date().toLocaleDateString();
+    
+    let quotaAtelier = JSON.parse(localStorage.getItem('eduka_quota_atelier')) || { date: aujourdhui, requetes: 0 };
+
+    if (quotaAtelier.date !== aujourdhui) {
+        quotaAtelier = { date: aujourdhui, requetes: 0 };
+    }
+
+    if (quotaAtelier.requetes >= QUOTA_MAX_ATELIER) {
+        alert("Tu as atteint ta limite de 3 essais gratuits pour l'Atelier aujourd'hui. Le savoir demande un Sceau pour continuer sans limite.");
+        if (typeof openPremiumModal === 'function') openPremiumModal(); 
+        return false;
+    }
+
+    // Incrémentation du compteur
+    quotaAtelier.requetes++;
+    localStorage.setItem('eduka_quota_atelier', JSON.stringify(quotaAtelier));
+    return true;
+}
+
 function invoquerJury() {
-    // 0. VÉRIFICATION DU GARDIEN (Nouveauté)
+    // 0. VÉRIFICATION DU GARDIEN
     if (!checkAtelierQuota()) return;
 
     // 1. Récupération des valeurs saisies dans le formulaire
@@ -902,8 +909,8 @@ function invoquerJury() {
     // 2. Dissiper le formulaire initial proprement
     fermerAtelier();
 
-    // 3. Le Pont d'Invocation SÉCURISÉ
-    const urlDifyExaminateur = "const urlDifyExaminateur = "https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq";
+    // 3. Le Pont d'Invocation SÉCURISÉ (Corrigé)
+    const urlDifyExaminateur = "https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq";
     const urlFinale = `${urlDifyExaminateur}?sujet_etudie=${sujetEncode}&cadre_epreuve=${cadreEncode}`;
 
     // 4. Ciblage des éléments de la nouvelle arène
@@ -929,55 +936,4 @@ function invoquerJury() {
 function fermerArene() {
     document.getElementById("arene-conteneur").className = "eduka-arene-cache";
     document.getElementById("iframe-examinateur").src = ""; // Brise la connexion pour la prochaine session
-}
-// Fonction de vérification du quota spécifique à l'Atelier
-function checkAtelierQuota() {
-    // Si l'utilisateur a déjà un code, il est libre
-    if (localStorage.getItem('eduka_sceau')) return true;
-
-    const QUOTA_MAX_ATELIER = 3; // Limite fixée à 3 essais
-    const aujourdhui = new Date().toLocaleDateString();
-    
-    let quotaAtelier = JSON.parse(localStorage.getItem('eduka_quota_atelier')) || { date: aujourdhui, requetes: 0 };
-
-    if (quotaAtelier.date !== aujourdhui) {
-        quotaAtelier = { date: aujourdhui, requetes: 0 };
-    }
-
-    if (quotaAtelier.requetes >= QUOTA_MAX_ATELIER) {
-        // Alerte et redirection vers l'invitation à s'abonner
-        alert("Tu as atteint ta limite de 3 essais gratuits pour l'Atelier aujourd'hui. Le savoir demande un Sceau pour continuer sans limite.");
-        openPremiumModal(); 
-        return false;
-    }
-
-    // Incrémentation
-    quotaAtelier.requetes++;
-    localStorage.setItem('eduka_quota_atelier', JSON.stringify(quotaAtelier));
-    return true;
-}
-function checkAtelierQuota() {
-    // Si l'utilisateur a déjà un code "sceau" (Premium), il est libre
-    if (localStorage.getItem('eduka_sceau')) return true;
-
-    const QUOTA_MAX_ATELIER = 3; // Limite fixée à 3 essais par jour
-    const aujourdhui = new Date().toLocaleDateString();
-    
-    let quotaAtelier = JSON.parse(localStorage.getItem('eduka_quota_atelier')) || { date: aujourdhui, requetes: 0 };
-
-    if (quotaAtelier.date !== aujourdhui) {
-        quotaAtelier = { date: aujourdhui, requetes: 0 };
-    }
-
-    if (quotaAtelier.requetes >= QUOTA_MAX_ATELIER) {
-        alert("Tu as atteint ta limite de 3 essais gratuits pour l'Atelier aujourd'hui. Le savoir demande un Sceau pour continuer sans limite.");
-        // Remplace par ta vraie fonction d'ouverture de modale si elle a un autre nom
-        if (typeof openPremiumModal === 'function') openPremiumModal(); 
-        return false;
-    }
-
-    // Incrémentation du compteur
-    quotaAtelier.requetes++;
-    localStorage.setItem('eduka_quota_atelier', JSON.stringify(quotaAtelier));
-    return true;
 }
