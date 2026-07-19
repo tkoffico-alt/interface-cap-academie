@@ -751,3 +751,55 @@ body.light-theme .btn-action-doc:hover {
     opacity: 0.5;
     cursor: not-allowed;
 }
+/* --- L'ARÈNE (CONTENEUR) --- */
+.eduka-arene-cache {
+    display: none;
+}
+
+.eduka-arene-active {
+    display: flex;
+    position: relative;
+    justify-content: center; /* Centrage horizontal absolu */
+    align-items: center;     /* Centrage vertical de l'animation */
+    width: 100%;
+    height: 75vh;            /* Occupe 75% de la hauteur de l'écran */
+    min-height: 600px;
+    margin-top: 2rem;
+    background-color: transparent;
+}
+
+/* --- LA FENÊTRE DE L'EXAMINATEUR --- */
+.eduka-iframe {
+    width: 90%;              /* Garde une respiration sur les bords */
+    max-width: 1200px;       /* Empêche l'étirement excessif sur grand écran */
+    height: 100%;
+    border-radius: 12px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15); /* Ombre professionnelle */
+    opacity: 0;              /* Caché tant que ce n'est pas chargé */
+    transition: opacity 0.6s ease-in-out;
+    background-color: #ffffff;
+}
+
+/* --- LE SOUFFLE D'ATTENTE (ANIMATION) --- */
+.eduka-loader {
+    position: absolute;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.eduka-loader .point {
+    width: 14px;
+    height: 14px;
+    background-color: #2b3a4a; /* Couleur sobre et institutionnelle */
+    border-radius: 50%;
+    animation: eduka-respiration 1.4s infinite ease-in-out both;
+}
+
+.eduka-loader .point:nth-child(1) { animation-delay: -0.32s; }
+.eduka-loader .point:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes eduka-respiration {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.2; }
+    40% { transform: scale(1); opacity: 1; }
+}
