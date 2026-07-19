@@ -409,5 +409,20 @@
         </div>
     </div>
 </div>
+    <!-- === L'ARÈNE DE L'EXAMINATEUR (FOCUS MODE) === -->
+<div id="arene-conteneur" class="eduka-arene-cache">
+    <!-- Bouton pour quitter l'arène -->
+    <button class="btn-fermer-arene" onclick="fermerArene()">×</button>
+    
+    <!-- Le Souffle d'Attente (Loader) -->
+    <div id="souffle-attente" class="eduka-loader">
+        <div class="point"></div>
+        <div class="point"></div>
+        <div class="point"></div>
+    </div>
+    
+    <!-- Le Miroir de l'IA (Iframe) -->
+    <iframe id="iframe-examinateur" class="eduka-iframe" src="" frameborder="0" allow="microphone"></iframe>
+</div>
 </body>
 </html>
