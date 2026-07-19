@@ -938,7 +938,7 @@ function invoquerMaitrePhilo() {
     if (!sujet || !cadre) { alert("Le Maître exige un sujet et un cadre de réflexion."); return; }
 
     fermerPhilo();
-    const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_PHILO"; // À remplacer
+    const urlDify = "https://ia.edukatchat.org/chat/qjBE3bTsjC1SIWiP"; // À remplacer
     const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
 
     lancerAreneCommune(urlFinale);
