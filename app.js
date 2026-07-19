@@ -927,3 +927,29 @@ function fermerArene() {
     document.getElementById("arene-conteneur").className = "eduka-arene-cache";
     document.getElementById("iframe-examinateur").src = ""; // Brise la connexion pour la prochaine session
 }
+// Fonction de vérification du quota spécifique à l'Atelier
+function checkAtelierQuota() {
+    // Si l'utilisateur a déjà un code, il est libre
+    if (localStorage.getItem('eduka_sceau')) return true;
+
+    const QUOTA_MAX_ATELIER = 3; // Limite fixée à 3 essais
+    const aujourdhui = new Date().toLocaleDateString();
+    
+    let quotaAtelier = JSON.parse(localStorage.getItem('eduka_quota_atelier')) || { date: aujourdhui, requetes: 0 };
+
+    if (quotaAtelier.date !== aujourdhui) {
+        quotaAtelier = { date: aujourdhui, requetes: 0 };
+    }
+
+    if (quotaAtelier.requetes >= QUOTA_MAX_ATELIER) {
+        // Alerte et redirection vers l'invitation à s'abonner
+        alert("Tu as atteint ta limite de 3 essais gratuits pour l'Atelier aujourd'hui. Le savoir demande un Sceau pour continuer sans limite.");
+        openPremiumModal(); 
+        return false;
+    }
+
+    // Incrémentation
+    quotaAtelier.requetes++;
+    localStorage.setItem('eduka_quota_atelier', JSON.stringify(quotaAtelier));
+    return true;
+}
