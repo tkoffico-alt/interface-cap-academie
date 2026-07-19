@@ -229,6 +229,7 @@ function initTheme() {
         updateThemeButtonUI(true);
     }
 }
+
 function toggleTheme() {
     const isLight = document.body.classList.toggle('light-theme');
     localStorage.setItem('eduka_theme', isLight ? 'light' : 'dark');
@@ -245,6 +246,7 @@ function updateThemeButtonUI(isLight) {
         }
     }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     restoreChatHistories(); 
@@ -500,6 +502,7 @@ async function sendSasMessage() {
         scrollToBottom('sas-chat-history');
     }
 }
+
 // =======================================================================
 // ❖ LOGIQUE DES OUTILS ENSEIGNANT ❖
 // =======================================================================
@@ -625,11 +628,11 @@ async function sendTeacherMessage(outil) {
         scrollToBottom(`${outil}-chat-history`);
     }
 }
+
 // =======================================================================
 // ❖ OUTILS D'ÉDITION PURES ET VALIDATION ❖
 // =======================================================================
 // ❖ LE SCEAU DU CRÉATEUR ❖
-// Remplace le lien ci-dessous par l'adresse de ton image copiée sur GitHub
 const urlSceau = "https://github.com/tkoffico-alt/interface-cap-academie/blob/main/logo-signature-doc.png?raw=true"; 
 
 function imprimerDocument(bouton) {
@@ -686,6 +689,7 @@ function imprimerDocument(bouton) {
     
     window.print();
 }
+
 function copierTexte(bouton) {
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
@@ -704,7 +708,7 @@ function copierTexte(bouton) {
             <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 2px;">© Propriété Intellectuelle Exclusive</span>
         </div>`;
 
-    // Création d'un colis riche pour le presse-papier (Préserve le gras, les tableaux et l'image)
+    // Création d'un colis riche pour le presse-papier
     const blobHtml = new Blob([contenuHTML + signatureHTML], { type: "text/html" });
     const blobText = new Blob([texteBrut + "\n\n© EdukaTchat - Propriété Intellectuelle Exclusive"], { type: "text/plain" });
 
@@ -734,7 +738,6 @@ function animerBoutonCopie(bouton) {
     }, 2000);
 }
 
-// Conserve ta fonction verifierFormulaire() existante juste en dessous
 function verifierFormulaire() {
     const habitude = document.getElementById('habitudes-revision').value;
     const stress = document.getElementById('gestion-stress').value;
@@ -750,25 +753,24 @@ function verifierFormulaire() {
         bouton.style.cursor = 'not-allowed';
     }
 }
+
 // =======================================================================
 // ❖ GESTION DU PLEIN ÉCRAN ❖
 // =======================================================================
 function toggleFullScreen() {
     const doc = window.document;
-    const docEl = doc.documentElement; // Cible l'intégralité de la page
+    const docEl = doc.documentElement; 
     const btn = document.getElementById('btn-fullscreen');
 
     const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
     const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
 
     if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-        // Entrer en plein écran
         if (requestFullScreen) {
             requestFullScreen.call(docEl);
             if (btn) btn.innerHTML = "⛶ Quitter Plein Écran";
         }
     } else {
-        // Quitter le plein écran
         if (cancelFullScreen) {
             cancelFullScreen.call(doc);
             if (btn) btn.innerHTML = "⛶ Plein Écran";
@@ -776,7 +778,6 @@ function toggleFullScreen() {
     }
 }
 
-// Écouteur pour remettre le bon texte si l'utilisateur quitte avec la touche "Échap"
 document.addEventListener('fullscreenchange', () => {
     const btn = document.getElementById('btn-fullscreen');
     if (!document.fullscreenElement && btn) {
@@ -784,7 +785,9 @@ document.addEventListener('fullscreenchange', () => {
     }
 });
 
-// La Maïeutique de l'Orientation (Version Holistique)
+// =======================================================================
+// ❖ LA MAÏEUTIQUE DE L'ORIENTATION (Version Holistique) ❖
+// =======================================================================
 function calculerMO() {
     const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
 
@@ -810,7 +813,6 @@ function calculerMO() {
     const moisActuel = new Date().getMonth(); 
     const estPeriodePostBepc = (moisActuel >= 6 && moisActuel <= 8);
     
-    // Vérification de l'appartenance à l'Académie (Le Sceau)
     const possedeSceau = localStorage.getItem('eduka_sceau') !== null;
     let directiveCognitive = "";
     
@@ -858,8 +860,9 @@ function calculerMO() {
     adviceDisplay.innerHTML = conseil + directiveCognitive + actionHTML;
     resultContainer.style.display = "block";
 }
+
 // =======================================================================
-// ❖ LA RESPIRATION DE LA BOUSSOLE (OUVERTURE ET FERMETURE) ❖
+// ❖ LA RESPIRATION DES FENÊTRES (OUVERTURE ET FERMETURE) ❖
 // =======================================================================
 function ouvrirBoussole() {
     document.getElementById('mo-modal').classList.add('active');
@@ -868,9 +871,7 @@ function ouvrirBoussole() {
 function fermerBoussole() {
     document.getElementById('mo-modal').classList.remove('active');
 }
-// =======================================================================
-// ❖ LA RESPIRATION DE L'ATELIER (OUVERTURE ET FERMETURE) ❖
-// =======================================================================
+
 function ouvrirAtelier() {
     document.getElementById('orateur-modal').classList.add('active');
 }
@@ -879,7 +880,9 @@ function fermerAtelier() {
     document.getElementById('orateur-modal').classList.remove('active');
 }
 
-// Fonction pour ouvrir l'Arène et appeler l'IA
+// =======================================================================
+// ❖ L'ARÈNE DE L'EXAMINATEUR (FOCUS MODE) ❖
+// =======================================================================
 function invoquerJury() {
     // 1. Récupération des valeurs saisies dans le formulaire
     const sujet = document.getElementById('orateur-sujet').value;
@@ -893,10 +896,10 @@ function invoquerJury() {
     const sujetEncode = encodeURIComponent(sujet);
     const cadreEncode = encodeURIComponent(cadre);
 
-    // 2. Dissiper le formulaire initial
-    document.getElementById('orateur-modal').style.display = 'none';
+    // 2. Dissiper le formulaire initial proprement
+    fermerAtelier();
 
-    // 3. Le Pont d'Invocation (Ton URL exacte)
+    // 3. Le Pont d'Invocation
     const urlDifyExaminateur = "http://178.238.224.136:8080/chat/UEtRcXzRm3NKj4rq";
     const urlFinale = `${urlDifyExaminateur}?sujet_etudie=${sujetEncode}&cadre_epreuve=${cadreEncode}`;
 
@@ -920,7 +923,6 @@ function invoquerJury() {
     };
 }
 
-// Fonction pour refermer l'Arène et réinitialiser l'IA
 function fermerArene() {
     document.getElementById("arene-conteneur").className = "eduka-arene-cache";
     document.getElementById("iframe-examinateur").src = ""; // Brise la connexion pour la prochaine session
