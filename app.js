@@ -903,7 +903,7 @@ function invoquerJury() {
     fermerAtelier();
 
     // 3. Le Pont d'Invocation SÉCURISÉ
-    const urlDifyExaminateur = "https://178.238.224.136/chatbot/UEtRcXzRm3NKj4rq";
+    const urlDifyExaminateur = "const urlDifyExaminateur = "https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq";
     const urlFinale = `${urlDifyExaminateur}?sujet_etudie=${sujetEncode}&cadre_epreuve=${cadreEncode}`;
 
     // 4. Ciblage des éléments de la nouvelle arène
