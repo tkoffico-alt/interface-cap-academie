@@ -965,7 +965,7 @@ function invoquerLaboratoire() {
     if (!sujet || !cadre) { alert("Les protocoles exigent un sujet et une méthode."); return; }
 
     fermerSciences();
-    const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_SCIENCES"; // À remplacer
+    const urlDify = "https://ia.edukatchat.org/chat/oxjmp0xUaVqNtASg"; // À remplacer
     const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
 
     lancerAreneCommune(urlFinale);
