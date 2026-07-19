@@ -859,74 +859,25 @@ function ouvrirAtelier() {
 function fermerAtelier() {
     document.getElementById('orateur-modal').classList.remove('active');
 }
+function ouvrirPhilo() { document.getElementById('philo-modal').classList.add('active'); }
+function fermerPhilo() { document.getElementById('philo-modal').classList.remove('active'); }
 
+function ouvrirSciences() { document.getElementById('sciences-modal').classList.add('active'); }
+function fermerSciences() { document.getElementById('sciences-modal').classList.remove('active'); }
 // =======================================================================
-// ❖ L'ARÈNE DE L'EXAMINATEUR (FOCUS MODE) ❖
+// ❖ L'ARÈNE COMMUNE (LE VOILE D'IMMERSION POUR LES ATELIERS) ❖
 // =======================================================================
 
-// Fonction de vérification du quota spécifique à l'Atelier
-function checkAtelierQuota() {
-    // Si l'utilisateur a déjà un code "sceau" (Premium), il est libre
-    if (localStorage.getItem('eduka_sceau')) return true;
-
-    const QUOTA_MAX_ATELIER = 3; // Limite fixée à 3 essais par jour
-    const aujourdhui = new Date().toLocaleDateString();
-    
-    let quotaAtelier = JSON.parse(localStorage.getItem('eduka_quota_atelier')) || { date: aujourdhui, requetes: 0 };
-
-    if (quotaAtelier.date !== aujourdhui) {
-        quotaAtelier = { date: aujourdhui, requetes: 0 };
-    }
-
-    if (quotaAtelier.requetes >= QUOTA_MAX_ATELIER) {
-        alert("Tu as atteint ta limite de 3 essais gratuits pour l'Atelier aujourd'hui. Le savoir demande un Sceau pour continuer sans limite.");
-        if (typeof openPremiumModal === 'function') openPremiumModal(); 
-        return false;
-    }
-
-    // Incrémentation du compteur
-    quotaAtelier.requetes++;
-    localStorage.setItem('eduka_quota_atelier', JSON.stringify(quotaAtelier));
-    return true;
-}
-
-function invoquerJury() {
-    // 0. VÉRIFICATION DU GARDIEN
-    if (!checkAtelierQuota()) return;
-
-    // 1. Récupération des valeurs saisies dans le formulaire
-    const sujet = document.getElementById('orateur-sujet').value;
-    const cadre = document.getElementById('orateur-cadre').value;
-
-    if (!sujet || !cadre) {
-        alert("Le jury exige que vous précisiez l'œuvre et le cadre de l'épreuve avant d'entrer.");
-        return;
-    }
-
-    const sujetEncode = encodeURIComponent(sujet);
-    const cadreEncode = encodeURIComponent(cadre);
-
-    // 2. Dissiper le formulaire initial proprement
-    fermerAtelier();
-
-    // 3. Le Pont d'Invocation SÉCURISÉ (Corrigé)
-    const urlDifyExaminateur = "https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq";
-    const urlFinale = `${urlDifyExaminateur}?sujet_etudie=${sujetEncode}&cadre_epreuve=${cadreEncode}`;
-
-    // 4. Ciblage des éléments de la nouvelle arène
+function lancerAreneCommune(url) {
     const conteneur = document.getElementById("arene-conteneur");
     const iframe = document.getElementById("iframe-examinateur");
     const loader = document.getElementById("souffle-attente");
 
-    // 5. L'Éveil : Déploiement du voile sombre et du souffle
     conteneur.className = "eduka-arene-active";
     loader.style.display = "flex";
     iframe.style.opacity = "0";
+    iframe.src = url;
 
-    // 6. Injection de l'esprit
-    iframe.src = urlFinale;
-
-    // 7. La Révélation : Fin de l'attente dès que la page est prête
     iframe.onload = function() {
         loader.style.display = "none";
         iframe.style.opacity = "1";
@@ -935,5 +886,87 @@ function invoquerJury() {
 
 function fermerArene() {
     document.getElementById("arene-conteneur").className = "eduka-arene-cache";
-    document.getElementById("iframe-examinateur").src = ""; // Brise la connexion pour la prochaine session
+    document.getElementById("iframe-examinateur").src = ""; // Brise la connexion pour purifier la mémoire
+}
+
+// --- 1. ATELIER DE L'ORATEUR ---
+function checkAtelierQuota() {
+    if (localStorage.getItem('eduka_sceau')) return true;
+    const aujourdhui = new Date().toLocaleDateString();
+    let quota = JSON.parse(localStorage.getItem('eduka_quota_atelier')) || { date: aujourdhui, requetes: 0 };
+    if (quota.date !== aujourdhui) quota = { date: aujourdhui, requetes: 0 };
+    if (quota.requetes >= 3) {
+        alert("Tu as atteint ta limite de 3 essais gratuits pour l'Atelier aujourd'hui. Le savoir demande un Sceau pour continuer sans limite.");
+        if (typeof openPremiumModal === 'function') openPremiumModal(); 
+        return false;
+    }
+    quota.requetes++; localStorage.setItem('eduka_quota_atelier', JSON.stringify(quota)); return true;
+}
+
+function invoquerJury() {
+    if (!checkAtelierQuota()) return;
+    const sujet = document.getElementById('orateur-sujet').value;
+    const cadre = document.getElementById('orateur-cadre').value;
+
+    if (!sujet || !cadre) { alert("Le jury exige que vous précisiez l'œuvre et le cadre de l'épreuve."); return; }
+
+    fermerAtelier();
+    const urlDify = "https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq"; // Ta clé Orateur
+    const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
+    
+    lancerAreneCommune(urlFinale);
+}
+
+// --- 2. ATELIER DE PHILOSOPHIE ---
+function checkPhiloQuota() {
+    if (localStorage.getItem('eduka_sceau')) return true;
+    const aujourdhui = new Date().toLocaleDateString();
+    let quota = JSON.parse(localStorage.getItem('eduka_quota_philo')) || { date: aujourdhui, requetes: 0 };
+    if (quota.date !== aujourdhui) quota = { date: aujourdhui, requetes: 0 };
+    if (quota.requetes >= 3) {
+        alert("Tu as atteint ta limite pour la Philosophie aujourd'hui. Un Sceau est requis.");
+        openPremiumModal(); return false;
+    }
+    quota.requetes++; localStorage.setItem('eduka_quota_philo', JSON.stringify(quota)); return true;
+}
+
+function invoquerMaitrePhilo() {
+    if (!checkPhiloQuota()) return;
+    const sujet = document.getElementById('philo-sujet').value;
+    const cadre = document.getElementById('philo-cadre').value;
+
+    if (!sujet || !cadre) { alert("Le Maître exige un sujet et un cadre de réflexion."); return; }
+
+    fermerPhilo();
+    const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_PHILO"; // À remplacer
+    const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
+
+    lancerAreneCommune(urlFinale);
+}
+
+// --- 3. LABORATOIRE DES SCIENCES ---
+function checkSciencesQuota() {
+    if (localStorage.getItem('eduka_sceau')) return true;
+    const aujourdhui = new Date().toLocaleDateString();
+    let quota = JSON.parse(localStorage.getItem('eduka_quota_sciences')) || { date: aujourdhui, requetes: 0 };
+    if (quota.date !== aujourdhui) quota = { date: aujourdhui, requetes: 0 };
+    if (quota.requetes >= 3) {
+        alert("Tu as atteint ta limite pour les Sciences aujourd'hui. Un Sceau est requis.");
+        openPremiumModal(); return false;
+    }
+    quota.requetes++; localStorage.setItem('eduka_quota_sciences', JSON.stringify(quota)); return true;
+}
+
+function invoquerLaboratoire() {
+    if (!checkSciencesQuota()) return;
+    const sujet = document.getElementById('sciences-sujet').value;
+    const cadre = document.getElementById('sciences-cadre').value;
+
+    if (!sujet || !cadre) { alert("Les protocoles exigent un sujet et une méthode."); return; }
+
+    fermerSciences();
+    const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_SCIENCES"; // À remplacer
+    const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
+
+    lancerAreneCommune(urlFinale);
 }
