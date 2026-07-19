@@ -879,39 +879,49 @@ function fermerAtelier() {
     document.getElementById('orateur-modal').classList.remove('active');
 }
 
+// Fonction pour ouvrir l'Arène et appeler l'IA
 function invoquerJury() {
-    // 1. Récupération et vérification des variables (adapte les IDs selon ton HTML)
-    const sujet = document.getElementById('sujet').value;
-    const cadre = document.getElementById('cadre').value;
+    // 1. Récupération des valeurs saisies dans le formulaire
+    const sujet = document.getElementById('orateur-sujet').value;
+    const cadre = document.getElementById('orateur-cadre').value;
 
     if (!sujet || !cadre) {
-        alert("Veuillez remplir le sujet et le cadre de l'épreuve avant de faire face au jury.");
+        alert("Le jury exige que vous précisiez l'œuvre et le cadre de l'épreuve avant d'entrer.");
         return;
     }
 
     const sujetEncode = encodeURIComponent(sujet);
     const cadreEncode = encodeURIComponent(cadre);
 
-    // 2. Le Pont d'Invocation (Ton URL exacte avec le port 8080)
+    // 2. Dissiper le formulaire initial
+    document.getElementById('orateur-modal').style.display = 'none';
+
+    // 3. Le Pont d'Invocation (Ton URL exacte)
     const urlDifyExaminateur = "http://178.238.224.136:8080/chat/UEtRcXzRm3NKj4rq";
     const urlFinale = `${urlDifyExaminateur}?sujet_etudie=${sujetEncode}&cadre_epreuve=${cadreEncode}`;
 
-    // 3. Identification de l'architecture
+    // 4. Ciblage des éléments de la nouvelle arène
     const conteneur = document.getElementById("arene-conteneur");
     const iframe = document.getElementById("iframe-examinateur");
     const loader = document.getElementById("souffle-attente");
 
-    // 4. L'Éveil : On affiche l'arène vide et on lance le souffle d'attente
+    // 5. L'Éveil : Déploiement du voile sombre et du souffle
     conteneur.className = "eduka-arene-active";
     loader.style.display = "flex";
-    iframe.style.opacity = "0"; // L'Iframe reste invisible le temps de charger
+    iframe.style.opacity = "0";
 
-    // 5. Injection de la conscience (chargement du lien)
+    // 6. Injection de l'esprit
     iframe.src = urlFinale;
 
-    // 6. La Révélation : Dès que la fenêtre est chargée, l'attente cesse
+    // 7. La Révélation : Fin de l'attente dès que la page est prête
     iframe.onload = function() {
         loader.style.display = "none";
-        iframe.style.opacity = "1"; // Révélation en douceur grâce au CSS
+        iframe.style.opacity = "1";
     };
+}
+
+// Fonction pour refermer l'Arène et réinitialiser l'IA
+function fermerArene() {
+    document.getElementById("arene-conteneur").className = "eduka-arene-cache";
+    document.getElementById("iframe-examinateur").src = ""; // Brise la connexion pour la prochaine session
 }
