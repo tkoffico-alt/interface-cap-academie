@@ -789,6 +789,7 @@ body.light-theme .btn-action-doc:hover {
 
 /* --- LA FENÊTRE DE L'EXAMINATEUR --- */
 .eduka-iframe {
+    display: block !important;
     width: 90%;
     max-width: 1200px;
     height: 85vh;
