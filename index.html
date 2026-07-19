@@ -34,66 +34,120 @@
                 <p>Bienvenue sur l'Académie EdukaTchat. Notre accompagnement s'étend désormais à <strong>l'ensemble des disciplines de l'enseignement secondaire général</strong>, de la <strong>6ème à la Terminale</strong>, dans le strict respect de l'Approche Par Compétences (APC) ivoirienne.</p>
             </section>
 
-           <section class="doors">
-                <div class="glass-card door-card sas">
-                    <div class="icon-wrapper">🧭</div>
-                    <h3>Espace de Préparation</h3>
-                    <p>Accès gratuit pour préparer sereinement vos devoirs, simuler vos examens et découvrir votre profil d'orientation.</p>
-                    <div class="card-action-area">
-                        <button class="btn-entrer" onclick="openSpace('sas')">Accès Libre</button>
-                        <div class="action-footer"></div>
-                    </div>
+           <!-- === L'ARCHITECTURE DES PÔLES === -->
+<section class="temple-hierarchy">
+    
+    <!-- ✦ PÔLE 1 : LE CŒUR DE L'ACADÉMIE ✦ -->
+    <div class="pole-section">
+        <h3 class="pole-title">Fondations & Apprentissage Continu</h3>
+        <div class="grid-fondamental">
+            <div class="glass-card door-card sas">
+                <div class="icon-wrapper">🧭</div>
+                <h3>Espace de Préparation</h3>
+                <p>Accès gratuit pour préparer sereinement vos devoirs, simuler vos examens et découvrir votre profil d'orientation.</p>
+                <div class="card-action-area">
+                    <button class="btn-entrer" onclick="openSpace('sas')">Accès Libre</button>
+                    <div class="action-footer"></div>
                 </div>
+            </div>
 
-                <div class="glass-card door-card eleve">
-                    <div class="icon-wrapper">🏛️</div>
-                    <h3>L'Académie EdukaTchat</h3>
-                    <p>L'espace académique complet. Accédez aux assistants virtuels pédagogiques et aux évaluations complètes.</p>
-                    <div class="card-action-area">
-                        <button class="btn-entrer" onclick="openSpace('eleve')">Déverrouiller l'Accès</button>
-                        <div class="action-footer"></div>
-                    </div>
+            <div class="glass-card door-card eleve">
+                <div class="icon-wrapper">🏛️</div>
+                <h3>L'Académie EdukaTchat</h3>
+                <p>L'espace académique complet. Accédez aux assistants virtuels pédagogiques et aux évaluations complètes.</p>
+                <div class="card-action-area">
+                    <button class="btn-entrer" onclick="openSpace('eleve')">Déverrouiller l'Accès</button>
+                    <div class="action-footer"></div>
                 </div>
-                
-                <div class="glass-card door-card enseignant">
-                    <div class="icon-wrapper">🔮</div>
-                    <h3>Espace Enseignant</h3>
-                    <p>Vos trois assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC.</p>
-                    <div class="card-action-area">
-                        <button class="btn-entrer" onclick="openSpace('enseignant')">Accéder à l'Espace</button>
-                        <div class="action-footer">
-                            <a href="https://tally.so/r/RGgdb4" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace Enseignant</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card door-card parents">
-                    <div class="icon-wrapper">🛡️</div>
-                    <h3>Espace Parents</h3>
-                    <p>Suivez la progression de votre enfant. Définissez les horaires pour activer le suivi pédagogique.</p>
-                    <div class="card-action-area">
-                        <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Accéder à l'Espace</button>
-                        <div class="action-footer"></div>
-                    </div>
-                </div>
-
-               <!-- Carte de l'Atelier de l'Orateur -->
-<div class="glass-card door-card">
-    <div class="icon-wrapper" style="background: rgba(17, 24, 39, 0.1); color: #111827;">🎙️</div>
-    <h3 style="color: #111827;">Atelier de l'Orateur</h3>
-    <p>Sculptez votre éloquence. Préparez vos oraux (BEPC/Bac) et affrontez les questions de notre jury virtuel.</p>
-    <div class="card-action-area">
-        <button class="btn-entrer" onclick="ouvrirAtelier()" style="background-color: #111827; color: white; border: none;">Entrer dans l'Atelier</button>
-        <div class="action-footer"></div>
+            </div>
+        </div>
     </div>
-</div>
-               <div class="glass-card door-card" style="grid-column: 1 / -1; justify-self: center; width: 100%; max-width: 450px; margin-top: 20px; border-bottom: 3px solid #F59E0B;">
-    <div class="door-icon" style="font-size: 2em; margin-bottom: 10px;">🧭</div>
-    <h3 style="margin-bottom: 10px;">Moyenne d'Orientation</h3>
-    <p style="margin-bottom: 20px;">Simulez votre trajectoire et vos chances de passage en 2nde.</p>
-    <button class="btn-entrer" onclick="ouvrirBoussole()" style="width: 100%; padding: 12px; background-color: #F59E0B; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Ouvrir le Simulateur</button>
-</div>
-            </section>
+
+    <!-- ✦ PÔLE 2 : LES ATELIERS SPÉCIALISÉS ✦ -->
+    <div class="pole-section">
+        <h3 class="pole-title">Les Ateliers de Maîtrise</h3>
+        <div class="grid-trois-piliers">
+            
+            <!-- Orateur -->
+            <div class="glass-card door-card" style="border-color: rgba(17, 24, 39, 0.4);">
+                <div class="icon-wrapper" style="background: rgba(255, 255, 255, 0.1); color: #F8FAFC;">🎙️</div>
+                <h3>Atelier de l'Orateur</h3>
+                <p>Sculptez votre éloquence. Préparez vos oraux (BEPC/Bac) et affrontez les questions de notre jury virtuel.</p>
+                <div class="card-action-area">
+                    <button class="btn-entrer" onclick="ouvrirAtelier()" style="background-color: #1E293B; color: white;">Entrer dans l'Atelier</button>
+                    <div class="action-footer"></div>
+                </div>
+            </div>
+
+            <!-- Philosophie -->
+            <div class="glass-card door-card philo">
+                <div class="icon-wrapper">🦉</div>
+                <h3>Atelier de Philosophie</h3>
+                <p>Affûtez votre dialectique. Structurez vos dissertations avec l'exigence des grands penseurs.</p>
+                <div class="card-action-area">
+                    <button class="btn-entrer" onclick="alert('L\'Atelier de Philosophie est actuellement en cours de forge. Ouverture imminente.')" style="background-color: #4F46E5; color: white;">Bientôt Disponible</button>
+                    <div class="action-footer"></div>
+                </div>
+            </div>
+
+            <!-- Sciences -->
+            <div class="glass-card door-card sciences">
+                <div class="icon-wrapper">🧬</div>
+                <h3>Atelier des Sciences</h3>
+                <p>Le laboratoire virtuel. Résolvez vos équations et validez vos hypothèses par la méthode stricte.</p>
+                <div class="card-action-area">
+                    <button class="btn-entrer" onclick="alert('Le Laboratoire des Sciences est en cours de calibration. Ouverture imminente.')" style="background-color: #059669; color: white;">Bientôt Disponible</button>
+                    <div class="action-footer"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ✦ PÔLE 3 : ACCOMPAGNEMENT & OUTILS ✦ -->
+    <div class="pole-section">
+        <h3 class="pole-title">Encadrement & Orientation</h3>
+        <div class="grid-trois-piliers">
+            
+            <!-- Enseignants -->
+            <div class="glass-card door-card enseignant">
+                <div class="icon-wrapper">🔮</div>
+                <h3>Espace Enseignant</h3>
+                <p>Vos assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC.</p>
+                <div class="card-action-area">
+                    <button class="btn-entrer" onclick="openSpace('enseignant')">Accéder au Cabinet</button>
+                    <div class="action-footer">
+                        <a href="https://tally.so/r/RGgdb4" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boussole (Anciennement au centre bas) -->
+            <div class="glass-card door-card boussole">
+                <div class="icon-wrapper">🧭</div>
+                <h3>Boussole d'Orientation</h3>
+                <p>Simulez votre trajectoire scolaire et vos chances de passage en 2nde (A ou C) de façon stratégique.</p>
+                <div class="card-action-area">
+                    <button class="btn-entrer" onclick="ouvrirBoussole()" style="background-color: #F59E0B; color: white;">Ouvrir le Simulateur</button>
+                    <div class="action-footer"></div>
+                </div>
+            </div>
+
+            <!-- Parents -->
+            <div class="glass-card door-card parents">
+                <div class="icon-wrapper">🛡️</div>
+                <h3>Espace Parents</h3>
+                <p>Suivez la progression de votre enfant. Définissez les horaires pour activer le suivi pédagogique.</p>
+                <div class="card-action-area">
+                    <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Accéder au Bureau</button>
+                    <div class="action-footer"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</section>
             <section class="info-section">
                <div class="glass-card info-box">
                     <h4>📜 Notice & Mode d'emploi</h4>
