@@ -449,62 +449,71 @@
         </div>
     </div>
 
-    <!-- Modale Boussole Universitaire (Post-Bac) -->
-    <div id="univ-modal" class="modal-overlay">
-        <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
-            <button class="modal-close" onclick="fermerBoussoleUniv()" style="color: #0F172A;">×</button>
-            <div style="text-align: center; margin-bottom: 25px;">
-                <div style="font-size: 2.5em; margin-bottom: 10px;">🎓</div>
-                <h2 style="color: #0F172A;">Conseiller Universitaire</h2>
-                <p style="color: #64748B; font-size: 0.95em;">Saisissez vos résultats exacts du Baccalauréat.</p>
-                <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+    <!-- Modale Boussole Universitaire -->
+<div id="univ-modal" class="modal-overlay">
+    <div class="glass-card modal-content" style="max-width: 600px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+        <button class="modal-close" onclick="fermerBoussoleUniv()" style="color: #0F172A;">×</button>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 2.5em; margin-bottom: 5px;">🎓</div>
+            <h2 style="color: #0F172A; margin-bottom: 5px;">Le Conseiller Universitaire</h2>
+            <p style="color: #64748B; font-size: 0.9em;">Saisissez vos résultats exacts du Baccalauréat.</p>
+            <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Série du Bac :</label>
+                <select id="univ-serie" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+                    <option value="A">Série A</option>
+                    <option value="C">Série C</option>
+                    <option value="D" selected>Série D</option>
+                    <option value="E">Série E</option>
+                    <option value="G">Série G</option>
+                </select>
             </div>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <label style="font-weight: bold; color: #334155; font-size: 0.9em; display:block; text-align:left; margin-bottom:5px;">Votre Série :</label>
-                    <select id="univ-serie" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
-                        <option value="A">Série A (A1, A2)</option>
-                        <option value="C">Série C</option>
-                        <option value="D" selected>Série D</option>
-                        <option value="E">Série E</option>
-                        <option value="G">Série G (G1, G2)</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
-                    <label style="font-weight: bold; color: #334155; font-size: 0.9em; display:block; text-align:left; margin-bottom:5px;">Année de naissance :</label>
-                    <input type="number" id="univ-annee" placeholder="Ex: 2006" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; text-align:left;">
-                <div>
-                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Mathématiques :</label>
-                    <input type="number" id="univ-maths" placeholder="/20" step="0.5" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
-                </div>
-                <div>
-                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Français :</label>
-                    <input type="number" id="univ-francais" placeholder="/20" step="0.5" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
-                </div>
-                <div>
-                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Philosophie :</label>
-                    <input type="number" id="univ-philo" placeholder="/20" step="0.5" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
-                </div>
-                <div>
-                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Histoire-Géo :</label>
-                    <input type="number" id="univ-hg" placeholder="/20" step="0.5" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
-                </div>
-                <div style="grid-column: 1 / -1;">
-                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Moyenne au BAC :</label>
-                    <input type="number" id="univ-moyenne" placeholder="/20" step="0.01" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
-                </div>
-            </div>
-
-            <div style="text-align: center;">
-                <button onclick="invoquerConseiller()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #14B8A6; color: white; border: none; border-radius: 4px; cursor: pointer; transition: 0.3s; font-weight:bold;">Lancer l'Analyse</button>
+            <div style="flex: 1;">
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Année de naissance :</label>
+                <input type="number" id="univ-annee" placeholder="Ex: 2006" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
             </div>
         </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Maths :</label>
+                <input type="number" id="univ-maths" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Français :</label>
+                <input type="number" id="univ-francais" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Philo :</label>
+                <input type="number" id="univ-philo" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Phys-Chimie :</label>
+                <input type="number" id="univ-pc" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">SVT :</label>
+                <input type="number" id="univ-svt" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Histoire-Géo :</label>
+                <input type="number" id="univ-hg" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+            <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Moyenne au BAC :</label>
+            <input type="number" id="univ-moyenne" placeholder="/20" step="0.01" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+        </div>
+
+        <div style="text-align: center;">
+            <button onclick="invoquerConseiller()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #14B8A6; color: white; border: none; border-radius: 4px; cursor: pointer; transition: 0.3s;">Lancer l'Analyse</button>
+        </div>
     </div>
+</div>
 
     <!-- Modale Atelier de l'Orateur -->
     <div id="orateur-modal" class="modal-overlay">
