@@ -3,12 +3,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <!-- L'Ajustement de la lentille : viewport-fit=cover active la zone de sécurité -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>EdukaTchat | La plateforme numérique de l'enseignement ivoirien</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    
-    <!-- Connexion à la source visuelle -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -35,138 +32,149 @@
             </section>
 
            <!-- === L'ARCHITECTURE DES PÔLES === -->
-<section class="temple-hierarchy">
-    
-    <!-- ✦ PÔLE 1 : LE CŒUR DE L'ACADÉMIE ✦ -->
-    <div class="pole-section">
-        <h3 class="pole-title">Fondations & Apprentissage Continu</h3>
-        <div class="grid-fondamental">
-            <div class="glass-card door-card sas">
-                <div class="icon-wrapper">🧭</div>
-                <h3>Espace de Préparation</h3>
-                <p>Accès gratuit pour préparer sereinement vos devoirs, simuler vos examens et découvrir votre profil d'orientation.</p>
-                <div class="card-action-area">
-                    <button class="btn-entrer" onclick="openSpace('sas')">Accès Libre</button>
-                    <div class="action-footer"></div>
-                </div>
-            </div>
+            <section class="temple-hierarchy">
+                
+                <!-- ✦ PÔLE 1 : LE CŒUR DE L'ACADÉMIE ✦ -->
+                <div class="pole-section">
+                    <h3 class="pole-title">Fondations & Apprentissage Continu</h3>
+                    <div class="grid-fondamental">
+                        <div class="glass-card door-card sas">
+                            <div class="icon-wrapper">🧭</div>
+                            <h3>Espace de Préparation</h3>
+                            <p>Accès gratuit pour préparer sereinement vos devoirs, simuler vos examens et découvrir votre profil d'orientation.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="openSpace('sas')">Accès Libre</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
 
-            <div class="glass-card door-card eleve">
-                <div class="icon-wrapper">🏛️</div>
-                <h3>L'Académie EdukaTchat</h3>
-                <p>L'espace académique complet. Accédez aux assistants virtuels pédagogiques et aux évaluations complètes.</p>
-                <div class="card-action-area">
-                    <button class="btn-entrer" onclick="openSpace('eleve')">Déverrouiller l'Accès</button>
-                    <div class="action-footer"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ✦ PÔLE 2 : LES ATELIERS SPÉCIALISÉS ✦ -->
-    <div class="pole-section">
-        <h3 class="pole-title">Les Ateliers de Maîtrise</h3>
-        <div class="grid-trois-piliers">
-            
-            <!-- Orateur -->
-            <div class="glass-card door-card" style="border-color: rgba(17, 24, 39, 0.4);">
-                <div class="icon-wrapper" style="background: rgba(255, 255, 255, 0.1); color: #F8FAFC;">🎙️</div>
-                <h3>Atelier de l'Orateur</h3>
-                <p>Sculptez votre éloquence. Préparez vos oraux (BEPC/Bac) et affrontez les questions de notre jury virtuel.</p>
-                <div class="card-action-area">
-                    <button class="btn-entrer" onclick="ouvrirAtelier()" style="background-color: #1E293B; color: white;">Entrer dans l'Atelier</button>
-                    <div class="action-footer"></div>
-                </div>
-            </div>
-
-            <!-- Philosophie -->
-            <div class="glass-card door-card philo">
-                <div class="icon-wrapper">🦉</div>
-                <h3>Atelier de Philosophie</h3>
-                <p>Affûtez votre dialectique. Structurez vos dissertations avec l'exigence des grands penseurs.</p>
-                <div class="card-action-area">
-                    <button class="btn-entrer" onclick="ouvrirPhilo()" style="background-color: #4F46E5; color: white; border: none;">Entrer dans l'Atelier</button>
-                    <div class="action-footer"></div>
-                </div>
-            </div>
-
-            <!-- Sciences -->
-            <div class="glass-card door-card sciences">
-                <div class="icon-wrapper">🧬</div>
-                <h3>Atelier des Sciences</h3>
-                <p>Le laboratoire virtuel. Résolvez vos équations et validez vos hypothèses par la méthode stricte.</p>
-                <div class="card-action-area">
-                    <button class="btn-entrer" onclick="ouvrirSciences()" style="background-color: #059669; color: white; border: none;">Entrer au Laboratoire</button>
-                    <div class="action-footer"></div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ✦ PÔLE 3 : ACCOMPAGNEMENT & OUTILS ✦ -->
-    <div class="pole-section">
-        <h3 class="pole-title">Encadrement & Orientation</h3>
-        <div class="grid-trois-piliers">
-            
-            <!-- Enseignants -->
-            <div class="glass-card door-card enseignant">
-                <div class="icon-wrapper">🔮</div>
-                <h3>Espace Enseignant</h3>
-                <p>Vos assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC.</p>
-                <div class="card-action-area">
-                    <button class="btn-entrer" onclick="openSpace('enseignant')">Accéder au Cabinet</button>
-                    <div class="action-footer">
-                        <a href="https://tally.so/r/RGgdb4" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace</a>
+                        <div class="glass-card door-card eleve">
+                            <div class="icon-wrapper">🏛️</div>
+                            <h3>L'Académie EdukaTchat</h3>
+                            <p>L'espace académique complet. Accédez aux assistants virtuels pédagogiques et aux évaluations complètes.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="openSpace('eleve')">Déverrouiller l'Accès</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Boussole (Anciennement au centre bas) -->
-            <div class="glass-card door-card boussole">
-                <div class="icon-wrapper">🧭</div>
-                <h3>Boussole d'Orientation</h3>
-                <p>Simulez votre trajectoire scolaire et vos chances de passage en 2nde (A ou C) de façon stratégique.</p>
-                <div class="card-action-area">
-                    <button class="btn-entrer" onclick="ouvrirBoussole()" style="background-color: #F59E0B; color: white;">Ouvrir le Simulateur</button>
-                    <div class="action-footer"></div>
+                <!-- ✦ PÔLE 2 : LES ATELIERS SPÉCIALISÉS ✦ -->
+                <div class="pole-section">
+                    <h3 class="pole-title">Les Ateliers de Maîtrise</h3>
+                    <div class="grid-trois-piliers">
+                        
+                        <!-- Orateur -->
+                        <div class="glass-card door-card" style="border-color: rgba(17, 24, 39, 0.4);">
+                            <div class="icon-wrapper" style="background: rgba(255, 255, 255, 0.1); color: #F8FAFC;">🎙️</div>
+                            <h3>Atelier de l'Orateur</h3>
+                            <p>Sculptez votre éloquence. Préparez vos oraux (BEPC/Bac) et affrontez les questions de notre jury virtuel.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirAtelier()" style="background-color: #1E293B; color: white;">Entrer dans l'Atelier</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Philosophie -->
+                        <div class="glass-card door-card philo">
+                            <div class="icon-wrapper">🦉</div>
+                            <h3>Atelier de Philosophie</h3>
+                            <p>Affûtez votre dialectique. Structurez vos dissertations avec l'exigence des grands penseurs.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirPhilo()" style="background-color: #4F46E5; color: white; border: none;">Entrer dans l'Atelier</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sciences -->
+                        <div class="glass-card door-card sciences">
+                            <div class="icon-wrapper">🧬</div>
+                            <h3>Atelier des Sciences</h3>
+                            <p>Le laboratoire virtuel. Résolvez vos équations et validez vos hypothèses par la méthode stricte.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirSciences()" style="background-color: #059669; color: white; border: none;">Entrer au Laboratoire</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-            </div>
 
-            <!-- Parents -->
-            <div class="glass-card door-card parents">
-                <div class="icon-wrapper">🛡️</div>
-                <h3>Espace Parents</h3>
-                <p>Suivez la progression de votre enfant. Définissez les horaires pour activer le suivi pédagogique.</p>
-                <div class="card-action-area">
-                    <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Accéder au Bureau</button>
-                    <div class="action-footer"></div>
+                <!-- ✦ PÔLE 3 : ACCOMPAGNEMENT & ORIENTATION (4 Piliers) ✦ -->
+                <div class="pole-section">
+                    <h3 class="pole-title">Encadrement & Orientation</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto;">
+                        
+                        <!-- Enseignants -->
+                        <div class="glass-card door-card enseignant">
+                            <div class="icon-wrapper">🔮</div>
+                            <h3>Espace Enseignant</h3>
+                            <p>Vos assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="openSpace('enseignant')">Accéder au Cabinet</button>
+                                <div class="action-footer">
+                                    <a href="https://tally.so/r/RGgdb4" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boussole BEPC -->
+                        <div class="glass-card door-card boussole">
+                            <div class="icon-wrapper">🧭</div>
+                            <h3>Boussole d'Orientation</h3>
+                            <p>Simulez votre trajectoire scolaire et vos chances de passage en 2nde (A ou C) de façon stratégique.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirBoussole()" style="background-color: #F59E0B; color: white;">Ouvrir le Simulateur</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Boussole Universitaire -->
+                        <div class="glass-card door-card boussole-univ" style="border-top: 4px solid #14B8A6;">
+                            <div class="icon-wrapper" style="background-color: rgba(20, 184, 166, 0.1); color: #14B8A6;">🎓</div>
+                            <h3>Boussole Universitaire</h3>
+                            <p>Nouveaux bacheliers, simulez vos affectations dans les universités publiques selon les critères officiels.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirBoussoleUniv()" style="background-color: #14B8A6; color: white; border: none;">Ouvrir le Simulateur</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Parents -->
+                        <div class="glass-card door-card parents">
+                            <div class="icon-wrapper">🛡️</div>
+                            <h3>Espace Parents</h3>
+                            <p>Suivez la progression de votre enfant. Définissez les horaires pour activer le suivi pédagogique.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Accéder au Bureau</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-            </div>
 
-        </div>
-    </div>
-
-</section>
+            </section>
+            
             <section class="info-section">
-               <div class="glass-card info-box">
-    <h4>📜 Notice & Mode d'emploi</h4>
-    <p>EdukaTchat allie <strong>l'exigence du programme ivoirien</strong> à la sérénité d'un accompagnement sur mesure pour transformer les doutes en compétences durables.</p>
-    <ul>
-        <li><strong>L'Espace de Préparation (Accès Libre) :</strong> Espace ouvert permettant d'explorer les devoirs quotidiens. Soumis à une jauge d'énergie (10 requêtes par jour).</li>
-        <li><strong>Les Ateliers de Maîtrise :</strong> Des arènes d'entraînement ciblées (Orateur, Philosophie, Sciences) pour affûter ses arguments et sa logique. Accès gratuit limité à 3 épreuves par jour.</li>
-        <li><strong>L'Académie (Espace Sécurisé) :</strong> Déverrouillée par un Sceau (Abonnement Premium), elle lève toutes les limites de requêtes et active l'analyse visuelle des documents.</li>
-        <li><strong>La Voie Maïeutique :</strong> Nos Répétiteurs ne donnent jamais la solution finale. Ils fragmentent l'obstacle et posent les questions qui forcent l'élève à construire son propre raisonnement.</li>
-    </ul>
-</div>
+                <div class="glass-card info-box">
+                    <h4>📜 Notice & Mode d'emploi</h4>
+                    <p>EdukaTchat allie <strong>l'exigence du programme ivoirien</strong> à la sérénité d'un accompagnement sur mesure pour transformer les doutes en compétences durables.</p>
+                    <ul>
+                        <li><strong>L'Espace de Préparation (Accès Libre) :</strong> Espace ouvert permettant d'explorer les devoirs quotidiens. Soumis à une jauge d'énergie (10 requêtes par jour).</li>
+                        <li><strong>Les Ateliers de Maîtrise :</strong> Des arènes d'entraînement ciblées (Orateur, Philosophie, Sciences) pour affûter ses arguments et sa logique. Accès gratuit limité à 3 épreuves par jour.</li>
+                        <li><strong>L'Académie (Espace Sécurisé) :</strong> Déverrouillée par un Sceau (Abonnement Premium), elle lève toutes les limites de requêtes et active l'analyse visuelle des documents.</li>
+                        <li><strong>La Voie Maïeutique :</strong> Nos Répétiteurs ne donnent jamais la solution finale. Ils fragmentent l'obstacle et posent les questions qui forcent l'élève à construire son propre raisonnement.</li>
+                    </ul>
+                </div>
 
                 <div class="glass-card info-box news-box">
                     <h4>📌 Journal de Bord</h4>
                     <ul>
-                        <li><strong>🧭 Nouveau : La Boussole d'Orientation</strong><br>Parents, dissipez le stress de l'orientation. Aidez votre enfant à simuler ses chances d'entrer en Seconde (A ou C) et laissez notre Répétiteur IA révéler sa véritable vocation. <em>Testez le simulateur en accès libre ci-dessus.</em></li>
+                        <li><strong>🎓 Nouveau : La Boussole Universitaire</strong><br>Bacheliers, simulez dès maintenant vos chances d'affectation dans les universités publiques selon l'algorithme officiel du MESRS. <em>Testez le simulateur en accès libre ci-dessus.</em></li>
                         <li><strong>Version 2.0 (Lancement Global)</strong><br>Déploiement intégral de toutes les matières du secondaire général (de la 6ème à la Terminale).</li>
                         <li>Intégration des 5 Pôles d'Excellence : Sciences Exactes, Sciences Expérimentales, Lettres & Sciences Humaines, Langues Vivantes, et Arts.</li>
-                        <li>Activation de la passerelle d'aiguillage silencieux pour une précision pédagogique absolue.</li>
                         <li>Création de "L'Espace de Préparation" (Accès libre et sécurisé).</li>
                     </ul>
                 </div>
@@ -174,7 +182,7 @@
         </div>
     </div>
 
-    <!-- 1. MODALE CODE D'ACCÈS PREMIUM (Avec lien dynamique) -->
+    <!-- 1. MODALE CODE D'ACCÈS PREMIUM -->
     <div id="premium-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 400px; text-align: center;">
             <button class="modal-close" onclick="closePremiumModal()">×</button>
@@ -194,7 +202,7 @@
         </div>
     </div>
 
-    <!-- 2. MODALE CHOIX DE LA DISCIPLINE (13 matières) -->
+    <!-- 2. MODALE CHOIX DE LA DISCIPLINE -->
     <div id="discipline-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 600px;">
             <button class="modal-close" onclick="fermerVestibule()">×</button>
@@ -202,33 +210,28 @@
             <p style="margin-bottom: 25px; color: #4B5563; text-align: center;">Sélectionne la matière que tu souhaites explorer aujourd'hui :</p>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 20px;">
-                <!-- Pôle Sciences Exactes -->
                 <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none;" onclick="entrerDansLeChat('maths')">Mathématiques</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none;" onclick="entrerDansLeChat('physique')">Physique-Chimie</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none;" onclick="entrerDansLeChat('tice')">TICE (Informatique)</button>
                 
-                <!-- Pôle Sciences Expérimentales -->
                 <button class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none;" onclick="entrerDansLeChat('svt')">SVT</button>
                 
-                <!-- Pôle Lettres & Sciences Humaines -->
                 <button class="btn-action-doc" style="justify-content: center; background-color: #A855F7; color: white; border: none;" onclick="entrerDansLeChat('francais')">Français</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #A855F7; color: white; border: none;" onclick="entrerDansLeChat('philosophie')">Philosophie</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #A855F7; color: white; border: none;" onclick="entrerDansLeChat('histoire_geo')">Histoire-Géo</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #A855F7; color: white; border: none;" onclick="entrerDansLeChat('edhc')">EDHC</button>
                 
-                <!-- Pôle Langues Vivantes -->
                 <button class="btn-action-doc" style="justify-content: center; background-color: #F59E0B; color: white; border: none;" onclick="entrerDansLeChat('anglais')">Anglais</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #F59E0B; color: white; border: none;" onclick="entrerDansLeChat('espagnol')">Espagnol</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #F59E0B; color: white; border: none;" onclick="entrerDansLeChat('allemand')">Allemand</button>
 
-                <!-- Pôle Arts -->
                 <button class="btn-action-doc" style="justify-content: center; background-color: #EC4899; color: white; border: none;" onclick="entrerDansLeChat('musique')">Éducation Musicale</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #EC4899; color: white; border: none;" onclick="entrerDansLeChat('arts_plastiques')">Arts Plastiques</button>
             </div>
         </div>
     </div>
 
-    <!-- 3. LE VOILE DE L'ILLUSION (Questionnaire Alibi) -->
+    <!-- 3. LE VOILE DE L'ILLUSION -->
     <div id="profil-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 500px;">
             <h3 style="text-align: center;">Configuration de la session</h3>
@@ -256,16 +259,15 @@
         </div>
     </div>
 
+    <!-- === ESPACE DE TRAVAIL === -->
     <div id="app-view">
         <div class="toolbar">
             <button class="btn-retour" onclick="goHome()">
                 ← Retour au menu
             </button>
-
             <button id="btn-theme" class="btn-retour btn-theme-toggle" style="margin-left: 1rem;" onclick="toggleTheme()">
                 Mode Clair
             </button>
-
             <button id="btn-fullscreen" class="btn-fullscreen" onclick="toggleFullScreen()">
                 ⛶ Plein Écran
             </button>
@@ -284,6 +286,7 @@
         </div>
         
         <div class="iframe-container">
+            <!-- Sas -->
             <div id="container-sas-custom" class="custom-chat-container">
                 <div id="sas-chat-history" class="chat-history">
                     <div class="message system-message">Bienvenue dans l'Espace de Préparation. Posez votre question pour commencer.</div>
@@ -297,14 +300,15 @@
                         </button>
                         <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
                         <button class="btn-envoyer-icon" onclick="sendSasMessage()" title="Envoyer">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
-        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-    </svg>
-</button>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
 
+            <!-- Atelier Prof -->
             <div id="container-atelier-custom" class="custom-chat-container">
                 <div id="atelier-chat-history" class="chat-history">
                     <div class="message system-message">Bienvenue dans l'Atelier. Je suis le Concepteur Universel. Précisez votre matière, classe et durée pour concevoir une évaluation APC.</div>
@@ -316,14 +320,15 @@
                         </button>
                         <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('atelier')" title="Envoyer">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
-        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-    </svg>
-</button>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
 
+            <!-- Forge Prof -->
             <div id="container-forge-custom" class="custom-chat-container">
                 <div id="forge-chat-history" class="chat-history">
                     <div class="message system-message">Bienvenue dans la Forge. Je suis l'Assistant Pédagogique. Précisez votre contexte pour structurer votre fiche de leçon.</div>
@@ -335,14 +340,15 @@
                         </button>
                         <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('forge')" title="Envoyer">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
-        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-    </svg>
-</button>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
 
+            <!-- Cabinet Prof -->
             <div id="container-cabinet-custom" class="custom-chat-container">
                 <div id="cabinet-chat-history" class="chat-history">
                     <div class="message system-message">Bienvenue dans le Cabinet d'Étude. Je suis le Consultant Pédagogique. Quelle difficulté rencontrez-vous dans votre enseignement ?</div>
@@ -354,187 +360,248 @@
                         </button>
                         <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('cabinet')" title="Envoyer">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
-        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-    </svg>
-</button>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
         
-       <iframe id="iframe-eleve" src="https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq" allow="microphone; camera"></iframe>
+            <iframe id="iframe-eleve" src="https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq" allow="microphone; camera"></iframe>
         </div>
     </div>
 
-    <!-- Invocation de la bibliothèque de traduction Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <!-- Connexion au moteur d'action -->
     <script src="app.js"></script>
-    <footer style="text-align: center; padding: 20px; font-size: 0.8em; color: #6B7280;">
+    
+    <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
+        <!-- Le Canal de Communication -->
+        <div style="margin-bottom: 15px;">
+            <strong style="color: #E2E8F0; font-size: 1.1em; display: block; margin-bottom: 8px;">Besoin d'assistance ?</strong>
+            <span style="display: inline-block; margin: 0 10px;">
+                ✉️ <a href="mailto:assistant.edukatchat@gmail.com" style="color: #60A5FA; text-decoration: none; font-weight: 500;">assistant.edukatchat@gmail.com</a>
+            </span>
+            <span style="color: #475569;">|</span>
+            <span style="display: inline-block; margin: 0 10px;">
+                📞 <a href="https://wa.me/225XXXXXXXXXX" style="color: #10B981; text-decoration: none; font-weight: 500;" target="_blank">WhatsApp Support</a>
+            </span>
+        </div>
+
+        <!-- Le Sceau et les Lois -->
         © 2026 EdukaTchat. Tous droits réservés.<br>
-        <div style="margin-top: 5px;">
-            <a href="politique.html" style="color: #3B82F6; text-decoration: none;">Politique de Confidentialité</a> 
-            <span style="margin: 0 10px; color: #9CA3AF;">|</span> 
-            <a href="cgu.html" style="color: #3B82F6; text-decoration: none;">Conditions Générales d'Utilisation (CGU)</a>
+        <div style="margin-top: 8px;">
+            <a href="politique.html" style="color: #60A5FA; text-decoration: none; transition: color 0.2s;">Politique de Confidentialité</a> 
+            <span style="margin: 0 10px; color: #475569;">|</span> 
+            <a href="cgu.html" style="color: #60A5FA; text-decoration: none; transition: color 0.2s;">Conditions Générales d'Utilisation (CGU)</a>
         </div>
     </footer>
-   <!-- Modale Moyenne d'Orientation -->
-<div id="mo-modal" class="modal-overlay">
-    <div class="glass-card modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-        <button class="modal-close" onclick="fermerBoussole()">×</button>
-        <h2 style="color: #F59E0B; text-align: center; margin-bottom: 20px;">Boussole d'Orientation</h2>
-        <p style="text-align: center; font-size: 0.9em; color: #6B7280; margin-bottom: 20px;">Saisis tes moyennes annuelles et tes prévisions au BEPC.</p>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
-            
-            <!-- Français -->
-            <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
-                <h4 style="margin-bottom: 10px; color: #1F2937;">Composition Française (Coeff 2)</h4>
-                <input type="number" id="mo-fr-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
-                <input type="number" id="mo-fr-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
-            </div>
+   <!-- Modale Moyenne d'Orientation (BEPC) -->
+    <div id="mo-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close" onclick="fermerBoussole()">×</button>
+            <h2 style="color: #F59E0B; text-align: center; margin-bottom: 20px;">Boussole d'Orientation</h2>
+            <p style="text-align: center; font-size: 0.9em; color: #6B7280; margin-bottom: 20px;">Saisis tes moyennes annuelles et tes prévisions au BEPC.</p>
 
-            <!-- Mathématiques -->
-            <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
-                <h4 style="margin-bottom: 10px; color: #1F2937;">Mathématiques (Coeff 2)</h4>
-                <input type="number" id="mo-math-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
-                <input type="number" id="mo-math-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
-            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <!-- Français -->
+                <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">Composition Française (Coeff 2)</h4>
+                    <input type="number" id="mo-fr-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <input type="number" id="mo-fr-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                </div>
 
-            <!-- Physique-Chimie -->
-            <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
-                <h4 style="margin-bottom: 10px; color: #1F2937;">Physique-Chimie (Coeff 1)</h4>
-                <input type="number" id="mo-pc-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
-                <input type="number" id="mo-pc-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
-            </div>
+                <!-- Mathématiques -->
+                <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">Mathématiques (Coeff 2)</h4>
+                    <input type="number" id="mo-math-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <input type="number" id="mo-math-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                </div>
 
-            <!-- Anglais -->
-            <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
-                <h4 style="margin-bottom: 10px; color: #1F2937;">Anglais (Coeff 1)</h4>
-                <input type="number" id="mo-ang-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
-                <div style="display:flex; gap:5px;">
-                    <input type="number" id="mo-ang-bepc-e" placeholder="Écrit" step="0.01" style="width:50%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
-                    <input type="number" id="mo-ang-bepc-o" placeholder="Oral" step="0.01" style="width:50%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                <!-- Physique-Chimie -->
+                <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">Physique-Chimie (Coeff 1)</h4>
+                    <input type="number" id="mo-pc-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <input type="number" id="mo-pc-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                </div>
+
+                <!-- Anglais -->
+                <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">Anglais (Coeff 1)</h4>
+                    <input type="number" id="mo-ang-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <div style="display:flex; gap:5px;">
+                        <input type="number" id="mo-ang-bepc-e" placeholder="Écrit" step="0.01" style="width:50%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                        <input type="number" id="mo-ang-bepc-o" placeholder="Oral" step="0.01" style="width:50%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div style="text-align: center;">
-            <button onclick="calculerMO()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #F59E0B; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;">Révéler ma Moyenne</button>
-        </div>
+            <div style="text-align: center;">
+                <button onclick="calculerMO()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #F59E0B; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;">Révéler ma Moyenne</button>
+            </div>
 
-        <!-- Zone d'affichage du résultat -->
-        <div id="mo-result-container" style="display: none; margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center; border-left: 4px solid #3B82F6;">
-            <p style="margin: 0; color: #6B7280; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">Moyenne d'Orientation</p>
-            <h3 id="mo-score-display" style="font-size: 2.5em; color: #1F2937; margin: 5px 0;"></h3>
-            <p id="mo-advice-display" style="margin-top: 15px; color: #374151; font-style: italic; line-height: 1.5;"></p>
+            <div id="mo-result-container" style="display: none; margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center; border-left: 4px solid #3B82F6;">
+                <p style="margin: 0; color: #6B7280; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">Moyenne d'Orientation</p>
+                <h3 id="mo-score-display" style="font-size: 2.5em; color: #1F2937; margin: 5px 0;"></h3>
+                <p id="mo-advice-display" style="margin-top: 15px; color: #374151; font-style: italic; line-height: 1.5;"></p>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Modale Boussole Universitaire (Post-Bac) -->
+    <div id="univ-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+            <button class="modal-close" onclick="fermerBoussoleUniv()" style="color: #0F172A;">×</button>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 2.5em; margin-bottom: 10px;">🎓</div>
+                <h2 style="color: #0F172A;">Conseiller Universitaire</h2>
+                <p style="color: #64748B; font-size: 0.95em;">Saisissez vos résultats exacts du Baccalauréat.</p>
+                <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <label style="font-weight: bold; color: #334155; font-size: 0.9em; display:block; text-align:left; margin-bottom:5px;">Votre Série :</label>
+                    <select id="univ-serie" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
+                        <option value="A">Série A (A1, A2)</option>
+                        <option value="C">Série C</option>
+                        <option value="D" selected>Série D</option>
+                        <option value="E">Série E</option>
+                        <option value="G">Série G (G1, G2)</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-weight: bold; color: #334155; font-size: 0.9em; display:block; text-align:left; margin-bottom:5px;">Année de naissance :</label>
+                    <input type="number" id="univ-annee" placeholder="Ex: 2006" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; text-align:left;">
+                <div>
+                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Mathématiques :</label>
+                    <input type="number" id="univ-maths" placeholder="/20" step="0.5" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
+                </div>
+                <div>
+                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Français :</label>
+                    <input type="number" id="univ-francais" placeholder="/20" step="0.5" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
+                </div>
+                <div>
+                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Philosophie :</label>
+                    <input type="number" id="univ-philo" placeholder="/20" step="0.5" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
+                </div>
+                <div>
+                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Histoire-Géo :</label>
+                    <input type="number" id="univ-hg" placeholder="/20" step="0.5" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label style="font-weight: bold; color: #334155; font-size: 0.9em;">Moyenne au BAC :</label>
+                    <input type="number" id="univ-moyenne" placeholder="/20" step="0.01" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8;">
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button onclick="invoquerConseiller()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #14B8A6; color: white; border: none; border-radius: 4px; cursor: pointer; transition: 0.3s; font-weight:bold;">Lancer l'Analyse</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modale Atelier de l'Orateur -->
-<div id="orateur-modal" class="modal-overlay">
-    <div class="glass-card modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto; background-color: #F9F9F9; border: 1px solid #E5E7EB;">
-        <button class="modal-close" onclick="fermerAtelier()" style="color: #111827;">×</button>
-        
-        <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 2.5em; margin-bottom: 10px;">🖋️</div>
-            <h2 style="color: #111827; font-family: 'Georgia', serif; font-weight: normal; letter-spacing: 1px;">L'Atelier de l'Orateur</h2>
-            <p style="color: #6B7280; font-style: italic; font-size: 0.95em;">"La parole est l'ombre de l'action."</p>
-            <hr style="border: none; border-top: 1px solid #D1D5DB; width: 50%; margin: 15px auto;">
-        </div>
-
-        <div style="margin-bottom: 20px; text-align: left;">
-            <label style="font-weight: bold; color: #374151; display: block; margin-bottom: 8px;">1. L'Œuvre ou le Sujet étudié :</label>
-            <input type="text" id="orateur-sujet" placeholder="Ex: Cahier d'un retour au pays natal (Aimé Césaire)" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #9CA3AF; background: transparent; color: #111827;">
-        </div>
-
-        <div style="margin-bottom: 25px; text-align: left;">
-            <label style="font-weight: bold; color: #374151; display: block; margin-bottom: 8px;">2. Le Cadre de l'Épreuve :</label>
-            <select id="orateur-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #9CA3AF; background: transparent; color: #111827;">
-                <option value="">-- Choisissez l'arène --</option>
-                <option value="bepc">Oral du BEPC</option>
-                <option value="bac">Oral du Baccalauréat (Français)</option>
-                <option value="expose">Exposé libre en classe</option>
-            </select>
-        </div>
-
-        <div style="text-align: center;">
-            <button onclick="invoquerJury()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #111827; color: #F9F9F9; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Faire face au Jury (IA)</button>
+    <div id="orateur-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto; background-color: #F9F9F9; border: 1px solid #E5E7EB;">
+            <button class="modal-close" onclick="fermerAtelier()" style="color: #111827;">×</button>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 2.5em; margin-bottom: 10px;">🖋️</div>
+                <h2 style="color: #111827; font-family: 'Georgia', serif; font-weight: normal; letter-spacing: 1px;">L'Atelier de l'Orateur</h2>
+                <p style="color: #6B7280; font-style: italic; font-size: 0.95em;">"La parole est l'ombre de l'action."</p>
+                <hr style="border: none; border-top: 1px solid #D1D5DB; width: 50%; margin: 15px auto;">
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-weight: bold; color: #374151; display: block; margin-bottom: 8px;">1. L'Œuvre ou le Sujet étudié :</label>
+                <input type="text" id="orateur-sujet" placeholder="Ex: Cahier d'un retour au pays natal (Aimé Césaire)" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #9CA3AF; background: transparent; color: #111827;">
+            </div>
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="font-weight: bold; color: #374151; display: block; margin-bottom: 8px;">2. Le Cadre de l'Épreuve :</label>
+                <select id="orateur-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #9CA3AF; background: transparent; color: #111827;">
+                    <option value="">-- Choisissez l'arène --</option>
+                    <option value="bepc">Oral du BEPC</option>
+                    <option value="bac">Oral du Baccalauréat (Français)</option>
+                    <option value="expose">Exposé libre en classe</option>
+                </select>
+            </div>
+            <div style="text-align: center;">
+                <button onclick="invoquerJury()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #111827; color: #F9F9F9; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Faire face au Jury (IA)</button>
+            </div>
         </div>
     </div>
-</div>
+
     <!-- === L'ARÈNE DE L'EXAMINATEUR (FOCUS MODE) === -->
-<div id="arene-conteneur" class="eduka-arene-cache">
-    <!-- Bouton pour quitter l'arène -->
-    <button class="btn-fermer-arene" onclick="fermerArene()">×</button>
-    
-    <!-- Le Souffle d'Attente (Loader) -->
-    <div id="souffle-attente" class="eduka-loader">
-        <div class="point"></div>
-        <div class="point"></div>
-        <div class="point"></div>
+    <div id="arene-conteneur" class="eduka-arene-cache">
+        <button class="btn-fermer-arene" onclick="fermerArene()">×</button>
+        <div id="souffle-attente" class="eduka-loader">
+            <div class="point"></div>
+            <div class="point"></div>
+            <div class="point"></div>
+        </div>
+        <iframe id="iframe-examinateur" class="eduka-iframe" src="" frameborder="0" allow="microphone"></iframe>
     </div>
-    
-    <!-- Le Miroir de l'IA (Iframe) -->
-    <iframe id="iframe-examinateur" class="eduka-iframe" src="" frameborder="0" allow="microphone"></iframe>
-</div>
-    <!-- Modale Atelier de Philosophie -->
-<div id="philo-modal" class="modal-overlay">
-    <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
-        <button class="modal-close" onclick="fermerPhilo()" style="color: #0F172A;">×</button>
-        <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 2.5em; margin-bottom: 10px;">🦉</div>
-            <h2 style="color: #0F172A; font-family: 'Georgia', serif; font-weight: normal;">Le Maître de la Dialectique</h2>
-            <p style="color: #64748B; font-style: italic; font-size: 0.95em;">"La sagesse commence dans l'émerveillement."</p>
-            <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
-        </div>
-        <div style="margin-bottom: 20px; text-align: left;">
-            <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">1. Sujet ou Thème :</label>
-            <input type="text" id="philo-sujet" placeholder="Ex: La conscience, L'État, ou l'énoncé d'un sujet..." style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
-        </div>
-        <div style="margin-bottom: 25px; text-align: left;">
-            <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">2. Type d'exercice :</label>
-            <select id="philo-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
-                <option value="">-- Choisissez le format --</option>
-                <option value="dissertation">Dissertation Philosophique</option>
-                <option value="commentaire">Commentaire de Texte</option>
-                <option value="concept">Explication d'un Concept</option>
-            </select>
-        </div>
-        <div style="text-align: center;">
-            <button onclick="invoquerMaitrePhilo()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #4F46E5; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Consulter le Maître</button>
-        </div>
-    </div>
-</div>
 
-<!-- Modale Atelier des Sciences -->
-<div id="sciences-modal" class="modal-overlay">
-    <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
-        <button class="modal-close" onclick="fermerSciences()" style="color: #0F172A;">×</button>
-        <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 2.5em; margin-bottom: 10px;">🧬</div>
-            <h2 style="color: #0F172A; font-family: 'Georgia', serif; font-weight: normal;">Le Laboratoire des Sciences</h2>
-            <p style="color: #64748B; font-style: italic; font-size: 0.95em;">"La logique vous mènera de A à B. L'imagination vous mènera partout."</p>
-            <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
-        </div>
-        <div style="margin-bottom: 20px; text-align: left;">
-            <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">1. Chapitre ou Problème :</label>
-            <input type="text" id="sciences-sujet" placeholder="Ex: Cinématique, Calcul de pH, Équations..." style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
-        </div>
-        <div style="margin-bottom: 25px; text-align: left;">
-            <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">2. Type d'assistance :</label>
-            <select id="sciences-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
-                <option value="">-- Choisissez l'approche --</option>
-                <option value="resolution">Méthode de résolution (Exercice)</option>
-                <option value="demonstration">Démonstration de cours</option>
-                <option value="formule">Explication d'une formule</option>
-            </select>
-        </div>
-        <div style="text-align: center;">
-            <button onclick="invoquerLaboratoire()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #059669; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Entrer au Laboratoire</button>
+    <!-- Modale Atelier de Philosophie -->
+    <div id="philo-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+            <button class="modal-close" onclick="fermerPhilo()" style="color: #0F172A;">×</button>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 2.5em; margin-bottom: 10px;">🦉</div>
+                <h2 style="color: #0F172A; font-family: 'Georgia', serif; font-weight: normal;">Le Maître de la Dialectique</h2>
+                <p style="color: #64748B; font-style: italic; font-size: 0.95em;">"La sagesse commence dans l'émerveillement."</p>
+                <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">1. Sujet ou Thème :</label>
+                <input type="text" id="philo-sujet" placeholder="Ex: La conscience, L'État, ou l'énoncé d'un sujet..." style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+            </div>
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">2. Type d'exercice :</label>
+                <select id="philo-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+                    <option value="">-- Choisissez le format --</option>
+                    <option value="dissertation">Dissertation Philosophique</option>
+                    <option value="commentaire">Commentaire de Texte</option>
+                    <option value="concept">Explication d'un Concept</option>
+                </select>
+            </div>
+            <div style="text-align: center;">
+                <button onclick="invoquerMaitrePhilo()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #4F46E5; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Consulter le Maître</button>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Modale Atelier des Sciences -->
+    <div id="sciences-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+            <button class="modal-close" onclick="fermerSciences()" style="color: #0F172A;">×</button>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 2.5em; margin-bottom: 10px;">🧬</div>
+                <h2 style="color: #0F172A; font-family: 'Georgia', serif; font-weight: normal;">Le Laboratoire des Sciences</h2>
+                <p style="color: #64748B; font-style: italic; font-size: 0.95em;">"La logique vous mènera de A à B. L'imagination vous mènera partout."</p>
+                <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">1. Chapitre ou Problème :</label>
+                <input type="text" id="sciences-sujet" placeholder="Ex: Cinématique, Calcul de pH, Équations..." style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+            </div>
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">2. Type d'assistance :</label>
+                <select id="sciences-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+                    <option value="">-- Choisissez l'approche --</option>
+                    <option value="resolution">Méthode de résolution (Exercice)</option>
+                    <option value="demonstration">Démonstration de cours</option>
+                    <option value="formule">Explication d'une formule</option>
+                </select>
+            </div>
+            <div style="text-align: center;">
+                <button onclick="invoquerLaboratoire()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #059669; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Entrer au Laboratoire</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
