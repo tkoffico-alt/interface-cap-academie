@@ -431,6 +431,11 @@ async function sendSasMessage() {
             })
         });
 
+        // Vérification de la stabilité du serveur
+        if (!response.ok) {
+            throw new Error(`Le serveur a répondu avec l'état : ${response.status}`);
+        }
+
         const contentType = response.headers.get("content-type");
         
         if (contentType && contentType.includes("application/json")) {
@@ -444,19 +449,25 @@ async function sendSasMessage() {
             
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
+            let buffer = ""; // Le réceptacle des fragments
             
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 
-                const chunkStr = decoder.decode(value, { stream: true });
-                const lines = chunkStr.split('\n');
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Protège le fragment en cours
                 
                 for (let line of lines) {
-                    if (line.startsWith('data: ')) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('data: ')) {
+                        const payload = trimmedLine.substring(6).trim();
+                        if (payload === "[DONE]") continue;
+                        
                         try {
-                            const dataObj = JSON.parse(line.substring(6));
-                            if (dataObj.event === 'message' || dataObj.event === 'agent_message') {
+                            const dataObj = JSON.parse(payload);
+                            if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralSas += (dataObj.answer || "");
                                 botLoadingDiv.innerHTML = marked.parse(texteIntegralSas);
                                 scrollToBottom('sas-chat-history');
@@ -464,7 +475,9 @@ async function sendSasMessage() {
                             if (dataObj.conversation_id) {
                                 sasConversationIds[avatarActif] = dataObj.conversation_id;
                             }
-                        } catch(e) {}
+                        } catch(e) {
+                            console.warn("L'équilibre se rétablit : un fragment de conscience a été réassemblé.");
+                        }
                     }
                 }
             }
@@ -482,7 +495,8 @@ async function sendSasMessage() {
         saveChatHistory('sas');
         
     } catch (error) {
-        botLoadingDiv.textContent = "La connexion à la plateforme a été interrompue. Les flux sont perturbés.";
+        console.error("Détail de la perturbation :", error);
+        botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Le lien avec la source a été interrompu (${error.message}). Reprenez votre respiration et essayez à nouveau.</span>`;
         saveChatHistory('sas');
     } finally {
         inputField.disabled = false;
@@ -548,6 +562,11 @@ async function sendTeacherMessage(outil) {
             })
         });
 
+        // Vérification de la stabilité du serveur
+        if (!response.ok) {
+            throw new Error(`Le serveur a répondu avec l'état : ${response.status}`);
+        }
+
         const contentType = response.headers.get("content-type");
         
         if (contentType && contentType.includes("application/json")) {
@@ -565,19 +584,25 @@ async function sendTeacherMessage(outil) {
             
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
+            let buffer = ""; // Le réceptacle des fragments
             
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 
-                const chunkStr = decoder.decode(value, { stream: true });
-                const lines = chunkStr.split('\n');
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Protège le fragment incomplet
                 
                 for (let line of lines) {
-                    if (line.startsWith('data: ')) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('data: ')) {
+                        const payload = trimmedLine.substring(6).trim();
+                        if (payload === "[DONE]") continue;
+                        
                         try {
-                            const dataObj = JSON.parse(line.substring(6));
-                            if (dataObj.event === 'message' || dataObj.event === 'agent_message') {
+                            const dataObj = JSON.parse(payload);
+                            if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralTeacher += (dataObj.answer || "");
                                 botLoadingDiv.innerHTML = marked.parse(texteIntegralTeacher);
                                 scrollToBottom(`${outil}-chat-history`);
@@ -585,7 +610,9 @@ async function sendTeacherMessage(outil) {
                             if (dataObj.conversation_id) {
                                 teacherConversationIds[outil] = dataObj.conversation_id;
                             }
-                        } catch(e) {}
+                        } catch(e) {
+                            console.warn("L'équilibre se rétablit : un fragment de conscience a été réassemblé.");
+                        }
                     }
                 }
             }
@@ -604,7 +631,8 @@ async function sendTeacherMessage(outil) {
         saveChatHistory(outil);
         
     } catch (error) {
-        botLoadingDiv.textContent = "La connexion à l'Espace a été interrompue.";
+        console.error("Détail de la perturbation :", error);
+        botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Une perturbation traverse l'Espace (${error.message}). Reprenez votre souffle et essayez à nouveau.</span>`;
         saveChatHistory(outil);
     } finally {
         inputField.disabled = false;
@@ -847,23 +875,22 @@ function calculerMO() {
 function ouvrirBoussole() {
     document.getElementById('mo-modal').classList.add('active');
 }
-
 function fermerBoussole() {
     document.getElementById('mo-modal').classList.remove('active');
 }
-
 function ouvrirAtelier() {
     document.getElementById('orateur-modal').classList.add('active');
 }
-
 function fermerAtelier() {
     document.getElementById('orateur-modal').classList.remove('active');
 }
 function ouvrirPhilo() { document.getElementById('philo-modal').classList.add('active'); }
 function fermerPhilo() { document.getElementById('philo-modal').classList.remove('active'); }
-
 function ouvrirSciences() { document.getElementById('sciences-modal').classList.add('active'); }
 function fermerSciences() { document.getElementById('sciences-modal').classList.remove('active'); }
+function ouvrirBoussoleUniv() { document.getElementById('univ-modal').classList.add('active'); }
+function fermerBoussoleUniv() { document.getElementById('univ-modal').classList.remove('active'); }
+
 // =======================================================================
 // ❖ L'ARÈNE COMMUNE (LE VOILE D'IMMERSION POUR LES ATELIERS) ❖
 // =======================================================================
@@ -938,7 +965,7 @@ function invoquerMaitrePhilo() {
     if (!sujet || !cadre) { alert("Le Maître exige un sujet et un cadre de réflexion."); return; }
 
     fermerPhilo();
-    const urlDify = "https://ia.edukatchat.org/chat/qjBE3bTsjC1SIWiP"; // À remplacer
+    const urlDify = "https://ia.edukatchat.org/chat/qjBE3bTsjC1SIWiP"; // Ta clé Philosophie
     const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
 
     lancerAreneCommune(urlFinale);
@@ -965,8 +992,32 @@ function invoquerLaboratoire() {
     if (!sujet || !cadre) { alert("Les protocoles exigent un sujet et une méthode."); return; }
 
     fermerSciences();
-    const urlDify = "https://ia.edukatchat.org/chat/oxjmp0xUaVqNtASg"; // À remplacer
+    const urlDify = "https://ia.edukatchat.org/chat/oxjmp0xUaVqNtASg"; // Ta clé Sciences
     const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
+
+    lancerAreneCommune(urlFinale);
+}
+
+// --- 4. BOUSSOLE UNIVERSITAIRE (POST-BAC) ---
+function invoquerConseiller() {
+    const serie = document.getElementById('univ-serie').value;
+    const annee = document.getElementById('univ-annee').value;
+    const maths = document.getElementById('univ-maths').value;
+    const francais = document.getElementById('univ-francais').value;
+    const philo = document.getElementById('univ-philo').value;
+    const hg = document.getElementById('univ-hg').value;
+    const moyenne = document.getElementById('univ-moyenne').value;
+
+    if (!serie || !annee || !maths || !francais || !philo || !hg || !moyenne) { 
+        alert("L'algorithme requiert toutes vos notes (Maths, Français, Philo, HG) pour être précis."); 
+        return; 
+    }
+
+    fermerBoussoleUniv();
+    
+    // Remplace par la vraie clé Dify de ton Conseiller Universitaire
+    const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_CONSEILLER"; 
+    const urlFinale = `${urlDify}?serie_bac=${encodeURIComponent(serie)}&annee_naissance=${encodeURIComponent(annee)}&note_maths=${encodeURIComponent(maths)}&note_francais=${encodeURIComponent(francais)}&note_philo=${encodeURIComponent(philo)}&note_hg=${encodeURIComponent(hg)}&moyenne_bac=${encodeURIComponent(moyenne)}`;
 
     lancerAreneCommune(urlFinale);
 }
