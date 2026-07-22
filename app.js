@@ -82,7 +82,6 @@ function entrerDansLeChat(matiereChoisie) {
 function validerProfilEtEntrer() {
     document.getElementById('profil-modal').classList.remove('active');
     
-    // Extraction des variables de diversion
     const methodeTravail = document.getElementById('habitudes-revision').value;
     const gestionStress = document.getElementById('gestion-stress').value;
     
@@ -413,7 +412,7 @@ async function sendSasMessage() {
 
     const botLoadingDiv = document.createElement('div');
     botLoadingDiv.className = 'message bot-message apparition-fluide';
-    botLoadingDiv.textContent = "L'Assistant prépare l'Espace...";
+    botLoadingDiv.textContent = "L'Assistant rassemble son savoir...";
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom('sas-chat-history');
 
@@ -431,7 +430,7 @@ async function sendSasMessage() {
             })
         });
 
-        // Vérification de la stabilité du serveur
+        // 1. Vérification de la stabilité
         if (!response.ok) {
             throw new Error(`Le serveur a répondu avec l'état : ${response.status}`);
         }
@@ -440,7 +439,7 @@ async function sendSasMessage() {
         
         if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
-            botLoadingDiv.textContent = data.answer || "Une erreur est survenue.";
+            botLoadingDiv.textContent = data.answer || "Le silence est la seule réponse obtenue.";
             if (data.conversation_id) sasConversationIds[avatarActif] = data.conversation_id;
         } 
         else {
@@ -449,7 +448,7 @@ async function sendSasMessage() {
             
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
-            let buffer = ""; // Le réceptacle des fragments
+            let buffer = ""; // 2. Le réceptacle des fragments
             
             while (true) {
                 const { done, value } = await reader.read();
@@ -544,7 +543,7 @@ async function sendTeacherMessage(outil) {
 
     const botLoadingDiv = document.createElement('div');
     botLoadingDiv.className = 'message bot-message apparition-fluide';
-    botLoadingDiv.textContent = "Le Cabinet compile les données...";
+    botLoadingDiv.textContent = "Le Cabinet compile les données. L'esprit rassemble le savoir...";
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom(`${outil}-chat-history`);
 
@@ -562,7 +561,7 @@ async function sendTeacherMessage(outil) {
             })
         });
 
-        // Vérification de la stabilité du serveur
+        // 1. Vérification de la stabilité du serveur
         if (!response.ok) {
             throw new Error(`Le serveur a répondu avec l'état : ${response.status}`);
         }
@@ -574,7 +573,7 @@ async function sendTeacherMessage(outil) {
             if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
                 botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
             } else {
-                botLoadingDiv.textContent = data.answer || "Une erreur est survenue.";
+                botLoadingDiv.textContent = data.answer || "La source est silencieuse.";
             }
             if (data.conversation_id) teacherConversationIds[outil] = data.conversation_id;
         } 
@@ -584,7 +583,7 @@ async function sendTeacherMessage(outil) {
             
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
-            let buffer = ""; // Le réceptacle des fragments
+            let buffer = ""; // 2. Le réceptacle des fragments
             
             while (true) {
                 const { done, value } = await reader.read();
@@ -592,7 +591,7 @@ async function sendTeacherMessage(outil) {
                 
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
-                buffer = lines.pop(); // Protège le fragment incomplet
+                buffer = lines.pop(); // Protège le fragment incomplet pour le cycle suivant
                 
                 for (let line of lines) {
                     const trimmedLine = line.trim();
@@ -627,7 +626,6 @@ async function sendTeacherMessage(outil) {
             `;
             botLoadingDiv.appendChild(actionsDiv);
         }
-        
         saveChatHistory(outil);
         
     } catch (error) {
@@ -1009,13 +1007,13 @@ function invoquerConseiller() {
     const moyenne = document.getElementById('univ-moyenne').value;
 
     if (!serie || !annee || !maths || !francais || !philo || !hg || !moyenne) { 
-        alert("L'algorithme requiert toutes vos notes (Maths, Français, Philo, HG) pour être précis."); 
+        alert("L'algorithme requiert toutes vos notes (Maths, Français, Philo, HG et Moyenne) pour être précis."); 
         return; 
     }
 
     fermerBoussoleUniv();
     
-    // Remplace par la vraie clé Dify de ton Conseiller Universitaire
+    // N'oublie pas de remplacer la valeur ci-dessous par la clé Dify réelle de l'Assistant
     const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_CONSEILLER"; 
     const urlFinale = `${urlDify}?serie_bac=${encodeURIComponent(serie)}&annee_naissance=${encodeURIComponent(annee)}&note_maths=${encodeURIComponent(maths)}&note_francais=${encodeURIComponent(francais)}&note_philo=${encodeURIComponent(philo)}&note_hg=${encodeURIComponent(hg)}&moyenne_bac=${encodeURIComponent(moyenne)}`;
 
