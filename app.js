@@ -914,6 +914,46 @@ function fermerArene() {
     document.getElementById("iframe-examinateur").src = ""; // Brise la connexion pour purifier la mémoire
 }
 
+// --- 4. LA BOUSSOLE UNIVERSITAIRE (POST-BAC) ---
+function ouvrirBoussoleUniv() { 
+    document.getElementById('univ-modal').classList.add('active'); 
+}
+
+function fermerBoussoleUniv() { 
+    document.getElementById('univ-modal').classList.remove('active'); 
+}
+
+function invoquerConseiller() {
+    const serie = document.getElementById('univ-serie').value;
+    const annee = document.getElementById('univ-annee').value;
+    
+    // Récupération des énergies (notes). Si le champ est vide, la valeur par défaut est 0
+    const maths = document.getElementById('univ-maths').value || 0;
+    const francais = document.getElementById('univ-francais').value || 0;
+    const philo = document.getElementById('univ-philo').value || 0;
+    const pc = document.getElementById('univ-pc').value || 0;
+    const svt = document.getElementById('univ-svt').value || 0;
+    const hg = document.getElementById('univ-hg').value || 0;
+    
+    const moyenne = document.getElementById('univ-moyenne').value;
+
+    if (!serie || !annee || !moyenne) { 
+        alert("L'algorithme requiert au moins votre série, votre année de naissance et votre moyenne générale pour tracer votre voie."); 
+        return; 
+    }
+
+    fermerBoussoleUniv();
+    
+    // Remplace VOTRE_CLE_CONSEILLER par l'identifiant réel généré dans Dify
+    const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_CONSEILLER"; 
+    
+    // Le fil d'invocation qui transmet toutes les variables au Conseiller
+    const urlFinale = `${urlDify}?serie_bac=${encodeURIComponent(serie)}&annee_naissance=${encodeURIComponent(annee)}&note_maths=${encodeURIComponent(maths)}&note_francais=${encodeURIComponent(francais)}&note_philo=${encodeURIComponent(philo)}&note_pc=${encodeURIComponent(pc)}&note_svt=${encodeURIComponent(svt)}&note_hg=${encodeURIComponent(hg)}&moyenne_bac=${encodeURIComponent(moyenne)}`;
+
+    // L'éveil de l'arène
+    lancerAreneCommune(urlFinale);
+}
+
 // --- 1. ATELIER DE L'ORATEUR ---
 function checkAtelierQuota() {
     if (localStorage.getItem('eduka_sceau')) return true;
