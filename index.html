@@ -367,7 +367,22 @@
                     </div>
                 </div>
             </div>
-        
+        <!-- Arène des Ateliers (Orateur, Philo, Sciences, Conseiller) -->
+            <div id="container-arene-custom" class="custom-chat-container">
+                <div id="arene-chat-history" class="chat-history">
+                    <div class="message system-message" id="arene-welcome-msg">Le Maître de l'Atelier vous écoute.</div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="chat-input-wrapper">
+                        <input type="text" id="arene-user-input" placeholder="Exprimez votre pensée ici..." onkeypress="handleAreneKeyPress(event)">
+                        <button class="btn-envoyer-icon" onclick="sendAreneMessage()" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
             <iframe id="iframe-eleve" src="https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq" allow="microphone; camera"></iframe>
         </div>
     </div>
@@ -544,16 +559,6 @@
         </div>
     </div>
 
-    <!-- === L'ARÈNE DE L'EXAMINATEUR (FOCUS MODE) === -->
-    <div id="arene-conteneur" class="eduka-arene-cache">
-        <button class="btn-fermer-arene" onclick="fermerArene()">×</button>
-        <div id="souffle-attente" class="eduka-loader">
-            <div class="point"></div>
-            <div class="point"></div>
-            <div class="point"></div>
-        </div>
-        <iframe id="iframe-examinateur" class="eduka-iframe" src="" frameborder="0" allow="microphone"></iframe>
-    </div>
 
     <!-- Modale Atelier de Philosophie -->
     <div id="philo-modal" class="modal-overlay">
