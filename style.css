@@ -240,6 +240,10 @@ body.light-theme .pole-title {
 .enseignant:hover { border-color: #A855F7; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(168, 85, 247, 0.4); }
 .parents:hover { border-color: #94A3B8; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(148, 163, 184, 0.4); }
 
+/* L'aura de la Boussole Universitaire (Teal) */
+.door-card.boussole-univ:hover { border-color: #14B8A6; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(20, 184, 166, 0.4); }
+.boussole-univ .icon-wrapper { background-color: rgba(20, 184, 166, 0.1); color: #14B8A6; }
+
 .icon-wrapper {
     width: 4rem;
     height: 4rem;
