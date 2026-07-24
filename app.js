@@ -1036,26 +1036,3 @@ function invoquerLaboratoire() {
     lancerAreneCommune(urlFinale);
 }
 
-// --- 4. BOUSSOLE UNIVERSITAIRE (POST-BAC) ---
-function invoquerConseiller() {
-    const serie = document.getElementById('univ-serie').value;
-    const annee = document.getElementById('univ-annee').value;
-    const maths = document.getElementById('univ-maths').value;
-    const francais = document.getElementById('univ-francais').value;
-    const philo = document.getElementById('univ-philo').value;
-    const hg = document.getElementById('univ-hg').value;
-    const moyenne = document.getElementById('univ-moyenne').value;
-
-    if (!serie || !annee || !maths || !francais || !philo || !hg || !moyenne) { 
-        alert("L'algorithme requiert toutes vos notes (Maths, Français, Philo, HG et Moyenne) pour être précis."); 
-        return; 
-    }
-
-    fermerBoussoleUniv();
-    
-    // N'oublie pas de remplacer la valeur ci-dessous par la clé Dify réelle de l'Assistant
-    const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_CONSEILLER"; 
-    const urlFinale = `${urlDify}?serie_bac=${encodeURIComponent(serie)}&annee_naissance=${encodeURIComponent(annee)}&note_maths=${encodeURIComponent(maths)}&note_francais=${encodeURIComponent(francais)}&note_philo=${encodeURIComponent(philo)}&note_hg=${encodeURIComponent(hg)}&moyenne_bac=${encodeURIComponent(moyenne)}`;
-
-    lancerAreneCommune(urlFinale);
-}
