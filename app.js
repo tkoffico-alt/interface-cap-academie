@@ -890,149 +890,180 @@ function ouvrirBoussoleUniv() { document.getElementById('univ-modal').classList.
 function fermerBoussoleUniv() { document.getElementById('univ-modal').classList.remove('active'); }
 
 // =======================================================================
-// ❖ L'ARÈNE COMMUNE (LE VOILE D'IMMERSION POUR LES ATELIERS) ❖
+// ❖ LA NOUVELLE ARÈNE UNIVERSELLE (ATELIERS & BOUSSOLE) ❖
 // =======================================================================
+let activeAtelier = "";
+let activeAtelierInputs = {};
+let areneConversationId = "";
 
-function lancerAreneCommune(url) {
-    const conteneur = document.getElementById("arene-conteneur");
-    const iframe = document.getElementById("iframe-examinateur");
-    const loader = document.getElementById("souffle-attente");
+function preparerArene(nomAtelier, messageBienvenue, inputs) {
+    activeAtelier = nomAtelier;
+    activeAtelierInputs = inputs;
+    areneConversationId = ""; 
 
-    conteneur.className = "eduka-arene-active";
-    loader.style.display = "flex";
-    iframe.style.opacity = "0";
-    iframe.src = url;
+    // Basculer l'affichage
+    document.getElementById('home-view').style.display = 'none';
+    document.getElementById('app-view').style.display = 'flex';
+    
+    document.querySelectorAll('.custom-chat-container').forEach(c => c.classList.remove('active'));
+    document.getElementById('container-arene-custom').classList.add('active');
+    document.getElementById('teacher-tabs-container').style.display = 'none';
 
-    iframe.onload = function() {
-        loader.style.display = "none";
-        iframe.style.opacity = "1";
-    };
+    // Purifier l'historique
+    const chatHistory = document.getElementById('arene-chat-history');
+    chatHistory.innerHTML = `<div class="message system-message">${messageBienvenue}</div>`;
 }
 
-function fermerArene() {
-    document.getElementById("arene-conteneur").className = "eduka-arene-cache";
-    document.getElementById("iframe-examinateur").src = ""; // Brise la connexion pour purifier la mémoire
+function invoquerJury() {
+    const sujet = document.getElementById('orateur-sujet').value;
+    const cadre = document.getElementById('orateur-cadre').value;
+    if (!sujet || !cadre) { alert("Le jury exige de préciser l'œuvre et le cadre."); return; }
+    fermerAtelier();
+    preparerArene('orateur', `Le Jury est prêt à vous écouter sur : <strong>${sujet}</strong> (${cadre}).`, { sujet_etudie: sujet, cadre_epreuve: cadre });
 }
 
-// --- 4. LA BOUSSOLE UNIVERSITAIRE (POST-BAC) ---
-function ouvrirBoussoleUniv() { 
-    document.getElementById('univ-modal').classList.add('active'); 
+function invoquerMaitrePhilo() {
+    const sujet = document.getElementById('philo-sujet').value;
+    const cadre = document.getElementById('philo-cadre').value;
+    if (!sujet || !cadre) { alert("Le Maître exige un sujet et un cadre de réflexion."); return; }
+    fermerPhilo();
+    preparerArene('philo', `L'Espace de réflexion est ouvert. Thème : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre });
 }
 
-function fermerBoussoleUniv() { 
-    document.getElementById('univ-modal').classList.remove('active'); 
+function invoquerLaboratoire() {
+    const sujet = document.getElementById('sciences-sujet').value;
+    const cadre = document.getElementById('sciences-cadre').value;
+    if (!sujet || !cadre) { alert("Les protocoles exigent un sujet et une méthode."); return; }
+    fermerSciences();
+    preparerArene('sciences', `Le Laboratoire est actif. Protocole : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre });
 }
 
 function invoquerConseiller() {
     const serie = document.getElementById('univ-serie').value;
     const annee = document.getElementById('univ-annee').value;
-    
-    // Récupération des énergies (notes). Si le champ est vide, la valeur par défaut est 0
     const maths = document.getElementById('univ-maths').value || 0;
     const francais = document.getElementById('univ-francais').value || 0;
     const philo = document.getElementById('univ-philo').value || 0;
     const pc = document.getElementById('univ-pc').value || 0;
     const svt = document.getElementById('univ-svt').value || 0;
     const hg = document.getElementById('univ-hg').value || 0;
-    
     const moyenne = document.getElementById('univ-moyenne').value;
 
     if (!serie || !annee || !moyenne) { 
-        alert("L'algorithme requiert au moins votre série, votre année de naissance et votre moyenne générale pour tracer votre voie."); 
-        return; 
+        alert("L'algorithme requiert au moins votre série, votre année et votre moyenne."); return; 
     }
-
     fermerBoussoleUniv();
     
-    // Remplace VOTRE_CLE_CONSEILLER par l'identifiant réel généré dans Dify
-    const urlDify = "https://ia.edukatchat.org/chat/YfNRW1rvpLOVzYu9"; 
+    const inputs = {
+        serie_bac: serie, annee_naissance: annee, note_maths: maths, 
+        note_francais: francais, note_philo: philo, note_pc: pc, 
+        note_svt: svt, note_hg: hg, moyenne_bac: moyenne
+    };
+    preparerArene('conseiller', `Le Conseiller Universitaire analyse vos résultats de la Série ${serie}... Que souhaitez-vous savoir sur vos orientations possibles ?`, inputs);
+}
+
+// --- LOGIQUE DE DIALOGUE ET DE FLUX CONTINU ---
+function handleAreneKeyPress(event) {
+    if (event.key === 'Enter') sendAreneMessage();
+}
+
+async function sendAreneMessage() {
+    const inputField = document.getElementById('arene-user-input');
+    const button = inputField.nextElementSibling;
+    const message = inputField.value.trim();
+    if (!message) return;
+
+    inputField.disabled = true;
+    button.disabled = true;
+    button.style.opacity = '0.5';
     
-    // Le fil d'invocation qui transmet toutes les variables au Conseiller
-    const urlFinale = `${urlDify}?serie_bac=${encodeURIComponent(serie)}&annee_naissance=${encodeURIComponent(annee)}&note_maths=${encodeURIComponent(maths)}&note_francais=${encodeURIComponent(francais)}&note_philo=${encodeURIComponent(philo)}&note_pc=${encodeURIComponent(pc)}&note_svt=${encodeURIComponent(svt)}&note_hg=${encodeURIComponent(hg)}&moyenne_bac=${encodeURIComponent(moyenne)}`;
-
-    // L'éveil de l'arène
-    lancerAreneCommune(urlFinale);
-}
-
-// --- 1. ATELIER DE L'ORATEUR ---
-function checkAtelierQuota() {
-    if (localStorage.getItem('eduka_sceau')) return true;
-    const aujourdhui = new Date().toLocaleDateString();
-    let quota = JSON.parse(localStorage.getItem('eduka_quota_atelier')) || { date: aujourdhui, requetes: 0 };
-    if (quota.date !== aujourdhui) quota = { date: aujourdhui, requetes: 0 };
-    if (quota.requetes >= 3) {
-        alert("Tu as atteint ta limite de 3 essais gratuits pour l'Atelier aujourd'hui. Le savoir demande un Sceau pour continuer sans limite.");
-        if (typeof openPremiumModal === 'function') openPremiumModal(); 
-        return false;
-    }
-    quota.requetes++; localStorage.setItem('eduka_quota_atelier', JSON.stringify(quota)); return true;
-}
-
-function invoquerJury() {
-    if (!checkAtelierQuota()) return;
-    const sujet = document.getElementById('orateur-sujet').value;
-    const cadre = document.getElementById('orateur-cadre').value;
-
-    if (!sujet || !cadre) { alert("Le jury exige que vous précisiez l'œuvre et le cadre de l'épreuve."); return; }
-
-    fermerAtelier();
-    const urlDify = "https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq"; // Ta clé Orateur
-    const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
+    const chatHistory = document.getElementById('arene-chat-history');
+    const userMsgDiv = document.createElement('div');
+    userMsgDiv.className = 'message user-message';
+    userMsgDiv.textContent = message;
+    chatHistory.appendChild(userMsgDiv);
     
-    lancerAreneCommune(urlFinale);
-}
+    inputField.value = '';
+    scrollToBottom('arene-chat-history');
 
-// --- 2. ATELIER DE PHILOSOPHIE ---
-function checkPhiloQuota() {
-    if (localStorage.getItem('eduka_sceau')) return true;
-    const aujourdhui = new Date().toLocaleDateString();
-    let quota = JSON.parse(localStorage.getItem('eduka_quota_philo')) || { date: aujourdhui, requetes: 0 };
-    if (quota.date !== aujourdhui) quota = { date: aujourdhui, requetes: 0 };
-    if (quota.requetes >= 3) {
-        alert("Tu as atteint ta limite pour la Philosophie aujourd'hui. Un Sceau est requis.");
-        openPremiumModal(); return false;
+    const botLoadingDiv = document.createElement('div');
+    botLoadingDiv.className = 'message bot-message apparition-fluide';
+    botLoadingDiv.textContent = "L'esprit rassemble le savoir...";
+    chatHistory.appendChild(botLoadingDiv);
+    scrollToBottom('arene-chat-history');
+
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/ateliers/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                query: message, 
+                conversation_id: areneConversationId, 
+                matricule: sceau,
+                atelier: activeAtelier,
+                inputs: activeAtelierInputs
+            })
+        });
+
+        if (!response.ok) throw new Error(`État : ${response.status}`);
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (data.answer && (data.answer.includes("limite") || data.answer.includes("épuisée"))) {
+                botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Déverrouiller l'Académie</button>";
+            } else {
+                botLoadingDiv.textContent = data.answer || "La source est silencieuse.";
+            }
+        } else {
+            botLoadingDiv.innerHTML = ""; 
+            let texteIntegral = ""; 
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = ""; 
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); 
+                
+                for (let line of lines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('data: ')) {
+                        const payload = trimmedLine.substring(6).trim();
+                        if (payload === "[DONE]") continue;
+                        try {
+                            const dataObj = JSON.parse(payload);
+                            if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
+                                texteIntegral += (dataObj.answer || "");
+                                botLoadingDiv.innerHTML = marked.parse(texteIntegral);
+                                scrollToBottom('arene-chat-history');
+                            }
+                            if (dataObj.conversation_id) areneConversationId = dataObj.conversation_id;
+                        } catch(e) { }
+                    }
+                }
+            }
+        }
+        
+        if (botLoadingDiv.textContent.length > 50) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = `<button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier</button><button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer</button>`;
+            botLoadingDiv.appendChild(actionsDiv);
+        }
+    } catch (error) {
+        botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Le lien a été rompu. Reprenez votre respiration et essayez à nouveau.</span>`;
+    } finally {
+        inputField.disabled = false;
+        button.disabled = false;
+        button.style.opacity = '1';
+        inputField.focus(); 
+        scrollToBottom('arene-chat-history');
     }
-    quota.requetes++; localStorage.setItem('eduka_quota_philo', JSON.stringify(quota)); return true;
 }
-
-function invoquerMaitrePhilo() {
-    if (!checkPhiloQuota()) return;
-    const sujet = document.getElementById('philo-sujet').value;
-    const cadre = document.getElementById('philo-cadre').value;
-
-    if (!sujet || !cadre) { alert("Le Maître exige un sujet et un cadre de réflexion."); return; }
-
-    fermerPhilo();
-    const urlDify = "https://ia.edukatchat.org/chat/qjBE3bTsjC1SIWiP"; // Ta clé Philosophie
-    const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
-
-    lancerAreneCommune(urlFinale);
-}
-
-// --- 3. LABORATOIRE DES SCIENCES ---
-function checkSciencesQuota() {
-    if (localStorage.getItem('eduka_sceau')) return true;
-    const aujourdhui = new Date().toLocaleDateString();
-    let quota = JSON.parse(localStorage.getItem('eduka_quota_sciences')) || { date: aujourdhui, requetes: 0 };
-    if (quota.date !== aujourdhui) quota = { date: aujourdhui, requetes: 0 };
-    if (quota.requetes >= 3) {
-        alert("Tu as atteint ta limite pour les Sciences aujourd'hui. Un Sceau est requis.");
-        openPremiumModal(); return false;
-    }
-    quota.requetes++; localStorage.setItem('eduka_quota_sciences', JSON.stringify(quota)); return true;
-}
-
-function invoquerLaboratoire() {
-    if (!checkSciencesQuota()) return;
-    const sujet = document.getElementById('sciences-sujet').value;
-    const cadre = document.getElementById('sciences-cadre').value;
-
-    if (!sujet || !cadre) { alert("Les protocoles exigent un sujet et une méthode."); return; }
-
-    fermerSciences();
-    const urlDify = "https://ia.edukatchat.org/chat/oxjmp0xUaVqNtASg"; // Ta clé Sciences
-    const urlFinale = `${urlDify}?sujet_etudie=${encodeURIComponent(sujet)}&cadre_epreuve=${encodeURIComponent(cadre)}`;
-
-    lancerAreneCommune(urlFinale);
-}
-
