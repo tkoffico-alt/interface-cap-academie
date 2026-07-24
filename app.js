@@ -945,7 +945,7 @@ function invoquerConseiller() {
     fermerBoussoleUniv();
     
     // Remplace VOTRE_CLE_CONSEILLER par l'identifiant réel généré dans Dify
-    const urlDify = "https://ia.edukatchat.org/chat/VOTRE_CLE_CONSEILLER"; 
+    const urlDify = "https://ia.edukatchat.org/chat/YfNRW1rvpLOVzYu9"; 
     
     // Le fil d'invocation qui transmet toutes les variables au Conseiller
     const urlFinale = `${urlDify}?serie_bac=${encodeURIComponent(serie)}&annee_naissance=${encodeURIComponent(annee)}&note_maths=${encodeURIComponent(maths)}&note_francais=${encodeURIComponent(francais)}&note_philo=${encodeURIComponent(philo)}&note_pc=${encodeURIComponent(pc)}&note_svt=${encodeURIComponent(svt)}&note_hg=${encodeURIComponent(hg)}&moyenne_bac=${encodeURIComponent(moyenne)}`;
