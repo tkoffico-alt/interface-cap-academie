@@ -37,41 +37,42 @@ header {
 
 .brand {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    flex-direction: column; /* Empile le logo et le texte verticalement */
+    align-items: center;    /* Centre parfaitement l'ensemble */
+    justify-content: center;
+    gap: 0.5rem;            /* L'espace de respiration entre le logo et le titre */
 }
 
 .logo-signature {
-    height: 45px;
+    height: 56px;           /* Légèrement agrandi pour asseoir sa présence en haut */
     width: auto;
     border-radius: 8px;
     object-fit: contain;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
     background-color: #FFFFFF;
     padding: 2px;
+    margin: 0; 
 }
 
 .brand-text {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centre le titre et le slogan l'un par rapport à l'autre */
-    text-align: center;  /* Assure le centrage parfait du texte */
+    align-items: center;
+    text-align: center;
 }
 
 .brand-text h1 {
-    font-size: 1.4rem;
+    font-size: 1.5rem;      /* Une prestance légèrement accentuée */
     font-weight: 700;
     color: #FFFFFF;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    margin: 0;
 }
 
 .brand-text p {
     color: #94A3B8;
     font-size: 0.85rem;
     margin-top: 0.3rem;
-    letter-spacing: 0.5px; /* Aère légèrement le texte pour plus d'élégance */
+    letter-spacing: 0.5px;  /* Aère le texte pour plus d'élégance */
 }
 
 /* --- L'ACCUEIL --- */
