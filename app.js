@@ -961,7 +961,18 @@ function invoquerConseiller() {
     };
     preparerArene('conseiller', `Le Conseiller Universitaire analyse vos résultats de la Série ${serie}... Que souhaitez-vous savoir sur vos orientations possibles ?`, inputs);
 }
+preparerArene('conseiller', `Le Conseiller Universitaire analyse vos résultats de la Série ${serie}... Que souhaitez-vous savoir sur vos orientations possibles ?`, inputs);
 
+    // --- NOUVEAU : Le déclenchement automatique ---
+    setTimeout(() => {
+        const inputField = document.getElementById('arene-user-input');
+        if(inputField) {
+            // On inscrit silencieusement une requête initiale
+            inputField.value = "Analyse mon profil, indique-moi mes chances et propose-moi des formations adaptées.";
+            sendAreneMessage(); // On lance la machine
+        }
+    }, 800); // Un léger délai pour laisser l'interface s'afficher avec fluidité
+}
 // --- LOGIQUE DE DIALOGUE ET DE FLUX CONTINU ---
 function handleAreneKeyPress(event) {
     if (event.key === 'Enter') sendAreneMessage();
