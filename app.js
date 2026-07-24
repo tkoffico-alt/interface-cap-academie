@@ -940,7 +940,10 @@ function invoquerLaboratoire() {
 
 function invoquerConseiller() {
     const serie = document.getElementById('univ-serie').value;
-    const annee = document.getElementById('univ-annee').value;
+    
+    // ✦ CE QUI CHANGE : On supprime 'annee' et on capte la date complète ✦
+    const dateNaissance = document.getElementById('univ-date-naissance').value;
+    
     const maths = document.getElementById('univ-maths').value || 0;
     const francais = document.getElementById('univ-francais').value || 0;
     const philo = document.getElementById('univ-philo').value || 0;
@@ -949,11 +952,12 @@ function invoquerConseiller() {
     const hg = document.getElementById('univ-hg').value || 0;
     const moyenne = document.getElementById('univ-moyenne').value;
 
-    if (!serie || !annee || !moyenne) { 
-        alert("L'algorithme requiert au moins votre série, votre année et votre moyenne."); return; 
+    // ✦ CE QUI CHANGE : L'alerte exige désormais la date de naissance ✦
+    if (!serie || !dateNaissance || !moyenne) { 
+        alert("L'algorithme requiert au moins votre série, votre date de naissance et votre moyenne."); return; 
     }
 
-    // 1. Le verrouillage : On vérifie si l'élève est abonné
+    // 1. Le verrouillage : On vérifie si l'élève est abonné (ON GARDE INTACT)
     if (!localStorage.getItem('eduka_sceau')) {
         fermerBoussoleUniv();
         alert("L'analyse d'orientation universitaire personnalisée nécessite un accès à l'Académie Premium. Veuillez saisir votre Sceau.");
@@ -961,18 +965,19 @@ function invoquerConseiller() {
         return; 
     }
 
-    // 2. Si abonné, on ouvre l'arène
+    // 2. Si abonné, on ouvre l'arène (ON GARDE INTACT)
     fermerBoussoleUniv();
     
+    // ✦ CE QUI CHANGE : On envoie "date_naissance" à l'IA au lieu de "annee_naissance" ✦
     const inputs = {
-        serie_bac: serie, annee_naissance: annee, note_maths: maths, 
+        serie_bac: serie, date_naissance: dateNaissance, note_maths: maths, 
         note_francais: francais, note_philo: philo, note_pc: pc, 
         note_svt: svt, note_hg: hg, moyenne_bac: moyenne
     };
     
     preparerArene('conseiller', `Le Conseiller Universitaire analyse vos résultats de la Série ${serie}... Que souhaitez-vous savoir sur vos orientations possibles ?`, inputs);
 
-    // 3. Déclenchement automatique de l'IA
+    // 3. Déclenchement automatique de l'IA (ON GARDE INTACT)
     setTimeout(() => {
         const inputField = document.getElementById('arene-user-input');
         if(inputField) {
