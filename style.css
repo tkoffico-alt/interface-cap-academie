@@ -54,7 +54,8 @@ header {
 .brand-text {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center; /* Centre le titre et le slogan l'un par rapport à l'autre */
+    text-align: center;  /* Assure le centrage parfait du texte */
 }
 
 .brand-text h1 {
@@ -69,7 +70,8 @@ header {
 .brand-text p {
     color: #94A3B8;
     font-size: 0.85rem;
-    margin-top: 0.2rem;
+    margin-top: 0.3rem;
+    letter-spacing: 0.5px; /* Aère légèrement le texte pour plus d'élégance */
 }
 
 /* --- L'ACCUEIL --- */
