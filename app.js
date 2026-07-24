@@ -952,6 +952,16 @@ function invoquerConseiller() {
     if (!serie || !annee || !moyenne) { 
         alert("L'algorithme requiert au moins votre série, votre année et votre moyenne."); return; 
     }
+
+    // 1. Le verrouillage : On vérifie si l'élève est abonné
+    if (!localStorage.getItem('eduka_sceau')) {
+        fermerBoussoleUniv();
+        alert("L'analyse d'orientation universitaire personnalisée nécessite un accès à l'Académie Premium. Veuillez saisir votre Sceau.");
+        openPremiumModal();
+        return; 
+    }
+
+    // 2. Si abonné, on ouvre l'arène
     fermerBoussoleUniv();
     
     const inputs = {
@@ -959,19 +969,17 @@ function invoquerConseiller() {
         note_francais: francais, note_philo: philo, note_pc: pc, 
         note_svt: svt, note_hg: hg, moyenne_bac: moyenne
     };
+    
     preparerArene('conseiller', `Le Conseiller Universitaire analyse vos résultats de la Série ${serie}... Que souhaitez-vous savoir sur vos orientations possibles ?`, inputs);
-}
-preparerArene('conseiller', `Le Conseiller Universitaire analyse vos résultats de la Série ${serie}... Que souhaitez-vous savoir sur vos orientations possibles ?`, inputs);
 
-    // --- NOUVEAU : Le déclenchement automatique ---
+    // 3. Déclenchement automatique de l'IA
     setTimeout(() => {
         const inputField = document.getElementById('arene-user-input');
         if(inputField) {
-            // On inscrit silencieusement une requête initiale
             inputField.value = "Analyse mon profil, indique-moi mes chances et propose-moi des formations adaptées.";
-            sendAreneMessage(); // On lance la machine
+            sendAreneMessage(); 
         }
-    }, 800); // Un léger délai pour laisser l'interface s'afficher avec fluidité
+    }, 800); 
 }
 // --- LOGIQUE DE DIALOGUE ET DE FLUX CONTINU ---
 function handleAreneKeyPress(event) {
