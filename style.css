@@ -896,3 +896,20 @@ body.light-theme .btn-action-doc:hover {
     0%, 80%, 100% { transform: scale(0); opacity: 0.2; }
     40% { transform: scale(1); opacity: 1; }
 }
+/* 1. Sur l'écran : Le sceau est totalement invisible */
+@media screen {
+    img[alt*="Sceau"], .sceau-image {
+        display: none !important;
+    }
+}
+
+/* 2. Sur le papier (Impression) : Le sceau apparaît, intact et proportionné */
+@media print {
+    img[alt*="Sceau"], .sceau-image {
+        display: block !important;
+        max-width: 200px !important; /* Ajuste cette valeur selon ton goût */
+        height: auto !important;
+        margin-top: 30px;
+        page-break-inside: avoid; /* Empêche le sceau d'être coupé entre deux pages */
+    }
+}
