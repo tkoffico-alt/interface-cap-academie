@@ -33,7 +33,8 @@ async function openSpace(space) {
             const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sceau: codeAcces })
+                // Le Sceau est transmis avec l'identité de la porte (la variable 'space')
+                body: JSON.stringify({ sceau: codeAcces, espace_cible: space }) 
             });
             const data = await response.json();
             
@@ -299,7 +300,11 @@ async function verifyMatricule() {
         const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sceau: matricule })
+            // On utilise ta variable 'espaceActuel' pour déclarer la provenance
+            body: JSON.stringify({ 
+                sceau: matricule, 
+                espace_cible: espaceActuel 
+            })
         });
 
         const data = await response.json();
