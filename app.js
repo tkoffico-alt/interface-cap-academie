@@ -949,12 +949,12 @@ function invoquerConseiller() {
     // ✦ CE QUI CHANGE : On supprime 'annee' et on capte la date complète ✦
     const dateNaissance = document.getElementById('univ-date-naissance').value;
     
-    const maths = document.getElementById('univ-maths').value || 0;
-    const francais = document.getElementById('univ-francais').value || 0;
-    const philo = document.getElementById('univ-philo').value || 0;
-    const pc = document.getElementById('univ-pc').value || 0;
-    const svt = document.getElementById('univ-svt').value || 0;
-    const hg = document.getElementById('univ-hg').value || 0;
+    const maths = document.getElementById('univ-maths').value || "0";
+const francais = document.getElementById('univ-francais').value || "0";
+const philo = document.getElementById('univ-philo').value || "0";
+const pc = document.getElementById('univ-pc').value || "0";
+const svt = document.getElementById('univ-svt').value || "0";
+const hg = document.getElementById('univ-hg').value || "0";
     const moyenne = document.getElementById('univ-moyenne').value;
 
     // ✦ CE QUI CHANGE : L'alerte exige désormais la date de naissance ✦
