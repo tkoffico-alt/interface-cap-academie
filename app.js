@@ -965,9 +965,9 @@ const hg = document.getElementById('univ-hg').value || "0";
     // ✦ L'accès est désormais libre pour tous les bacheliers ✦
     fermerBoussoleUniv();
     
-    // On envoie "date_naissance" à l'IA au lieu de "annee_naissance"
+    // On repasse temporairement à l'ancienne méthode pour vérifier
     const inputs = {
-        serie_bac: serie, date_naissance: dateNaissance, note_maths: maths, 
+        serie_bac: serie, annee_naissance: dateNaissance, note_maths: maths, 
         note_francais: francais, note_philo: philo, note_pc: pc, 
         note_svt: svt, note_hg: hg, moyenne_bac: moyenne
     };
