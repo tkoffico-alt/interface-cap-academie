@@ -965,14 +965,13 @@ const hg = document.getElementById('univ-hg').value || "0";
     // ✦ L'accès est désormais libre pour tous les bacheliers ✦
     fermerBoussoleUniv();
     
-    // ✦ On aligne parfaitement le vocabulaire avec les attentes de Dify ✦
     const inputs = {
         serie_bac: serie, 
         date_naissance: dateNaissance, 
         note_maths: maths, 
         note_francais: francais, 
         note_philo: philo, 
-        note_Physique_chimie: pc,  // C'est ici que la magie opère
+        note_pc: pc,  // ✦ Retour à l'identifiant originel et correct
         note_svt: svt, 
         note_hg: hg, 
         moyenne_bac: moyenne
