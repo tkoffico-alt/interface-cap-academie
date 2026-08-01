@@ -634,29 +634,46 @@
                 
                 // Séries scientifiques : C, D, E
                 if (serieChoisie === 'C' || serieChoisie === 'D' || serieChoisie === 'E') {
-                    // Les piliers scientifiques deviennent obligatoires
+                    // Les piliers s'éveillent et deviennent obligatoires
                     inputPC.setAttribute('required', 'required');
                     inputSVT.setAttribute('required', 'required');
                     
-                    // Indication visuelle
+                    // Rétablir l'accès et l'apparence normale
+                    inputPC.disabled = false;
+                    inputSVT.disabled = false;
+                    inputPC.style.backgroundColor = "transparent";
+                    inputSVT.style.backgroundColor = "transparent";
+                    inputPC.style.opacity = "1";
+                    inputSVT.style.opacity = "1";
+                    
                     inputPC.placeholder = "Requis (/20)";
                     inputSVT.placeholder = "Requis (/20)";
                 } else {
-                    // Séries littéraires ou autres : A, G
+                    // Séries littéraires (A, G) : Les piliers se mettent en sommeil
                     inputPC.removeAttribute('required');
                     inputSVT.removeAttribute('required');
                     
-                    // Retour au calme visuel
-                    inputPC.placeholder = "/20";
-                    inputSVT.placeholder = "/20";
+                    // Verrouiller et griser les champs
+                    inputPC.disabled = true;
+                    inputSVT.disabled = true;
+                    inputPC.style.backgroundColor = "#E2E8F0"; // Gris doux
+                    inputSVT.style.backgroundColor = "#E2E8F0";
+                    inputPC.style.opacity = "0.6"; // Légère transparence
+                    
+                    // Effacer d'éventuelles notes saisies par erreur
+                    inputPC.value = "";
+                    inputSVT.value = "";
+                    
+                    inputPC.placeholder = "Non requis";
+                    inputSVT.placeholder = "Non requis";
                 }
             }
 
             if (selectSerie && inputPC && inputSVT) {
-                // 1. On ajuste dès l'ouverture (car la Série D est pré-sélectionnée)
+                // 1. Ajustement initial (Série D par défaut)
                 ajusterChampsScientifiques();
                 
-                // 2. On écoute chaque changement de série
+                // 2. Écoute de chaque changement
                 selectSerie.addEventListener('change', ajusterChampsScientifiques);
             }
         });
