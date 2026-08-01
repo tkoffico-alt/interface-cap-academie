@@ -1065,6 +1065,11 @@ async function sendAreneMessage() {
                         if (payload === "[DONE]") continue;
                         try {
                             const dataObj = JSON.parse(payload);
+                            // ✦ NOUVEAU : On capte les erreurs internes du modèle IA de Dify
+                            if (dataObj.event === 'error') {
+                                botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Erreur interne Dify : ${dataObj.message || dataObj.code}</span>`;
+                                break; // On stoppe la boucle
+                            }
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegral += (dataObj.answer || "");
                                 botLoadingDiv.innerHTML = marked.parse(texteIntegral);
