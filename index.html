@@ -660,5 +660,46 @@
             }
         });
     </script>
+<!-- Script de régulation des notes scientifiques (Conseiller Universitaire) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectSerie = document.getElementById('univ-serie');
+            const inputPC = document.getElementById('univ-pc');
+            const inputSVT = document.getElementById('univ-svt');
+
+            function ajusterChampsScientifiques() {
+                if (!selectSerie || !inputPC || !inputSVT) return;
+                
+                const serieChoisie = selectSerie.value.toUpperCase();
+                
+                // Séries scientifiques : C, D, E
+                if (serieChoisie === 'C' || serieChoisie === 'D' || serieChoisie === 'E') {
+                    // Les piliers scientifiques deviennent obligatoires
+                    inputPC.setAttribute('required', 'required');
+                    inputSVT.setAttribute('required', 'required');
+                    
+                    // Indication visuelle
+                    inputPC.placeholder = "Requis (/20)";
+                    inputSVT.placeholder = "Requis (/20)";
+                } else {
+                    // Séries littéraires ou autres : A, G
+                    inputPC.removeAttribute('required');
+                    inputSVT.removeAttribute('required');
+                    
+                    // Retour au calme visuel
+                    inputPC.placeholder = "/20";
+                    inputSVT.placeholder = "/20";
+                }
+            }
+
+            if (selectSerie && inputPC && inputSVT) {
+                // 1. On ajuste dès l'ouverture (car la Série D est pré-sélectionnée)
+                ajusterChampsScientifiques();
+                
+                // 2. On écoute chaque changement de série
+                selectSerie.addEventListener('change', ajusterChampsScientifiques);
+            }
+        });
+    </script>
 </body>
 </html>
