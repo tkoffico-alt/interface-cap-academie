@@ -962,18 +962,10 @@ const hg = document.getElementById('univ-hg').value || "0";
         alert("L'algorithme requiert au moins votre série, votre date de naissance et votre moyenne."); return; 
     }
 
-    // 1. Le verrouillage : On vérifie si l'élève est abonné (ON GARDE INTACT)
-    if (!localStorage.getItem('eduka_sceau')) {
-        fermerBoussoleUniv();
-        alert("L'analyse d'orientation universitaire personnalisée nécessite un accès à l'Académie Premium. Veuillez saisir votre Sceau.");
-        openPremiumModal();
-        return; 
-    }
-
-    // 2. Si abonné, on ouvre l'arène (ON GARDE INTACT)
+    // ✦ L'accès est désormais libre pour tous les bacheliers ✦
     fermerBoussoleUniv();
     
-    // ✦ CE QUI CHANGE : On envoie "date_naissance" à l'IA au lieu de "annee_naissance" ✦
+    // On envoie "date_naissance" à l'IA au lieu de "annee_naissance"
     const inputs = {
         serie_bac: serie, date_naissance: dateNaissance, note_maths: maths, 
         note_francais: francais, note_philo: philo, note_pc: pc, 
