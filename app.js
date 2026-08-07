@@ -361,6 +361,21 @@ function handleSasKeyPress(event) {
     if (event.key === 'Enter') sendSasMessage();
 }
 
+// ❖ LE PASSE-UNIQUE — Identifiant d'appareil persistant.
+// Généré une seule fois par navigateur/appareil et conservé dans
+// localStorage. Transmis avec chaque requête premium pour permettre au
+// serveur de reconnaître un changement d'appareil (remplacement
+// silencieux : le nouvel appareil prend le relais).
+function obtenirDeviceId() {
+    let deviceId = localStorage.getItem('eduka_device_id');
+    if (!deviceId) {
+        deviceId = (crypto.randomUUID && crypto.randomUUID()) ||
+            'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+        localStorage.setItem('eduka_device_id', deviceId);
+    }
+    return deviceId;
+}
+
 async function sendSasMessage() {
     const inputField = document.getElementById('sas-user-input');
     const button = inputField.nextElementSibling;
@@ -440,7 +455,8 @@ async function sendSasMessage() {
                 query: message,
                 conversation_id: sasConversationIds[avatarActif] || "",
                 matricule: sceau,
-                avatar: avatarActif
+                avatar: avatarActif,
+                device_id: obtenirDeviceId()
             })
         });
 
@@ -571,7 +587,8 @@ async function sendTeacherMessage(outil) {
                 query: message,
                 conversation_id: teacherConversationIds[outil] || "",
                 outil: outil,
-                matricule: sceau
+                matricule: sceau,
+                device_id: obtenirDeviceId()
             })
         });
 
@@ -1038,7 +1055,8 @@ async function sendAreneMessage() {
                 conversation_id: areneConversationId,
                 matricule: sceau,
                 atelier: activeAtelier,
-                inputs: activeAtelierInputs
+                inputs: activeAtelierInputs,
+                device_id: obtenirDeviceId()
             })
         });
 
