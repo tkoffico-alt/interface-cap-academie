@@ -516,7 +516,11 @@ async function sendSasMessage() {
             if (data.conversation_id) sasConversationIds[avatarActif] = data.conversation_id;
         }
         else {
-            botLoadingDiv.innerHTML = "";
+            // ❖ La bulle de réflexion (points animés) reste affichée telle
+            // quelle ici — on ne l'efface plus par avance. Elle ne sera
+            // remplacée qu'au moment où un vrai fragment de texte arrive
+            // (voir plus bas), pour ne jamais laisser un vide entre
+            // l'animation et la restitution de la pensée de l'agent.
             let texteIntegralSas = "";
 
             const reader = response.body.getReader();
@@ -541,8 +545,12 @@ async function sendSasMessage() {
                             const dataObj = JSON.parse(payload);
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralSas += (dataObj.answer || "");
-                                botLoadingDiv.innerHTML = marked.parse(texteIntegralSas);
-                                scrollToBottom('sas-chat-history');
+                                // On ne remplace la bulle animée que lorsqu'il y a
+                                // vraiment quelque chose à montrer.
+                                if (texteIntegralSas.length > 0) {
+                                    botLoadingDiv.innerHTML = marked.parse(texteIntegralSas);
+                                    scrollToBottom('sas-chat-history');
+                                }
                             }
                             if (dataObj.conversation_id) {
                                 sasConversationIds[avatarActif] = dataObj.conversation_id;
@@ -552,6 +560,13 @@ async function sendSasMessage() {
                         }
                     }
                 }
+            }
+
+            // Filet de sécurité : si le flux s'est terminé sans jamais
+            // produire le moindre texte, on arrête l'animation et on
+            // l'explique plutôt que de la laisser tourner indéfiniment.
+            if (!texteIntegralSas) {
+                botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta question ?";
             }
         }
 
@@ -652,7 +667,8 @@ async function sendTeacherMessage(outil) {
             if (data.conversation_id) teacherConversationIds[outil] = data.conversation_id;
         }
         else {
-            botLoadingDiv.innerHTML = "";
+            // ❖ Voir la note équivalente dans sendSasMessage : la bulle
+            // animée n'est plus effacée par avance.
             let texteIntegralTeacher = "";
 
             const reader = response.body.getReader();
@@ -677,8 +693,10 @@ async function sendTeacherMessage(outil) {
                             const dataObj = JSON.parse(payload);
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralTeacher += (dataObj.answer || "");
-                                botLoadingDiv.innerHTML = marked.parse(texteIntegralTeacher);
-                                scrollToBottom(`${outil}-chat-history`);
+                                if (texteIntegralTeacher.length > 0) {
+                                    botLoadingDiv.innerHTML = marked.parse(texteIntegralTeacher);
+                                    scrollToBottom(`${outil}-chat-history`);
+                                }
                             }
                             if (dataObj.conversation_id) {
                                 teacherConversationIds[outil] = dataObj.conversation_id;
@@ -688,6 +706,10 @@ async function sendTeacherMessage(outil) {
                         }
                     }
                 }
+            }
+
+            if (!texteIntegralTeacher) {
+                botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta demande ?";
             }
         }
 
@@ -1114,7 +1136,7 @@ async function sendAreneMessage() {
                 botLoadingDiv.textContent = data.answer || "La source est silencieuse.";
             }
         } else {
-            botLoadingDiv.innerHTML = "";
+            // ❖ Même principe : la bulle animée n'est plus effacée par avance.
             let texteIntegral = "";
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
@@ -1142,13 +1164,19 @@ async function sendAreneMessage() {
                             }
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegral += (dataObj.answer || "");
-                                botLoadingDiv.innerHTML = marked.parse(texteIntegral);
-                                scrollToBottom('arene-chat-history');
+                                if (texteIntegral.length > 0) {
+                                    botLoadingDiv.innerHTML = marked.parse(texteIntegral);
+                                    scrollToBottom('arene-chat-history');
+                                }
                             }
                             if (dataObj.conversation_id) areneConversationId = dataObj.conversation_id;
                         } catch(e) { }
                     }
                 }
+            }
+
+            if (!texteIntegral) {
+                botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ?";
             }
         }
 
