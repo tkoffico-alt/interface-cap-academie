@@ -104,16 +104,25 @@ function validerProfilEtEntrer() {
         const chatHistory = document.getElementById('sas-chat-history');
         chatHistory.innerHTML = '';
 
-        const welcomeDiv = document.createElement('div');
-        welcomeDiv.className = 'message system-message';
+        // ❖ Isolation par avatar : chaque matière a son propre historique,
+        // pour qu'une conversation de SVT ne se mélange jamais à celle de Français.
+        const historiqueSauvegarde = localStorage.getItem(`eduka_chat_sas_${avatarActif}`);
 
-        if (espaceActuel === 'eleve') {
-            welcomeDiv.innerHTML = `L'Académie Premium vous ouvre ses portes. Le Répétiteur de <strong>${formaterNomMatiere(avatarActif)}</strong> est à votre écoute.`;
+        if (historiqueSauvegarde) {
+            chatHistory.innerHTML = historiqueSauvegarde;
         } else {
-            welcomeDiv.innerHTML = `L'Espace de Préparation est prêt. Le Répétiteur de <strong>${formaterNomMatiere(avatarActif)}</strong> vous écoute.`;
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'message system-message';
+
+            if (espaceActuel === 'eleve') {
+                welcomeDiv.innerHTML = `L'Académie Premium vous ouvre ses portes. Le Répétiteur de <strong>${formaterNomMatiere(avatarActif)}</strong> est à votre écoute.`;
+            } else {
+                welcomeDiv.innerHTML = `L'Espace de Préparation est prêt. Le Répétiteur de <strong>${formaterNomMatiere(avatarActif)}</strong> vous écoute.`;
+            }
+
+            chatHistory.appendChild(welcomeDiv);
         }
 
-        chatHistory.appendChild(welcomeDiv);
         scrollToBottom('sas-chat-history');
     }
 }
@@ -186,7 +195,10 @@ function scrollToBottom(elementId) {
 function saveChatHistory(outil) {
     const historyDiv = document.getElementById(`${outil}-chat-history`);
     if(historyDiv) {
-        localStorage.setItem(`eduka_chat_${outil}`, historyDiv.innerHTML);
+        // ❖ Le Sas est sauvegardé sous une clé propre à l'avatar actif,
+        // pour ne jamais mélanger les matières entre elles.
+        const cle = (outil === 'sas') ? `eduka_chat_sas_${avatarActif}` : `eduka_chat_${outil}`;
+        localStorage.setItem(cle, historyDiv.innerHTML);
 
         if (outil === 'sas') {
             localStorage.setItem(`eduka_conv_sas`, JSON.stringify(sasConversationIds));
@@ -197,7 +209,11 @@ function saveChatHistory(outil) {
 }
 
 function restoreChatHistories() {
-    const outils = ['sas', 'atelier', 'forge', 'cabinet'];
+    // ❖ Le Sas n'est plus restauré ici : son historique dépend de l'avatar
+    // choisi, connu seulement une fois le portail de matière franchi
+    // (voir validerProfilEtEntrer). On restaure ici uniquement les outils
+    // de l'espace enseignant, qui n'ont qu'un seul historique chacun.
+    const outils = ['atelier', 'forge', 'cabinet'];
 
     outils.forEach(outil => {
         const savedHtml = localStorage.getItem(`eduka_chat_${outil}`);
@@ -209,17 +225,18 @@ function restoreChatHistories() {
 
         const savedConvId = localStorage.getItem(`eduka_conv_${outil}`);
         if (savedConvId) {
-            if (outil === 'sas') {
-                try {
-                    sasConversationIds = JSON.parse(savedConvId);
-                } catch (e) {
-                    sasConversationIds = {};
-                }
-            } else {
-                teacherConversationIds[outil] = savedConvId;
-            }
+            teacherConversationIds[outil] = savedConvId;
         }
     });
+
+    const savedConvSas = localStorage.getItem('eduka_conv_sas');
+    if (savedConvSas) {
+        try {
+            sasConversationIds = JSON.parse(savedConvSas);
+        } catch (e) {
+            sasConversationIds = {};
+        }
+    }
 }
 
 function initTheme() {
