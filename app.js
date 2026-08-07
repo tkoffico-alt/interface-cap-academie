@@ -390,12 +390,12 @@ function injecterStyleReflexion() {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background-color: currentColor;
+            background-color: #6B7280;
             animation: edukaTypingBounce 1.2s infinite ease-in-out;
         }
         .eduka-typing-dot:nth-child(2) { animation-delay: 0.15s; }
         .eduka-typing-dot:nth-child(3) { animation-delay: 0.3s; }
-        .eduka-typing-texte { margin-left: 8px; opacity: 0.75; }
+        .eduka-typing-texte { margin-left: 8px; opacity: 0.75; color: #6B7280; }
     `;
     document.head.appendChild(style);
 }
