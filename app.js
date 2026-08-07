@@ -366,6 +366,49 @@ function handleSasKeyPress(event) {
 // localStorage. Transmis avec chaque requête premium pour permettre au
 // serveur de reconnaître un changement d'appareil (remplacement
 // silencieux : le nouvel appareil prend le relais).
+// ❖ LA BULLE DE RÉFLEXION VIVANTE — remplace l'ancien texte statique
+// immobile par trois points animés, façon "en train d'écrire". Le style
+// n'est injecté qu'une seule fois dans la page. Dès que le premier
+// fragment de la réponse arrive, cette bulle est naturellement écrasée
+// par le texte réel (aucune logique supplémentaire n'est nécessaire).
+function injecterStyleReflexion() {
+    if (document.getElementById('eduka-style-reflexion')) return;
+    const style = document.createElement('style');
+    style.id = 'eduka-style-reflexion';
+    style.textContent = `
+        @keyframes edukaTypingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        .eduka-typing {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            vertical-align: middle;
+        }
+        .eduka-typing-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: currentColor;
+            animation: edukaTypingBounce 1.2s infinite ease-in-out;
+        }
+        .eduka-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+        .eduka-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+        .eduka-typing-texte { margin-left: 8px; opacity: 0.75; }
+    `;
+    document.head.appendChild(style);
+}
+injecterStyleReflexion();
+
+function creerBulleReflexion(texte) {
+    return `<span class="eduka-typing">
+        <span class="eduka-typing-dot"></span>
+        <span class="eduka-typing-dot"></span>
+        <span class="eduka-typing-dot"></span>
+    </span><span class="eduka-typing-texte">${texte}</span>`;
+}
+
 function obtenirDeviceId() {
     let deviceId = localStorage.getItem('eduka_device_id');
     if (!deviceId) {
@@ -443,7 +486,7 @@ async function sendSasMessage() {
 
     const botLoadingDiv = document.createElement('div');
     botLoadingDiv.className = 'message bot-message apparition-fluide';
-    botLoadingDiv.textContent = "L'Assistant rassemble son savoir...";
+    botLoadingDiv.innerHTML = creerBulleReflexion("L'Assistant rassemble son savoir...");
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom('sas-chat-history');
 
@@ -573,7 +616,7 @@ async function sendTeacherMessage(outil) {
 
     const botLoadingDiv = document.createElement('div');
     botLoadingDiv.className = 'message bot-message apparition-fluide';
-    botLoadingDiv.textContent = "Le Cabinet compile les données. L'esprit rassemble le savoir...";
+    botLoadingDiv.innerHTML = creerBulleReflexion("Le Cabinet compile les données. L'esprit rassemble le savoir...");
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom(`${outil}-chat-history`);
 
@@ -1040,7 +1083,7 @@ async function sendAreneMessage() {
 
     const botLoadingDiv = document.createElement('div');
     botLoadingDiv.className = 'message bot-message apparition-fluide';
-    botLoadingDiv.textContent = "L'esprit rassemble le savoir...";
+    botLoadingDiv.innerHTML = creerBulleReflexion("L'esprit rassemble le savoir...");
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom('arene-chat-history');
 
