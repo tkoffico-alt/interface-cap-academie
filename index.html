@@ -240,6 +240,17 @@
             <p style="text-align: center; color: #4B5563;">Afin d'adapter notre pédagogie à ton profil, merci de nous éclairer sur ces deux points :</p>
             
             <div style="margin-top: 20px; text-align: left;">
+                <label style="font-weight: bold; color: #374151;">Tu es en quelle classe ?</label>
+<select id="niveau-classe" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 20px; background-color: #F3F4F6; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" onchange="verifierFormulaire()">
+    <option value="">-- Choisis ta classe --</option>
+    <option value="6e">6ème</option>
+    <option value="5e">5ème</option>
+    <option value="4e">4ème</option>
+    <option value="3e">3ème</option>
+    <option value="2nde">2nde</option>
+    <option value="1ere">1ère</option>
+    <option value="Tle">Terminale</option>
+</select>
                 <label style="font-weight: bold; color: #374151;">Comment as-tu l'habitude de réviser à la maison ?</label>
                 <select id="habitudes-revision" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 20px; background-color: #F3F4F6; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" onchange="verifierFormulaire()">
                     <option value="">-- Choisis une option --</option>
