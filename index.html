@@ -277,16 +277,19 @@
                     <div style="font-size: 1.8em; margin-bottom: 8px;">🔄</div>
                     <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Tally</h4>
                     <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Idéal pour un <strong>programme de cours de vacances</strong>. Vous choisissez vous-même les créneaux de révision souhaités via un formulaire.</p>
-                    <a href="https://tally.so/r/lb5WjX" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; margin-bottom: 8px; text-decoration: none;">Définir mes créneaux</a>
-                    <a href="https://tally.so/r/ODE4rA" target="_blank" style="font-size: 0.8em; color: #3B82F6; font-weight: bold; text-decoration: none;">🔄 Modifier un emploi du temps existant</a>
+                    <a href="https://tally.so/r/ODE4rA" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; margin-bottom: 8px; text-decoration: none;">Définir mes créneaux</a>
+                    <a href="https://tally.so/r/lb5WjX" target="_blank" style="font-size: 0.8em; color: #3B82F6; font-weight: bold; text-decoration: none;">🔄 Modifier un emploi du temps existant</a>
                 </div>
                 <!-- EDT Progression -->
                 <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
                     <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
                     <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression</h4>
-                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Recommandé pour un <strong>suivi au quotidien</strong>. Votre enfant photographie l'emploi du temps de sa classe directement dans son Espace ; l'Académie adapte alors les leçons proposées chaque jour.</p>
-                    <a href="https://tally.so/r/lb5WjX" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; margin-bottom: 6px; text-decoration: none;">S'abonner</a>
-                    <p style="font-size: 0.72em; color: #9CA3AF; margin: 0;">La session que vous y indiquez sera remplacée dès que votre enfant enverra sa photo.</p>
+                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Recommandé pour un <strong>suivi au quotidien</strong>. Envoyez directement la photo de l'emploi du temps de votre enfant : elle sera prête dès l'activation de votre abonnement.</p>
+                    <input type="text" id="pre-abo-telephone" placeholder="Numéro WhatsApp du parent" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <input type="text" id="pre-abo-nom-eleve" placeholder="Nom et prénoms de l'élève" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <input type="file" id="pre-abo-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 10px; font-size: 0.8em;">
+                    <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Envoyer la photo et payer</button>
+                    <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0; min-height: 16px;"></p>
                 </div>
             </div>
         </div>
@@ -417,7 +420,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="app.js?v=2.4"></script>
+    <script src="app.js?v=2.5"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->

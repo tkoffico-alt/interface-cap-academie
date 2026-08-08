@@ -113,6 +113,69 @@ function fermerParentsModal() {
     document.getElementById('parents-modal').classList.remove('active');
 }
 
+// ❖ EDT Progression, avant abonnement : la photo de l'emploi du temps est
+// envoyée AVANT le paiement (aucun Sceau/matricule n'existe encore), donc
+// on identifie la famille par son numéro WhatsApp. Une fois la photo lue
+// avec succès, on bascule directement vers la page de paiement Paystack ;
+// le webhook de paiement se chargera de récupérer ce planning dès que le
+// nouveau Sceau sera généré.
+const LIEN_PAIEMENT_PAYSTACK = "https://paystack.shop/pay/edukatchat-eleves-parents";
+
+async function envoyerPhotoPreAbonnement() {
+    const telephone = document.getElementById('pre-abo-telephone').value.trim();
+    const nomEleve = document.getElementById('pre-abo-nom-eleve').value.trim();
+    const inputFichier = document.getElementById('pre-abo-photo-input');
+    const feedback = document.getElementById('pre-abo-feedback');
+    const bouton = document.getElementById('btn-pre-abonnement');
+
+    if (!telephone) {
+        feedback.textContent = "Le numéro WhatsApp du parent est requis.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+    if (!nomEleve) {
+        feedback.textContent = "Le nom de l'élève est requis.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+    if (!inputFichier || !inputFichier.files || inputFichier.files.length === 0) {
+        feedback.textContent = "Choisis d'abord une photo.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+
+    bouton.disabled = true;
+    feedback.textContent = "Lecture de la photo en cours...";
+    feedback.style.color = "#60A5FA";
+
+    const formulaire = new FormData();
+    formulaire.append('telephone', telephone);
+    formulaire.append('nom_eleve', nomEleve);
+    formulaire.append('photo', inputFichier.files[0]);
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/planning/pre_abonnement', {
+            method: 'POST',
+            body: formulaire
+        });
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            feedback.textContent = `✔ ${data.message}`;
+            feedback.style.color = "#10B981";
+            setTimeout(() => { window.location.href = LIEN_PAIEMENT_PAYSTACK; }, 1200);
+        } else {
+            feedback.textContent = data.message || "Une erreur est survenue.";
+            feedback.style.color = (data.status === 'vide') ? "#F59E0B" : "#F87171";
+            bouton.disabled = false;
+        }
+    } catch (err) {
+        feedback.textContent = "Le réseau est instable. Réessaie dans un instant.";
+        feedback.style.color = "#F87171";
+        bouton.disabled = false;
+    }
+}
+
 async function envoyerPhotoEmploiDuTemps() {
     const sceau = localStorage.getItem('eduka_sceau') || "";
     const inputFichier = document.getElementById('planning-photo-input');
@@ -369,7 +432,7 @@ function openPremiumModal() {
             lien.href = "https://tally.so/r/RGgdb4";
             lien.textContent = "Accéder au Cabinet (Enseignants)";
         } else {
-            lien.href = "https://tally.so/r/ODE4rA";
+            lien.href = "https://tally.so/r/lb5WjX";
             lien.textContent = "Accéder au Bureau des Parents";
         }
     }
