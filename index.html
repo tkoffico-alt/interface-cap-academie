@@ -134,14 +134,10 @@
 <div class="glass-card door-card parents">
     <div class="icon-wrapper">🛡️</div>
     <h3>Espace Parents</h3>
-    <p>Suivez la progression de votre enfant. Définissez les horaires pour activer le suivi pédagogique.</p>
+    <p>Suivez la progression de votre enfant. Choisissez la méthode d'emploi du temps la mieux adaptée pour activer le suivi pédagogique.</p>
     <div class="card-action-area">
-        <button class="btn-entrer" onclick="window.open('https://tally.so/r/ODE4rA', '_blank')">Accéder au Bureau</button>
-        <div class="action-footer" style="margin-top: 12px; text-align: center;">
-            <a href="https://tally.so/r/lb5WjX" target="_blank" style="color: #60a5fa; font-size: 0.9rem; text-decoration: none; font-weight: 500; transition: color 0.2s;">
-                🔄 Réviser l'emploi du temps
-            </a>
-        </div>
+        <button class="btn-entrer" onclick="ouvrirParentsModal()">Accéder au Bureau</button>
+        <div class="action-footer"></div>
     </div>
 </div>
                     </div>
@@ -266,6 +262,32 @@
             <button id="btn-envoyer-planning" class="btn-entrer" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; padding: 10px; border: none; border-radius: 5px; cursor: pointer;" onclick="envoyerPhotoEmploiDuTemps()">Envoyer la photo</button>
 
             <p id="planning-feedback" class="feedback-text" style="margin-top: 15px; font-weight: bold; min-height: 20px;"></p>
+        </div>
+    </div>
+    <!-- 3ter. MODALE ESPACE PARENTS (CHOIX DE L'EMPLOI DU TEMPS) -->
+    <div id="parents-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 620px;">
+            <button class="modal-close" onclick="fermerParentsModal()">×</button>
+            <h3 style="text-align: center; margin-bottom: 10px;">🛡️ Espace Parents</h3>
+            <p style="text-align: center; color: #4B5563; margin-bottom: 25px;">Deux façons d'organiser l'emploi du temps de révision de votre enfant. Choisissez celle qui convient le mieux à votre situation, puis abonnez-vous pour l'activer.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                <!-- EDT Tally -->
+                <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
+                    <div style="font-size: 1.8em; margin-bottom: 8px;">🔄</div>
+                    <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Tally</h4>
+                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Idéal pour un <strong>programme de cours de vacances</strong>. Vous choisissez vous-même les créneaux de révision souhaités via un formulaire.</p>
+                    <a href="https://tally.so/r/lb5WjX" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; margin-bottom: 8px; text-decoration: none;">1. Définir les créneaux</a>
+                    <a href="https://tally.so/r/ODE4rA" target="_blank" style="font-size: 0.8em; color: #3B82F6; font-weight: bold; text-decoration: none;">2. S'abonner ensuite →</a>
+                </div>
+                <!-- EDT Progression -->
+                <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
+                    <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
+                    <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression</h4>
+                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Recommandé pour un <strong>suivi au quotidien</strong>. Votre enfant photographie l'emploi du temps de sa classe directement dans son Espace ; l'Académie adapte alors les leçons proposées chaque jour.</p>
+                    <a href="https://tally.so/r/ODE4rA" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; text-decoration: none;">S'abonner</a>
+                </div>
+            </div>
         </div>
     </div>
     <!-- === ESPACE DE TRAVAIL === -->
@@ -394,7 +416,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="app.js?v=2.2"></script>
+    <script src="app.js?v=2.3"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->

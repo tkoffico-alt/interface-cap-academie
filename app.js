@@ -102,6 +102,17 @@ function fermerPlanningModal() {
     document.getElementById('planning-modal').classList.remove('active');
 }
 
+// =======================================================================
+// ❖ L'ESPACE PARENTS (CHOIX EDT TALLY / EDT PROGRESSION) ❖
+// =======================================================================
+function ouvrirParentsModal() {
+    document.getElementById('parents-modal').classList.add('active');
+}
+
+function fermerParentsModal() {
+    document.getElementById('parents-modal').classList.remove('active');
+}
+
 async function envoyerPhotoEmploiDuTemps() {
     const sceau = localStorage.getItem('eduka_sceau') || "";
     const inputFichier = document.getElementById('planning-photo-input');
