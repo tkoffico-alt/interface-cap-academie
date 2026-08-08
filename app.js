@@ -5,6 +5,13 @@ let avatarActif = "general"; // Mémorise l'avatar choisi
 let espaceActuel = "";       // Mémorise la porte choisie
 let disciplineEnAttente = ""; // Retient la matière pendant le questionnaire de diversion
 
+// ❖ Mémorisés depuis le questionnaire de diversion (profil-modal) puis
+// réellement transmis au serveur — auparavant collectés mais jamais
+// envoyés, remplacés côté backend par des valeurs génériques figées.
+let classeActive = "";
+let methodeTravailActive = "";
+let gestionStressActive = "";
+
 // =======================================================================
 // ❖ LA GESTION DES ESPACES ET DE L'AIGUILLAGE ❖
 // =======================================================================
@@ -74,6 +81,76 @@ function fermerVestibule() {
     document.getElementById('discipline-modal').classList.remove('active');
 }
 
+// =======================================================================
+// ❖ LE PLANIFICATEUR DE RÉVISION (PHOTO D'EMPLOI DU TEMPS) ❖
+// =======================================================================
+function ouvrirPlanningModal() {
+    // ❖ Fonctionnalité réservée aux porteurs de Sceau : sans matricule
+    // stable, le planning ne peut être rattaché à personne de façon
+    // durable (contrairement à une adresse IP, qui change).
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+    if (!sceau) {
+        openPremiumModal();
+        return;
+    }
+    const feedback = document.getElementById('planning-feedback');
+    if (feedback) { feedback.textContent = ""; }
+    document.getElementById('planning-modal').classList.add('active');
+}
+
+function fermerPlanningModal() {
+    document.getElementById('planning-modal').classList.remove('active');
+}
+
+async function envoyerPhotoEmploiDuTemps() {
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+    const inputFichier = document.getElementById('planning-photo-input');
+    const feedback = document.getElementById('planning-feedback');
+    const bouton = document.getElementById('btn-envoyer-planning');
+
+    if (!sceau) {
+        openPremiumModal();
+        return;
+    }
+    if (!inputFichier || !inputFichier.files || inputFichier.files.length === 0) {
+        feedback.textContent = "Choisis d'abord une photo.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+
+    bouton.disabled = true;
+    feedback.textContent = "Lecture de la photo en cours...";
+    feedback.style.color = "#60A5FA";
+
+    const formulaire = new FormData();
+    formulaire.append('matricule', sceau);
+    formulaire.append('photo', inputFichier.files[0]);
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/planning/lire_photo', {
+            method: 'POST',
+            body: formulaire
+        });
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            feedback.textContent = `✔ ${data.message}`;
+            feedback.style.color = "#10B981";
+            setTimeout(fermerPlanningModal, 2000);
+        } else {
+            // ❖ 'vide' (rien lu) et 'error' partagent le même traitement
+            // visuel côté élève — seule la couleur diffère légèrement.
+            feedback.textContent = data.message || "Une erreur est survenue.";
+            feedback.style.color = (data.status === 'vide') ? "#F59E0B" : "#F87171";
+        }
+    } catch (err) {
+        feedback.textContent = "Le réseau est instable. Réessaie dans un instant.";
+        feedback.style.color = "#F87171";
+    } finally {
+        bouton.disabled = false;
+    }
+}
+
 function entrerDansLeChat(matiereChoisie) {
     disciplineEnAttente = matiereChoisie;
     fermerVestibule();
@@ -83,8 +160,10 @@ function entrerDansLeChat(matiereChoisie) {
 function validerProfilEtEntrer() {
     document.getElementById('profil-modal').classList.remove('active');
 
-    const methodeTravail = document.getElementById('habitudes-revision').value;
-    const gestionStress = document.getElementById('gestion-stress').value;
+    const champClasse = document.getElementById('niveau-classe');
+    classeActive = champClasse ? champClasse.value : "";
+    methodeTravailActive = document.getElementById('habitudes-revision').value;
+    gestionStressActive = document.getElementById('gestion-stress').value;
 
     avatarActif = disciplineEnAttente;
 
@@ -516,7 +595,10 @@ async function sendSasMessage() {
                 conversation_id: sasConversationIds[avatarActif] || "",
                 matricule: sceau,
                 avatar: avatarActif,
-                device_id: obtenirDeviceId()
+                device_id: obtenirDeviceId(),
+                classe: classeActive,
+                methode_travail: methodeTravailActive,
+                gestion_stress: gestionStressActive
             })
         });
 
@@ -860,9 +942,13 @@ function animerBoutonCopie(bouton) {
 function verifierFormulaire() {
     const habitude = document.getElementById('habitudes-revision').value;
     const stress = document.getElementById('gestion-stress').value;
+    const champClasse = document.getElementById('niveau-classe');
+    // ❖ Le champ classe n'existe que si l'ajout HTML a été fait : tant
+    // qu'il n'est pas présent, on ne bloque pas le formulaire pour autant.
+    const classe = champClasse ? champClasse.value : "ok";
     const bouton = document.getElementById('btn-commencer');
 
-    if (habitude !== "" && stress !== "") {
+    if (habitude !== "" && stress !== "" && classe !== "") {
         bouton.disabled = false;
         bouton.style.opacity = '1';
         bouton.style.cursor = 'pointer';
