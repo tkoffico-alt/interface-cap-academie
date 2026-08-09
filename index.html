@@ -363,6 +363,7 @@
                             </svg>
                         </button>
                         <button class="btn-attachment" onclick="ouvrirPlanningModal()" title="Ajouter mon emploi du temps de classe" style="background-color: #3B82F6; border-radius: 50%; width: 36px; height: 36px; min-width: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15em; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); flex-shrink: 0;">📅</button>
+                        <button class="btn-attachment" id="btn-micro-sas" onclick="toggleEnregistrementVocal()" title="Poser ma question à l'oral" style="background-color: #8B5CF6; border-radius: 50%; width: 36px; height: 36px; min-width: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05em; box-shadow: 0 0 0 3px rgba(139,92,246,0.25); flex-shrink: 0;">🎤</button>
                         <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
                         <button class="btn-envoyer-icon" onclick="sendSasMessage()" title="Envoyer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
@@ -449,7 +450,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="app.js?v=3.1"></script>
+    <script src="app.js?v=3.2"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->
