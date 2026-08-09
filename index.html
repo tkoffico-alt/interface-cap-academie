@@ -30,6 +30,16 @@
             .btn-icone-outil svg { width: 14px; height: 14px; }
             .chat-input-wrapper { gap: 4px; }
         }
+
+        /* ❖ Le fondu progressif des réponses : à chaque fragment reçu du
+           flux SSE, la bulle de réponse est légèrement estompée puis
+           reprend son opacité pleine, au lieu d'un remplacement sec du
+           texte. Voir afficherReponseAvecFondu() dans app.js. */
+        @keyframes fonduTexteReponse {
+            from { opacity: 0.35; }
+            to { opacity: 1; }
+        }
+        .fondu-reponse { animation: fonduTexteReponse 0.35s ease-out; }
     </style>
 </head>
 <body>
@@ -475,7 +485,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="app.js?v=3.4"></script>
+    <script src="app.js?v=3.5"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->

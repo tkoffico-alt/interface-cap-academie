@@ -343,6 +343,24 @@ function goHome() {
     document.getElementById('teacher-tabs-container').style.display = 'none';
 }
 
+// ❖ LE FONDU PROGRESSIF DE LA RÉPONSE ❖
+// botLoadingDiv.innerHTML est réécrit en entier à chaque fragment reçu du
+// flux SSE (nécessaire pour que marked.parse() reforme correctement le
+// markdown au fur et à mesure — gras, listes, etc.). Une simple
+// réaffectation d'innerHTML ne déclenche aucune animation CSS, même si la
+// classe "apparition-fluide" est déjà posée : elle n'a joué qu'une fois, à
+// la création de la bulle. Cette fonction retire puis repose la classe de
+// fondu à chaque mise à jour (avec un reflow forcé entre les deux pour que
+// l'animation CSS soit bien relancée), pour que l'arrivée de chaque
+// fragment de texte se fasse en fondu, comme souhaité, au lieu d'un
+// remplacement sec.
+function afficherReponseAvecFondu(element, texteMarkdown) {
+    element.innerHTML = marked.parse(texteMarkdown);
+    element.classList.remove('fondu-reponse');
+    void element.offsetWidth; // force le reflow : relance l'animation CSS
+    element.classList.add('fondu-reponse');
+}
+
 function scrollToBottom(elementId) {
     const el = document.getElementById(elementId);
     if(el) {
@@ -839,7 +857,7 @@ async function sendSasMessage() {
                                 // On ne remplace la bulle animée que lorsqu'il y a
                                 // vraiment quelque chose à montrer.
                                 if (texteIntegralSas.length > 0) {
-                                    botLoadingDiv.innerHTML = marked.parse(texteIntegralSas);
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas);
                                     scrollToBottom('sas-chat-history');
                                 }
                             }
@@ -985,7 +1003,7 @@ async function sendTeacherMessage(outil) {
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralTeacher += (dataObj.answer || "");
                                 if (texteIntegralTeacher.length > 0) {
-                                    botLoadingDiv.innerHTML = marked.parse(texteIntegralTeacher);
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher);
                                     scrollToBottom(`${outil}-chat-history`);
                                 }
                             }
@@ -1460,7 +1478,7 @@ async function sendAreneMessage() {
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegral += (dataObj.answer || "");
                                 if (texteIntegral.length > 0) {
-                                    botLoadingDiv.innerHTML = marked.parse(texteIntegral);
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegral);
                                     scrollToBottom('arene-chat-history');
                                 }
                             }
