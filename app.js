@@ -614,6 +614,85 @@ function obtenirDeviceId() {
     return deviceId;
 }
 
+// ❖ LE MICRO DU SAS — transcription vocale sur le site (jamais WhatsApp) ❖
+// Un élève qui présente mal sa pensée par écrit peut enregistrer sa
+// question à l'oral : le texte transcrit vient simplement pré-remplir la
+// zone de saisie, sans envoi automatique — il garde la main pour relire.
+let mediaRecorderSas = null;
+let chunksAudioSas = [];
+let enregistrementSasEnCours = false;
+
+async function toggleEnregistrementVocal() {
+    const bouton = document.getElementById('btn-micro-sas');
+    if (!bouton) return;
+
+    if (!enregistrementSasEnCours) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Ce navigateur ne permet pas l'enregistrement vocal. Écris directement ta question.");
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            chunksAudioSas = [];
+            mediaRecorderSas = new MediaRecorder(stream);
+            mediaRecorderSas.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksAudioSas.push(e.data); };
+            mediaRecorderSas.onstop = () => {
+                stream.getTracks().forEach(track => track.stop());
+                envoyerVocalPourTranscription();
+            };
+            mediaRecorderSas.start();
+            enregistrementSasEnCours = true;
+            bouton.style.backgroundColor = '#EF4444';
+            bouton.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.35)';
+            bouton.textContent = '⏹️';
+            bouton.title = "Arrêter l'enregistrement";
+        } catch (err) {
+            alert("Impossible d'accéder au microphone. Vérifie les autorisations de ton navigateur pour ce site.");
+        }
+    } else {
+        mediaRecorderSas.stop();
+        enregistrementSasEnCours = false;
+        bouton.style.backgroundColor = '#8B5CF6';
+        bouton.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.25)';
+        bouton.textContent = '🎤';
+        bouton.title = "Poser ma question à l'oral";
+    }
+}
+
+async function envoyerVocalPourTranscription() {
+    const inputField = document.getElementById('sas-user-input');
+    if (!inputField) return;
+    const placeholderOriginal = inputField.placeholder;
+    inputField.placeholder = "Transcription de ta voix en cours...";
+    inputField.disabled = true;
+
+    try {
+        const blobAudio = new Blob(chunksAudioSas, { type: (mediaRecorderSas && mediaRecorderSas.mimeType) || 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', blobAudio, 'vocal.webm');
+
+        const response = await fetch('https://api.edukatchat.org/api/sas/transcrire_vocal', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.status === 'success' && data.texte) {
+            inputField.value = data.texte;
+            inputField.placeholder = placeholderOriginal;
+        } else {
+            inputField.placeholder = data.message || "La transcription a échoué. Réessaie ou écris ta question.";
+            setTimeout(() => { inputField.placeholder = placeholderOriginal; }, 4000);
+        }
+    } catch (err) {
+        inputField.placeholder = "Le réseau est instable. Réessaie dans un instant.";
+        setTimeout(() => { inputField.placeholder = placeholderOriginal; }, 4000);
+    } finally {
+        inputField.disabled = false;
+        inputField.focus();
+    }
+}
+
 async function sendSasMessage() {
     const inputField = document.getElementById('sas-user-input');
     const button = inputField.nextElementSibling;
