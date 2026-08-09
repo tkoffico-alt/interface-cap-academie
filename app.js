@@ -614,34 +614,46 @@ function obtenirDeviceId() {
     return deviceId;
 }
 
-// ❖ LE MICRO DU SAS — transcription vocale sur le site (jamais WhatsApp) ❖
+// ❖ LE MICRO — transcription vocale sur le site (jamais WhatsApp) ❖
 // Un élève qui présente mal sa pensée par écrit peut enregistrer sa
 // question à l'oral : le texte transcrit vient simplement pré-remplir la
 // zone de saisie, sans envoi automatique — il garde la main pour relire.
-let mediaRecorderSas = null;
-let chunksAudioSas = [];
-let enregistrementSasEnCours = false;
+// Cible "sas" (Espace de Préparation + Académie, mêmes champs) ou "arene"
+// (Ateliers Orateur/Philo/Sciences) : les deux partagent la même logique
+// d'enregistrement, seuls les identifiants de bouton/champ diffèrent.
+const CIBLES_MICRO = {
+    sas: { bouton: 'btn-micro-sas', champ: 'sas-user-input' },
+    arene: { bouton: 'btn-micro-arene', champ: 'arene-user-input' }
+};
 
-async function toggleEnregistrementVocal() {
-    const bouton = document.getElementById('btn-micro-sas');
+let mediaRecorderVocal = null;
+let chunksAudioVocal = [];
+let enregistrementVocalEnCours = false;
+let cibleMicroActive = null;
+
+async function toggleEnregistrementVocal(cible) {
+    const infosCible = CIBLES_MICRO[cible];
+    if (!infosCible) return;
+    const bouton = document.getElementById(infosCible.bouton);
     if (!bouton) return;
 
-    if (!enregistrementSasEnCours) {
+    if (!enregistrementVocalEnCours) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             alert("Ce navigateur ne permet pas l'enregistrement vocal. Écris directement ta question.");
             return;
         }
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            chunksAudioSas = [];
-            mediaRecorderSas = new MediaRecorder(stream);
-            mediaRecorderSas.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksAudioSas.push(e.data); };
-            mediaRecorderSas.onstop = () => {
+            chunksAudioVocal = [];
+            cibleMicroActive = cible;
+            mediaRecorderVocal = new MediaRecorder(stream);
+            mediaRecorderVocal.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksAudioVocal.push(e.data); };
+            mediaRecorderVocal.onstop = () => {
                 stream.getTracks().forEach(track => track.stop());
-                envoyerVocalPourTranscription();
+                envoyerVocalPourTranscription(cible);
             };
-            mediaRecorderSas.start();
-            enregistrementSasEnCours = true;
+            mediaRecorderVocal.start();
+            enregistrementVocalEnCours = true;
             bouton.style.backgroundColor = '#EF4444';
             bouton.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.35)';
             bouton.textContent = '⏹️';
@@ -650,24 +662,26 @@ async function toggleEnregistrementVocal() {
             alert("Impossible d'accéder au microphone. Vérifie les autorisations de ton navigateur pour ce site.");
         }
     } else {
-        mediaRecorderSas.stop();
-        enregistrementSasEnCours = false;
+        mediaRecorderVocal.stop();
+        enregistrementVocalEnCours = false;
         bouton.style.backgroundColor = '#8B5CF6';
         bouton.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.25)';
         bouton.textContent = '🎤';
-        bouton.title = "Poser ma question à l'oral";
+        bouton.title = (cible === 'arene') ? "Parler au lieu d'écrire" : "Poser ma question à l'oral";
     }
 }
 
-async function envoyerVocalPourTranscription() {
-    const inputField = document.getElementById('sas-user-input');
+async function envoyerVocalPourTranscription(cible) {
+    const infosCible = CIBLES_MICRO[cible];
+    if (!infosCible) return;
+    const inputField = document.getElementById(infosCible.champ);
     if (!inputField) return;
     const placeholderOriginal = inputField.placeholder;
     inputField.placeholder = "Transcription de ta voix en cours...";
     inputField.disabled = true;
 
     try {
-        const blobAudio = new Blob(chunksAudioSas, { type: (mediaRecorderSas && mediaRecorderSas.mimeType) || 'audio/webm' });
+        const blobAudio = new Blob(chunksAudioVocal, { type: (mediaRecorderVocal && mediaRecorderVocal.mimeType) || 'audio/webm' });
         const formData = new FormData();
         formData.append('audio', blobAudio, 'vocal.webm');
 
