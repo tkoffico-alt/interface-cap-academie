@@ -113,6 +113,14 @@ function fermerParentsModal() {
     document.getElementById('parents-modal').classList.remove('active');
 }
 
+function ouvrirEnseignantAboModal() {
+    document.getElementById('enseignant-abo-modal').classList.add('active');
+}
+
+function fermerEnseignantAboModal() {
+    document.getElementById('enseignant-abo-modal').classList.remove('active');
+}
+
 // ❖ EDT Progression, avant abonnement : la photo de l'emploi du temps est
 // envoyée AVANT le paiement (aucun Sceau/matricule n'existe encore), donc
 // on identifie la famille par son numéro WhatsApp. Une fois la photo lue

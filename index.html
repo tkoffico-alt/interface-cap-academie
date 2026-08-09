@@ -106,7 +106,7 @@
                             <div class="card-action-area">
                                 <button class="btn-entrer" onclick="openSpace('enseignant')">Accéder au Cabinet</button>
                                 <div class="action-footer">
-                                    <a href="https://tally.so/r/RGgdb4" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace</a>
+                                    <a href="#" onclick="ouvrirEnseignantAboModal(); return false;" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace</a>
                                 </div>
                             </div>
                         </div>
@@ -266,7 +266,7 @@
     </div>
     <!-- 3ter. MODALE ESPACE PARENTS (CHOIX DE L'EMPLOI DU TEMPS) -->
     <div id="parents-modal" class="modal-overlay">
-        <div class="glass-card modal-content" style="max-width: 620px;">
+        <div class="glass-card modal-content" style="max-width: 620px; max-height: 90vh; overflow-y: auto;">
             <button class="modal-close" onclick="fermerParentsModal()">×</button>
             <h3 style="text-align: center; margin-bottom: 10px;">🛡️ Espace Parents</h3>
             <p style="text-align: center; color: #4B5563; margin-bottom: 20px;">Deux façons d'organiser l'emploi du temps de révision de votre enfant. Choisissez celle qui convient le mieux à votre situation, puis abonnez-vous pour l'activer.</p>
@@ -279,6 +279,22 @@
             <p style="text-align: center; color: #4B5563; margin-bottom: 12px; font-size: 0.85em; font-weight: bold;">Étape 2 : Choisissez votre méthode</p>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                <!-- EDT Progression -->
+                <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
+                    <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
+                    <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression</h4>
+                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Recommandé pour un <strong>suivi au quotidien</strong>. Envoyez directement la photo de l'emploi du temps de votre enfant : elle sera prête dès l'activation de votre abonnement.</p>
+
+                    <div style="background: #FEF2F2; border: 2px solid #EF4444; border-radius: 8px; padding: 10px; margin-bottom: 12px; text-align: left;">
+                        <p style="margin: 0; font-size: 0.8em; color: #991B1B; font-weight: bold; line-height: 1.4;">🚨 IMPORTANT : utilisez EXACTEMENT le même numéro WhatsApp ici et à l'étape de paiement Paystack juste après. Un numéro différent empêchera le rattachement automatique de l'emploi du temps au compte (le paiement, lui, aboutira normalement).</p>
+                    </div>
+
+                    <input type="text" id="pre-abo-telephone" placeholder="Numéro WhatsApp du parent" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <input type="text" id="pre-abo-nom-eleve" placeholder="Nom et prénoms de l'élève" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <input type="file" id="pre-abo-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 10px; font-size: 0.8em;">
+                    <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Envoyer la photo et payer</button>
+                    <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0; min-height: 16px;"></p>
+                </div>
                 <!-- EDT Tally -->
                 <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
                     <div style="font-size: 1.8em; margin-bottom: 8px;">🔄</div>
@@ -287,21 +303,26 @@
                     <a href="https://tally.so/r/ODE4rA" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; margin-bottom: 8px; text-decoration: none;">Définir mes créneaux</a>
                     <a href="https://tally.so/r/lb5WjX" target="_blank" style="font-size: 0.8em; color: #3B82F6; font-weight: bold; text-decoration: none;">🔄 Modifier un emploi du temps existant</a>
                 </div>
-                <!-- EDT Progression -->
-                <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
-                    <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
-                    <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression</h4>
-                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Recommandé pour un <strong>suivi au quotidien</strong>. Envoyez directement la photo de l'emploi du temps de votre enfant : elle sera prête dès l'activation de votre abonnement.</p>
-                    <input type="text" id="pre-abo-telephone" placeholder="Numéro WhatsApp du parent" style="width: 100%; margin-bottom: 3px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
-                    <p style="font-size: 0.68em; color: #9CA3AF; margin: 0 0 8px 0; text-align: left;">⚠️ Utilisez ce même numéro à l'étape de paiement Paystack juste après.</p>
-                    <input type="text" id="pre-abo-nom-eleve" placeholder="Nom et prénoms de l'élève" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
-                    <input type="file" id="pre-abo-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 10px; font-size: 0.8em;">
-                    <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Envoyer la photo et payer</button>
-                    <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0; min-height: 16px;"></p>
-                </div>
             </div>
         </div>
     </div>
+    <!-- 3quater. MODALE ABONNEMENT ESPACE ENSEIGNANT -->
+    <div id="enseignant-abo-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 460px; max-height: 90vh; overflow-y: auto; text-align: center;">
+            <button class="modal-close" onclick="fermerEnseignantAboModal()">×</button>
+            <h3 style="margin-bottom: 10px;">🔮 Abonnement Espace Enseignant</h3>
+            <p style="margin-bottom: 20px; color: #4B5563; font-size: 0.9em;">Un dernier pas avant de rejoindre le Cabinet.</p>
+
+            <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 20px; text-align: center;">
+                <p style="margin: 0 0 8px 0; font-size: 0.85em; color: #1E3A8A;"><strong>Étape 1 (recommandée) :</strong> dites-nous bonjour sur WhatsApp avant de payer — votre code d'accès pourra alors vous être transmis instantanément sur ce même canal, dès l'abonnement validé.</p>
+                <a href="https://wa.me/2250142674315?text=Bonjour" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 6px; font-weight: bold; font-size: 0.85em; text-decoration: none;">💬 Dire bonjour sur WhatsApp</a>
+            </div>
+
+            <p style="text-align: center; color: #4B5563; margin-bottom: 12px; font-size: 0.85em; font-weight: bold;">Étape 2 : Finalisez votre abonnement</p>
+            <a href="https://tally.so/r/RGgdb4" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #8B5CF6; color: white; border: none; display: block; text-decoration: none;">Accéder au formulaire d'abonnement</a>
+        </div>
+    </div>
+
     <!-- === ESPACE DE TRAVAIL === -->
     <div id="app-view">
         <div class="toolbar">
@@ -428,7 +449,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="app.js?v=2.8"></script>
+    <script src="app.js?v=3.0"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->
