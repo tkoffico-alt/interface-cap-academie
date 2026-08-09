@@ -434,14 +434,31 @@ document.addEventListener('DOMContentLoaded', () => {
 // ❖ GESTION DU CODE D'ACCÈS ET DES MODALES ❖
 // =======================================================================
 function openPremiumModal() {
+    // ❖ Correction : ce lien pointait auparavant directement vers un
+    // formulaire Tally figé (Révision d'Emploi du Temps pour les parents,
+    // Cabinet brut pour les enseignants) — désormais périmé depuis la
+    // création des modales dédiées (Espace Parents avec choix EDT
+    // Tally/Progression + rappel WhatsApp, et Abonnement Espace Enseignant).
+    // Le lien ouvre maintenant la bonne modale au lieu de sauter directement
+    // sur un formulaire.
     const lien = document.getElementById('lien-abonnement-dynamique');
     if (lien) {
+        lien.href = "#";
+        lien.removeAttribute('target');
         if (espaceActuel === 'enseignant') {
-            lien.href = "https://tally.so/r/RGgdb4";
             lien.textContent = "Accéder au Cabinet (Enseignants)";
+            lien.onclick = function(e) {
+                e.preventDefault();
+                closePremiumModal();
+                ouvrirEnseignantAboModal();
+            };
         } else {
-            lien.href = "https://tally.so/r/lb5WjX";
             lien.textContent = "Accéder au Bureau des Parents";
+            lien.onclick = function(e) {
+                e.preventDefault();
+                closePremiumModal();
+                ouvrirParentsModal();
+            };
         }
     }
 
