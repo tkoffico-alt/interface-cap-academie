@@ -40,6 +40,17 @@
             to { opacity: 1; }
         }
         .fondu-reponse { animation: fonduTexteReponse 0.35s ease-out; }
+
+        /* ❖ La graphie colorée du nom, en écho au logo (tête multicolore +
+           "T" bleu ciel + "chat" en dégradé corail) plutôt qu'un titre tout
+           blanc à côté d'une icône déjà vive. */
+        .logo-t { color: #38BDF8; }
+        .logo-chat {
+            background: linear-gradient(90deg, #FB923C, #F472B6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -52,7 +63,7 @@
            <!-- Nous retirons le margin-right et confions le style au CSS -->
            <img src="logo-entete.png" alt="Logo EdukaTchat" class="logo-signature">
             <div class="brand-text">
-                <h1>EdukaTchat</h1>
+                <h1><span class="logo-eduka">Eduka</span><span class="logo-t">T</span><span class="logo-chat">chat</span></h1>
                 <p>La Plateforme Numérique de l'Enseignement Ivoirien</p>
             </div>
         </div>
