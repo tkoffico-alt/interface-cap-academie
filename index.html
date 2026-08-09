@@ -7,6 +7,30 @@
     <title>EdukaTchat | La plateforme numérique de l'enseignement ivoirien</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ❖ Correctif barre d'outils du chat : l'ajout du micro (en plus du
+           trombone et, dans le Sas, de l'emploi du temps) faisait déborder
+           la zone de saisie sur petit écran mobile. min-width:0 permet au
+           champ texte de se rétrécir au lieu de forcer le débordement, et
+           la media query réduit légèrement les boutons ronds sous 420px. */
+        .chat-input-wrapper { flex-wrap: nowrap; }
+        .chat-input-wrapper input[type="text"] { min-width: 0; flex: 1 1 auto; }
+        .btn-icone-outil {
+            width: 36px; height: 36px; min-width: 36px;
+            border-radius: 50%; border: none; cursor: pointer; color: #fff;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.05em; flex-shrink: 0;
+        }
+        .btn-icone-outil svg { width: 17px; height: 17px; }
+        .btn-icone-outil.btn-icone-orange { background-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.25); }
+        .btn-icone-outil.btn-icone-bleu { background-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+        .btn-icone-outil.btn-icone-violet { background-color: #8B5CF6; box-shadow: 0 0 0 3px rgba(139,92,246,0.25); }
+        @media (max-width: 420px) {
+            .btn-icone-outil { width: 30px; height: 30px; min-width: 30px; font-size: 0.9em; }
+            .btn-icone-outil svg { width: 14px; height: 14px; }
+            .chat-input-wrapper { gap: 4px; }
+        }
+    </style>
 </head>
 <body>
     <div class="watermark-background"></div>
@@ -357,13 +381,13 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un document">
+                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un document">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                             </svg>
                         </button>
-                        <button class="btn-attachment" onclick="ouvrirPlanningModal()" title="Ajouter mon emploi du temps de classe" style="background-color: #3B82F6; border-radius: 50%; width: 36px; height: 36px; min-width: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15em; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); flex-shrink: 0;">📅</button>
-                        <button class="btn-attachment" id="btn-micro-sas" onclick="toggleEnregistrementVocal()" title="Poser ma question à l'oral" style="background-color: #8B5CF6; border-radius: 50%; width: 36px; height: 36px; min-width: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05em; box-shadow: 0 0 0 3px rgba(139,92,246,0.25); flex-shrink: 0;">🎤</button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-bleu" onclick="ouvrirPlanningModal()" title="Ajouter mon emploi du temps de classe">📅</button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-violet" id="btn-micro-sas" onclick="toggleEnregistrementVocal('sas')" title="Poser ma question à l'oral">🎤</button>
                         <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
                         <button class="btn-envoyer-icon" onclick="sendSasMessage()" title="Envoyer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
@@ -380,7 +404,7 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment" onclick="triggerVisionUpsell('atelier-chat-history')" title="Joindre un texte source">
+                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('atelier-chat-history')" title="Joindre un texte source">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                         </button>
                         <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
@@ -399,7 +423,7 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
+                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                         </button>
                         <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
@@ -418,7 +442,7 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
+                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                         </button>
                         <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
@@ -437,6 +461,7 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-violet" id="btn-micro-arene" onclick="toggleEnregistrementVocal('arene')" title="Parler au lieu d'écrire">🎤</button>
                         <input type="text" id="arene-user-input" placeholder="Exprimez votre pensée ici..." onkeypress="handleAreneKeyPress(event)">
                         <button class="btn-envoyer-icon" onclick="sendAreneMessage()" title="Envoyer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
@@ -450,7 +475,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="app.js?v=3.2"></script>
+    <script src="app.js?v=3.4"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->
