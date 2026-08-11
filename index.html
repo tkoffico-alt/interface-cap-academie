@@ -51,12 +51,20 @@
            s'empiler au-dessus — sur un écran portrait étroit, l'espace
            restant devient quasi nul et la bande disparaît. On force donc
            un empilement vertical propre, spécifiquement pour ce conteneur. */
-        #container-sas-custom .chat-input-area {
+        /* Même correctif étendu aux 3 outils de l'Espace Enseignant depuis
+           qu'ils ont aussi reçu une bande de suggestions rapides. */
+        #container-sas-custom .chat-input-area,
+        #container-atelier-custom .chat-input-area,
+        #container-forge-custom .chat-input-area,
+        #container-cabinet-custom .chat-input-area {
             flex-direction: column;
             align-items: center;
             gap: 6px;
         }
-        #container-sas-custom .chat-input-area > .suggestions-rapides {
+        #container-sas-custom .chat-input-area > .suggestions-rapides,
+        #container-atelier-custom .chat-input-area > .suggestions-rapides,
+        #container-forge-custom .chat-input-area > .suggestions-rapides,
+        #container-cabinet-custom .chat-input-area > .suggestions-rapides {
             width: 100%;
             max-width: 1000px;
         }
@@ -85,7 +93,12 @@
            en petites puces discrètes (gris neutre au repos, bleu seulement
            au survol), plus proches d'icônes d'action que de boutons. */
         .message-actions { gap: 6px; margin-top: 10px; padding-top: 8px; }
-        .btn-action-doc {
+        /* IMPORTANT : scopé à ".message-actions .btn-action-doc", pas à
+           ".btn-action-doc" seule -- cette classe est réutilisée ailleurs
+           (grille de matières, "Commencer le Chat", boutons Tally...) où
+           elle doit garder sa taille normale. Un premier essai non-scopé
+           avait réduit ces boutons-là par erreur. */
+        .message-actions .btn-action-doc {
             border: 1px solid rgba(148, 163, 184, 0.4);
             color: #94A3B8;
             padding: 3px 9px;
@@ -94,20 +107,68 @@
             font-weight: 500;
             gap: 4px;
         }
-        .btn-action-doc:hover {
+        .message-actions .btn-action-doc:hover {
             border-color: #3B82F6;
             color: #60A5FA;
             background-color: rgba(59, 130, 246, 0.08);
         }
-        body.light-theme .btn-action-doc {
+        body.light-theme .message-actions .btn-action-doc {
             border-color: rgba(100, 116, 139, 0.4);
             color: #64748B;
         }
-        body.light-theme .btn-action-doc:hover {
+        body.light-theme .message-actions .btn-action-doc:hover {
             border-color: #3B82F6;
             color: #2563EB;
             background-color: rgba(59, 130, 246, 0.08);
         }
+
+        /* ❖ Refonte de la barre d'outils (Retour au menu, Mode Clair/Sombre,
+           Plein Écran, onglets de l'Espace Enseignant) : boutons en pilules
+           arrondies, transitions douces, contraste ajusté pour les deux
+           thèmes -- au lieu des rectangles bruts d'origine. */
+        .toolbar { gap: 0.6rem; }
+        .btn-retour {
+            border-radius: 999px;
+            background-color: rgba(148, 163, 184, 0.08);
+            padding: 0.55rem 1.1rem;
+            letter-spacing: 0.01em;
+            transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        .btn-retour:hover {
+            background-color: rgba(59, 130, 246, 0.14);
+            border-color: #3B82F6;
+            color: #F8FAFC;
+            transform: translateY(-1px);
+        }
+        .btn-fullscreen {
+            border-radius: 999px;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+            transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-fullscreen:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+        }
+        .teacher-navigation {
+            gap: 0.3rem;
+            background-color: rgba(148, 163, 184, 0.07);
+            padding: 0.3rem;
+            border-radius: 999px;
+        }
+        .tab-btn {
+            border-radius: 999px;
+            padding: 0.5rem 1.1rem;
+            transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active {
+            background-color: #3B82F6;
+            color: #FFFFFF;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+        }
+        body.light-theme .btn-retour { background-color: #F8FAFC; }
+        body.light-theme .teacher-navigation { background-color: #EEF2F7; }
+        body.light-theme .tab-btn.active { background-color: #3B82F6; color: #FFFFFF; }
 
         /* ❖ Le fondu progressif des réponses : à chaque fragment reçu du
            flux SSE, la bulle de réponse est légèrement estompée puis
@@ -281,7 +342,9 @@
                 <div class="glass-card info-box news-box">
                     <h4>📌 Journal de Bord</h4>
                     <ul>
-                        <li><strong>🎓 Nouveau : La Boussole Universitaire</strong><br>Bacheliers, simulez dès maintenant vos chances d'affectation dans les universités publiques selon l'algorithme officiel du MESRS. <em>Testez le simulateur en accès libre ci-dessus.</em></li>
+                        <li><strong>🧭 Le Conseiller Universitaire s'affine</strong><br>L'orientation post-bac s'appuie désormais sur un profil complet (personnalité, méthode de travail, motivation) pour des recommandations plus fines — et son accès est maintenant gratuit pour tous les bacheliers.</li>
+                        <li><strong>💬 Un accueil qui guide, plus jamais une page blanche</strong><br>L'Espace de Préparation et l'Académie proposent désormais des suggestions de démarrage dès l'ouverture. L'Espace Enseignant (Atelier, Forge, Cabinet) fait de même : chaque outil se présente et propose un exemple concret à sa première visite.</li>
+                        <li><strong>🎓 La Boussole Universitaire</strong><br>Bacheliers, simulez dès maintenant vos chances d'affectation dans les universités publiques selon l'algorithme officiel du MESRS. <em>Testez le simulateur en accès libre ci-dessus.</em></li>
                         <li><strong>Version 2.0 (Lancement Global)</strong><br>Déploiement intégral de toutes les matières du secondaire général (de la 6ème à la Terminale).</li>
                         <li>Intégration des 5 Pôles d'Excellence : Sciences Exactes, Sciences Expérimentales, Lettres & Sciences Humaines, Langues Vivantes, et Arts.</li>
                         <li>Création de "L'Espace de Préparation" (Accès libre et sécurisé).</li>
@@ -453,7 +516,7 @@
                 ← Retour au menu
             </button>
             <button id="btn-theme" class="btn-retour btn-theme-toggle" style="margin-left: 1rem;" onclick="toggleTheme()">
-                Mode Clair
+                ☀️ Mode Clair
             </button>
             <button id="btn-fullscreen" class="btn-fullscreen" onclick="toggleFullScreen()">
                 ⛶ Plein Écran
@@ -508,6 +571,11 @@
                     <div class="message system-message">Bienvenue dans l'Atelier. Je suis le Concepteur Universel. Précisez votre matière, classe et durée pour concevoir une évaluation APC.</div>
                 </div>
                 <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Je veux créer une nouvelle évaluation, aide-moi à cadrer matière, classe et durée.">📝 Nouvelle évaluation</button>
+                        <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Ajoute des références ou sources fiables à la dernière évaluation générée.">📚 Ajouter des références</button>
+                        <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Générer une variante</button>
+                    </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('atelier-chat-history')" title="Joindre un texte source">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
@@ -527,6 +595,11 @@
                     <div class="message system-message">Bienvenue dans la Forge. Je suis l'Assistant Pédagogique. Précisez votre contexte pour structurer votre fiche de leçon.</div>
                 </div>
                 <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion" data-outil="forge" data-message="Je veux créer une nouvelle fiche de leçon, aide-moi à cadrer matière, classe et chapitre.">📖 Nouvelle fiche de leçon</button>
+                        <button type="button" class="btn-suggestion" data-outil="forge" data-message="Ajoute des activités ou exercices d'application à la dernière fiche.">🧩 Ajouter des activités</button>
+                        <button type="button" class="btn-suggestion" data-outil="forge" data-message="Actualise l'entête de la dernière fiche (identification, objectifs, prérequis).">🔖 Actualiser l'entête</button>
+                    </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
@@ -546,6 +619,11 @@
                     <div class="message system-message">Bienvenue dans le Cabinet d'Étude. Je suis le Consultant Pédagogique. Quelle difficulté rencontrez-vous dans votre enseignement ?</div>
                 </div>
                 <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion" data-outil="cabinet" data-message="J'ai une situation-problème à te soumettre, aide-moi à l'analyser.">💡 Une situation-problème</button>
+                        <button type="button" class="btn-suggestion" data-outil="cabinet" data-message="Donne-moi un conseil pédagogique pour un point du programme que je maîtrise moins.">🧑‍🏫 Conseil pédagogique</button>
+                        <button type="button" class="btn-suggestion" data-outil="cabinet" data-message="Aide-moi à analyser une difficulté récurrente rencontrée avec mes élèves.">📊 Analyser une difficulté</button>
+                    </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
