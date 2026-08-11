@@ -131,7 +131,16 @@
            clair (le badge bleu du T, lui, reste lisible dans les deux cas
            grâce à son propre fond). */
         .brand-text h1 { display: inline-flex; align-items: center; }
-        .logo-eduka, .logo-chat { color: #F8FAFC; }
+        /* ❖ "chat" doit rester blanc uni -- réinitialisation explicite au
+           cas où une règle antérieure (dégradé/text-fill transparent sur
+           .logo-chat) traînerait encore dans style.css ou une mise en cache. */
+        .logo-eduka, .logo-chat {
+            color: #F8FAFC !important;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: #F8FAFC !important;
+        }
         .logo-t {
             background-color: #3B82F6;
             color: #F8FAFC;
@@ -144,7 +153,10 @@
             font-size: 0.72em;
             margin: 0 2px;
         }
-        body.light-theme .logo-eduka, body.light-theme .logo-chat { color: #0F172A; }
+        body.light-theme .logo-eduka, body.light-theme .logo-chat {
+            color: #0F172A !important;
+            -webkit-text-fill-color: #0F172A !important;
+        }
         body.light-theme .message-actions .btn-action-doc {
             border-color: rgba(100, 116, 139, 0.4);
             color: #64748B;
