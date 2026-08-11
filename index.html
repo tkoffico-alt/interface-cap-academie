@@ -31,6 +31,25 @@
             .chat-input-wrapper { gap: 4px; }
         }
 
+        /* ❖ Les suggestions rapides : un élève qui ne sait pas quoi demander
+           (surtout un premier contact, ou un jour sans idée précise) peut
+           cliquer plutôt que d'affronter un champ vide. Toujours visibles,
+           jamais obligatoires — un simple raccourci, voir envoyerSuggestionRapide()
+           dans app.js. */
+        .suggestions-rapides {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            padding: 0 4px 8px 4px;
+        }
+        .btn-suggestion {
+            background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;
+            border-radius: 999px; padding: 6px 12px; font-size: 0.82em;
+            cursor: pointer; white-space: nowrap; transition: background-color 0.15s ease;
+        }
+        .btn-suggestion:hover, .btn-suggestion:active { background-color: #DBEAFE; }
+        @media (max-width: 420px) {
+            .btn-suggestion { font-size: 0.76em; padding: 5px 10px; }
+        }
+
         /* ❖ Le fondu progressif des réponses : à chaque fragment reçu du
            flux SSE, la bulle de réponse est légèrement estompée puis
            reprend son opacité pleine, au lieu d'un remplacement sec du
@@ -401,6 +420,12 @@
                     <div class="message system-message">Bienvenue dans l'Espace de Préparation. Posez votre question pour commencer.</div>
                 </div>
                 <div class="chat-input-area">
+                    <div id="sas-suggestions-rapides" class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion" data-message="Je ne sais pas par où commencer aujourd'hui, guide-moi.">🧭 Guide-moi</button>
+                        <button type="button" class="btn-suggestion" data-message="Je veux réviser un chapitre, aide-moi à choisir lequel.">📖 Réviser un chapitre</button>
+                        <button type="button" class="btn-suggestion" data-message="J'ai un exercice précis sur lequel je bloque, je vais te l'expliquer.">✏️ Un exercice précis</button>
+                        <button type="button" class="btn-suggestion" data-message="C'est les vacances : aide-moi à préparer la rentrée prochaine.">🌴 Préparer la rentrée</button>
+                    </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un document">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
