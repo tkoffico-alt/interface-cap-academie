@@ -78,6 +78,37 @@
             .btn-suggestion { font-size: 0.76em; padding: 5px 10px; }
         }
 
+        /* ❖ Allègement des boutons "Copier pour Word" / "Imprimer / PDF" :
+           en style.css ils sont volumineux (padding 6px 12px, bordure pleine
+           bleue, 0.85rem) — pensés comme des actions principales alors que
+           ce sont des actions secondaires sous chaque réponse. On les passe
+           en petites puces discrètes (gris neutre au repos, bleu seulement
+           au survol), plus proches d'icônes d'action que de boutons. */
+        .message-actions { gap: 6px; margin-top: 10px; padding-top: 8px; }
+        .btn-action-doc {
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            color: #94A3B8;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            gap: 4px;
+        }
+        .btn-action-doc:hover {
+            border-color: #3B82F6;
+            color: #60A5FA;
+            background-color: rgba(59, 130, 246, 0.08);
+        }
+        body.light-theme .btn-action-doc {
+            border-color: rgba(100, 116, 139, 0.4);
+            color: #64748B;
+        }
+        body.light-theme .btn-action-doc:hover {
+            border-color: #3B82F6;
+            color: #2563EB;
+            background-color: rgba(59, 130, 246, 0.08);
+        }
+
         /* ❖ Le fondu progressif des réponses : à chaque fragment reçu du
            flux SSE, la bulle de réponse est légèrement estompée puis
            reprend son opacité pleine, au lieu d'un remplacement sec du
