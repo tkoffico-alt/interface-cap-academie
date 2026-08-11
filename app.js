@@ -17,19 +17,45 @@ let gestionStressActive = "";
 // la même fenêtre de 800ms : le premier des deux qui agit désarme l'autre.
 let sasPremierEchangeEnAttente = false;
 
-// ❖ LES SUGGESTIONS RAPIDES DU SAS/ACADÉMIE ❖
-// Toujours visibles, jamais obligatoires : un élève qui ne sait pas quoi
-// demander (premier contact ou simple jour sans idée précise) peut cliquer
-// plutôt que d'affronter un champ vide. Écouteur délégué sur document pour
-// fonctionner quel que soit le moment où les boutons apparaissent dans le DOM.
+// ❖ L'AMORÇAGE AUTOMATIQUE DE L'ESPACE ENSEIGNANT (Atelier, Forge, Cabinet) :
+// même logique que le Sas côté élève — un enseignant qui ouvre un outil pour
+// la première fois sur cet appareil ne doit jamais affronter un champ vide
+// en silence. outilsDejaAmorces évite un double déclenchement si l'on
+// bascule rapidement d'onglet avant la fin du premier échange (le vrai
+// garde-fou inter-sessions reste l'historique localStorage, voir
+// switchTeacherTool ci-dessous).
+let outilsDejaAmorces = new Set();
+const MESSAGES_AMORCAGE_ENSEIGNANT = {
+    atelier: "C'est ma première visite dans l'Atelier des Évaluations : présente-moi en quelques lignes ce que tu peux concevoir ici, puis propose-moi un exemple concret pour démarrer.",
+    forge: "C'est ma première visite dans la Forge des Leçons : présente-moi en quelques lignes ce que tu peux produire ici, puis propose-moi un exemple concret pour démarrer.",
+    cabinet: "C'est ma première visite dans le Cabinet d'Étude : présente-moi en quelques lignes comment tu peux m'accompagner ici, puis propose-moi un exemple concret pour démarrer."
+};
+
+// ❖ LES SUGGESTIONS RAPIDES (Sas/Académie + Espace Enseignant) ❖
+// Toujours visibles, jamais obligatoires : un élève ou un enseignant qui ne
+// sait pas quoi demander peut cliquer plutôt que d'affronter un champ vide.
+// Écouteur délégué sur document pour fonctionner quel que soit le moment où
+// les boutons apparaissent dans le DOM. data-outil distingue le Sas (valeur
+// par défaut "sas", champ dédié) des outils enseignants (routés vers
+// sendTeacherMessage).
 document.addEventListener('click', function (evenement) {
     const bouton = evenement.target.closest('.btn-suggestion');
     if (!bouton) return;
-    sasPremierEchangeEnAttente = false;
-    const champ = document.getElementById('sas-user-input');
-    if (champ && !champ.disabled) {
-        champ.value = bouton.dataset.message || "";
-        sendSasMessage();
+    const outil = bouton.dataset.outil || 'sas';
+    if (outil === 'sas') {
+        sasPremierEchangeEnAttente = false;
+        const champ = document.getElementById('sas-user-input');
+        if (champ && !champ.disabled) {
+            champ.value = bouton.dataset.message || "";
+            sendSasMessage();
+        }
+    } else {
+        outilsDejaAmorces.add(outil); // un clic manuel vaut amorçage : plus d'auto-envoi ensuite
+        const champ = document.getElementById(`${outil}-user-input`);
+        if (champ && !champ.disabled) {
+            champ.value = bouton.dataset.message || "";
+            sendTeacherMessage(outil);
+        }
     }
 });
 
@@ -369,6 +395,22 @@ function switchTeacherTool(toolID) {
             activeContainer.webkitRequestFullscreen();
         }
     }
+
+    // ❖ AMORÇAGE AUTOMATIQUE DE L'ESPACE ENSEIGNANT : au tout premier passage
+    // sur cet outil pour cet appareil (aucun historique localStorage), l'IA
+    // se présente et propose un exemple concret plutôt que de laisser
+    // l'enseignant face au message d'accueil statique et un champ vide.
+    // Se déclenche une seule fois par outil et par appareil.
+    if (!outilsDejaAmorces.has(toolID) && !localStorage.getItem(`eduka_chat_${toolID}`)) {
+        outilsDejaAmorces.add(toolID);
+        setTimeout(() => {
+            const inputField = document.getElementById(`${toolID}-user-input`);
+            if (inputField && !inputField.value.trim() && !inputField.disabled) {
+                inputField.value = MESSAGES_AMORCAGE_ENSEIGNANT[toolID] || "C'est ma première visite ici, présente-moi cet espace et propose-moi un exemple concret pour démarrer.";
+                sendTeacherMessage(toolID);
+            }
+        }, 800);
+    }
 }
 
 function goHome() {
@@ -476,9 +518,9 @@ function updateThemeButtonUI(isLight) {
     const themeBtn = document.getElementById('btn-theme');
     if (themeBtn) {
         if (isLight) {
-            themeBtn.innerHTML = "Mode Sombre";
+            themeBtn.innerHTML = "🌙 Mode Sombre";
         } else {
-            themeBtn.innerHTML = "Mode Clair";
+            themeBtn.innerHTML = "☀️ Mode Clair";
         }
     }
 }
