@@ -36,14 +36,24 @@
            cliquer plutôt que d'affronter un champ vide. Toujours visibles,
            jamais obligatoires — un simple raccourci, voir envoyerSuggestionRapide()
            dans app.js. */
+        /* ❖ Bande horizontale défilante plutôt qu'un retour à la ligne : sur
+           mobile étroit, un flex-wrap laissait certains libellés tronqués à
+           gauche (largeur du conteneur mal calculée selon les écrans). Une
+           bande qui défile latéralement (comme les suggestions rapides des
+           apps de messagerie) est beaucoup plus robuste, quel que soit
+           l'écran, et n'a jamais besoin de couper un texte. */
         .suggestions-rapides {
-            display: flex; flex-wrap: wrap; gap: 6px;
+            display: flex; flex-wrap: nowrap; gap: 6px;
             padding: 0 4px 8px 4px;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
         }
+        .suggestions-rapides::-webkit-scrollbar { height: 4px; }
         .btn-suggestion {
             background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;
             border-radius: 999px; padding: 6px 12px; font-size: 0.82em;
             cursor: pointer; white-space: nowrap; transition: background-color 0.15s ease;
+            flex-shrink: 0;
         }
         .btn-suggestion:hover, .btn-suggestion:active { background-color: #DBEAFE; }
         @media (max-width: 420px) {
