@@ -282,6 +282,23 @@ function validerProfilEtEntrer() {
             }
 
             chatHistory.appendChild(welcomeDiv);
+
+            // ❖ L'AMORÇAGE AUTOMATIQUE (première visite uniquement) :
+            // un élève qui découvre l'outil face à un champ vide ne sait
+            // souvent pas quoi demander et se décourage avant même de
+            // commencer. L'absence d'historique sauvegardé ci-dessus prouve
+            // qu'il s'agit d'un tout premier contact avec CET avatar sur CET
+            // appareil (le drapeau se pose tout seul dès qu'un échange a lieu,
+            // voir eduka_chat_sas_${avatarActif} plus haut) — donc on amorce
+            // l'échange à sa place. Aux visites suivantes, l'historique existera
+            // déjà et cette branche ne sera plus jamais exécutée.
+            setTimeout(() => {
+                const inputField = document.getElementById('sas-user-input');
+                if (inputField && !inputField.value.trim()) {
+                    inputField.value = `C'est ma première fois ici, aide-moi à démarrer en ${formaterNomMatiere(avatarActif)}.`;
+                    sendSasMessage();
+                }
+            }, 800);
         }
 
         scrollToBottom('sas-chat-history');
