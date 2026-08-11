@@ -112,6 +112,39 @@
             color: #60A5FA;
             background-color: rgba(59, 130, 246, 0.08);
         }
+        /* ❖ Marque ™ : discrète, en attendant le dépôt officiel auprès de
+           l'OAPI -- posée sur le wordmark principal (en-tête), au pied de
+           page, et sur le tampon des documents générés (Atelier/Forge) :
+           les points de contact qui comptent réellement pour dissuader une
+           reprise du nom, sans surcharger chaque mention en prose. */
+        .marque-tm {
+            font-size: 0.45em;
+            vertical-align: super;
+            opacity: 0.65;
+            margin-left: 2px;
+            font-weight: 400;
+        }
+        /* ❖ Graphie retenue : "bulle intégrée" -- le T pivot d'EdukaTchat
+           devient un petit pictogramme (coin inférieur gauche non arrondi,
+           comme une bulle de dialogue), sur fond bleu. Eduka/chat restent
+           blancs en thème sombre, et basculent en texte foncé en thème
+           clair (le badge bleu du T, lui, reste lisible dans les deux cas
+           grâce à son propre fond). */
+        .brand-text h1 { display: inline-flex; align-items: center; }
+        .logo-eduka, .logo-chat { color: #F8FAFC; }
+        .logo-t {
+            background-color: #3B82F6;
+            color: #F8FAFC;
+            width: 24px;
+            height: 24px;
+            border-radius: 7px 7px 7px 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72em;
+            margin: 0 2px;
+        }
+        body.light-theme .logo-eduka, body.light-theme .logo-chat { color: #0F172A; }
         body.light-theme .message-actions .btn-action-doc {
             border-color: rgba(100, 116, 139, 0.4);
             color: #64748B;
@@ -202,7 +235,7 @@
            <!-- Nous retirons le margin-right et confions le style au CSS -->
            <img src="logo-entete.png" alt="Logo EdukaTchat" class="logo-signature">
             <div class="brand-text">
-                <h1><span class="logo-eduka">Eduka</span><span class="logo-t">T</span><span class="logo-chat">chat</span></h1>
+                <h1><span class="logo-eduka">Eduka</span><span class="logo-t">T</span><span class="logo-chat">chat</span><sup class="marque-tm" title="Marque en cours de dépôt à l'OAPI">™</sup></h1>
                 <p>La Plateforme Numérique de l'Enseignement Ivoirien</p>
             </div>
         </div>
@@ -673,7 +706,7 @@
             </span>
         </div>
         <!-- Le Sceau et les Lois -->
-        © 2026 EdukaTchat. Tous droits réservés.<br>
+        © 2026 EdukaTchat™. Tous droits réservés.<br>
         <span style="font-size: 0.85em; color: #94A3B8;">EdukaTchat est un service édité et exploité par TANOH KOFFI CONSTANT, Côte d'Ivoire.</span><br>
         <div style="margin-top: 8px;">
             <a href="politique.html" style="color: #60A5FA; text-decoration: none; transition: color 0.2s;">Politique de Confidentialité</a>
