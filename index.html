@@ -42,6 +42,24 @@
            bande qui défile latéralement (comme les suggestions rapides des
            apps de messagerie) est beaucoup plus robuste, quel que soit
            l'écran, et n'a jamais besoin de couper un texte. */
+        /* ❖ Cause racine du bug "boutons invisibles en portrait" : dans
+           style.css, .chat-input-area est en display:flex SANS
+           flex-direction précisé (donc "row" par défaut), conçu à l'origine
+           pour un seul enfant (.chat-input-wrapper). Depuis l'ajout de la
+           bande de suggestions, elle est devenue un 2e enfant qui se
+           partage la largeur EN LIGNE avec le champ de saisie au lieu de
+           s'empiler au-dessus — sur un écran portrait étroit, l'espace
+           restant devient quasi nul et la bande disparaît. On force donc
+           un empilement vertical propre, spécifiquement pour ce conteneur. */
+        #container-sas-custom .chat-input-area {
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        #container-sas-custom .chat-input-area > .suggestions-rapides {
+            width: 100%;
+            max-width: 1000px;
+        }
         .suggestions-rapides {
             display: flex; flex-wrap: nowrap; gap: 6px;
             padding: 0 4px 8px 4px;
