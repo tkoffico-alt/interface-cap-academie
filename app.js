@@ -1132,7 +1132,16 @@ async function sendTeacherMessage(outil) {
 // =======================================================================
 // ❖ OUTILS D'ÉDITION PURES ET VALIDATION ❖
 // =======================================================================
-const urlSceau = "https://github.com/tkoffico-alt/interface-cap-academie/blob/main/logo-signature-doc.png?raw=true";
+// ❖ Cause probable de l'affichage intermittent du logo signalé en test réel :
+// ce lien pointait vers la page "blob" de GitHub avec ?raw=true, qui répond
+// par une redirection 302 vers raw.githubusercontent.com -- suivie de façon
+// peu fiable selon le contexte de rendu (impression, export PDF, connexion
+// mobile instable), et parfois soumise aux limites/anti-hotlinking de GitHub.
+// logo-entete.png (utilisé pour l'en-tête du site) fonctionne de façon fiable
+// via un chemin relatif local -- même logique appliquée ici. IMPORTANT :
+// s'assurer que le fichier logo-signature-doc.png est bien déployé à la
+// racine du site (même dossier que logo-entete.png) sous ce nom exact.
+const urlSceau = "logo-signature-doc.png";
 
 function imprimerDocument(bouton) {
     const documentDiv = bouton.closest('.bot-message');
@@ -1178,7 +1187,7 @@ function imprimerDocument(bouton) {
 
             <div style="margin-top: 50px; text-align: center; border-top: 2px solid #E5E7EB; padding-top: 20px; white-space: normal; line-height: 1.2;">
                 <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; display: block; margin: 0 auto;">
-                <strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px; display: block; margin-top: -12px;">EdukaTchat</strong>
+                <strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px; display: block; margin-top: -12px;">EdukaTchat™</strong>
                 <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 2px;">© Propriété Intellectuelle Exclusive | Document officiel généré par IA</span>
             </div>
         </div>`;
@@ -1199,12 +1208,12 @@ function copierTexte(bouton) {
         <br><br>
         <div style="text-align: center; font-family: Arial, sans-serif; border-top: 2px solid #E5E7EB; padding-top: 20px;">
             <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; display: block; margin: 0 auto;">
-            <strong style="font-size: 14pt; color: #1F2937; display: block; margin-top: -12px;">EdukaTchat</strong>
+            <strong style="font-size: 14pt; color: #1F2937; display: block; margin-top: -12px;">EdukaTchat™</strong>
             <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 2px;">© Propriété Intellectuelle Exclusive</span>
         </div>`;
 
     const blobHtml = new Blob([contenuHTML + signatureHTML], { type: "text/html" });
-    const blobText = new Blob([texteBrut + "\n\n© EdukaTchat - Propriété Intellectuelle Exclusive"], { type: "text/plain" });
+    const blobText = new Blob([texteBrut + "\n\n© EdukaTchat™ - Propriété Intellectuelle Exclusive"], { type: "text/plain" });
 
     try {
         const data = [new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })];
@@ -1212,7 +1221,7 @@ function copierTexte(bouton) {
             animerBoutonCopie(bouton);
         });
     } catch (err) {
-        navigator.clipboard.writeText(texteBrut + "\n\n© EdukaTchat - Propriété Intellectuelle").then(() => {
+        navigator.clipboard.writeText(texteBrut + "\n\n© EdukaTchat™ - Propriété Intellectuelle").then(() => {
             animerBoutonCopie(bouton);
         });
     }
