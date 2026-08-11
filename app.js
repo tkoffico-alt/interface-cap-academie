@@ -12,6 +12,27 @@ let classeActive = "";
 let methodeTravailActive = "";
 let gestionStressActive = "";
 
+// ❖ Garde-fou anti double-envoi entre l'amorçage automatique (setTimeout,
+// voir validerProfilEtEntrer) et un clic sur une suggestion rapide pendant
+// la même fenêtre de 800ms : le premier des deux qui agit désarme l'autre.
+let sasPremierEchangeEnAttente = false;
+
+// ❖ LES SUGGESTIONS RAPIDES DU SAS/ACADÉMIE ❖
+// Toujours visibles, jamais obligatoires : un élève qui ne sait pas quoi
+// demander (premier contact ou simple jour sans idée précise) peut cliquer
+// plutôt que d'affronter un champ vide. Écouteur délégué sur document pour
+// fonctionner quel que soit le moment où les boutons apparaissent dans le DOM.
+document.addEventListener('click', function (evenement) {
+    const bouton = evenement.target.closest('.btn-suggestion');
+    if (!bouton) return;
+    sasPremierEchangeEnAttente = false;
+    const champ = document.getElementById('sas-user-input');
+    if (champ && !champ.disabled) {
+        champ.value = bouton.dataset.message || "";
+        sendSasMessage();
+    }
+});
+
 // =======================================================================
 // ❖ LA GESTION DES ESPACES ET DE L'AIGUILLAGE ❖
 // =======================================================================
@@ -292,12 +313,14 @@ function validerProfilEtEntrer() {
             // voir eduka_chat_sas_${avatarActif} plus haut) — donc on amorce
             // l'échange à sa place. Aux visites suivantes, l'historique existera
             // déjà et cette branche ne sera plus jamais exécutée.
+            sasPremierEchangeEnAttente = true;
             setTimeout(() => {
                 const inputField = document.getElementById('sas-user-input');
-                if (inputField && !inputField.value.trim()) {
+                if (sasPremierEchangeEnAttente && inputField && !inputField.value.trim()) {
                     inputField.value = `C'est ma première fois ici, aide-moi à démarrer en ${formaterNomMatiere(avatarActif)}.`;
                     sendSasMessage();
                 }
+                sasPremierEchangeEnAttente = false;
             }, 800);
         }
 
