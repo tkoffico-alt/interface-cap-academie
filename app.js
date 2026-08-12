@@ -1087,8 +1087,8 @@ async function sendSasMessage() {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
             actionsDiv.innerHTML = `
-                <button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier pour Word</button>
-                <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer / Enregistrer en PDF</button>
+                <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
+                <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
             `;
             botLoadingDiv.appendChild(actionsDiv);
         }
@@ -1232,8 +1232,8 @@ async function sendTeacherMessage(outil) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
             actionsDiv.innerHTML = `
-                <button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier pour Word</button>
-                <button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer / Enregistrer en PDF</button>
+                <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
+                <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
             `;
             botLoadingDiv.appendChild(actionsDiv);
         }
@@ -1712,7 +1712,7 @@ async function sendAreneMessage() {
         if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
-            actionsDiv.innerHTML = `<button class="btn-action-doc" onclick="copierTexte(this)">📋 Copier</button><button class="btn-action-doc" onclick="imprimerDocument(this)">🖨️ Imprimer</button>`;
+            actionsDiv.innerHTML = `<button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button><button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>`;
             botLoadingDiv.appendChild(actionsDiv);
         }
     } catch (error) {
