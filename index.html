@@ -265,6 +265,121 @@
             transform: scale(1.1);
         }
 
+        /* ❖ Boutons de la barre d'outils en icônes rondes minimalistes
+           (Retour, Thème, Mascotte, Plein Écran) : dégage l'en-tête pour
+           laisser toute la place à la concentration, plutôt que des
+           libellés textuels. L'intitulé reste disponible au survol/lecture
+           d'écran via title/aria-label. Ajouté APRÈS les règles .btn-retour
+           / .btn-fullscreen existantes : à spécificité égale, l'ordre dans
+           la feuille de style fait gagner cette règle. */
+        .btn-icon {
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            line-height: 1;
+        }
+
+        /* ❖ Bulles de conversation adoucies : coins plus arrondis façon
+           "bulle de BD" moderne, et légère atténuation du coin pointu
+           (au lieu d'un angle droit sec) pour casser la rigidité
+           géométrique tout en gardant la silhouette reconnaissable d'une
+           bulle de chat. */
+        .message {
+            border-radius: 20px;
+        }
+        .user-message {
+            background: linear-gradient(135deg, #3B82F6 0%, #6366F1 100%);
+            border-bottom-right-radius: 6px;
+        }
+        .bot-message {
+            border-bottom-left-radius: 6px;
+        }
+
+        /* ❖ Barre de saisie plus ronde et invitante : hauteur légèrement
+           augmentée, bordure adoucie, très légère ombre portée, extrémités
+           fortement arrondies (forme "pilule"). */
+        .chat-input-wrapper input {
+            padding: 1.05rem 1.4rem;
+            border-radius: 999px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+        }
+        .chat-input-wrapper input:focus {
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.25);
+        }
+        body.light-theme .chat-input-wrapper input {
+            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.12);
+        }
+        body.light-theme .chat-input-wrapper input:focus {
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+        }
+
+        /* ❖ Fond légèrement teinté plutôt que blanc pur : moins "clinique",
+           plus confortable pour les yeux lors de longues lectures. Ne
+           touche que l'espace de travail (chat), pas l'accueil (qui garde
+           son dégradé propre). */
+        body.light-theme #app-view,
+        body.light-theme .custom-chat-container {
+            background-color: #F7F5F2;
+        }
+        body.light-theme .chat-input-wrapper input {
+            background-color: #FFFFFF;
+        }
+
+        /* ❖ Mode Mascotte (optionnel, activé/désactivé via le bouton dédié
+           de la barre d'outils, mémorisé par appareil comme le thème) : un
+           petit hibou compagnon en médaillon au coin de chaque réponse de
+           l'IA dans l'Espace de Préparation, avec une expression qui suit
+           le contexte -- réflexion pendant le chargement, sourire à
+           l'arrivée d'une vraie réponse, air désolé en cas d'erreur.
+           Purement visuel : ne modifie ni la logique de conversation ni le
+           contenu envoyé au serveur. Voir creerAvatarMascotte() dans
+           app.js. */
+        body.mode-mascotte .bot-message {
+            position: relative;
+            margin-left: 16px;
+        }
+        .mascotte-avatar {
+            position: absolute;
+            top: -14px;
+            left: -16px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #FDE68A;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            animation: mascotteApparition 0.25s ease-out;
+        }
+        .mascotte-avatar svg {
+            width: 23px;
+            height: 23px;
+        }
+        @keyframes mascotteApparition {
+            0% { opacity: 0; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .mascotte-etincelle {
+            position: absolute;
+            top: -8px;
+            right: -6px;
+            font-size: 1.05rem;
+            animation: mascotteEtincelle 1.4s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes mascotteEtincelle {
+            0% { opacity: 0; transform: translateY(4px) scale(0.5) rotate(-10deg); }
+            30% { opacity: 1; transform: translateY(-6px) scale(1.15) rotate(8deg); }
+            100% { opacity: 0; transform: translateY(-18px) scale(0.9) rotate(15deg); }
+        }
+
         /* ❖ Le fondu progressif des réponses : à chaque fragment reçu du
            flux SSE, la bulle de réponse est légèrement estompée puis
            reprend son opacité pleine, au lieu d'un remplacement sec du
@@ -607,14 +722,17 @@
     <!-- === ESPACE DE TRAVAIL === -->
     <div id="app-view">
         <div class="toolbar">
-            <button class="btn-retour" onclick="goHome()">
-                ← Retour au menu
+            <button class="btn-retour btn-icon" onclick="goHome()" title="Retour au menu" aria-label="Retour au menu">
+                ←
             </button>
-            <button id="btn-theme" class="btn-retour btn-theme-toggle" style="margin-left: 1rem;" onclick="toggleTheme()">
-                ☀️ Mode Clair
+            <button id="btn-theme" class="btn-retour btn-icon btn-theme-toggle" style="margin-left: 1rem;" onclick="toggleTheme()" title="Changer de thème" aria-label="Changer de thème">
+                ☀️
             </button>
-            <button id="btn-fullscreen" class="btn-fullscreen" onclick="toggleFullScreen()">
-                ⛶ Plein Écran
+            <button id="btn-mascotte" class="btn-retour btn-icon" onclick="toggleMascotte()" title="Activer la mascotte" aria-label="Activer ou désactiver la mascotte">
+                🦉
+            </button>
+            <button id="btn-fullscreen" class="btn-fullscreen btn-icon" onclick="toggleFullScreen()" title="Plein écran" aria-label="Plein écran">
+                ⛶
             </button>
 
             <div id="teacher-tabs-container" class="teacher-navigation">
