@@ -206,14 +206,64 @@
             transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
         }
         .tab-btn:hover { transform: translateY(-1px); }
+        /* ❖ Trois identités visuelles distinctes plutôt qu'un bleu unique
+           pour les trois outils de l'Espace Enseignant -- chaque teinte fait
+           écho au symbole déjà choisi pour l'outil : bleu (❖ Atelier,
+           couleur déjà associée à la précision/l'évaluation), ambre (✦
+           Forge, la chaleur du feu qui façonne), violet (⚜ Cabinet, déjà la
+           couleur du bouton d'abonnement Enseignant -- ton feutré, propice
+           à la réflexion). Repli générique conservé pour tout .tab-btn.active
+           qui n'aurait pas d'identifiant précis. */
         .tab-btn.active {
             background-color: #3B82F6;
             color: #FFFFFF;
             box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
         }
+        #tab-atelier.active {
+            background-color: #3B82F6;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+        }
+        #tab-forge.active {
+            background-color: #F59E0B;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+        }
+        #tab-cabinet.active {
+            background-color: #8B5CF6;
+            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.35);
+        }
         body.light-theme .btn-retour { background-color: #F8FAFC; }
         body.light-theme .teacher-navigation { background-color: #EEF2F7; }
         body.light-theme .tab-btn.active { background-color: #3B82F6; color: #FFFFFF; }
+        body.light-theme #tab-atelier.active { background-color: #3B82F6; }
+        body.light-theme #tab-forge.active { background-color: #F59E0B; }
+        body.light-theme #tab-cabinet.active { background-color: #8B5CF6; }
+
+        /* ❖ Réutiliser une question déjà posée : petit bouton circulaire
+           discret ajouté à la fin de chaque bulle utilisateur, qui reverse
+           le texte dans le champ de saisie au lieu d'obliger à le retaper.
+           Voir creerBoutonReutiliser() dans app.js. */
+        .btn-reutiliser-question {
+            background: rgba(255, 255, 255, 0.18);
+            border: none;
+            color: #F8FAFC;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            line-height: 1;
+            cursor: pointer;
+            margin-left: 8px;
+            vertical-align: middle;
+            transition: background-color 0.15s ease, transform 0.15s ease;
+            flex-shrink: 0;
+        }
+        .btn-reutiliser-question:hover {
+            background: rgba(255, 255, 255, 0.32);
+            transform: scale(1.1);
+        }
 
         /* ❖ Le fondu progressif des réponses : à chaque fragment reçu du
            flux SSE, la bulle de réponse est légèrement estompée puis
