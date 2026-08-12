@@ -339,6 +339,23 @@
             line-height: 1;
         }
 
+        /* ❖ Correctif mobile portrait : dans style.css, une règle plus
+           ancienne empile la barre d'outils verticalement en dessous de
+           768px de large (pensée à l'époque pour des boutons à libellé
+           texte, trop larges pour tenir sur une ligne). Or 4 icônes rondes
+           de 42px tiennent très bien sur une seule ligne, même sur un
+           téléphone étroit -- cet empilement vertical n'a plus lieu d'être
+           et donnait l'impression d'une barre "désorganisée". On force donc
+           un alignement horizontal, quelle que soit la largeur d'écran. */
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: row;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.4rem;
+            }
+        }
+
         /* ❖ Bulles de conversation adoucies : coins plus arrondis façon
            "bulle de BD" moderne, et légère atténuation du coin pointu
            (au lieu d'un angle droit sec) pour casser la rigidité
