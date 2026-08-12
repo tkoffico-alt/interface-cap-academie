@@ -86,31 +86,87 @@
             .btn-suggestion { font-size: 0.76em; padding: 5px 10px; }
         }
 
-        /* ❖ Allègement des boutons "Copier pour Word" / "Imprimer / PDF" :
-           en style.css ils sont volumineux (padding 6px 12px, bordure pleine
-           bleue, 0.85rem) — pensés comme des actions principales alors que
-           ce sont des actions secondaires sous chaque réponse. On les passe
-           en petites puces discrètes (gris neutre au repos, bleu seulement
-           au survol), plus proches d'icônes d'action que de boutons. */
-        .message-actions { gap: 6px; margin-top: 10px; padding-top: 8px; }
+        /* ❖ Les suggestions du Sas en petites "cartes" pastel plutôt qu'une
+           bande de pilules uniformément bleues : chaque intention a sa
+           propre couleur douce, pour repérer d'un coup d'œil, et l'emoji
+           légèrement agrandi (dans son propre <span>) donne du caractère
+           sans surcharger le libellé. Forme "carte" (coins moins ronds
+           qu'une pilule pure) + ombre très légère pour l'effet "flottant". */
+        #sas-suggestions-rapides .btn-suggestion {
+            border-radius: 14px;
+            padding: 7px 13px;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+        #sas-suggestions-rapides .btn-suggestion:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
+        }
+        .suggestion-emoji {
+            font-size: 1.25em;
+            margin-right: 2px;
+            vertical-align: -2px;
+            display: inline-block;
+        }
+        #sas-suggestions-rapides .btn-suggestion-guide {
+            background-color: #E0E7FF; color: #4338CA; border-color: #C7D2FE;
+        }
+        #sas-suggestions-rapides .btn-suggestion-guide:hover { background-color: #C7D2FE; }
+        #sas-suggestions-rapides .btn-suggestion-reviser {
+            background-color: #D1FAE5; color: #047857; border-color: #A7F3D0;
+        }
+        #sas-suggestions-rapides .btn-suggestion-reviser:hover { background-color: #A7F3D0; }
+        #sas-suggestions-rapides .btn-suggestion-exercice {
+            background-color: #FFEDD5; color: #C2410C; border-color: #FED7AA;
+        }
+        #sas-suggestions-rapides .btn-suggestion-exercice:hover { background-color: #FED7AA; }
+        #sas-suggestions-rapides .btn-suggestion-rentree {
+            background-color: #EDE9FE; color: #6D28D9; border-color: #DDD6FE;
+        }
+        #sas-suggestions-rapides .btn-suggestion-rentree:hover { background-color: #DDD6FE; }
+        body.light-theme #sas-suggestions-rapides .btn-suggestion-guide { background-color: #E0E7FF; color: #4338CA; }
+        body.light-theme #sas-suggestions-rapides .btn-suggestion-reviser { background-color: #D1FAE5; color: #047857; }
+        body.light-theme #sas-suggestions-rapides .btn-suggestion-exercice { background-color: #FFEDD5; color: #C2410C; }
+        body.light-theme #sas-suggestions-rapides .btn-suggestion-rentree { background-color: #EDE9FE; color: #6D28D9; }
+
+        /* ❖ Deuxième passe d'allègement : les boutons "Copier pour Word" /
+           "Imprimer / PDF" ressemblaient encore à des boutons d'action
+           principaux (puces bien visibles) et laissaient un vide
+           disproportionné sous le texte à cause de leur rangée dédiée avec
+           séparateur. Ils passent en simples icônes grises, sans texte,
+           alignées à droite comme dans un coin discret de la bulle -- plus
+           de bordure pleine ni de ligne de séparation, une opacité réduite
+           au repos qui monte au survol/focus (le glyphe reste néanmoins
+           bien tappable sur mobile, où il n'y a pas de survol). */
+        .message-actions {
+            justify-content: flex-end;
+            gap: 2px;
+            margin-top: 4px;
+            padding-top: 0;
+            border-top: none;
+        }
         /* IMPORTANT : scopé à ".message-actions .btn-action-doc", pas à
            ".btn-action-doc" seule -- cette classe est réutilisée ailleurs
            (grille de matières, "Commencer le Chat", boutons Tally...) où
            elle doit garder sa taille normale. Un premier essai non-scopé
            avait réduit ces boutons-là par erreur. */
         .message-actions .btn-action-doc {
-            border: 1px solid rgba(148, 163, 184, 0.4);
+            border: none;
+            background: transparent;
             color: #94A3B8;
-            padding: 3px 9px;
-            border-radius: 999px;
-            font-size: 0.72rem;
-            font-weight: 500;
-            gap: 4px;
+            opacity: 0.5;
+            padding: 5px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            gap: 0;
+            transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
         }
-        .message-actions .btn-action-doc:hover {
-            border-color: #3B82F6;
-            color: #60A5FA;
-            background-color: rgba(59, 130, 246, 0.08);
+        .message-actions .btn-action-doc:hover,
+        .message-actions .btn-action-doc:focus-visible {
+            opacity: 1;
+            color: #3B82F6;
+            background-color: rgba(59, 130, 246, 0.1);
         }
         /* ❖ Marque ™ : discrète, en attendant le dépôt officiel auprès de
            l'OAPI -- posée sur le wordmark principal (en-tête), au pied de
@@ -158,11 +214,10 @@
             -webkit-text-fill-color: #0F172A !important;
         }
         body.light-theme .message-actions .btn-action-doc {
-            border-color: rgba(100, 116, 139, 0.4);
             color: #64748B;
         }
-        body.light-theme .message-actions .btn-action-doc:hover {
-            border-color: #3B82F6;
+        body.light-theme .message-actions .btn-action-doc:hover,
+        body.light-theme .message-actions .btn-action-doc:focus-visible {
             color: #2563EB;
             background-color: rgba(59, 130, 246, 0.08);
         }
@@ -756,10 +811,10 @@
                 </div>
                 <div class="chat-input-area">
                     <div id="sas-suggestions-rapides" class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion" data-message="Je ne sais pas par où commencer aujourd'hui, guide-moi.">🧭 Guide-moi</button>
-                        <button type="button" class="btn-suggestion" data-message="Je veux réviser un chapitre, aide-moi à choisir lequel.">📖 Réviser un chapitre</button>
-                        <button type="button" class="btn-suggestion" data-message="J'ai un exercice précis sur lequel je bloque, je vais te l'expliquer.">✏️ Un exercice précis</button>
-                        <button type="button" class="btn-suggestion" data-message="C'est les vacances : aide-moi à préparer la rentrée prochaine.">🌴 Préparer la rentrée</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-guide" data-message="Je ne sais pas par où commencer aujourd'hui, guide-moi."><span class="suggestion-emoji">🧭</span>Guide-moi</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-reviser" data-message="Je veux réviser un chapitre, aide-moi à choisir lequel."><span class="suggestion-emoji">📖</span>Réviser un chapitre</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-exercice" data-message="J'ai un exercice précis sur lequel je bloque, je vais te l'expliquer."><span class="suggestion-emoji">✏️</span>Un exercice précis</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-rentree" data-message="C'est les vacances : aide-moi à préparer la rentrée prochaine."><span class="suggestion-emoji">🌴</span>Préparer la rentrée</button>
                     </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un document">
