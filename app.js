@@ -508,6 +508,95 @@ function initTheme() {
     }
 }
 
+// ❖ Mode Mascotte : purement visuel, optionnel, mémorisé par appareil
+// (même mécanisme que le thème). Désactivé par défaut -- chacun choisit
+// l'habillage qui lui convient plutôt que de l'imposer.
+function initMascotte() {
+    const actif = localStorage.getItem('eduka_mascotte') === 'on';
+    if (actif) {
+        document.body.classList.add('mode-mascotte');
+    }
+    updateMascotteButtonUI(actif);
+}
+
+function toggleMascotte() {
+    const actif = document.body.classList.toggle('mode-mascotte');
+    localStorage.setItem('eduka_mascotte', actif ? 'on' : 'off');
+    updateMascotteButtonUI(actif);
+}
+
+function updateMascotteButtonUI(actif) {
+    const btn = document.getElementById('btn-mascotte');
+    if (btn) {
+        btn.style.opacity = actif ? '1' : '0.45';
+        btn.title = actif ? "Mascotte activée (cliquer pour désactiver)" : "Activer la mascotte";
+    }
+}
+
+// ❖ Le visage du hibou compagnon : trois expressions simples (réflexion,
+// succès, erreur) obtenues en ne faisant varier que les sourcils, les
+// pupilles et la bouche -- le reste du dessin (yeux, bec) reste
+// identique, pour une lecture claire même en tout petit format.
+function creerAvatarMascotte(etat) {
+    const expressions = {
+        reflexion: {
+            pupilleY: 9.4,
+            sourcils: '<path d="M6,7.3 h4" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,7.3 h4" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M9.5,17 h5" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>'
+        },
+        succes: {
+            pupilleY: 11,
+            sourcils: '<path d="M6,7 q2,-1.4 4,0" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,7 q2,-1.4 4,0" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M7.5,15.5 Q12,19.5 16.5,15.5" stroke="#78350F" stroke-width="1.3" stroke-linecap="round" fill="none"/>'
+        },
+        erreur: {
+            pupilleY: 11.6,
+            sourcils: '<path d="M6,7.6 q2,1.6 4,0.6" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,8.2 q2,-1.6 4,-0.6" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M8,17.5 Q12,15 16,17.5" stroke="#78350F" stroke-width="1.3" stroke-linecap="round" fill="none"/>'
+        }
+    };
+    const c = expressions[etat] || expressions.reflexion;
+    return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="8" cy="11" r="3.2" fill="#FFFFFF" stroke="#92400E" stroke-width="1"/>
+        <circle cx="16" cy="11" r="3.2" fill="#FFFFFF" stroke="#92400E" stroke-width="1"/>
+        <circle cx="8" cy="${c.pupilleY}" r="1.3" fill="#451A03"/>
+        <circle cx="16" cy="${c.pupilleY}" r="1.3" fill="#451A03"/>
+        ${c.sourcils}
+        <path d="M11,13.3 L13,13.3 L12,15.3 Z" fill="#92400E"/>
+        ${c.bouche}
+    </svg>`;
+}
+
+// ❖ Attache (ou met à jour) le médaillon-mascotte sur une bulle de
+// réponse -- ne fait rien si le Mode Mascotte est désactivé. Doit
+// toujours être appelé APRÈS toute réaffectation de innerHTML/textContent
+// sur la bulle (qui effacerait sinon l'avatar déjà posé).
+function ajouterMascotte(bulleDiv, etat) {
+    if (!document.body.classList.contains('mode-mascotte') || !bulleDiv) return;
+    let avatar = bulleDiv.querySelector('.mascotte-avatar');
+    if (!avatar) {
+        avatar = document.createElement('div');
+        avatar.className = 'mascotte-avatar';
+        bulleDiv.appendChild(avatar);
+    }
+    avatar.innerHTML = creerAvatarMascotte(etat);
+}
+
+// ❖ Petite étincelle d'encouragement, discrète et non-infantilisante --
+// une seule apparition brève au succès d'une réponse, jamais répétée ni
+// intrusive. Disparaît d'elle-même, aucune trace ne persiste dans
+// l'historique sauvegardé au-delà de son animation.
+function declencherEtincelleMascotte(bulleDiv) {
+    if (!document.body.classList.contains('mode-mascotte') || !bulleDiv) return;
+    const avatar = bulleDiv.querySelector('.mascotte-avatar');
+    if (!avatar) return;
+    const etincelle = document.createElement('span');
+    etincelle.className = 'mascotte-etincelle';
+    etincelle.textContent = '✨';
+    avatar.appendChild(etincelle);
+    setTimeout(() => { etincelle.remove(); }, 1500);
+}
+
 function toggleTheme() {
     const isLight = document.body.classList.toggle('light-theme');
     localStorage.setItem('eduka_theme', isLight ? 'light' : 'dark');
@@ -517,16 +606,14 @@ function toggleTheme() {
 function updateThemeButtonUI(isLight) {
     const themeBtn = document.getElementById('btn-theme');
     if (themeBtn) {
-        if (isLight) {
-            themeBtn.innerHTML = "🌙 Mode Sombre";
-        } else {
-            themeBtn.innerHTML = "☀️ Mode Clair";
-        }
+        themeBtn.textContent = isLight ? "🌙" : "☀️";
+        themeBtn.title = isLight ? "Passer en mode sombre" : "Passer en mode clair";
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    initMascotte();
     restoreChatHistories();
 });
 
@@ -899,6 +986,7 @@ async function sendSasMessage() {
     const botLoadingDiv = document.createElement('div');
     botLoadingDiv.className = 'message bot-message apparition-fluide';
     botLoadingDiv.innerHTML = creerBulleReflexion("L'Assistant rassemble son savoir...");
+    ajouterMascotte(botLoadingDiv, 'reflexion');
     chatHistory.appendChild(botLoadingDiv);
     scrollToBottom('sas-chat-history');
 
@@ -928,6 +1016,12 @@ async function sendSasMessage() {
         if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
             botLoadingDiv.textContent = data.answer || "Le silence est la seule réponse obtenue.";
+            if (data.answer) {
+                ajouterMascotte(botLoadingDiv, 'succes');
+                declencherEtincelleMascotte(botLoadingDiv);
+            } else {
+                ajouterMascotte(botLoadingDiv, 'erreur');
+            }
             if (data.conversation_id) sasConversationIds[avatarActif] = data.conversation_id;
         }
         else {
@@ -982,6 +1076,10 @@ async function sendSasMessage() {
             // l'explique plutôt que de la laisser tourner indéfiniment.
             if (!texteIntegralSas) {
                 botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta question ?";
+                ajouterMascotte(botLoadingDiv, 'erreur');
+            } else {
+                ajouterMascotte(botLoadingDiv, 'succes');
+                declencherEtincelleMascotte(botLoadingDiv);
             }
         }
 
@@ -999,6 +1097,7 @@ async function sendSasMessage() {
     } catch (error) {
         console.error("Détail de la perturbation :", error);
         botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Le lien avec la source a été interrompu (${error.message}). Reprenez votre respiration et essayez à nouveau.</span>`;
+        ajouterMascotte(botLoadingDiv, 'erreur');
         saveChatHistory('sas');
     } finally {
         inputField.disabled = false;
@@ -1299,12 +1398,12 @@ function toggleFullScreen() {
     if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
         if (requestFullScreen) {
             requestFullScreen.call(docEl);
-            if (btn) btn.innerHTML = "⛶ Quitter Plein Écran";
+            if (btn) btn.title = "Quitter le plein écran";
         }
     } else {
         if (cancelFullScreen) {
             cancelFullScreen.call(doc);
-            if (btn) btn.innerHTML = "⛶ Plein Écran";
+            if (btn) btn.title = "Plein écran";
         }
     }
 }
@@ -1312,7 +1411,7 @@ function toggleFullScreen() {
 document.addEventListener('fullscreenchange', () => {
     const btn = document.getElementById('btn-fullscreen');
     if (!document.fullscreenElement && btn) {
-        btn.innerHTML = "⛶ Plein Écran";
+        btn.title = "Plein écran";
     }
 });
 
