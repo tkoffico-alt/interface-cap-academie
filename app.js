@@ -704,6 +704,29 @@ function creerBulleReflexion(texte) {
     </span><span class="eduka-typing-texte">${texte}</span>`;
 }
 
+// ❖ Réutiliser une question déjà posée : plutôt qu'un simple copier-coller
+// vers le presse-papiers (qui exige ensuite un collage manuel), ce bouton
+// reverse directement le texte dans le champ de saisie correspondant --
+// l'élève/enseignant n'a plus qu'à cliquer "Envoyer" (ou modifier avant).
+// Construit en DOM pur (pas d'innerHTML avec le texte interpolé) pour ne
+// jamais casser si la question contient des caractères spéciaux.
+function creerBoutonReutiliser(message, champSaisieId) {
+    const bouton = document.createElement('button');
+    bouton.type = 'button';
+    bouton.className = 'btn-reutiliser-question';
+    bouton.title = 'Réutiliser cette question';
+    bouton.textContent = '↻';
+    bouton.onclick = function (evenement) {
+        evenement.stopPropagation();
+        const champ = document.getElementById(champSaisieId);
+        if (champ) {
+            champ.value = message;
+            champ.focus();
+        }
+    };
+    return bouton;
+}
+
 function obtenirDeviceId() {
     let deviceId = localStorage.getItem('eduka_device_id');
     if (!deviceId) {
@@ -867,6 +890,7 @@ async function sendSasMessage() {
     const userMsgDiv = document.createElement('div');
     userMsgDiv.className = 'message user-message';
     userMsgDiv.textContent = message;
+    userMsgDiv.appendChild(creerBoutonReutiliser(message, 'sas-user-input'));
     chatHistory.appendChild(userMsgDiv);
 
     inputField.value = '';
@@ -1015,6 +1039,7 @@ async function sendTeacherMessage(outil) {
     const userMsgDiv = document.createElement('div');
     userMsgDiv.className = 'message user-message';
     userMsgDiv.textContent = message;
+    userMsgDiv.appendChild(creerBoutonReutiliser(message, `${outil}-user-input`));
     chatHistory.appendChild(userMsgDiv);
 
     inputField.value = '';
@@ -1502,6 +1527,7 @@ async function sendAreneMessage() {
     const userMsgDiv = document.createElement('div');
     userMsgDiv.className = 'message user-message';
     userMsgDiv.textContent = message;
+    userMsgDiv.appendChild(creerBoutonReutiliser(message, 'arene-user-input'));
     chatHistory.appendChild(userMsgDiv);
 
     inputField.value = '';
