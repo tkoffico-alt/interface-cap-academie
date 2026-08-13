@@ -729,6 +729,14 @@
                 <button class="btn-action-doc" style="justify-content: center; background-color: #EC4899; color: white; border: none;" onclick="entrerDansLeChat('musique')">Éducation Musicale</button>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #EC4899; color: white; border: none;" onclick="entrerDansLeChat('arts_plastiques')">Arts Plastiques</button>
             </div>
+
+            <!-- ❖ N'a d'utilité réelle qu'une fois un profil déjà
+                 enregistré (voir obtenirProfilEleveSauvegarde() dans
+                 app.js) -- reste inoffensif sinon, ouvre simplement le
+                 même formulaire vierge que la première visite. -->
+            <div style="margin-top: 18px; text-align: center;">
+                <a href="#" onclick="ouvrirModificationProfil(); return false;" style="font-size: 0.85em; color: #6B7280; text-decoration: underline;">✎ Modifier mes informations (classe, habitudes)</a>
+            </div>
         </div>
     </div>
     <!-- 3. LE VOILE DE L'ILLUSION -->
@@ -855,6 +863,14 @@
             </button>
             <button id="btn-fullscreen" class="btn-fullscreen btn-icon" onclick="toggleFullScreen()" title="Plein écran" aria-label="Plein écran">
                 ⛶
+            </button>
+            <!-- ❖ Réservé à l'Académie Premium ("eleve") : permet de
+                 changer de matière sans quitter l'espace de travail, en
+                 rouvrant le sélecteur de discipline existant. Masqué par
+                 défaut, affiché/masqué par appliquerProfilEtEntrerDansEspace()
+                 et openSpace() dans app.js selon l'espace actif. -->
+            <button id="btn-matieres" class="btn-retour btn-icon" style="display: none;" onclick="document.getElementById('discipline-modal').classList.add('active')" title="Changer de matière" aria-label="Changer de matière">
+                📚
             </button>
 
             <div id="teacher-tabs-container" class="teacher-navigation">

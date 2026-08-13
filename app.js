@@ -120,6 +120,8 @@ async function openSpace(space) {
         document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
         document.getElementById('container-sas-custom').classList.remove('active');
         document.getElementById('teacher-tabs-container').style.display = 'flex';
+        const btnMatieresEnseignant = document.getElementById('btn-matieres');
+        if (btnMatieresEnseignant) btnMatieresEnseignant.style.display = 'none';
         switchTeacherTool('atelier');
     }
 }
@@ -280,8 +282,56 @@ async function envoyerPhotoEmploiDuTemps() {
     }
 }
 
+// ❖ Le profil (classe, méthode de révision, gestion du stress) est
+// mémorisé par appareil dès la première saisie -- inutile de reposer les
+// mêmes questions à chaque connexion, l'IA connaît déjà l'élève. Voir
+// validerProfilEtEntrer() (qui l'enregistre) et ouvrirModificationProfil()
+// (qui permet de le corriger plus tard).
+function obtenirProfilEleveSauvegarde() {
+    try {
+        const brut = localStorage.getItem('eduka_profil_eleve');
+        if (!brut) return null;
+        const profil = JSON.parse(brut);
+        if (profil && profil.classe && profil.methode_travail && profil.gestion_stress) {
+            return profil;
+        }
+    } catch (e) {
+        // Profil corrompu : on redemande simplement, sans planter.
+    }
+    return null;
+}
+
 function entrerDansLeChat(matiereChoisie) {
     disciplineEnAttente = matiereChoisie;
+    fermerVestibule();
+
+    const profilSauvegarde = obtenirProfilEleveSauvegarde();
+    if (profilSauvegarde) {
+        appliquerProfilEtEntrerDansEspace(profilSauvegarde.classe, profilSauvegarde.methode_travail, profilSauvegarde.gestion_stress);
+        return;
+    }
+
+    document.getElementById('profil-modal').classList.add('active');
+}
+
+// ❖ Rouvre "Configuration de la session" pré-remplie avec le profil déjà
+// enregistré, pour le corriger (changement de classe en cours d'année,
+// etc.) sans que cela ne déclenche par effet de bord un changement de
+// matière : si un avatar est déjà actif, on le préserve explicitement.
+function ouvrirModificationProfil() {
+    const profil = obtenirProfilEleveSauvegarde();
+    const champClasse = document.getElementById('niveau-classe');
+    const champMethode = document.getElementById('habitudes-revision');
+    const champStress = document.getElementById('gestion-stress');
+    if (profil) {
+        if (champClasse) champClasse.value = profil.classe;
+        if (champMethode) champMethode.value = profil.methode_travail;
+        if (champStress) champStress.value = profil.gestion_stress;
+    }
+    if (typeof verifierFormulaire === 'function') verifierFormulaire();
+    if (avatarActif) {
+        disciplineEnAttente = avatarActif;
+    }
     fermerVestibule();
     document.getElementById('profil-modal').classList.add('active');
 }
@@ -290,9 +340,23 @@ function validerProfilEtEntrer() {
     document.getElementById('profil-modal').classList.remove('active');
 
     const champClasse = document.getElementById('niveau-classe');
-    classeActive = champClasse ? champClasse.value : "";
-    methodeTravailActive = document.getElementById('habitudes-revision').value;
-    gestionStressActive = document.getElementById('gestion-stress').value;
+    const classe = champClasse ? champClasse.value : "";
+    const methode = document.getElementById('habitudes-revision').value;
+    const stress = document.getElementById('gestion-stress').value;
+
+    localStorage.setItem('eduka_profil_eleve', JSON.stringify({
+        classe: classe,
+        methode_travail: methode,
+        gestion_stress: stress
+    }));
+
+    appliquerProfilEtEntrerDansEspace(classe, methode, stress);
+}
+
+function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
+    classeActive = classe;
+    methodeTravailActive = methode;
+    gestionStressActive = stress;
 
     avatarActif = disciplineEnAttente;
 
@@ -305,6 +369,14 @@ function validerProfilEtEntrer() {
     document.getElementById('container-forge-custom').classList.remove('active');
     document.getElementById('container-cabinet-custom').classList.remove('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
+
+    // ❖ Le bouton "Changer de matière" ne concerne que l'Académie Premium
+    // ("eleve") -- pas l'Espace de Préparation freemium ("sas"), pour
+    // garder la friction volontaire de cet espace-là intacte.
+    const btnMatieres = document.getElementById('btn-matieres');
+    if (btnMatieres) {
+        btnMatieres.style.display = (espaceActuel === 'eleve') ? 'flex' : 'none';
+    }
 
     if(espaceActuel === 'sas' || espaceActuel === 'eleve') {
         document.getElementById('container-sas-custom').classList.add('active');
@@ -423,6 +495,8 @@ function goHome() {
     document.getElementById('container-forge-custom').classList.remove('active');
     document.getElementById('container-cabinet-custom').classList.remove('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
+    const btnMatieresAccueil = document.getElementById('btn-matieres');
+    if (btnMatieresAccueil) btnMatieresAccueil.style.display = 'none';
 }
 
 // ❖ LE FONDU PROGRESSIF DE LA RÉPONSE ❖
