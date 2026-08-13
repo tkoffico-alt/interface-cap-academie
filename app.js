@@ -609,12 +609,13 @@ function initTheme() {
 // ❖ Mode Mascotte : purement visuel, optionnel, mémorisé par appareil
 // (même mécanisme que le thème). Désactivé par défaut -- chacun choisit
 // l'habillage qui lui convient plutôt que de l'imposer.
+// ❖ La mascotte n'est plus optionnelle : elle accompagne systématiquement
+// les réponses de l'IA dans l'Espace de Préparation, pour tous les enfants
+// -- plus de bouton dédié dans la barre d'outils (voir historique Git pour
+// toggleMascotte()/updateMascotteButtonUI(), conservées mais plus reliées
+// à aucun bouton, au cas où l'idée d'un réglage reviendrait un jour).
 function initMascotte() {
-    const actif = localStorage.getItem('eduka_mascotte') === 'on';
-    if (actif) {
-        document.body.classList.add('mode-mascotte');
-    }
-    updateMascotteButtonUI(actif);
+    document.body.classList.add('mode-mascotte');
 }
 
 function toggleMascotte() {

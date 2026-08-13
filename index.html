@@ -389,6 +389,53 @@
             line-height: 1;
         }
 
+        /* ❖ Socle en pilule regroupant thème/matière/plein écran : même
+           traitement visuel que .teacher-navigation (les onglets de
+           l'Espace Enseignant), pour une cohérence d'ensemble -- un fond
+           doux qui délimite un groupe de réglages, plutôt que des icônes
+           livrées à elles-mêmes dans l'en-tête. */
+        .toolbar-outils {
+            display: flex;
+            align-items: center;
+            gap: 0.15rem;
+            margin-left: 1rem;
+            background-color: rgba(255, 255, 255, 0.06);
+            padding: 0.3rem;
+            border-radius: 999px;
+        }
+        body.light-theme .toolbar-outils {
+            background-color: #EEF2F7;
+        }
+        .btn-icon-groupe {
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #94A3B8;
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+        }
+        .btn-icon-groupe:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #F8FAFC;
+            transform: translateY(-1px);
+        }
+        body.light-theme .btn-icon-groupe {
+            color: #64748B;
+        }
+        body.light-theme .btn-icon-groupe:hover {
+            background-color: #FFFFFF;
+            color: #0F172A;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+        }
+
         /* ❖ Correctif mobile portrait : dans style.css, une règle plus
            ancienne empile la barre d'outils verticalement en dessous de
            768px de large (pensée à l'époque pour des boutons à libellé
@@ -855,23 +902,29 @@
             <button class="btn-retour btn-icon" onclick="goHome()" title="Retour au menu" aria-label="Retour au menu">
                 ←
             </button>
-            <button id="btn-theme" class="btn-retour btn-icon btn-theme-toggle" style="margin-left: 1rem;" onclick="toggleTheme()" title="Changer de thème" aria-label="Changer de thème">
-                ☀️
-            </button>
-            <button id="btn-mascotte" class="btn-retour btn-icon" onclick="toggleMascotte()" title="Activer la mascotte" aria-label="Activer ou désactiver la mascotte">
-                🤖
-            </button>
-            <button id="btn-fullscreen" class="btn-fullscreen btn-icon" onclick="toggleFullScreen()" title="Plein écran" aria-label="Plein écran">
-                ⛶
-            </button>
-            <!-- ❖ Réservé à l'Académie Premium ("eleve") : permet de
-                 changer de matière sans quitter l'espace de travail, en
-                 rouvrant le sélecteur de discipline existant. Masqué par
-                 défaut, affiché/masqué par appliquerProfilEtEntrerDansEspace()
-                 et openSpace() dans app.js selon l'espace actif. -->
-            <button id="btn-matieres" class="btn-retour btn-icon" style="display: none;" onclick="document.getElementById('discipline-modal').classList.add('active')" title="Changer de matière" aria-label="Changer de matière">
-                📚
-            </button>
+
+            <!-- ❖ Regroupement esthétique : les icônes de réglage (thème,
+                 matière, plein écran) partagent désormais un même socle en
+                 pilule, plutôt que de flotter séparément -- cohérent avec
+                 le traitement déjà donné aux onglets de l'Espace
+                 Enseignant. "Retour" reste seul et distinct : c'est une
+                 action de sortie, pas un réglage. -->
+            <div class="toolbar-outils">
+                <button id="btn-theme" class="btn-icon-groupe btn-theme-toggle" onclick="toggleTheme()" title="Changer de thème" aria-label="Changer de thème">
+                    ☀️
+                </button>
+                <!-- ❖ Réservé à l'Académie Premium ("eleve") : permet de
+                     changer de matière sans quitter l'espace de travail, en
+                     rouvrant le sélecteur de discipline existant. Masqué par
+                     défaut, affiché/masqué par appliquerProfilEtEntrerDansEspace()
+                     et openSpace() dans app.js selon l'espace actif. -->
+                <button id="btn-matieres" class="btn-icon-groupe" style="display: none;" onclick="document.getElementById('discipline-modal').classList.add('active')" title="Changer de matière" aria-label="Changer de matière">
+                    📚
+                </button>
+                <button id="btn-fullscreen" class="btn-icon-groupe" onclick="toggleFullScreen()" title="Plein écran" aria-label="Plein écran">
+                    ⛶
+                </button>
+            </div>
 
             <div id="teacher-tabs-container" class="teacher-navigation">
                 <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')">
