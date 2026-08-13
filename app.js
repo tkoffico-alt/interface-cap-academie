@@ -749,7 +749,18 @@ function openPremiumModal() {
     }
 
     document.getElementById('premium-modal').classList.add('active');
-    setTimeout(() => document.getElementById('matricule-input').focus(), 100);
+    // ❖ Sur mobile (Android en particulier), un focus() déclenché par
+    // script -- même via un simple setTimeout -- n'est pas considéré comme
+    // un geste utilisateur "de confiance" par le navigateur : le clavier
+    // virtuel ne s'affiche alors pas, et le champ reste bloqué en focus
+    // "silencieux" (souvent impossible d'y écrire même en le retouchant).
+    // On réserve donc l'auto-focus au clavier/souris (desktop) ; sur
+    // tactile, l'utilisateur touche lui-même le champ, ce qui est un vrai
+    // geste utilisateur et fait apparaître le clavier de façon fiable.
+    const estTactile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    if (!estTactile) {
+        setTimeout(() => document.getElementById('matricule-input').focus(), 100);
+    }
 }
 
 function closePremiumModal() {
