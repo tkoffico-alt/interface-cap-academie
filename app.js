@@ -436,8 +436,32 @@ function goHome() {
 // l'animation CSS soit bien relancée), pour que l'arrivée de chaque
 // fragment de texte se fasse en fondu, comme souhaité, au lieu d'un
 // remplacement sec.
-function afficherReponseAvecFondu(element, texteMarkdown) {
-    element.innerHTML = marked.parse(texteMarkdown);
+// ❖ Le bloc de propriété intellectuelle (❖ Architecture Pédagogique
+// EdukaTchat ❖ ...) que l'agent Enseignant ajoute en fin de document est
+// utile à l'impression/la copie, mais alourdit visuellement la bulle de
+// discussion. On l'entoure de jetons sentinelles AVANT le passage par
+// marked.parse() (pour rester du texte brut, jamais interprété comme du
+// Markdown), puis on remplace ces jetons par un <span> discret une fois le
+// HTML généré -- le texte lui-même n'est jamais retiré, seulement restylé.
+const JETON_SIGNATURE_DEBUT = '§§SIGNATURE_DEBUT§§';
+const JETON_SIGNATURE_FIN = '§§SIGNATURE_FIN§§';
+
+function attenuerSignatureDocument(texteMarkdown) {
+    return texteMarkdown.replace(
+        /(❖\s*Architecture Pédagogique EdukaTchat[\s\S]*)/,
+        `${JETON_SIGNATURE_DEBUT}$1${JETON_SIGNATURE_FIN}`
+    );
+}
+
+function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature) {
+    const source = attenuerSignature ? attenuerSignatureDocument(texteMarkdown) : texteMarkdown;
+    let html = marked.parse(source);
+    if (attenuerSignature) {
+        html = html
+            .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+            .replace(JETON_SIGNATURE_FIN, '</span>');
+    }
+    element.innerHTML = html;
     element.classList.remove('fondu-reponse');
     void element.offsetWidth; // force le reflow : relance l'animation CSS
     element.classList.add('fondu-reponse');
@@ -533,36 +557,36 @@ function updateMascotteButtonUI(actif) {
     }
 }
 
-// ❖ Le visage du petit compagnon IA (humanoïde/robot) : trois expressions
-// simples (réflexion, succès, erreur) obtenues en ne faisant varier que
-// les yeux, la bouche et la couleur de la pastille d'antenne -- le reste
-// du dessin (tête, antenne) reste identique, pour une lecture claire même
-// en tout petit format. Remplace le précédent hibou, à identité visuelle
-// égale (même fonction, mêmes points d'appel dans sendSasMessage).
+// ❖ Le visage du hibou compagnon : trois expressions simples (réflexion,
+// succès, erreur) obtenues en ne faisant varier que les sourcils, les
+// pupilles et la bouche -- le reste du dessin (yeux, bec) reste
+// identique, pour une lecture claire même en tout petit format.
 function creerAvatarMascotte(etat) {
     const expressions = {
         reflexion: {
-            couleurAntenne: '#93C5FD',
-            yeux: '<line x1="7.6" y1="12.4" x2="9.6" y2="12.4" stroke="#2563EB" stroke-width="1.4" stroke-linecap="round"/><line x1="14.4" y1="12.4" x2="16.4" y2="12.4" stroke="#2563EB" stroke-width="1.4" stroke-linecap="round"/>',
-            bouche: '<path d="M10,16.3 h4" stroke="#2563EB" stroke-width="1.2" stroke-linecap="round" fill="none"/>'
+            pupilleY: 9.4,
+            sourcils: '<path d="M6,7.3 h4" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,7.3 h4" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M9.5,17 h5" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>'
         },
         succes: {
-            couleurAntenne: '#34D399',
-            yeux: '<circle cx="8.6" cy="12.4" r="1.5" fill="#FFFFFF" stroke="#2563EB" stroke-width="1"/><circle cx="15.4" cy="12.4" r="1.5" fill="#FFFFFF" stroke="#2563EB" stroke-width="1"/><circle cx="8.6" cy="12.4" r="0.6" fill="#1E3A8A"/><circle cx="15.4" cy="12.4" r="0.6" fill="#1E3A8A"/>',
-            bouche: '<path d="M9,16 Q12,18.4 15,16" stroke="#2563EB" stroke-width="1.3" stroke-linecap="round" fill="none"/>'
+            pupilleY: 11,
+            sourcils: '<path d="M6,7 q2,-1.4 4,0" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,7 q2,-1.4 4,0" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M7.5,15.5 Q12,19.5 16.5,15.5" stroke="#78350F" stroke-width="1.3" stroke-linecap="round" fill="none"/>'
         },
         erreur: {
-            couleurAntenne: '#F87171',
-            yeux: '<path d="M7.6,11.2 l2,2.4 M9.6,11.2 l-2,2.4" stroke="#2563EB" stroke-width="1.3" stroke-linecap="round"/><path d="M14.4,11.2 l2,2.4 M16.4,11.2 l-2,2.4" stroke="#2563EB" stroke-width="1.3" stroke-linecap="round"/>',
-            bouche: '<path d="M9,17 Q12,15 15,17" stroke="#2563EB" stroke-width="1.3" stroke-linecap="round" fill="none"/>'
+            pupilleY: 11.6,
+            sourcils: '<path d="M6,7.6 q2,1.6 4,0.6" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,8.2 q2,-1.6 4,-0.6" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M8,17.5 Q12,15 16,17.5" stroke="#78350F" stroke-width="1.3" stroke-linecap="round" fill="none"/>'
         }
     };
     const c = expressions[etat] || expressions.reflexion;
     return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <line x1="12" y1="6" x2="12" y2="2.6" stroke="#2563EB" stroke-width="1.3" stroke-linecap="round"/>
-        <circle cx="12" cy="1.9" r="1.3" fill="${c.couleurAntenne}"/>
-        <rect x="4" y="6" width="16" height="13" rx="5" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.2"/>
-        ${c.yeux}
+        <circle cx="8" cy="11" r="3.2" fill="#FFFFFF" stroke="#92400E" stroke-width="1"/>
+        <circle cx="16" cy="11" r="3.2" fill="#FFFFFF" stroke="#92400E" stroke-width="1"/>
+        <circle cx="8" cy="${c.pupilleY}" r="1.3" fill="#451A03"/>
+        <circle cx="16" cy="${c.pupilleY}" r="1.3" fill="#451A03"/>
+        ${c.sourcils}
+        <path d="M11,13.3 L13,13.3 L12,15.3 Z" fill="#92400E"/>
         ${c.bouche}
     </svg>`;
 }
@@ -1209,7 +1233,7 @@ async function sendTeacherMessage(outil) {
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralTeacher += (dataObj.answer || "");
                                 if (texteIntegralTeacher.length > 0) {
-                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher);
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true);
                                     scrollToBottom(`${outil}-chat-history`);
                                 }
                             }

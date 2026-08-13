@@ -293,6 +293,56 @@
         body.light-theme #tab-forge.active { background-color: #F59E0B; }
         body.light-theme #tab-cabinet.active { background-color: #8B5CF6; }
 
+        /* ❖ Les onglets inactifs "flottaient" sans repère visuel avant le
+           survol (juste du texte nu dans le halo du conteneur) -- un fond
+           discret dès le repos les fait lire comme de vrais onglets d'un
+           logiciel métier, pas comme un simple lien texte. */
+        .tab-btn:not(.active) {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #94A3B8;
+        }
+        .tab-btn:not(.active):hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #E2E8F0;
+        }
+        body.light-theme .tab-btn:not(.active) {
+            background-color: #FFFFFF;
+            color: #64748B;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        }
+        body.light-theme .tab-btn:not(.active):hover {
+            background-color: #F8FAFC;
+            color: #0F172A;
+        }
+
+        /* ❖ Identité "Espace Enseignant" distincte de celle de l'élève : un
+           bleu ardoise sobre et concentré plutôt que le bleu-violet vif
+           utilisé côté Sas -- un simple repère de couleur qui distingue
+           immédiatement les deux univers, sans changer la structure de la
+           bulle elle-même. */
+        #container-atelier-custom .user-message,
+        #container-forge-custom .user-message,
+        #container-cabinet-custom .user-message {
+            background: linear-gradient(135deg, #334155 0%, #1E3A8A 100%);
+            border-bottom-right-radius: 6px;
+        }
+
+        /* ❖ Le bloc de propriété intellectuelle que l'agent ajoute en fin
+           de document (❖ Architecture Pédagogique EdukaTchat ❖ ...) reste
+           présent dans le texte -- utile pour l'impression/la copie -- mais
+           s'efface visuellement dans le fil de discussion : petits
+           caractères gris clair, centrés, discrets, au lieu d'alourdir la
+           bulle. Voir attenuerSignatureDocument() dans app.js. */
+        .signature-doc {
+            display: block;
+            margin-top: 14px;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: #94A3B8;
+            text-align: center;
+            opacity: 0.7;
+        }
+
         /* ❖ Réutiliser une question déjà posée : petit bouton circulaire
            discret ajouté à la fin de chaque bulle utilisateur, qui reverse
            le texte dans le champ de saisie au lieu d'obliger à le retaper.
