@@ -294,20 +294,6 @@
     "mots_cles": "reproduction chez les spermaphytes observation microscopique"
   },
   {
-    "id": "img022",
-    "matiere": "svt",
-    "niveau": "terminale",
-    "serie": "D",
-    "theme": "Reproduction chez les spermaphytes",
-    "fiche": "OBSERVATION DE COUPES TRANSVERSALES D'OVAIRES A LA LOUPE",
-    "lecon": "",
-    "type": "photo_reelle",
-    "legende": "Coupe transversale d'ovaire d'hibiscus au microscope",
-    "source": "✅ Vraie photographie microscopique — Sugam Pokharel, CC BY-SA 4.0, Wikimedia Commons.",
-    "fichier": "images/illustrations/svt/terminale/022_coupe_transversale_d_ovaire_d_hibiscus_a.png",
-    "mots_cles": "reproduction chez les spermaphytes observation de coupes tra"
-  },
-  {
     "id": "img023",
     "matiere": "svt",
     "niveau": "terminale",
@@ -484,7 +470,7 @@
     "fiche": "PREPARATION D’UNE SOLUTION",
     "lecon": "",
     "type": "schema",
-    "legende": "Dispositif expérimental.",
+    "legende": "Pesée du soluté (sulfate de cuivre) sur balance électronique — étape de préparation d'une solution.",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/035_dispositif_experimental.jpg",
     "mots_cles": "chimie generale preparation dune solution dispositif experim"
@@ -498,7 +484,7 @@
     "fiche": "PREPARATION D’UNE SOLUTION",
     "lecon": "",
     "type": "schema",
-    "legende": "Dispositif expérimental.",
+    "legende": "Dissolution du soluté et ajustement au trait de jauge dans la fiole jaugée de 100 mL — étape de préparation d'une solution.",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/036_dispositif_experimental.jpg",
     "mots_cles": "chimie generale preparation dune solution dispositif experim"
@@ -512,7 +498,7 @@
     "fiche": "PREPARATION D’UNE SOLUTION",
     "lecon": "",
     "type": "schema",
-    "legende": "Etape 1                                                                                Etape 2",
+    "legende": "Étape 1 : prélèvement de 100 mL de solution à la fiole jaugée. Étape 2 : vérification de l'homogénéité de la solution par transparence.",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/037_etape_1_etape_2.jpg",
     "mots_cles": "chimie generale preparation dune solution etape 1 etape 2"
@@ -568,24 +554,10 @@
     "fiche": "DETERMINATION GRAPHIQUE DE LA CONSTANTE D’ACIDITE D’UN COUPLE ACIDE/BASE",
     "lecon": "",
     "type": "schema",
-    "legende": "Détermination graphique du pKa (pH = f(log(VB/VA))) — courbe de titrage acide-base",
+    "legende": "Echelles : 1 cm pour  et 5 cm pour 1 unité de pH (A partir de pH = 3)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/041_echelles_1_cm_pour_et_5_cm_pour_1_unite_.png",
     "mots_cles": "chimie generale determination graphique de la constante daci"
-  },
-  {
-    "id": "img042",
-    "matiere": "chimie",
-    "niveau": "terminale",
-    "serie": "CDE",
-    "theme": "",
-    "fiche": "",
-    "lecon": "",
-    "type": "schema",
-    "legende": "Solution de soudeSolution d’acide chlorhydriqueBarreau aimanté Agitateur magnétique pH – mètre Solution de soudeSolution d’acide chlorhydriqueBarreau aimanté Agitateur magnétique pH – mètre",
-    "source": "",
-    "fichier": "images/illustrations/chimie/terminale/042_solution_de_soudesolution_dacide_chlorhy.jpg",
-    "mots_cles": "solution de soudesolution dacide chlorhydriquebarreau aimant"
   },
   {
     "id": "img043",
@@ -628,20 +600,6 @@
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/045_courbe_de_titrage_ph_f_vb_courbe_recreee.png",
     "mots_cles": "courbe de titrage ph f vb courbe recreee"
-  },
-  {
-    "id": "img046",
-    "matiere": "chimie",
-    "niveau": "terminale",
-    "serie": "CDE",
-    "theme": "CHIMIE GENERALE",
-    "fiche": "DOSAGE ACIDO - BASIQUE",
-    "lecon": "",
-    "type": "schema",
-    "legende": "pH – mètre Solution de soudeSolution d’acide éthanoique Barreau aimantée Agitateur magnétiquepH – mètre Solution de soudeSolution d’acide éthanoique Barreau aimantée Agitateur magnétique",
-    "source": "",
-    "fichier": "images/illustrations/chimie/terminale/046_ph_metre_solution_de_soudesolution_dacid.jpg",
-    "mots_cles": "chimie generale dosage acido basique ph metre solution de so"
   },
   {
     "id": "img047",
@@ -722,7 +680,7 @@
     "fiche": "DÉSHYDRATATION INTRAMOLÉCULAIRE DE L’ÉTHANOL- RÉACTION AVEC LE SODIUM",
     "lecon": "",
     "type": "schema",
-    "legende": "Dispositif expérimental",
+    "legende": "Dispositif de déshydratation intramoléculaire de l'éthanol par catalyse (alumine chauffée à 350-400°C) : le gaz formé est testé au dibrome dans CCl4.",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/052_dispositif_experimental.png",
     "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le"
@@ -826,34 +784,6 @@
     "mots_cles": "tests de caracterisation des composes carbonyles oxydation m"
   },
   {
-    "id": "img060",
-    "matiere": "chimie",
-    "niveau": "terminale",
-    "serie": "CDE",
-    "theme": "",
-    "fiche": "PRÉPARATION DE L’ETHANOATE DE METHYLE",
-    "lecon": "",
-    "type": "schema",
-    "legende": "Dispositif expérimental",
-    "source": "",
-    "fichier": "images/illustrations/chimie/terminale/060_dispositif_experimental.jpg",
-    "mots_cles": "preparation de lethanoate de methyle dispositif experimental"
-  },
-  {
-    "id": "img061",
-    "matiere": "chimie",
-    "niveau": "terminale",
-    "serie": "CDE",
-    "theme": "",
-    "fiche": "PRÉPARATION D’UN SAVON",
-    "lecon": "",
-    "type": "schema",
-    "legende": "Dispositif expérimental",
-    "source": "",
-    "fichier": "images/illustrations/chimie/terminale/061_dispositif_experimental.jpg",
-    "mots_cles": "preparation dun savon dispositif experimental"
-  },
-  {
     "id": "img062",
     "matiere": "physique",
     "niveau": "terminale",
@@ -946,24 +876,10 @@
     "fiche": "AUTO-INDUCTION",
     "lecon": "",
     "type": "schema",
-    "legende": "(contexte non identifié)",
+    "legende": "Oscillogramme observé lors de l'étude de l'auto-induction : tensions relevées à l'oscilloscope (signal triangulaire et réponse en créneaux). [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/068_contexte_non_identifie.png",
     "mots_cles": "auto induction auto induction contexte non identifie"
-  },
-  {
-    "id": "img069",
-    "matiere": "physique",
-    "niveau": "terminale",
-    "serie": "CDE",
-    "theme": "MONTAGES DERIVATEUR ET MONTAGE INTEGRATEUR",
-    "fiche": "MONTAGES DERIVATEUR ET INTEGRATEUR",
-    "lecon": "",
-    "type": "schema",
-    "legende": "2.3  Exploitation des résultats",
-    "source": "",
-    "fichier": "images/illustrations/physique/terminale/069_2_3_exploitation_des_resultats.png",
-    "mots_cles": "montages derivateur et montage integrateur montages derivate"
   },
   {
     "id": "img070",
@@ -1072,7 +988,7 @@
     "fiche": "CHAMP MAGNETIQUE",
     "lecon": "",
     "type": "schema",
-    "legende": "Dispositif expérimental",
+    "legende": "Aimant en U (pôles Nord et Sud) utilisé pour l'étude du champ magnétique — dispositif expérimental.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/077_dispositif_experimental.jpg",
     "mots_cles": "champ magnetique champ magnetique dispositif experimental"
@@ -1100,7 +1016,7 @@
     "fiche": "LOI DE LAPLACE",
     "lecon": "",
     "type": "schema",
-    "legende": "Dispositif expérimental",
+    "legende": "Dispositif de mise en évidence de la loi de Laplace : conducteur plongé dans le mercure, soumis à un champ magnétique B et parcouru par un courant I.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/079_dispositif_experimental.png",
     "mots_cles": "loi de laplace loi de laplace dispositif experimental"
@@ -1114,7 +1030,7 @@
     "fiche": "LOI DE LAPLACE",
     "lecon": "",
     "type": "schema",
-    "legende": "Dispositif expérimental",
+    "legende": "Schéma du rail conducteur MN mobile dans l'entrefer d'un aimant en U, relié à un circuit avec générateur et interrupteur K — mise en évidence de la force de Laplace.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/080_dispositif_experimental.png",
     "mots_cles": "loi de laplace loi de laplace dispositif experimental"
@@ -1128,7 +1044,7 @@
     "fiche": "INDUCTION ELECTROMAGNETIQUE.",
     "lecon": "",
     "type": "schema",
-    "legende": "Dispositif expérimental",
+    "legende": "Schéma d'un transformateur : bobines primaire (N1) et secondaire (N2) enroulées sur un noyau de fer fermé, lignes de champ magnétique — dispositif d'étude de l'induction électromagnétique.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/081_dispositif_experimental.png",
     "mots_cles": "induction electromagnetique induction electromagnetique disp"
@@ -1142,7 +1058,7 @@
     "fiche": "INDUCTION ELECTROMAGNETIQUE.",
     "lecon": "",
     "type": "schema",
-    "legende": "Dispositif expérimental",
+    "legende": "Dispositif de rails inclinés parcourus par un aimant en U et un barreau conducteur M — mise en évidence de l'induction électromagnétique par variation de flux.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/082_dispositif_experimental.png",
     "mots_cles": "induction electromagnetique induction electromagnetique disp"
@@ -1170,7 +1086,7 @@
     "fiche": "LA COAGULATION DU SANG.",
     "lecon": "Le sang",
     "type": "schema",
-    "legende": "LA COAGULATION DU SANG.",
+    "legende": "Coagulation du sang : formation d'un caillot retenant les éléments figurés, séparé du sérum — schéma. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/084_la_coagulation_du_sang.png",
     "mots_cles": "la nutrition chez lhomme la coagulation du sang le sang la c"
@@ -1184,7 +1100,7 @@
     "fiche": "LA TRANSFUSION SANGUINE.",
     "lecon": "La transfusion sanguine",
     "type": "schema",
-    "legende": "LA TRANSFUSION SANGUINE.",
+    "legende": "Tableau de compatibilité des groupes sanguins (donneur / receveur) : agglutination ou absence d'agglutination selon les groupes ABO — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/085_la_transfusion_sanguine.jpg",
     "mots_cles": "la nutrition chez lhomme la transfusion sanguine la transfus"
@@ -1198,7 +1114,7 @@
     "fiche": "LA CIRCULATION SANGUINE",
     "lecon": "La circulation sanguine",
     "type": "schema",
-    "legende": "LA CIRCULATION SANGUINE",
+    "legende": "Schéma de la circulation sanguine : petite circulation (cœur-poumons) et grande circulation (cœur-organes), avec les principales artères et veines.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/086_la_circulation_sanguine.jpg",
     "mots_cles": "la nutrition chez lhomme la circulation sanguine la circulat"
@@ -1212,7 +1128,7 @@
     "fiche": "LA PERMEABILITE DU SOL.",
     "lecon": "Les caractéristiques d’un sol.",
     "type": "schema",
-    "legende": "LA PERMEABILITE DU SOL.",
+    "legende": "Dispositif de mesure de la perméabilité du sol : colonne de sol traversée par l'eau, mesure du temps d'écoulement — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/087_la_permeabilite_du_sol.png",
     "mots_cles": "les relations entre les sols et les plantes la permeabilite "
@@ -1226,7 +1142,7 @@
     "fiche": "POROSITE ET CAPACITE DE RETENTION",
     "lecon": "Les caractéristiques d’un sol fertile.",
     "type": "schema",
-    "legende": "POROSITE ET CAPACITE DE RETENTION",
+    "legende": "Porosité et capacité de rétention en eau du sol, illustrées à travers différents profils de sol. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/088_porosite_et_capacite_de_retention.png",
     "mots_cles": "les relations entre les sols et les plantes porosite et capa"
@@ -1240,7 +1156,7 @@
     "fiche": "INFLUENCE DE LA PENTE SUR LA",
     "lecon": "La dégradation des sols.",
     "type": "schema",
-    "legende": "INFLUENCE DE LA PENTE SUR LA",
+    "legende": "Influence de la pente sur l'érosion du sol : comparaison d'un sol horizontal (①) et d'un sol incliné (②) soumis à un ruissellement d'eau, avec récupération des particules entraînées — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/089_influence_de_la_pente_sur_la.png",
     "mots_cles": "la degradation la protection et lamelioration des sols influ"
@@ -1254,7 +1170,7 @@
     "fiche": "INFLUENCE DE LA NATURE DU SOL SUR",
     "lecon": "La dégradation des sols.",
     "type": "schema",
-    "legende": "INFLUENCE DE LA NATURE DU SOL SUR",
+    "legende": "Influence de la nature du sol sur l'érosion : comparaison d'un sol argileux (①) et d'un sol sableux (②) soumis à un ruissellement d'eau — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/090_influence_de_la_nature_du_sol_sur.png",
     "mots_cles": "la degradation la protection et lamelioration des sols influ"
@@ -1268,7 +1184,7 @@
     "fiche": "INFLUENCE DU COUVERT VEGETAL SUR",
     "lecon": "La dégradation des sols.",
     "type": "schema",
-    "legende": "INFLUENCE DU COUVERT VEGETAL SUR",
+    "legende": "Influence du couvert végétal sur l'érosion : comparaison d'un sol avec couvert végétal et d'un sol sans couvert végétal soumis à un ruissellement d'eau — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/091_influence_du_couvert_vegetal_sur.png",
     "mots_cles": "la degradation la protection et lamelioration des sols influ"
@@ -1324,7 +1240,7 @@
     "fiche": "DIGESTION IN VITRO DE L’AMIDON",
     "lecon": "La digestion des aliments",
     "type": "schema",
-    "legende": "DIGESTION IN VITRO DE L’AMIDON",
+    "legende": "Dispositif de digestion in vitro de l'amidon par la salive : tubes à essai en bain-marie, test à l'eau iodée — schéma. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/095_digestion_in_vitro_de_lamidon.png",
     "mots_cles": "la nutrition chez lhomme digestion in vitro de lamidon la di"
@@ -1338,7 +1254,7 @@
     "fiche": "INFLUENCE DE LA TEMPERATURE SUR",
     "lecon": "La digestion des aliments.",
     "type": "schema",
-    "legende": "INFLUENCE DE LA TEMPERATURE SUR",
+    "legende": "Influence de la température sur la digestion de l'amidon par la salive : comparaison de tubes maintenus à différentes températures — schéma. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/096_influence_de_la_temperature_sur.png",
     "mots_cles": "la nutrition chez lhomme influence de la temperature sur la "
@@ -1352,24 +1268,10 @@
     "fiche": "LA SPECIFICITE D’ACTION DE LA SALIVE",
     "lecon": "La digestion des aliments",
     "type": "schema",
-    "legende": "LA SPECIFICITE D’ACTION DE LA SALIVE",
+    "legende": "Spécificité d'action de la salive : comparaison de deux tubes à essai (A et B) contenant des substrats différents, pour mettre en évidence que la salive n'agit que sur l'amidon — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/097_la_specificite_daction_de_la_salive.png",
     "mots_cles": "la nutrition chez lhomme la specificite daction de la salive"
-  },
-  {
-    "id": "img098",
-    "matiere": "svt",
-    "niveau": "3e",
-    "serie": null,
-    "theme": "La nutrition chez l’Homme",
-    "fiche": "MISE EN EVIDENCE DES CONSTITUANTS DU SANG",
-    "lecon": "Le sang",
-    "type": "schema",
-    "legende": "MISE EN EVIDENCE DES CONSTITUANTS DU SANG",
-    "source": "",
-    "fichier": "images/illustrations/svt/3e/098_mise_en_evidence_des_constituants_du_san.png",
-    "mots_cles": "la nutrition chez lhomme mise en evidence des constituants d"
   },
   {
     "id": "img099",
@@ -1408,7 +1310,7 @@
     "fiche": "LA SEDIMENTATION DU SANG.",
     "lecon": "Le sang",
     "type": "schema",
-    "legende": "LA SEDIMENTATION DU SANG.",
+    "legende": "Sédimentation du sang : tube à essai laissé au repos, séparation du sang en plasma et éléments figurés sédimentés — schéma. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/101_la_sedimentation_du_sang.png",
     "mots_cles": "la nutrition chez lhomme la sedimentation du sang le sang la"
