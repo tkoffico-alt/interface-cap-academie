@@ -34,6 +34,54 @@
             .chat-input-wrapper { gap: 4px; }
         }
 
+        /* ❖ Le menu de navigation qui remplace le simple bouton "Retour" :
+           un clic déploie la liste de toutes les destinations de l'accueil,
+           cliquables directement -- plus besoin de revenir à l'accueil
+           d'abord pour changer d'espace. */
+        .menu-navigation-wrapper { position: relative; }
+        .menu-navigation-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 240px;
+            background-color: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px);
+            transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+        }
+        .menu-navigation-panel.ouvert {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .menu-nav-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: #E2E8F0;
+            font-size: 0.88em;
+            padding: 9px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .menu-nav-item:hover { background-color: #334155; }
+        .menu-nav-separateur { height: 1px; background-color: #334155; margin: 6px 4px; }
+        body.light-theme .menu-navigation-panel { background-color: #FFFFFF; border-color: #E2E8F0; }
+        body.light-theme .menu-nav-item { color: #1E293B; }
+        body.light-theme .menu-nav-item:hover { background-color: #F1F5F9; }
+        body.light-theme .menu-nav-separateur { background-color: #E2E8F0; }
+
         /* ❖ Les suggestions rapides : un élève qui ne sait pas quoi demander
            (surtout un premier contact, ou un jour sans idée précise) peut
            cliquer plutôt que d'affronter un champ vide. Toujours visibles,
@@ -931,9 +979,26 @@
     <!-- === ESPACE DE TRAVAIL === -->
     <div id="app-view">
         <div class="toolbar">
-            <button class="btn-retour btn-icon" onclick="goHome()" title="Retour au menu" aria-label="Retour au menu">
-                ←
-            </button>
+            <div class="menu-navigation-wrapper">
+                <button class="btn-retour btn-icon" id="btn-menu-nav" onclick="toggleMenuNavigation()" title="Menu de navigation" aria-label="Menu de navigation" aria-expanded="false">
+                    ☰
+                </button>
+                <div id="menu-navigation-panel" class="menu-navigation-panel">
+                    <button class="menu-nav-item" onclick="naviguerVers('home')">🏠 Retour à l'accueil</button>
+                    <div class="menu-nav-separateur"></div>
+                    <button class="menu-nav-item" onclick="naviguerVers('sas')">🧭 Espace de Préparation</button>
+                    <button class="menu-nav-item" onclick="naviguerVers('eleve')">🏛️ L'Académie EdukaTchat</button>
+                    <button class="menu-nav-item" onclick="naviguerVers('enseignant')">🔮 Espace Enseignant</button>
+                    <div class="menu-nav-separateur"></div>
+                    <button class="menu-nav-item" onclick="naviguerVers('orateur')">🎙️ Atelier de l'Orateur</button>
+                    <button class="menu-nav-item" onclick="naviguerVers('philo')">🦉 Atelier de Philosophie</button>
+                    <button class="menu-nav-item" onclick="naviguerVers('sciences')">🧬 Atelier des Sciences</button>
+                    <div class="menu-nav-separateur"></div>
+                    <button class="menu-nav-item" onclick="naviguerVers('boussole')">🧭 Boussole d'Orientation</button>
+                    <button class="menu-nav-item" onclick="naviguerVers('boussole-univ')">🎓 Boussole Universitaire</button>
+                    <button class="menu-nav-item" onclick="naviguerVers('parents')">🛡️ Espace Parents</button>
+                </div>
+            </div>
 
             <!-- ❖ Regroupement esthétique : les icônes de réglage (thème,
                  matière, plein écran) partagent désormais un même socle en

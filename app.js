@@ -499,6 +499,53 @@ function goHome() {
     if (btnMatieresAccueil) btnMatieresAccueil.style.display = 'none';
 }
 
+// ❖ LE MENU DE NAVIGATION (remplace le simple bouton "Retour") : chaque
+// destination de l'accueil est déjà une fonction autonome (ouvertes
+// jusqu'ici uniquement depuis les cartes de l'accueil) -- on les réutilise
+// telles quelles, sans dupliquer leur logique.
+function toggleMenuNavigation() {
+    const panel = document.getElementById('menu-navigation-panel');
+    const btn = document.getElementById('btn-menu-nav');
+    if (!panel || !btn) return;
+    const estOuvert = panel.classList.toggle('ouvert');
+    btn.setAttribute('aria-expanded', estOuvert ? 'true' : 'false');
+}
+
+function fermerMenuNavigation() {
+    const panel = document.getElementById('menu-navigation-panel');
+    const btn = document.getElementById('btn-menu-nav');
+    if (panel) panel.classList.remove('ouvert');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('click', function(event) {
+    const wrapper = document.querySelector('.menu-navigation-wrapper');
+    if (wrapper && !wrapper.contains(event.target)) {
+        fermerMenuNavigation();
+    }
+});
+
+function naviguerVers(destination) {
+    fermerMenuNavigation();
+    if (destination === 'home') {
+        goHome();
+    } else if (destination === 'sas' || destination === 'eleve' || destination === 'enseignant') {
+        openSpace(destination);
+    } else if (destination === 'orateur') {
+        ouvrirAtelier();
+    } else if (destination === 'philo') {
+        ouvrirPhilo();
+    } else if (destination === 'sciences') {
+        ouvrirSciences();
+    } else if (destination === 'boussole') {
+        ouvrirBoussole();
+    } else if (destination === 'boussole-univ') {
+        ouvrirBoussoleUniv();
+    } else if (destination === 'parents') {
+        ouvrirParentsModal();
+    }
+}
+
 // ❖ LE FONDU PROGRESSIF DE LA RÉPONSE ❖
 // botLoadingDiv.innerHTML est réécrit en entier à chaque fragment reçu du
 // flux SSE (nécessaire pour que marked.parse() reforme correctement le
