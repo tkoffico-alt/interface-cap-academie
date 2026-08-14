@@ -1835,3 +1835,87 @@ async function sendAreneMessage() {
         scrollToBottom('arene-chat-history');
     }
 }
+
+// =====================================================================
+// BIBLIOTHÈQUE D'ILLUSTRATIONS (Espace Enseignant — La Forge)
+// =====================================================================
+// ❖ Galerie de schémas recréés (vectoriel, sans risque de droits
+// d'auteur) et de vraies photographies microscopiques libres de droits,
+// consultable depuis La Forge des Leçons. Interroge le même gateway que
+// le chat (GET /api/illustrations, sans authentification : ce sont des
+// ressources pédagogiques publiques). Portée actuelle : SVT et
+// Physique-Chimie, Terminale et Troisième (BEPC) — les autres
+// classes/matières n'ont pas encore d'illustrations cataloguées.
+let illuMinuteur = null;
+
+function ouvrirBibliothequeIllustrations() {
+    document.getElementById('illustrations-modal').classList.add('active');
+    rechercherIllustrations();
+}
+
+function fermerBibliothequeIllustrations() {
+    document.getElementById('illustrations-modal').classList.remove('active');
+}
+
+function rechercherIllustrationsDifferee() {
+    clearTimeout(illuMinuteur);
+    illuMinuteur = setTimeout(rechercherIllustrations, 350);
+}
+
+async function rechercherIllustrations() {
+    const matiere = document.getElementById('illu-filtre-matiere').value;
+    const niveau = document.getElementById('illu-filtre-niveau').value;
+    const q = document.getElementById('illu-recherche').value.trim();
+    const feedback = document.getElementById('illu-feedback');
+    const conteneur = document.getElementById('illu-resultats');
+
+    feedback.textContent = 'Recherche...';
+    try {
+        const params = new URLSearchParams();
+        if (matiere) params.set('matiere', matiere);
+        if (niveau) params.set('niveau', niveau);
+        if (q) params.set('q', q);
+        const reponse = await fetch(`https://api.edukatchat.org/api/illustrations?${params.toString()}`);
+        const data = await reponse.json();
+        afficherResultatsIllustrations(data.illustrations || []);
+        feedback.textContent = data.total > 0
+            ? `${data.total} illustration${data.total > 1 ? 's' : ''} trouvée${data.total > 1 ? 's' : ''}.`
+            : "Aucune illustration ne correspond à cette recherche pour l'instant.";
+    } catch (error) {
+        conteneur.innerHTML = '';
+        feedback.textContent = "La bibliothèque est momentanément indisponible. Réessayez dans un instant.";
+    }
+}
+
+function afficherResultatsIllustrations(liste) {
+    const conteneur = document.getElementById('illu-resultats');
+    conteneur.innerHTML = '';
+    liste.forEach((img) => {
+        const carte = document.createElement('div');
+        carte.style.cssText = 'background:#fff; border:1px solid #E5E7EB; border-radius:8px; overflow:hidden; cursor:pointer; transition:0.15s; display:flex; flex-direction:column;';
+        carte.onmouseenter = () => carte.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+        carte.onmouseleave = () => carte.style.boxShadow = 'none';
+        carte.title = 'Cliquer pour copier le lien Markdown';
+        carte.innerHTML = `
+            <img src="${img.url}" alt="${img.legende || img.fiche}" style="width:100%; height:110px; object-fit:cover; display:block; background:#F3F4F6;">
+            <div style="padding:8px; font-size:0.78em; color:#374151; flex:1;">${(img.legende || img.fiche || '').slice(0, 90)}</div>
+        `;
+        carte.onclick = () => copierLienIllustration(img.url, img.legende || img.fiche, carte);
+        conteneur.appendChild(carte);
+    });
+}
+
+function copierLienIllustration(url, legende, carteElement) {
+    const markdown = `![${legende}](${url})`;
+    navigator.clipboard.writeText(markdown).then(() => {
+        const feedback = document.getElementById('illu-feedback');
+        feedback.textContent = 'Lien Markdown copié — collez-le dans votre fiche (La Forge).';
+        if (carteElement) {
+            const ancienneBordure = carteElement.style.border;
+            carteElement.style.border = '2px solid #10B981';
+            setTimeout(() => { carteElement.style.border = ancienneBordure; }, 700);
+        }
+    }).catch(() => {
+        document.getElementById('illu-feedback').textContent = "Impossible de copier automatiquement — clic droit sur l'image pour copier son adresse.";
+    });
+}

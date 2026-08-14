@@ -1002,6 +1002,9 @@
                         <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                         </button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
+                        </button>
                         <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('forge')" title="Envoyer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
@@ -1269,6 +1272,31 @@
             <div style="text-align: center;">
                 <button onclick="invoquerLaboratoire()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #059669; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Entrer au Laboratoire</button>
             </div>
+        </div>
+    </div>
+    <!-- MODALE BIBLIOTHÈQUE D'ILLUSTRATIONS (Espace Enseignant — La Forge) -->
+    <div id="illustrations-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 780px; width: 92%;">
+            <button class="modal-close" onclick="fermerBibliothequeIllustrations()">×</button>
+            <h3 style="margin-bottom: 6px;">🖼️ Bibliothèque d'illustrations</h3>
+            <p style="color: #6B7280; font-size: 0.9em; margin-bottom: 18px;">Schémas recréés et vraies photographies microscopiques, prêts à insérer dans une fiche. Cliquez sur une image pour copier son lien Markdown.</p>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
+                <select id="illu-filtre-matiere" class="input-field" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" onchange="rechercherIllustrations()">
+                    <option value="">Toutes les matières</option>
+                    <option value="svt">SVT</option>
+                    <option value="physique">Physique-Chimie</option>
+                </select>
+                <select id="illu-filtre-niveau" class="input-field" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" onchange="rechercherIllustrations()">
+                    <option value="">Toutes les classes</option>
+                    <option value="terminale">Terminale</option>
+                    <option value="3e">Troisième (BEPC)</option>
+                </select>
+                <input type="text" id="illu-recherche" class="input-field" placeholder="Rechercher un thème, un TP..." style="flex: 2; min-width: 180px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" oninput="rechercherIllustrationsDifferee()">
+            </div>
+
+            <div id="illu-feedback" style="min-height: 18px; font-size: 0.85em; color: #6B7280; margin-bottom: 8px;"></div>
+            <div id="illu-resultats" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; max-height: 55vh; overflow-y: auto; padding-right: 4px;"></div>
         </div>
     </div>
     <!-- Script de régulation des notes scientifiques (Conseiller Universitaire) -->
