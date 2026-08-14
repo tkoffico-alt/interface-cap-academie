@@ -22,6 +22,9 @@
             font-size: 1.05em; flex-shrink: 0;
         }
         .btn-icone-outil svg { width: 17px; height: 17px; }
+        .btn-icone-outil.btn-icone-neutre { background-color: transparent; border: 1px solid #475569; color: #94A3B8; }
+        .btn-icone-outil.btn-icone-neutre:hover { background-color: rgba(148,163,184,0.12); color: #CBD5E1; }
+        .btn-icone-outil.btn-icone-teal { background-color: #0F6E56; color: #9FE1CB; }
         .btn-icone-outil.btn-icone-orange { background-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.25); }
         .btn-icone-outil.btn-icone-bleu { background-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
         .btn-icone-outil.btn-icone-violet { background-color: #8B5CF6; box-shadow: 0 0 0 3px rgba(139,92,246,0.25); }
@@ -128,6 +131,38 @@
         body.light-theme #sas-suggestions-rapides .btn-suggestion-reviser { background-color: #D1FAE5; color: #047857; }
         body.light-theme #sas-suggestions-rapides .btn-suggestion-exercice { background-color: #FFEDD5; color: #C2410C; }
         body.light-theme #sas-suggestions-rapides .btn-suggestion-rentree { background-color: #EDE9FE; color: #6D28D9; }
+
+        /* ❖ Les suggestions des 3 outils enseignants reprennent la même
+           forme "carte" que celles du Sas (élève) plutôt que la pilule
+           bleue uniforme d'origine — chaque outil garde la couleur douce
+           déjà associée à son onglet (bleu Atelier, ambre Forge, violet
+           Cabinet), pour une identité cohérente entre onglet et suggestions. */
+        #container-atelier-custom .suggestions-rapides .btn-suggestion,
+        #container-forge-custom .suggestions-rapides .btn-suggestion,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion {
+            border-radius: 14px;
+            padding: 7px 13px;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+        #container-atelier-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
+        }
+        #container-atelier-custom .suggestions-rapides .btn-suggestion {
+            background-color: #DBEAFE; color: #1D4ED8; border-color: #93C5FD;
+        }
+        #container-atelier-custom .suggestions-rapides .btn-suggestion:hover { background-color: #BFDBFE; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion {
+            background-color: #FEF3C7; color: #B45309; border-color: #FCD34D;
+        }
+        #container-forge-custom .suggestions-rapides .btn-suggestion:hover { background-color: #FDE68A; }
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion {
+            background-color: #EDE9FE; color: #6D28D9; border-color: #C4B5FD;
+        }
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover { background-color: #DDD6FE; }
 
         /* ❖ Deuxième passe d'allègement : les boutons "Copier pour Word" /
            "Imprimer / PDF" ressemblaient encore à des boutons d'action
@@ -279,23 +314,26 @@
             box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
         }
         #tab-atelier.active {
-            background-color: #3B82F6;
-            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+            background-color: rgba(59, 130, 246, 0.16);
+            color: #93C5FD;
+            box-shadow: none;
         }
         #tab-forge.active {
-            background-color: #F59E0B;
-            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+            background-color: rgba(245, 158, 11, 0.16);
+            color: #FCD34D;
+            box-shadow: none;
         }
         #tab-cabinet.active {
-            background-color: #8B5CF6;
-            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.35);
+            background-color: rgba(139, 92, 246, 0.16);
+            color: #C4B5FD;
+            box-shadow: none;
         }
         body.light-theme .btn-retour { background-color: #F8FAFC; }
         body.light-theme .teacher-navigation { background-color: #EEF2F7; }
         body.light-theme .tab-btn.active { background-color: #3B82F6; color: #FFFFFF; }
-        body.light-theme #tab-atelier.active { background-color: #3B82F6; }
-        body.light-theme #tab-forge.active { background-color: #F59E0B; }
-        body.light-theme #tab-cabinet.active { background-color: #8B5CF6; }
+        body.light-theme #tab-atelier.active { background-color: #DBEAFE; color: #1D4ED8; box-shadow: none; }
+        body.light-theme #tab-forge.active { background-color: #FEF3C7; color: #B45309; box-shadow: none; }
+        body.light-theme #tab-cabinet.active { background-color: #EDE9FE; color: #6D28D9; box-shadow: none; }
 
         /* ❖ Les onglets inactifs "flottaient" sans repère visuel avant le
            survol (juste du texte nu dans le halo du conteneur) -- un fond
@@ -947,7 +985,7 @@
                         <button type="button" class="btn-suggestion btn-suggestion-rentree" data-message="C'est les vacances : aide-moi à préparer la rentrée prochaine."><span class="suggestion-emoji">🌴</span>Préparer la rentrée</button>
                     </div>
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un document">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="triggerVisionUpsell('sas-chat-history')" title="Joindre un document">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                             </svg>
@@ -975,10 +1013,10 @@
                         <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Générer une variante</button>
                     </div>
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('atelier-chat-history')" title="Joindre un texte source">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="triggerVisionUpsell('atelier-chat-history')" title="Joindre un texte source">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                         </button>
-                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
+                        <button class="btn-attachment btn-icone-outil btn-icone-teal" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
                         </button>
                         <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
@@ -1002,10 +1040,10 @@
                         <button type="button" class="btn-suggestion" data-outil="forge" data-message="Actualise l'entête de la dernière fiche (identification, objectifs, prérequis).">🔖 Actualiser l'entête</button>
                     </div>
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="triggerVisionUpsell('forge-chat-history')" title="Joindre un extrait de livre">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                         </button>
-                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
+                        <button class="btn-attachment btn-icone-outil btn-icone-teal" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
                         </button>
                         <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
@@ -1029,7 +1067,7 @@
                         <button type="button" class="btn-suggestion" data-outil="cabinet" data-message="Aide-moi à analyser une difficulté récurrente rencontrée avec mes élèves.">📊 Analyser une difficulté</button>
                     </div>
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment btn-icone-outil btn-icone-orange" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="triggerVisionUpsell('cabinet-chat-history')" title="Joindre une situation d'apprentissage">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                         </button>
                         <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
