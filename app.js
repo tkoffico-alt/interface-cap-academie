@@ -502,7 +502,11 @@ function goHome() {
 // ❖ LE MENU DE NAVIGATION (remplace le simple bouton "Retour") : chaque
 // destination de l'accueil est déjà une fonction autonome (ouvertes
 // jusqu'ici uniquement depuis les cartes de l'accueil) -- on les réutilise
-// telles quelles, sans dupliquer leur logique.
+// telles quelles, sans dupliquer leur logique. Volontairement identique
+// dans tous les espaces (pas de cloisonnement élève/enseignant) : les
+// espaces protégés (Académie, Espace Enseignant) restent de toute façon
+// filtrés par le code d'accès, et un enseignant curieux qui explore le Sas
+// n'est pas un problème -- plutôt un bon ambassadeur du projet.
 function toggleMenuNavigation() {
     const panel = document.getElementById('menu-navigation-panel');
     const btn = document.getElementById('btn-menu-nav');
