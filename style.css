@@ -765,6 +765,32 @@ body.light-theme .btn-action-doc:hover {
     color: #1D4ED8;
 }
 
+/* --- LA PRONONCIATION À LA DEMANDE, DIRECTEMENT SUR LA PHRASE CONCERNÉE ---
+   Plutôt qu'un unique bouton en bas du message (qui lisait tout, y compris
+   les explications en français), un petit haut-parleur s'insère juste après
+   chaque phrase entre guillemets détectée dans la réponse -- voir
+   ajouterBoutonsPrononciationInline() dans app.js. Ne cible ainsi que ce
+   qui intéresse vraiment l'élève : le mot ou la phrase en langue étrangère. */
+.btn-ecoute-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin: 0 1px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #3B82F6;
+    font-size: 0.8em;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+}
+.btn-ecoute-inline:hover { color: #1D4ED8; }
+.btn-ecoute-inline:disabled { cursor: wait; opacity: 0.6; }
+body.light-theme .btn-ecoute-inline { color: #2563EB; }
+
 /* --- LE FILTRE DE PURIFICATION POUR L'IMPRIMANTE --- */
 #print-area { display: none; }
 @media print {
@@ -785,20 +811,11 @@ body.light-theme .btn-action-doc:hover {
     }
 }
 
-/* ❖ L'APPARITION FLUIDE DES MESSAGES ❖ */
+/* ❖ L'APPARITION FLUIDE DES MESSAGES (désactivée à la demande — affichage immédiat) ❖ */
 .apparition-fluide {
-    animation: fonduDeroule 0.8s ease-out forwards;
-}
-
-@keyframes fonduDeroule {
-    0% { 
-        opacity: 0; 
-        transform: translateY(15px);
-    }
-    100% { 
-        opacity: 1; 
-        transform: translateY(0);
-    }
+    animation: none;
+    opacity: 1;
+    transform: none;
 }
 
 /* Le nouveau bouton minimaliste d'envoi */
