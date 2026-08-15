@@ -1535,36 +1535,42 @@ function animerBoutonCopie(bouton) {
 }
 
 // ❖ LA PRONONCIATION À LA DEMANDE, CIBLÉE SUR LA PHRASE (langues uniquement) ❖
-// Repère chaque segment entre guillemets doubles dans la réponse (c'est déjà
-// la convention que l'agent utilise pour citer un mot ou une phrase en
-// langue étrangère -- voir les captures : "Hello", "How are you?", etc.) et
-// insère un petit 🔊 juste après, plutôt qu'un bouton unique qui lirait tout
-// le message y compris les explications en français. On évite volontairement
-// de toucher aux balises HTML déjà présentes (gras, listes) : le motif
-// n'accepte que du texte brut entre les guillemets.
+// Première version : repérage par guillemets doubles ("..."). Abandonnée --
+// le français utilise lui aussi les guillemets pour citer un mot ("bonjour"),
+// donc le bouton apparaissait aussi bien sur le mot français que sur sa
+// traduction, quoi qu'en dise le prompt (réflexe linguistique du modèle,
+// difficile à supprimer entièrement par instruction seule).
+// Version actuelle : le prompt de l'agent encadre désormais le mot/la phrase
+// en langue étrangère avec des BACKTICKS (`mot`) -- un signe que le français
+// n'emploie jamais spontanément pour citer un terme, donc sans ambiguïté
+// possible. marked.js transforme déjà ces backticks en balises <code> au
+// moment du rendu (voir afficherReponseAvecFondu/marked.parse) ; il suffit
+// donc de cibler ces balises directement dans le DOM, sans regex fragile sur
+// du texte déjà transformé en HTML.
 const phrasesAudioEnAttente = {};
 
 function ajouterBoutonsPrononciationInline(messageDiv) {
-    const MOTIF_GUILLEMETS = /"([^"<>]{2,150})"/g;
+    const elementsCode = messageDiv.querySelectorAll('code');
     let indexPhrase = 0;
-    const phrases = [];
 
-    messageDiv.innerHTML = messageDiv.innerHTML.replace(MOTIF_GUILLEMETS, (correspondance, phrase) => {
+    elementsCode.forEach((element) => {
+        const phrase = element.textContent.trim();
+        if (!phrase) return;
+
         const id = `phrase-audio-${Date.now()}-${indexPhrase}`;
-        phrases.push(phrase);
         indexPhrase++;
-        return `"${phrase}"<button class="btn-ecoute-inline" data-phrase-id="${id}" onclick="ecouterPhraseParId(this)" title="Écouter la prononciation" aria-label="Écouter la prononciation">🔊</button>`;
-    });
+        phrasesAudioEnAttente[id] = phrase;
 
-    // Les textes des phrases sont gardés en mémoire (attribut data-*
-    // insuffisant pour des guillemets/apostrophes sans risque d'échappement
-    // HTML mal formé) -- on les associe après coup aux boutons fraîchement
-    // créés, dans l'ordre où ils ont été insérés.
-    const boutons = messageDiv.querySelectorAll('.btn-ecoute-inline[data-phrase-id]');
-    boutons.forEach((bouton, i) => {
-        if (phrases[i]) {
-            phrasesAudioEnAttente[bouton.dataset.phraseId] = phrases[i];
-        }
+        const bouton = document.createElement('button');
+        bouton.type = 'button';
+        bouton.className = 'btn-ecoute-inline';
+        bouton.dataset.phraseId = id;
+        bouton.title = 'Écouter la prononciation';
+        bouton.setAttribute('aria-label', 'Écouter la prononciation');
+        bouton.textContent = '🔊';
+        bouton.onclick = function () { ecouterPhraseParId(bouton); };
+
+        element.insertAdjacentElement('afterend', bouton);
     });
 }
 

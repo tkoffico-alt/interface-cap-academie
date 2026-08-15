@@ -768,9 +768,26 @@ body.light-theme .btn-action-doc:hover {
 /* --- LA PRONONCIATION À LA DEMANDE, DIRECTEMENT SUR LA PHRASE CONCERNÉE ---
    Plutôt qu'un unique bouton en bas du message (qui lisait tout, y compris
    les explications en français), un petit haut-parleur s'insère juste après
-   chaque phrase entre guillemets détectée dans la réponse -- voir
-   ajouterBoutonsPrononciationInline() dans app.js. Ne cible ainsi que ce
-   qui intéresse vraiment l'élève : le mot ou la phrase en langue étrangère. */
+   chaque mot/phrase en langue étrangère repéré dans la réponse -- voir
+   ajouterBoutonsPrononciationInline() dans app.js. L'agent encadre désormais
+   ces mots avec des BACKTICKS (`mot`) dans son Markdown plutôt que des
+   guillemets (le français citant lui-même volontiers un mot entre
+   guillemets, ex. "bonjour" -- ambiguïté que les backticks éliminent).
+   marked.js transforme automatiquement ces backticks en balises <code> ;
+   la règle ci-dessous leur retire leur habillage "code" par défaut pour les
+   présenter comme un simple mot mis en valeur, cliquable pour être écouté. */
+.message.bot-message code {
+    font-family: inherit;
+    background: rgba(59, 130, 246, 0.12);
+    color: inherit;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1em;
+}
+body.light-theme .message.bot-message code {
+    background: rgba(37, 99, 235, 0.10);
+}
 .btn-ecoute-inline {
     display: inline-flex;
     align-items: center;
