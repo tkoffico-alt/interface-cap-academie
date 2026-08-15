@@ -1549,13 +1549,44 @@ function animerBoutonCopie(bouton) {
 // du texte déjà transformé en HTML.
 const phrasesAudioEnAttente = {};
 
+// ❖ FILET DE SÉCURITÉ (l'IA ne respecte pas toujours la consigne à la
+// lettre) : deux défauts observés malgré le prompt --
+//  1) elle encadre parfois de backticks le mot français ET le mot étranger,
+//     pas seulement ce dernier ;
+//  2) elle garde parfois les guillemets à l'INTÉRIEUR des backticks
+//     (`"Hello"` au lieu de `Hello`).
+// On corrige donc les deux ici plutôt que de dépendre uniquement du prompt :
+// on retire les guillemets superflus, puis on ignore tout segment qui
+// correspond à un mot ou une expression française courante (liste volontai-
+// rement restreinte aux salutations/formules de politesse -- le vocabulaire
+// typique de ce contexte -- pas une détection de langue complète).
+const MOTS_COURANTS_FRANCAIS = new Set([
+    'bonjour', 'bonsoir', 'salut', 'au revoir', 'a plus', 'a bientot',
+    'a tout a lheure', 'merci', 'merci beaucoup', 'de rien', 'pardon',
+    'excuse-moi', 'excusez-moi', 'oui', 'non', 'peut-etre', 'sil vous plait',
+    'sil te plait', 'comment allez-vous', 'comment vas-tu', 'comment ca va',
+    'ca va', 'tres bien', 'bien', 'bienvenue', 'bonne journee', 'bonne soiree',
+    'bonne nuit', 'enchante', 'enchantee', 's il te plait', 's il vous plait'
+]);
+
+function normaliserPourComparaison(texte) {
+    return texte
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
 function ajouterBoutonsPrononciationInline(messageDiv) {
     const elementsCode = messageDiv.querySelectorAll('code');
     let indexPhrase = 0;
 
     elementsCode.forEach((element) => {
-        const phrase = element.textContent.trim();
+        let phrase = element.textContent.trim();
+        // Retire d'éventuels guillemets laissés à l'intérieur des backticks.
+        phrase = phrase.replace(/^["'“”‘’«»]+|["'“”‘’«»]+$/g, '').trim();
         if (!phrase) return;
+        if (MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase))) return;
 
         const id = `phrase-audio-${Date.now()}-${indexPhrase}`;
         indexPhrase++;
