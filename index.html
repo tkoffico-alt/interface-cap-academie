@@ -28,6 +28,7 @@
         .btn-icone-outil.btn-icone-orange { background-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.25); }
         .btn-icone-outil.btn-icone-bleu { background-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
         .btn-icone-outil.btn-icone-violet { background-color: #8B5CF6; box-shadow: 0 0 0 3px rgba(139,92,246,0.25); }
+        .btn-icone-outil.btn-icone-ambre { background-color: #B45309; color: #FDE68A; }
         @media (max-width: 420px) {
             .btn-icone-outil { width: 30px; height: 30px; min-width: 30px; font-size: 0.9em; }
             .btn-icone-outil svg { width: 14px; height: 14px; }
@@ -986,9 +987,9 @@
                 <div id="menu-navigation-panel" class="menu-navigation-panel">
                     <button class="menu-nav-item" onclick="naviguerVers('home')">🏠 Retour à l'accueil</button>
                     <div class="menu-nav-separateur"></div>
-                    <button class="menu-nav-item" onclick="naviguerVers('sas')">🧭 Espace de Préparation</button>
-                    <button class="menu-nav-item" onclick="naviguerVers('eleve')">🏛️ L'Académie EdukaTchat</button>
-                    <button class="menu-nav-item" onclick="naviguerVers('enseignant')">🔮 Espace Enseignant</button>
+                    <button class="menu-nav-item" id="menu-nav-sas" onclick="naviguerVers('sas')">🧭 Espace de Préparation</button>
+                    <button class="menu-nav-item" id="menu-nav-eleve" onclick="naviguerVers('eleve')">🏛️ L'Académie EdukaTchat</button>
+                    <button class="menu-nav-item" id="menu-nav-enseignant" onclick="naviguerVers('enseignant')">🔮 Espace Enseignant</button>
                     <div class="menu-nav-separateur"></div>
                     <button class="menu-nav-item" onclick="naviguerVers('orateur')">🎙️ Atelier de l'Orateur</button>
                     <button class="menu-nav-item" onclick="naviguerVers('philo')">🦉 Atelier de Philosophie</button>
@@ -1084,6 +1085,9 @@
                         <button class="btn-attachment btn-icone-outil btn-icone-teal" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
                         </button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-ambre" onclick="ouvrirBibliothequeFormules()" title="Bibliothèque de fiches-formules">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-6 4h6m-6 4h4M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" /></svg>
+                        </button>
                         <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('atelier')" title="Envoyer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
@@ -1110,6 +1114,9 @@
                         </button>
                         <button class="btn-attachment btn-icone-outil btn-icone-teal" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
+                        </button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-ambre" onclick="ouvrirBibliothequeFormules()" title="Bibliothèque de fiches-formules">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-6 4h6m-6 4h4M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" /></svg>
                         </button>
                         <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('forge')" title="Envoyer">
@@ -1403,6 +1410,32 @@
 
             <div id="illu-feedback" style="min-height: 18px; font-size: 0.85em; color: #6B7280; margin-bottom: 8px;"></div>
             <div id="illu-resultats" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; max-height: 55vh; overflow-y: auto; padding-right: 4px;"></div>
+        </div>
+    </div>
+    <!-- MODALE BIBLIOTHÈQUE DE FICHES-FORMULES (Espace Enseignant — Atelier/Forge) -->
+    <div id="formules-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 780px; width: 92%;">
+            <button class="modal-close" onclick="fermerBibliothequeFormules()">×</button>
+            <h3 style="margin-bottom: 6px;">📐 Bibliothèque de fiches-formules</h3>
+            <p style="color: #6B7280; font-size: 0.9em; margin-bottom: 18px;">Formulaires de Maths, Physique-Chimie et SVT, prêts à insérer dans un cours ou une évaluation. Cliquez sur une fiche pour copier son contenu.</p>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
+                <select id="formules-filtre-matiere" class="input-field" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" onchange="rechercherFormules()">
+                    <option value="">Toutes les matières</option>
+                    <option value="maths">Mathématiques</option>
+                    <option value="physique">Physique-Chimie</option>
+                    <option value="svt">SVT</option>
+                </select>
+                <select id="formules-filtre-niveau" class="input-field" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" onchange="rechercherFormules()">
+                    <option value="">Toutes les classes</option>
+                    <option value="3e">Troisième (BEPC)</option>
+                    <option value="terminale">Terminale</option>
+                </select>
+                <input type="text" id="formules-recherche" class="input-field" placeholder="Rechercher un chapitre, une notion..." style="flex: 2; min-width: 180px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" oninput="rechercherFormulesDifferee()">
+            </div>
+
+            <div id="formules-feedback" style="min-height: 18px; font-size: 0.85em; color: #6B7280; margin-bottom: 8px;"></div>
+            <div id="formules-resultats" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; max-height: 55vh; overflow-y: auto; padding-right: 4px;"></div>
         </div>
     </div>
     <!-- Script de régulation des notes scientifiques (Conseiller Universitaire) -->

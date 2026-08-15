@@ -2070,3 +2070,85 @@ function copierLienIllustration(url, legende, carteElement) {
         document.getElementById('illu-feedback').textContent = "Impossible de copier automatiquement — clic droit sur l'image pour copier son adresse.";
     });
 }
+
+// =======================================================================
+// ❖ LA BIBLIOTHÈQUE DE FICHES-FORMULES (Espace Enseignant) ❖
+// Même logique que la Bibliothèque d'Illustrations juste au-dessus, mais
+// il n'y a pas d'image à afficher : chaque carte montre le titre de la
+// fiche, et un clic copie directement son CONTENU texte (le formulaire
+// complet) dans le presse-papiers, prêt à coller dans un message adressé
+// à l'IA (Forge/Atelier). Portée actuelle : Maths, Physique-Chimie et
+// SVT, Troisième et Terminale — extension progressive aux autres classes.
+let formulesMinuteur = null;
+
+function ouvrirBibliothequeFormules() {
+    document.getElementById('formules-modal').classList.add('active');
+    rechercherFormules();
+}
+
+function fermerBibliothequeFormules() {
+    document.getElementById('formules-modal').classList.remove('active');
+}
+
+function rechercherFormulesDifferee() {
+    clearTimeout(formulesMinuteur);
+    formulesMinuteur = setTimeout(rechercherFormules, 350);
+}
+
+async function rechercherFormules() {
+    const matiere = document.getElementById('formules-filtre-matiere').value;
+    const niveau = document.getElementById('formules-filtre-niveau').value;
+    const q = document.getElementById('formules-recherche').value.trim();
+    const feedback = document.getElementById('formules-feedback');
+    const conteneur = document.getElementById('formules-resultats');
+
+    feedback.textContent = 'Recherche...';
+    try {
+        const params = new URLSearchParams();
+        if (matiere) params.set('matiere', matiere);
+        if (niveau) params.set('niveau', niveau);
+        if (q) params.set('q', q);
+        const reponse = await fetch(`https://api.edukatchat.org/api/formules?${params.toString()}`);
+        const data = await reponse.json();
+        afficherResultatsFormules(data.formules || []);
+        feedback.textContent = data.total > 0
+            ? `${data.total} fiche${data.total > 1 ? 's' : ''} trouvée${data.total > 1 ? 's' : ''}.`
+            : "Aucune fiche ne correspond à cette recherche pour l'instant.";
+    } catch (error) {
+        conteneur.innerHTML = '';
+        feedback.textContent = "La bibliothèque est momentanément indisponible. Réessayez dans un instant.";
+    }
+}
+
+function afficherResultatsFormules(liste) {
+    const conteneur = document.getElementById('formules-resultats');
+    conteneur.innerHTML = '';
+    liste.forEach((fiche) => {
+        const carte = document.createElement('div');
+        carte.style.cssText = 'background:#fff; border:1px solid #E5E7EB; border-radius:8px; padding:12px; cursor:pointer; transition:0.15s;';
+        carte.onmouseenter = () => carte.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+        carte.onmouseleave = () => carte.style.boxShadow = 'none';
+        carte.title = 'Cliquer pour copier cette fiche';
+        const apercu = (fiche.contenu || '').split('\n').slice(1, 4).join(' ').slice(0, 110);
+        carte.innerHTML = `
+            <div style="font-weight:600; font-size:0.88em; color:#111827; margin-bottom:4px;">${fiche.titre || fiche.chapitre}</div>
+            <div style="font-size:0.78em; color:#6B7280;">${apercu}…</div>
+        `;
+        carte.onclick = () => copierFormule(fiche, carte);
+        conteneur.appendChild(carte);
+    });
+}
+
+function copierFormule(fiche, carteElement) {
+    navigator.clipboard.writeText(fiche.contenu || '').then(() => {
+        const feedback = document.getElementById('formules-feedback');
+        feedback.textContent = 'Fiche copiée — collez-la dans votre message (La Forge/L\'Atelier).';
+        if (carteElement) {
+            const ancienneBordure = carteElement.style.border;
+            carteElement.style.border = '2px solid #10B981';
+            setTimeout(() => { carteElement.style.border = ancienneBordure; }, 700);
+        }
+    }).catch(() => {
+        document.getElementById('formules-feedback').textContent = "Impossible de copier automatiquement.";
+    });
+}
