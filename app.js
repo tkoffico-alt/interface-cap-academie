@@ -1247,9 +1247,14 @@ async function sendSasMessage() {
         if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
+            const AVATARS_AVEC_AUDIO = ['anglais', 'espagnol', 'allemand'];
+            const boutonEcoute = AVATARS_AVEC_AUDIO.includes(avatarActif)
+                ? `<button class="btn-action-doc" onclick="ecouterPrononciation(this)" title="Écouter la prononciation" aria-label="Écouter la prononciation">🔊</button>`
+                : '';
             actionsDiv.innerHTML = `
                 <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
                 <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+                ${boutonEcoute}
             `;
             botLoadingDiv.appendChild(actionsDiv);
         }
@@ -1523,6 +1528,51 @@ function animerBoutonCopie(bouton) {
         bouton.style.color = "";
         bouton.style.borderColor = "";
     }, 2000);
+}
+
+// ❖ LA PRONONCIATION À LA DEMANDE (bouton 🔊, langues uniquement) ❖
+// Envoie le texte de la réponse au serveur (Piper, hébergé en local, aucun
+// coût par caractère) et joue l'audio obtenu directement dans la page.
+// Jamais automatique -- seul un clic explicite de l'élève déclenche l'appel.
+async function ecouterPrononciation(bouton) {
+    const messageDiv = bouton.closest('.bot-message');
+    const clone = messageDiv.cloneNode(true);
+    const actions = clone.querySelector('.message-actions');
+    if (actions) actions.remove();
+    const texte = clone.innerText.trim();
+
+    if (!texte) return;
+
+    const contenuOriginal = bouton.innerHTML;
+    bouton.innerHTML = '⏳';
+    bouton.disabled = true;
+
+    try {
+        const reponse = await fetch('https://api.edukatchat.org/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texte: texte, avatar: avatarActif })
+        });
+
+        if (!reponse.ok) {
+            throw new Error(`Le serveur a répondu avec l'état : ${reponse.status}`);
+        }
+
+        const blobAudio = await reponse.blob();
+        const urlAudio = URL.createObjectURL(blobAudio);
+        const lecteur = new Audio(urlAudio);
+        lecteur.play();
+        lecteur.onended = () => URL.revokeObjectURL(urlAudio);
+    } catch (erreur) {
+        console.error("Échec de la synthèse vocale :", erreur);
+        bouton.innerHTML = '⚠️';
+        setTimeout(() => { bouton.innerHTML = contenuOriginal; }, 2000);
+        bouton.disabled = false;
+        return;
+    }
+
+    bouton.innerHTML = contenuOriginal;
+    bouton.disabled = false;
 }
 
 function verifierFormulaire() {
