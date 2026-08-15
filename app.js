@@ -1535,31 +1535,22 @@ function animerBoutonCopie(bouton) {
 }
 
 // ❖ LA PRONONCIATION À LA DEMANDE, CIBLÉE SUR LA PHRASE (langues uniquement) ❖
-// Première version : repérage par guillemets doubles ("..."). Abandonnée --
-// le français utilise lui aussi les guillemets pour citer un mot ("bonjour"),
-// donc le bouton apparaissait aussi bien sur le mot français que sur sa
-// traduction, quoi qu'en dise le prompt (réflexe linguistique du modèle,
-// difficile à supprimer entièrement par instruction seule).
-// Version actuelle : le prompt de l'agent encadre désormais le mot/la phrase
-// en langue étrangère avec des BACKTICKS (`mot`) -- un signe que le français
-// n'emploie jamais spontanément pour citer un terme, donc sans ambiguïté
-// possible. marked.js transforme déjà ces backticks en balises <code> au
-// moment du rendu (voir afficherReponseAvecFondu/marked.parse) ; il suffit
-// donc de cibler ces balises directement dans le DOM, sans regex fragile sur
-// du texte déjà transformé en HTML.
+// Historique des tentatives :
+//  1) Repérage par guillemets doubles ("..."). Le français utilise lui aussi
+//     les guillemets pour citer un mot ("bonjour") -> bouton sur les deux.
+//  2) Consigne de prompt demandant des BACKTICKS (`mot`) autour du seul mot
+//     étranger. Résultat instable d'une réponse à l'autre : parfois respecté,
+//     parfois non (l'IA revient aux guillemets classiques), donc aucun
+//     bouton n'apparaissait du tout sur certaines réponses.
+// Version actuelle : on revient aux guillemets doubles -- seul signe que
+// l'IA utilise VRAIMENT de façon systématique, confirmé sur tous les essais
+// -- et on compense le défaut n°1 avec un filtre local : on ignore tout
+// segment entre guillemets qui correspond à un mot ou une expression
+// française courante (salutations/politesse -- le vocabulaire typique de ce
+// contexte, pas une détection de langue complète). Le prompt garde sa
+// consigne en complément, mais le site ne dépend plus de son respect exact.
 const phrasesAudioEnAttente = {};
 
-// ❖ FILET DE SÉCURITÉ (l'IA ne respecte pas toujours la consigne à la
-// lettre) : deux défauts observés malgré le prompt --
-//  1) elle encadre parfois de backticks le mot français ET le mot étranger,
-//     pas seulement ce dernier ;
-//  2) elle garde parfois les guillemets à l'INTÉRIEUR des backticks
-//     (`"Hello"` au lieu de `Hello`).
-// On corrige donc les deux ici plutôt que de dépendre uniquement du prompt :
-// on retire les guillemets superflus, puis on ignore tout segment qui
-// correspond à un mot ou une expression française courante (liste volontai-
-// rement restreinte aux salutations/formules de politesse -- le vocabulaire
-// typique de ce contexte -- pas une détection de langue complète).
 const MOTS_COURANTS_FRANCAIS = new Set([
     'bonjour', 'bonsoir', 'salut', 'au revoir', 'a plus', 'a bientot',
     'a tout a lheure', 'merci', 'merci beaucoup', 'de rien', 'pardon',
@@ -1578,30 +1569,23 @@ function normaliserPourComparaison(texte) {
 }
 
 function ajouterBoutonsPrononciationInline(messageDiv) {
-    const elementsCode = messageDiv.querySelectorAll('code');
+    const MOTIF_GUILLEMETS = /["“”]([^"“”<>]{1,150})["“”]/g;
     let indexPhrase = 0;
+    const phrasesTrouvees = [];
 
-    elementsCode.forEach((element) => {
-        let phrase = element.textContent.trim();
-        // Retire d'éventuels guillemets laissés à l'intérieur des backticks.
-        phrase = phrase.replace(/^["'“”‘’«»]+|["'“”‘’«»]+$/g, '').trim();
-        if (!phrase) return;
-        if (MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase))) return;
-
+    messageDiv.innerHTML = messageDiv.innerHTML.replace(MOTIF_GUILLEMETS, (correspondance, phraseBrute) => {
+        const phrase = phraseBrute.trim();
+        if (!phrase || MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase))) {
+            return correspondance; // mot français courant (ou vide) : pas de bouton
+        }
         const id = `phrase-audio-${Date.now()}-${indexPhrase}`;
         indexPhrase++;
+        phrasesTrouvees.push({ id, phrase });
+        return `${correspondance}<button type="button" class="btn-ecoute-inline" data-phrase-id="${id}" onclick="ecouterPhraseParId(this)" title="Écouter la prononciation" aria-label="Écouter la prononciation">🔊</button>`;
+    });
+
+    phrasesTrouvees.forEach(({ id, phrase }) => {
         phrasesAudioEnAttente[id] = phrase;
-
-        const bouton = document.createElement('button');
-        bouton.type = 'button';
-        bouton.className = 'btn-ecoute-inline';
-        bouton.dataset.phraseId = id;
-        bouton.title = 'Écouter la prononciation';
-        bouton.setAttribute('aria-label', 'Écouter la prononciation');
-        bouton.textContent = '🔊';
-        bouton.onclick = function () { ecouterPhraseParId(bouton); };
-
-        element.insertAdjacentElement('afterend', bouton);
     });
 }
 
