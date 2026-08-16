@@ -2078,7 +2078,7 @@ function copierLienIllustration(url, legende, carteElement) {
 // fiche, et un clic copie directement son CONTENU texte (le formulaire
 // complet) dans le presse-papiers, prêt à coller dans un message adressé
 // à l'IA (Forge/Atelier). Portée actuelle : Maths, Physique-Chimie et
-// SVT, Troisième et Terminale — extension progressive aux autres classes.
+// SVT, de la 6ème à la Terminale.
 let formulesMinuteur = null;
 
 function ouvrirBibliothequeFormules() {
