@@ -543,6 +543,18 @@ iframe.active {
     border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+/* Variante "compacte" : posée dynamiquement par JS (voir
+   chargerTaillesIllustrations() / afficherReponseAvecFondu() dans app.js)
+   selon le champ "taille" du catalogue (illustrations_manifest.json).
+   Volontairement PAS de float ni d'habillage de texte -- reste un bloc
+   centré, simplement plus étroit, pour ne pas interférer avec le
+   white-space: pre-wrap des bulles ni avec .message-actions en dessous. */
+.message img.illustration-compacte {
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .user-message {
     align-self: flex-end;
     background-color: #3B82F6;

@@ -578,6 +578,42 @@ function attenuerSignatureDocument(texteMarkdown) {
     );
 }
 
+// ❖ TAILLE DES ILLUSTRATIONS (grande / compacte) ❖
+// L'IA ne connaît QUE l'URL de l'image (voir illustrations_disponibles côté
+// gateway) et se contente de la recopier en Markdown ![alt](url) -- elle ne
+// choisit jamais elle-même le format. La taille est décidée par nous, au
+// niveau du catalogue (champ "taille" de illustrations_manifest.json), puis
+// appliquée ici côté client par simple correspondance d'URL, une fois le
+// HTML déjà généré. Ce choix délibéré évite de dépendre d'une consigne de
+// formatage que l'IA devrait suivre à la lettre (cf. le bouton de
+// prononciation, où une consigne de ce type s'est révélée peu fiable).
+let tailleIllustrationsParUrl = new Map();
+
+async function chargerTaillesIllustrations() {
+    try {
+        const reponse = await fetch('https://api.edukatchat.org/api/illustrations');
+        const data = await reponse.json();
+        (data.illustrations || []).forEach((img) => {
+            if (img.url && img.taille) {
+                tailleIllustrationsParUrl.set(img.url, img.taille);
+            }
+        });
+    } catch (error) {
+        // Silencieux : en cas d'échec, toutes les images restent au format
+        // "grande" par défaut (comportement actuel, aucune régression).
+    }
+}
+chargerTaillesIllustrations();
+
+function appliquerTailleIllustrations(element) {
+    element.querySelectorAll('img').forEach((img) => {
+        const taille = tailleIllustrationsParUrl.get(img.getAttribute('src'));
+        if (taille === 'compacte') {
+            img.classList.add('illustration-compacte');
+        }
+    });
+}
+
 function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature) {
     const source = attenuerSignature ? attenuerSignatureDocument(texteMarkdown) : texteMarkdown;
     let html = marked.parse(source);
@@ -587,6 +623,7 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature) {
             .replace(JETON_SIGNATURE_FIN, '</span>');
     }
     element.innerHTML = html;
+    appliquerTailleIllustrations(element);
     element.classList.remove('fondu-reponse');
     void element.offsetWidth; // force le reflow : relance l'animation CSS
     element.classList.add('fondu-reponse');
