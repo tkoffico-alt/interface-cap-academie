@@ -1605,6 +1605,39 @@ function normaliserPourComparaison(texte) {
         .trim();
 }
 
+// ❖ Filtre complété (17 août) : MOTS_COURANTS_FRANCAIS seul ne couvrait
+// que les salutations ("bonjour", "merci"...) -- une phrase française
+// quelconque comme "j'ai faim" n'y figurait pas et recevait quand même un
+// bouton d'écoute. ressembleAuFrancais() ajoute une heuristique légère
+// (élisions "j'/l'/d'/qu'..." + mots-outils français + accents) plutôt
+// qu'une liste figée, sans dépendre d'une vraie détection de langue.
+const MOTS_OUTILS_FRANCAIS = new Set([
+    'je', 'tu', 'il', 'elle', 'nous', 'vous', 'ils', 'elles',
+    'le', 'la', 'les', 'un', 'une', 'des', 'du', 'au', 'aux',
+    'est', 'es', 'suis', 'ai', 'as', 'avons', 'avez', 'ont',
+    'ne', 'pas', 'que', 'qui', 'quoi', 'et', 'mais', 'donc', 'car',
+    'pour', 'avec', 'sans', 'dans', 'chez', 'vers', 'entre',
+    'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses',
+    'notre', 'votre', 'leur', 'leurs', 'ce', 'cet', 'cette', 'ces', 'tres'
+]);
+
+function ressembleAuFrancais(phrase) {
+    const normalisee = normaliserPourComparaison(phrase);
+    if (/[éèàçêîôûùïëœ]/.test(normalisee)) return true;
+    const mots = normalisee.split(/\s+/).filter(Boolean);
+    if (mots.length === 0) return false;
+    let indicesFrancais = 0;
+    for (const mot of mots) {
+        if (/^(j|l|d|qu|n|s|m|t|c|jusqu|lorsqu|puisqu)['’]/i.test(mot)) {
+            indicesFrancais++;
+            continue;
+        }
+        const motNu = mot.replace(/^['’]+|['’.,!?;:]+$/g, '');
+        if (MOTS_OUTILS_FRANCAIS.has(motNu)) indicesFrancais++;
+    }
+    return (indicesFrancais / mots.length) >= 0.5;
+}
+
 function ajouterBoutonsPrononciationInline(messageDiv) {
     const MOTIF_GUILLEMETS = /["“”]([^"“”<>]{1,150})["“”]/g;
     let indexPhrase = 0;
@@ -1612,8 +1645,8 @@ function ajouterBoutonsPrononciationInline(messageDiv) {
 
     messageDiv.innerHTML = messageDiv.innerHTML.replace(MOTIF_GUILLEMETS, (correspondance, phraseBrute) => {
         const phrase = phraseBrute.trim();
-        if (!phrase || MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase))) {
-            return correspondance; // mot français courant (ou vide) : pas de bouton
+        if (!phrase || MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase)) || ressembleAuFrancais(phrase)) {
+            return correspondance; // phrase française (courante ou détectée) : pas de bouton
         }
         const id = `phrase-audio-${Date.now()}-${indexPhrase}`;
         indexPhrase++;
