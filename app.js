@@ -1064,7 +1064,7 @@ async function toggleEnregistrementVocal(cible) {
             enregistrementVocalEnCours = true;
             bouton.style.backgroundColor = '#EF4444';
             bouton.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.35)';
-            bouton.textContent = '⏹️';
+            bouton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>';
             bouton.title = "Arrêter l'enregistrement";
         } catch (err) {
             alert("Impossible d'accéder au microphone. Vérifie les autorisations de ton navigateur pour ce site.");
@@ -1073,8 +1073,8 @@ async function toggleEnregistrementVocal(cible) {
         mediaRecorderVocal.stop();
         enregistrementVocalEnCours = false;
         bouton.style.backgroundColor = '#8B5CF6';
-        bouton.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.25)';
-        bouton.textContent = '🎤';
+        bouton.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.35)';
+        bouton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>';
         bouton.title = (cible === 'arene') ? "Parler au lieu d'écrire" : "Poser ma question à l'oral";
     }
 }
