@@ -38,6 +38,16 @@
         .btn-icone-outil.btn-icone-bleu:hover,
         .btn-icone-outil.btn-icone-violet:hover,
         .btn-icone-outil.btn-icone-ambre:hover { transform: scale(1.08); filter: brightness(1.1); }
+        /* ❖ Correctif thème clair : body.light-theme .btn-attachment (deux
+           classes) est plus spécifique que .btn-icone-outil seule (une
+           classe) et repassait l'icône en gris terne (#64748B) sur les
+           quatre boutons colorés, quel que soit le fond. On regagne la
+           priorité avec une sélection tout aussi spécifique. */
+        body.light-theme .btn-icone-outil.btn-icone-teal,
+        body.light-theme .btn-icone-outil.btn-icone-orange,
+        body.light-theme .btn-icone-outil.btn-icone-bleu,
+        body.light-theme .btn-icone-outil.btn-icone-violet,
+        body.light-theme .btn-icone-outil.btn-icone-ambre { color: #fff; }
         @media (max-width: 420px) {
             .btn-icone-outil { width: 30px; height: 30px; min-width: 30px; font-size: 0.9em; }
             .btn-icone-outil svg { width: 14px; height: 14px; }
@@ -1487,40 +1497,4 @@
                     inputSVT.style.opacity = "1";
 
                     inputPC.placeholder = "Requis (/20)";
-                    inputSVT.placeholder = "Requis (/20)";
-                } else {
-                    // Séries littéraires (A, G) : Les piliers se mettent en sommeil
-                    inputPC.removeAttribute('required');
-                    inputSVT.removeAttribute('required');
-
-                    // Verrouiller et griser les champs
-                    inputPC.disabled = true;
-                    inputSVT.disabled = true;
-                    inputPC.style.backgroundColor = "#E2E8F0"; // Gris doux
-                    inputSVT.style.backgroundColor = "#E2E8F0";
-                    inputPC.style.opacity = "0.6"; // Légère transparence
-
-                    // Effacer d'éventuelles notes saisies par erreur
-                    inputPC.value = "";
-                    inputSVT.value = "";
-
-                    inputPC.placeholder = "Non requis";
-                    inputSVT.placeholder = "Non requis";
-                }
-            }
-            if (selectSerie && inputPC && inputSVT) {
-                // 1. Ajustement initial (Série D par défaut)
-                ajusterChampsScientifiques();
-
-                // 2. Écoute de chaque changement
-                selectSerie.addEventListener('change', ajusterChampsScientifiques);
-            }
-        });
-    </script>
-    <!-- Vercel Web Analytics -->
-    <script type="module">
-        import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1.3.1/dist/index.js';
-        inject();
-    </script>
-</body>
-</html>
+                 
