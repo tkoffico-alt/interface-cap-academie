@@ -1066,7 +1066,9 @@
                             </svg>
                         </button>
                         <button class="btn-attachment btn-icone-outil btn-icone-bleu" onclick="ouvrirPlanningModal()" title="Ajouter mon emploi du temps de classe">📅</button>
-                        <button class="btn-attachment btn-icone-outil btn-icone-violet" id="btn-micro-sas" onclick="toggleEnregistrementVocal('sas')" title="Poser ma question à l'oral">🎤</button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-violet" id="btn-micro-sas" onclick="toggleEnregistrementVocal('sas')" title="Poser ma question à l'oral">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        </button>
                         <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
                         <button class="btn-envoyer-icon" onclick="sendSasMessage()" title="Envoyer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
@@ -1095,7 +1097,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
                         </button>
                         <button class="btn-attachment btn-icone-outil btn-icone-ambre" onclick="ouvrirBibliothequeFormules()" title="Bibliothèque de fiches-formules">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-6 4h6m-6 4h4M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 3l4 4l-14 14l-4-4z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7l-1.5-1.5M13 10l-1.5-1.5M10 13l-1.5-1.5M7 16l-1.5-1.5" /></svg>
                         </button>
                         <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('atelier')" title="Envoyer">
@@ -1125,7 +1127,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
                         </button>
                         <button class="btn-attachment btn-icone-outil btn-icone-ambre" onclick="ouvrirBibliothequeFormules()" title="Bibliothèque de fiches-formules">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-6 4h6m-6 4h4M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 3l4 4l-14 14l-4-4z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7l-1.5-1.5M13 10l-1.5-1.5M10 13l-1.5-1.5M7 16l-1.5-1.5" /></svg>
                         </button>
                         <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('forge')" title="Envoyer">
@@ -1167,7 +1169,9 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-input-wrapper">
-                        <button class="btn-attachment btn-icone-outil btn-icone-violet" id="btn-micro-arene" onclick="toggleEnregistrementVocal('arene')" title="Parler au lieu d'écrire">🎤</button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-violet" id="btn-micro-arene" onclick="toggleEnregistrementVocal('arene')" title="Parler au lieu d'écrire">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        </button>
                         <input type="text" id="arene-user-input" placeholder="Exprimez votre pensée ici..." onkeypress="handleAreneKeyPress(event)">
                         <button class="btn-envoyer-icon" onclick="sendAreneMessage()" title="Envoyer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
