@@ -11,7 +11,8 @@
     "legende": "Schéma du montage de la fermentation alcoolique — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/001_schema_du_montage_de_la_fermentation_alc.png",
-    "mots_cles": "production denergie experience de la fermentation alcoolique"
+    "mots_cles": "production denergie experience de la fermentation alcoolique",
+    "taille": "grande"
   },
   {
     "id": "img002",
@@ -25,7 +26,8 @@
     "legende": "Schéma du montage de mise en évidence de la respiration cellulaire — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/002_schema_du_montage_de_mise_en_evidence_de.png",
-    "mots_cles": "production denergie experience de mise en evidence de la res"
+    "mots_cles": "production denergie experience de mise en evidence de la res",
+    "taille": "grande"
   },
   {
     "id": "img003",
@@ -39,7 +41,8 @@
     "legende": "Coupe longitudinale de fibre musculaire au microscope électronique à transmission — bandes A et I, lignes Z, mitochondries de part et d'autre des lignes Z",
     "source": "✅ Vraie photographie microscopique — Louisa Howard, Dartmouth EM Facility — domaine public, via Wikimedia Commons",
     "fichier": "images/illustrations/svt/terminale/003_coupe_longitudinale_de_fibre_musculaire_.png",
-    "mots_cles": "utilisation de lenergie observation microscopique de la stru"
+    "mots_cles": "utilisation de lenergie observation microscopique de la stru",
+    "taille": "compacte"
   },
   {
     "id": "img004",
@@ -53,7 +56,8 @@
     "legende": "Coupe d'endomètre utérin en phase proliférative observée au microscope (coloration H&E, faible grossissement) — glandes endométriales",
     "source": "✅ Vraie photographie microscopique — Nephron — CC BY-SA 3.0, via Wikimedia Commons",
     "fichier": "images/illustrations/svt/terminale/004_coupe_d_endometre_uterin_en_phase_prolif.png",
-    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais"
+    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais",
+    "taille": "compacte"
   },
   {
     "id": "img005",
@@ -67,7 +71,8 @@
     "legende": "Schéma de la coupe d'un utérus de lapine — a: phase folliculaire, b: phase lutéinique (dentelle utérine) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/005_schema_de_la_coupe_d_un_uterus_de_lapine.png",
-    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais"
+    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais",
+    "taille": "grande"
   },
   {
     "id": "img006",
@@ -81,7 +86,8 @@
     "legende": "Coupe schématique d'ovaire — follicules primordiaux/primaires/cavitaires, corps jaune, zone médullaire, hile — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/006_coupe_schematique_d_ovaire_follicules_pr.png",
-    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais"
+    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais",
+    "taille": "grande"
   },
   {
     "id": "img007",
@@ -95,7 +101,8 @@
     "legende": "Coupe transversale de moelle épinière observée au microscope (coloration H&E) — substance grise en H entourée de substance blanche",
     "source": "✅ Vraie photographie microscopique — OpenStax Anatomy and Physiology — CC BY 4.0, via Wikimedia Commons",
     "fichier": "images/illustrations/svt/terminale/007_coupe_transversale_de_moelle_epiniere_ob.png",
-    "mots_cles": "mecanisme de la communication nerveuse observation microscop"
+    "mots_cles": "mecanisme de la communication nerveuse observation microscop",
+    "taille": "compacte"
   },
   {
     "id": "img008",
@@ -109,7 +116,8 @@
     "legende": "Coupe transversale de nerf périphérique observée au microscope optique (coloration H&E, fort grossissement)",
     "source": "✅ Vraie photographie microscopique — Courtesy Department of Histology, Jagiellonian University Medical College — CC BY-SA 3.0, via Wikimedia Commons",
     "fichier": "images/illustrations/svt/terminale/008_coupe_transversale_de_nerf_peripherique_.png",
-    "mots_cles": "mecanisme de la communication nerveuse observation microscop"
+    "mots_cles": "mecanisme de la communication nerveuse observation microscop",
+    "taille": "compacte"
   },
   {
     "id": "img009",
@@ -123,7 +131,8 @@
     "legende": "Schéma d'interprétation de la coupe de nerf (vaisseau sanguin, fibre nerveuse, faisceau de fibres nerveuses, tissu conjonctif, gaine conjonctive) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/009_schema_d_interpretation_de_la_coupe_de_n.png",
-    "mots_cles": "mecanisme de la communication nerveuse observation microscop"
+    "mots_cles": "mecanisme de la communication nerveuse observation microscop",
+    "taille": "grande"
   },
   {
     "id": "img010",
@@ -137,7 +146,8 @@
     "legende": "Emplacement de la dissection sur le crapaud — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/010_emplacement_de_la_dissection_sur_le_crap.png",
-    "mots_cles": "activite cardiaque experience de mise en evidence de l autom"
+    "mots_cles": "activite cardiaque experience de mise en evidence de l autom",
+    "taille": "grande"
   },
   {
     "id": "img011",
@@ -151,7 +161,8 @@
     "legende": "Dispositif pour projection du cœur (cuve à faces parallèles, liquide de Ringer) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/011_dispositif_pour_projection_du_cur_cuve_a.png",
-    "mots_cles": "activite cardiaque experience de mise en evidence de l autom"
+    "mots_cles": "activite cardiaque experience de mise en evidence de l autom",
+    "taille": "grande"
   },
   {
     "id": "img012",
@@ -165,7 +176,8 @@
     "legende": "Coupe d'endomètre utérin en phase proliférative observée au microscope (coloration H&E)",
     "source": "♻️ Asset réutilisé du catalogue Terminale C (image source identique).",
     "fichier": "images/illustrations/svt/terminale/012_coupe_d_endometre_uterin_en_phase_prolif.png",
-    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais"
+    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais",
+    "taille": "compacte"
   },
   {
     "id": "img013",
@@ -179,7 +191,8 @@
     "legende": "Schéma de la coupe d'un utérus de lapine — a: phase folliculaire, b: phase lutéinique (dentelle utérine)",
     "source": "♻️ Asset réutilisé du catalogue Terminale C (image source identique).",
     "fichier": "images/illustrations/svt/terminale/013_schema_de_la_coupe_d_un_uterus_de_lapine.png",
-    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais"
+    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais",
+    "taille": "grande"
   },
   {
     "id": "img014",
@@ -193,7 +206,8 @@
     "legende": "Planche de coupes histologiques réelles d'ovaire (follicule de Graaf, corps jaune, follicule secondaire)",
     "source": "✅ Vraie photographie microscopique — Yara Mohamed et al., CC BY 4.0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/014_planche_de_coupes_histologiques_reelles_.png",
-    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais"
+    "mots_cles": "quelques cycles sexuels chez la femme et regulation des nais",
+    "taille": "grande"
   },
   {
     "id": "img015",
@@ -207,7 +221,8 @@
     "legende": "Coupe transversale d'anthère au microscope (sacs polliniques)",
     "source": "✅ Vraie photographie microscopique — John Alan Elson, CC BY-SA, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/015_coupe_transversale_d_anthere_au_microsco.png",
-    "mots_cles": "reproduction chez les spermaphytes observation microscopique"
+    "mots_cles": "reproduction chez les spermaphytes observation microscopique",
+    "taille": "compacte"
   },
   {
     "id": "img016",
@@ -221,7 +236,8 @@
     "legende": "Cellules mères des grains de pollen (méiose) au microscope",
     "source": "✅ Vraie photographie microscopique — remplace l'image filigranée Alamy. Jon Houseman, CC BY-SA 4.0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/016_cellules_meres_des_grains_de_pollen_meio.png",
-    "mots_cles": "reproduction chez les spermaphytes observation microscopique"
+    "mots_cles": "reproduction chez les spermaphytes observation microscopique",
+    "taille": "compacte"
   },
   {
     "id": "img017",
@@ -235,7 +251,8 @@
     "legende": "Coupe de l'anthère au microscope (loges polliniques)",
     "source": "✅ Vraie photographie microscopique — John Alan Elson, CC BY-SA, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/017_coupe_de_l_anthere_au_microscope_loges_p.png",
-    "mots_cles": "reproduction chez les spermaphytes observation microscopique"
+    "mots_cles": "reproduction chez les spermaphytes observation microscopique",
+    "taille": "compacte"
   },
   {
     "id": "img018",
@@ -249,7 +266,8 @@
     "legende": "Schéma d'interprétation de la coupe de l'anthère (tissus foliaires, sac pollinique) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/018_schema_d_interpretation_de_la_coupe_de_l.png",
-    "mots_cles": "reproduction chez les spermaphytes observation microscopique"
+    "mots_cles": "reproduction chez les spermaphytes observation microscopique",
+    "taille": "grande"
   },
   {
     "id": "img019",
@@ -263,7 +281,8 @@
     "legende": "Montage de grains de pollen de différentes plantes au microscope (x1000)",
     "source": "✅ Vraie photographie microscopique — Andrei Savitsky, CC BY 4.0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/019_montage_de_grains_de_pollen_de_different.png",
-    "mots_cles": "reproduction chez les spermaphytes observation microscopique"
+    "mots_cles": "reproduction chez les spermaphytes observation microscopique",
+    "taille": "grande"
   },
   {
     "id": "img020",
@@ -277,7 +296,8 @@
     "legende": "Grain de pollen vu au microscope optique (G x400)",
     "source": "✅ Vraie photographie microscopique — Wanderfee11, CC BY-SA 4.0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/020_grain_de_pollen_vu_au_microscope_optique.png",
-    "mots_cles": "reproduction chez les spermaphytes observation microscopique"
+    "mots_cles": "reproduction chez les spermaphytes observation microscopique",
+    "taille": "compacte"
   },
   {
     "id": "img021",
@@ -291,7 +311,8 @@
     "legende": "Structure schématique d'un grain de pollen (cytoplasme, noyaux, exine, intine, pore, ornementation) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/021_structure_schematique_d_un_grain_de_poll.png",
-    "mots_cles": "reproduction chez les spermaphytes observation microscopique"
+    "mots_cles": "reproduction chez les spermaphytes observation microscopique",
+    "taille": "grande"
   },
   {
     "id": "img023",
@@ -305,7 +326,8 @@
     "legende": "Coupe transversale d'ovaire au microscope (carpelles)",
     "source": "✅ Vraie photographie microscopique — Sugam Pokharel, CC BY-SA 4.0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/023_coupe_transversale_d_ovaire_au_microscop.png",
-    "mots_cles": "reproduction chez les spermaphytes observation de coupes tra"
+    "mots_cles": "reproduction chez les spermaphytes observation de coupes tra",
+    "taille": "compacte"
   },
   {
     "id": "img024",
@@ -319,7 +341,8 @@
     "legende": "Schéma de la coupe transversale d'ovaire (tissus foliaires, cavité carpellaire, placenta, ovule) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/024_schema_de_la_coupe_transversale_d_ovaire.png",
-    "mots_cles": "reproduction chez les spermaphytes observation de coupes tra"
+    "mots_cles": "reproduction chez les spermaphytes observation de coupes tra",
+    "taille": "grande"
   },
   {
     "id": "img025",
@@ -333,7 +356,8 @@
     "legende": "Coupe d'ovaire montrant l'ovule au microscope",
     "source": "✅ Vraie photographie microscopique — Knowledge genome, CC BY-SA 4.0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/025_coupe_d_ovaire_montrant_l_ovule_au_micro.png",
-    "mots_cles": "reproduction chez les spermaphytes observation de coupes tra"
+    "mots_cles": "reproduction chez les spermaphytes observation de coupes tra",
+    "taille": "compacte"
   },
   {
     "id": "img026",
@@ -347,7 +371,8 @@
     "legende": "Coupe transversale d'ovaire d'hibiscus au microscope",
     "source": "✅ Vraie photographie microscopique — Sugam Pokharel, CC BY-SA 4.0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/026_coupe_transversale_d_ovaire_d_hibiscus_a.png",
-    "mots_cles": "reproduction chez les spermaphytes observation de coupes lon"
+    "mots_cles": "reproduction chez les spermaphytes observation de coupes lon",
+    "taille": "compacte"
   },
   {
     "id": "img027",
@@ -361,7 +386,8 @@
     "legende": "Formation du sac embryonnaire (méiose, mitoses successives, 7 cellules / 8 noyaux haploïdes) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/027_formation_du_sac_embryonnaire_meiose_mit.png",
-    "mots_cles": "reproduction chez les spermaphytes observation de coupes lon"
+    "mots_cles": "reproduction chez les spermaphytes observation de coupes lon",
+    "taille": "grande"
   },
   {
     "id": "img028",
@@ -375,7 +401,8 @@
     "legende": "Germination d'un grain de pollen (tube pollinique) au microscope",
     "source": "✅ Vraie photographie microscopique — Melekber Sulusoglu & Aysun Cavusoglu, CC BY 4.0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/028_germination_d_un_grain_de_pollen_tube_po.png",
-    "mots_cles": "la reproduction chez les plantes a fleurs et chez les verteb"
+    "mots_cles": "la reproduction chez les plantes a fleurs et chez les verteb",
+    "taille": "compacte"
   },
   {
     "id": "img029",
@@ -389,7 +416,8 @@
     "legende": "Coupe transversale de nerf sciatique observée au microscope (coloration H&E)",
     "source": "♻️ Asset réutilisé du catalogue Terminale C (image source identique).",
     "fichier": "images/illustrations/svt/terminale/029_coupe_transversale_de_nerf_sciatique_obs.png",
-    "mots_cles": "mecanisme de la communication nerveuse observation microscop"
+    "mots_cles": "mecanisme de la communication nerveuse observation microscop",
+    "taille": "compacte"
   },
   {
     "id": "img030",
@@ -403,7 +431,8 @@
     "legende": "Schéma d'interprétation de la coupe de nerf sciatique (vaisseau sanguin, fibre nerveuse, faisceau, tissu conjonctif, gaine conjonctive)",
     "source": "♻️ Asset réutilisé du catalogue Terminale C (image source identique).",
     "fichier": "images/illustrations/svt/terminale/030_schema_d_interpretation_de_la_coupe_de_n.png",
-    "mots_cles": "mecanisme de la communication nerveuse observation microscop"
+    "mots_cles": "mecanisme de la communication nerveuse observation microscop",
+    "taille": "grande"
   },
   {
     "id": "img031",
@@ -417,7 +446,8 @@
     "legende": "Réflexe de retrait de la patte du crapaud (excitation du nerf, moelle épinière) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/031_reflexe_de_retrait_de_la_patte_du_crapau.png",
-    "mots_cles": "relation avec le milieu exterieur experience de mise en evid"
+    "mots_cles": "relation avec le milieu exterieur experience de mise en evid",
+    "taille": "grande"
   },
   {
     "id": "img032",
@@ -431,7 +461,8 @@
     "legende": "Coupe transversale de muscle squelettique au microscope (coloration H&E)",
     "source": "✅ Vraie photographie microscopique — Berkshire Community College Bioscience Image Library, CC0, Wikimedia Commons.",
     "fichier": "images/illustrations/svt/terminale/032_coupe_transversale_de_muscle_squelettiqu.png",
-    "mots_cles": "etude d un effecteur moteur le muscle strie squelettique obs"
+    "mots_cles": "etude d un effecteur moteur le muscle strie squelettique obs",
+    "taille": "compacte"
   },
   {
     "id": "img033",
@@ -445,7 +476,8 @@
     "legende": "Schéma de la coupe transversale du muscle (tissu conjonctif, champs musculaires, fibres, vaisseau, nerf) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/terminale/033_schema_de_la_coupe_transversale_du_muscl.png",
-    "mots_cles": "etude d un effecteur moteur le muscle strie squelettique obs"
+    "mots_cles": "etude d un effecteur moteur le muscle strie squelettique obs",
+    "taille": "grande"
   },
   {
     "id": "img034",
@@ -459,7 +491,8 @@
     "legende": "Coupe longitudinale de fibre musculaire au microscope électronique — bandes A et I, lignes Z, mitochondries",
     "source": "♻️ Asset réutilisé du catalogue Terminale C (image source identique).",
     "fichier": "images/illustrations/svt/terminale/034_coupe_longitudinale_de_fibre_musculaire_.png",
-    "mots_cles": "etude d un effecteur moteur le muscle strie squelettique obs"
+    "mots_cles": "etude d un effecteur moteur le muscle strie squelettique obs",
+    "taille": "compacte"
   },
   {
     "id": "img035",
@@ -473,7 +506,8 @@
     "legende": "Pesée du soluté (sulfate de cuivre) sur balance électronique — étape de préparation d'une solution.",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/035_dispositif_experimental.jpg",
-    "mots_cles": "chimie generale preparation dune solution dispositif experim"
+    "mots_cles": "chimie generale preparation dune solution dispositif experim",
+    "taille": "grande"
   },
   {
     "id": "img036",
@@ -487,7 +521,8 @@
     "legende": "Dissolution du soluté et ajustement au trait de jauge dans la fiole jaugée de 100 mL — étape de préparation d'une solution.",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/036_dispositif_experimental.jpg",
-    "mots_cles": "chimie generale preparation dune solution dispositif experim"
+    "mots_cles": "chimie generale preparation dune solution dispositif experim",
+    "taille": "grande"
   },
   {
     "id": "img037",
@@ -501,7 +536,8 @@
     "legende": "Étape 1 : prélèvement de 100 mL de solution à la fiole jaugée. Étape 2 : vérification de l'homogénéité de la solution par transparence.",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/037_etape_1_etape_2.jpg",
-    "mots_cles": "chimie generale preparation dune solution etape 1 etape 2"
+    "mots_cles": "chimie generale preparation dune solution etape 1 etape 2",
+    "taille": "grande"
   },
   {
     "id": "img038",
@@ -515,7 +551,8 @@
     "legende": "Etape 1                                                                                Etape 2",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/038_etape_1_etape_2.jpg",
-    "mots_cles": "chimie generale preparation dune solution etape 1 etape 2"
+    "mots_cles": "chimie generale preparation dune solution etape 1 etape 2",
+    "taille": "grande"
   },
   {
     "id": "img039",
@@ -529,7 +566,8 @@
     "legende": "Etape 3                                                                               Etape 4",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/039_etape_3_etape_4.jpg",
-    "mots_cles": "chimie generale preparation dune solution etape 3 etape 4"
+    "mots_cles": "chimie generale preparation dune solution etape 3 etape 4",
+    "taille": "grande"
   },
   {
     "id": "img040",
@@ -543,7 +581,8 @@
     "legende": "Etape 3                                                                               Etape 4",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/040_etape_3_etape_4.jpg",
-    "mots_cles": "chimie generale preparation dune solution etape 3 etape 4"
+    "mots_cles": "chimie generale preparation dune solution etape 3 etape 4",
+    "taille": "grande"
   },
   {
     "id": "img041",
@@ -557,7 +596,8 @@
     "legende": "Echelles : 1 cm pour  et 5 cm pour 1 unité de pH (A partir de pH = 3)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/041_echelles_1_cm_pour_et_5_cm_pour_1_unite_.png",
-    "mots_cles": "chimie generale determination graphique de la constante daci"
+    "mots_cles": "chimie generale determination graphique de la constante daci",
+    "taille": "grande"
   },
   {
     "id": "img043",
@@ -571,7 +611,8 @@
     "legende": "Courbe de titrage pH = f(VB) : détermination du point d'équivalence (courbe recréée)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/043_courbe_de_titrage_ph_f_vb_determination_.png",
-    "mots_cles": "courbe de titrage ph f vb determination du point d equivalen"
+    "mots_cles": "courbe de titrage ph f vb determination du point d equivalen",
+    "taille": "grande"
   },
   {
     "id": "img044",
@@ -585,7 +626,8 @@
     "legende": "Tableau de mesures pH = f(VB) (tableau recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/044_tableau_de_mesures_ph_f_vb_tableau_recre.png",
-    "mots_cles": "tableau de mesures ph f vb tableau recree"
+    "mots_cles": "tableau de mesures ph f vb tableau recree",
+    "taille": "grande"
   },
   {
     "id": "img045",
@@ -599,7 +641,8 @@
     "legende": "Courbe de titrage pH = f(VB) (courbe recréée)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/045_courbe_de_titrage_ph_f_vb_courbe_recreee.png",
-    "mots_cles": "courbe de titrage ph f vb courbe recreee"
+    "mots_cles": "courbe de titrage ph f vb courbe recreee",
+    "taille": "grande"
   },
   {
     "id": "img047",
@@ -613,7 +656,8 @@
     "legende": "Tableau de mesures pH = f(VB) (tableau recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/047_tableau_de_mesures_ph_f_vb_tableau_recre.png",
-    "mots_cles": "chimie generale dosage acido basique tableau de mesures ph f"
+    "mots_cles": "chimie generale dosage acido basique tableau de mesures ph f",
+    "taille": "grande"
   },
   {
     "id": "img048",
@@ -627,7 +671,8 @@
     "legende": "Courbe de titrage pH = f(VB) (courbe recréée)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/048_courbe_de_titrage_ph_f_vb_courbe_recreee.png",
-    "mots_cles": "chimie generale dosage acido basique courbe de titrage ph f "
+    "mots_cles": "chimie generale dosage acido basique courbe de titrage ph f ",
+    "taille": "grande"
   },
   {
     "id": "img049",
@@ -641,7 +686,8 @@
     "legende": "L'éther pharmaceutique est de l'éthoxyéthane (illustration recréée)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/049_l_ether_pharmaceutique_est_de_l_ethoxyet.png",
-    "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le"
+    "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le",
+    "taille": "grande"
   },
   {
     "id": "img050",
@@ -655,7 +701,8 @@
     "legende": "Action du sodium sur l'éthanol : dégagement de dihydrogène (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/050_action_du_sodium_sur_l_ethanol_degagemen.png",
-    "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le"
+    "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le",
+    "taille": "grande"
   },
   {
     "id": "img051",
@@ -669,7 +716,8 @@
     "legende": "L'éthanolate de sodium est une base (illustration recréée)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/051_l_ethanolate_de_sodium_est_une_base_illu.png",
-    "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le"
+    "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le",
+    "taille": "grande"
   },
   {
     "id": "img052",
@@ -683,7 +731,8 @@
     "legende": "Dispositif de déshydratation intramoléculaire de l'éthanol par catalyse (alumine chauffée à 350-400°C) : le gaz formé est testé au dibrome dans CCl4.",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/052_dispositif_experimental.png",
-    "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le"
+    "mots_cles": "deshydratation intramoleculaire de lethanol reaction avec le",
+    "taille": "grande"
   },
   {
     "id": "img053",
@@ -697,7 +746,8 @@
     "legende": "Oxydation d'alcools primaires et secondaires par le dichromate de potassium (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/053_oxydation_d_alcools_primaires_et_seconda.png",
-    "mots_cles": "chimie organique oxydation menagee des alcools oxydation d a"
+    "mots_cles": "chimie organique oxydation menagee des alcools oxydation d a",
+    "taille": "grande"
   },
   {
     "id": "img054",
@@ -711,7 +761,8 @@
     "legende": "Test à la D.N.P.H. : mise en évidence de l'aldéhyde formé (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/054_test_a_la_d_n_p_h_mise_en_evidence_de_l_.png",
-    "mots_cles": "chimie organique oxydation menagee des alcools test a la d n"
+    "mots_cles": "chimie organique oxydation menagee des alcools test a la d n",
+    "taille": "grande"
   },
   {
     "id": "img055",
@@ -725,7 +776,8 @@
     "legende": "Test à la D.N.P.H. : mise en évidence d'un composé carbonylé (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/055_test_a_la_d_n_p_h_mise_en_evidence_d_un_.png",
-    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m"
+    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m",
+    "taille": "grande"
   },
   {
     "id": "img056",
@@ -739,7 +791,8 @@
     "legende": "Les aldéhydes peuvent réduire l'ion complexe Cu²⁺_tar en Cu₂O, en s'oxydant eux-mêmes en ion carboxylate (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/056_les_aldehydes_peuvent_reduire_l_ion_comp.png",
-    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m"
+    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m",
+    "taille": "grande"
   },
   {
     "id": "img057",
@@ -753,7 +806,8 @@
     "legende": "Caractère réducteur des aldéhydes : tests au réactif de Schiff, à la liqueur de Fehling, miroir de cuivre et D.N.P.H. (illustration recréée, consolidée)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/057_caractere_reducteur_des_aldehydes_tests_.png",
-    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m"
+    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m",
+    "taille": "grande"
   },
   {
     "id": "img058",
@@ -767,7 +821,8 @@
     "legende": "Obtention du complexe diammine argent (I) (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/058_obtention_du_complexe_diammine_argent_i_.png",
-    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m"
+    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m",
+    "taille": "grande"
   },
   {
     "id": "img059",
@@ -781,7 +836,8 @@
     "legende": "Formation d'un miroir d'argent (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/chimie/terminale/059_formation_d_un_miroir_d_argent_schema_re.png",
-    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m"
+    "mots_cles": "tests de caracterisation des composes carbonyles oxydation m",
+    "taille": "grande"
   },
   {
     "id": "img062",
@@ -795,7 +851,8 @@
     "legende": "Positions successives M1, M2, M3 du centre d'inertie, à intervalles de temps égaux (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/062_positions_successives_m1_m2_m3_du_centre.png",
-    "mots_cles": "theoreme du centre dinertie mouvement du centre dinertie dun"
+    "mots_cles": "theoreme du centre dinertie mouvement du centre dinertie dun",
+    "taille": "grande"
   },
   {
     "id": "img063",
@@ -809,7 +866,8 @@
     "legende": "Chute parabolique : trajectoire d'une bille lancée avec une vitesse initiale v0 (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/063_chute_parabolique_trajectoire_d_une_bill.png",
-    "mots_cles": "chute parabolique mouvement dans chute parabolique trajectoi"
+    "mots_cles": "chute parabolique mouvement dans chute parabolique trajectoi",
+    "taille": "grande"
   },
   {
     "id": "img064",
@@ -823,7 +881,8 @@
     "legende": "Dispositif solide-ressort utilisé pour l'étude des oscillations mécaniques libres (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/064_dispositif_solide_ressort_utilise_pour_l.png",
-    "mots_cles": "oscillations dun dispositif solide ressort oscillations meca"
+    "mots_cles": "oscillations dun dispositif solide ressort oscillations meca",
+    "taille": "grande"
   },
   {
     "id": "img065",
@@ -837,7 +896,8 @@
     "legende": "Période au carré T² en fonction de la masse m : droite passant par l'origine (courbe recréée)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/065_periode_au_carre_t2_en_fonction_de_la_ma.png",
-    "mots_cles": "oscillations dun dispositif solide ressort oscillations meca"
+    "mots_cles": "oscillations dun dispositif solide ressort oscillations meca",
+    "taille": "grande"
   },
   {
     "id": "img066",
@@ -851,7 +911,8 @@
     "legende": "Pendule élastique : élongation x par rapport à la position d'équilibre (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/066_pendule_elastique_elongation_x_par_rappo.png",
-    "mots_cles": "oscillations dun dispositif solide ressort oscillations meca"
+    "mots_cles": "oscillations dun dispositif solide ressort oscillations meca",
+    "taille": "grande"
   },
   {
     "id": "img067",
@@ -865,7 +926,8 @@
     "legende": "Conclusion : la force électromotrice d’auto-induction est proportionnelle à l’opposé de la dérivée de l’intensité du courant par rapport au temps. Elle s’exprime en volts (V).",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/067_conclusion_la_force_electromotrice_dauto.png",
-    "mots_cles": "auto induction auto induction conclusion la force electromot"
+    "mots_cles": "auto induction auto induction conclusion la force electromot",
+    "taille": "grande"
   },
   {
     "id": "img068",
@@ -879,7 +941,8 @@
     "legende": "Oscillogramme observé lors de l'étude de l'auto-induction : tensions relevées à l'oscilloscope (signal triangulaire et réponse en créneaux). [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/068_contexte_non_identifie.png",
-    "mots_cles": "auto induction auto induction contexte non identifie"
+    "mots_cles": "auto induction auto induction contexte non identifie",
+    "taille": "grande"
   },
   {
     "id": "img070",
@@ -893,7 +956,8 @@
     "legende": "Circuit LC : condensateur C chargé, puis oscillations libres à la fermeture de K (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/070_circuit_lc_condensateur_c_charge_puis_os.png",
-    "mots_cles": "entretien des oscillations avec un circuit oscillations elec"
+    "mots_cles": "entretien des oscillations avec un circuit oscillations elec",
+    "taille": "grande"
   },
   {
     "id": "img071",
@@ -907,7 +971,8 @@
     "legende": "Oscillogramme : décharge oscillante amortie (courbe recréée)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/071_oscillogramme_decharge_oscillante_amorti.png",
-    "mots_cles": "entretien des oscillations avec un circuit oscillations elec"
+    "mots_cles": "entretien des oscillations avec un circuit oscillations elec",
+    "taille": "grande"
   },
   {
     "id": "img072",
@@ -921,7 +986,8 @@
     "legende": "Régimes de décharge selon la résistance R : non amorti, pseudo-périodique, critique, apériodique (courbes recréées)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/072_regimes_de_decharge_selon_la_resistance_.png",
-    "mots_cles": "entretien des oscillations avec un circuit oscillations elec"
+    "mots_cles": "entretien des oscillations avec un circuit oscillations elec",
+    "taille": "grande"
   },
   {
     "id": "img073",
@@ -935,7 +1001,8 @@
     "legende": "Montage avec commutateurs K1/K2/K3 : charge du condensateur puis oscillations libres (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/073_montage_avec_commutateurs_k1_k2_k3_charg.png",
-    "mots_cles": "entretien des oscillations avec un circuit oscillations elec"
+    "mots_cles": "entretien des oscillations avec un circuit oscillations elec",
+    "taille": "grande"
   },
   {
     "id": "img074",
@@ -949,7 +1016,8 @@
     "legende": "Variations de u_AM et de i au cours du temps (courbe recréée)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/074_variations_de_u_am_et_de_i_au_cours_du_t.png",
-    "mots_cles": "entretien des oscillations avec un circuit oscillations elec"
+    "mots_cles": "entretien des oscillations avec un circuit oscillations elec",
+    "taille": "grande"
   },
   {
     "id": "img075",
@@ -963,7 +1031,8 @@
     "legende": "Diagramme de Fresnel du circuit RLC série : à la résonance, U_L et U_C s'annulent et U = U_R (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/075_diagramme_de_fresnel_du_circuit_rlc_seri.png",
-    "mots_cles": "etude experimentale de la resonance resonance dintensite dun"
+    "mots_cles": "etude experimentale de la resonance resonance dintensite dun",
+    "taille": "grande"
   },
   {
     "id": "img076",
@@ -977,7 +1046,8 @@
     "legende": "Courbe de résonance d'intensité : le courant est maximal à la fréquence propre f0 (schéma recréé)",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/076_courbe_de_resonance_d_intensite_le_coura.png",
-    "mots_cles": "etude experimentale de la resonance resonance dintensite dun"
+    "mots_cles": "etude experimentale de la resonance resonance dintensite dun",
+    "taille": "grande"
   },
   {
     "id": "img077",
@@ -991,7 +1061,8 @@
     "legende": "Aimant en U (pôles Nord et Sud) utilisé pour l'étude du champ magnétique — dispositif expérimental.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/077_dispositif_experimental.jpg",
-    "mots_cles": "champ magnetique champ magnetique dispositif experimental"
+    "mots_cles": "champ magnetique champ magnetique dispositif experimental",
+    "taille": "grande"
   },
   {
     "id": "img078",
@@ -1005,7 +1076,8 @@
     "legende": "2- Protocole expérimental",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/078_2_protocole_experimental.jpg",
-    "mots_cles": "champ magnetique champ magnetique 2 protocole experimental"
+    "mots_cles": "champ magnetique champ magnetique 2 protocole experimental",
+    "taille": "grande"
   },
   {
     "id": "img079",
@@ -1019,7 +1091,8 @@
     "legende": "Dispositif de mise en évidence de la loi de Laplace : conducteur plongé dans le mercure, soumis à un champ magnétique B et parcouru par un courant I.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/079_dispositif_experimental.png",
-    "mots_cles": "loi de laplace loi de laplace dispositif experimental"
+    "mots_cles": "loi de laplace loi de laplace dispositif experimental",
+    "taille": "grande"
   },
   {
     "id": "img080",
@@ -1033,7 +1106,8 @@
     "legende": "Schéma du rail conducteur MN mobile dans l'entrefer d'un aimant en U, relié à un circuit avec générateur et interrupteur K — mise en évidence de la force de Laplace.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/080_dispositif_experimental.png",
-    "mots_cles": "loi de laplace loi de laplace dispositif experimental"
+    "mots_cles": "loi de laplace loi de laplace dispositif experimental",
+    "taille": "grande"
   },
   {
     "id": "img081",
@@ -1047,7 +1121,8 @@
     "legende": "Schéma d'un transformateur : bobines primaire (N1) et secondaire (N2) enroulées sur un noyau de fer fermé, lignes de champ magnétique — dispositif d'étude de l'induction électromagnétique.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/081_dispositif_experimental.png",
-    "mots_cles": "induction electromagnetique induction electromagnetique disp"
+    "mots_cles": "induction electromagnetique induction electromagnetique disp",
+    "taille": "grande"
   },
   {
     "id": "img082",
@@ -1061,7 +1136,8 @@
     "legende": "Dispositif de rails inclinés parcourus par un aimant en U et un barreau conducteur M — mise en évidence de l'induction électromagnétique par variation de flux.",
     "source": "",
     "fichier": "images/illustrations/physique/terminale/082_dispositif_experimental.png",
-    "mots_cles": "induction electromagnetique induction electromagnetique disp"
+    "mots_cles": "induction electromagnetique induction electromagnetique disp",
+    "taille": "grande"
   },
   {
     "id": "img083",
@@ -1075,7 +1151,8 @@
     "legende": "Mise en évidence des sels minéraux (chlorures, nitrates) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/3e/083_mise_en_evidence_des_sels_mineraux_chlor.png",
-    "mots_cles": "la nutrition chez lhomme mise en evidence des aliments simpl"
+    "mots_cles": "la nutrition chez lhomme mise en evidence des aliments simpl",
+    "taille": "grande"
   },
   {
     "id": "img084",
@@ -1089,7 +1166,8 @@
     "legende": "Coagulation du sang : formation d'un caillot retenant les éléments figurés, séparé du sérum — schéma. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/084_la_coagulation_du_sang.png",
-    "mots_cles": "la nutrition chez lhomme la coagulation du sang le sang la c"
+    "mots_cles": "la nutrition chez lhomme la coagulation du sang le sang la c",
+    "taille": "grande"
   },
   {
     "id": "img085",
@@ -1103,7 +1181,8 @@
     "legende": "Tableau de compatibilité des groupes sanguins (donneur / receveur) : agglutination ou absence d'agglutination selon les groupes ABO — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/085_la_transfusion_sanguine.jpg",
-    "mots_cles": "la nutrition chez lhomme la transfusion sanguine la transfus"
+    "mots_cles": "la nutrition chez lhomme la transfusion sanguine la transfus",
+    "taille": "grande"
   },
   {
     "id": "img086",
@@ -1117,7 +1196,8 @@
     "legende": "Schéma de la circulation sanguine : petite circulation (cœur-poumons) et grande circulation (cœur-organes), avec les principales artères et veines.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/086_la_circulation_sanguine.jpg",
-    "mots_cles": "la nutrition chez lhomme la circulation sanguine la circulat"
+    "mots_cles": "la nutrition chez lhomme la circulation sanguine la circulat",
+    "taille": "grande"
   },
   {
     "id": "img087",
@@ -1131,7 +1211,8 @@
     "legende": "Dispositif de mesure de la perméabilité du sol : colonne de sol traversée par l'eau, mesure du temps d'écoulement — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/087_la_permeabilite_du_sol.png",
-    "mots_cles": "les relations entre les sols et les plantes la permeabilite "
+    "mots_cles": "les relations entre les sols et les plantes la permeabilite ",
+    "taille": "grande"
   },
   {
     "id": "img088",
@@ -1145,7 +1226,8 @@
     "legende": "Porosité et capacité de rétention en eau du sol, illustrées à travers différents profils de sol. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/088_porosite_et_capacite_de_retention.png",
-    "mots_cles": "les relations entre les sols et les plantes porosite et capa"
+    "mots_cles": "les relations entre les sols et les plantes porosite et capa",
+    "taille": "grande"
   },
   {
     "id": "img089",
@@ -1159,7 +1241,8 @@
     "legende": "Influence de la pente sur l'érosion du sol : comparaison d'un sol horizontal (①) et d'un sol incliné (②) soumis à un ruissellement d'eau, avec récupération des particules entraînées — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/089_influence_de_la_pente_sur_la.png",
-    "mots_cles": "la degradation la protection et lamelioration des sols influ"
+    "mots_cles": "la degradation la protection et lamelioration des sols influ",
+    "taille": "grande"
   },
   {
     "id": "img090",
@@ -1173,7 +1256,8 @@
     "legende": "Influence de la nature du sol sur l'érosion : comparaison d'un sol argileux (①) et d'un sol sableux (②) soumis à un ruissellement d'eau — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/090_influence_de_la_nature_du_sol_sur.png",
-    "mots_cles": "la degradation la protection et lamelioration des sols influ"
+    "mots_cles": "la degradation la protection et lamelioration des sols influ",
+    "taille": "grande"
   },
   {
     "id": "img091",
@@ -1187,7 +1271,8 @@
     "legende": "Influence du couvert végétal sur l'érosion : comparaison d'un sol avec couvert végétal et d'un sol sans couvert végétal soumis à un ruissellement d'eau — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/091_influence_du_couvert_vegetal_sur.png",
-    "mots_cles": "la degradation la protection et lamelioration des sols influ"
+    "mots_cles": "la degradation la protection et lamelioration des sols influ",
+    "taille": "grande"
   },
   {
     "id": "img092",
@@ -1201,7 +1286,8 @@
     "legende": "Mise en évidence des glucides (liqueur de Fehling) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/3e/092_mise_en_evidence_des_glucides_liqueur_de.png",
-    "mots_cles": "la nutrition chez lhomme mise en evidence des aliments simpl"
+    "mots_cles": "la nutrition chez lhomme mise en evidence des aliments simpl",
+    "taille": "grande"
   },
   {
     "id": "img093",
@@ -1215,7 +1301,8 @@
     "legende": "Mise en évidence des lipides (tache translucide sur papier) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/3e/093_mise_en_evidence_des_lipides_tache_trans.png",
-    "mots_cles": "la nutrition mise en evidence des aliments simples les alime"
+    "mots_cles": "la nutrition mise en evidence des aliments simples les alime",
+    "taille": "grande"
   },
   {
     "id": "img094",
@@ -1229,7 +1316,8 @@
     "legende": "Mise en évidence des protides (réaction biuret) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/3e/094_mise_en_evidence_des_protides_reaction_b.png",
-    "mots_cles": "la nutrition de lhomme mise en evidence des aliments simples"
+    "mots_cles": "la nutrition de lhomme mise en evidence des aliments simples",
+    "taille": "grande"
   },
   {
     "id": "img095",
@@ -1243,7 +1331,8 @@
     "legende": "Dispositif de digestion in vitro de l'amidon par la salive : tubes à essai en bain-marie, test à l'eau iodée — schéma. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/095_digestion_in_vitro_de_lamidon.png",
-    "mots_cles": "la nutrition chez lhomme digestion in vitro de lamidon la di"
+    "mots_cles": "la nutrition chez lhomme digestion in vitro de lamidon la di",
+    "taille": "grande"
   },
   {
     "id": "img096",
@@ -1257,7 +1346,8 @@
     "legende": "Influence de la température sur la digestion de l'amidon par la salive : comparaison de tubes maintenus à différentes températures — schéma. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/096_influence_de_la_temperature_sur.png",
-    "mots_cles": "la nutrition chez lhomme influence de la temperature sur la "
+    "mots_cles": "la nutrition chez lhomme influence de la temperature sur la ",
+    "taille": "grande"
   },
   {
     "id": "img097",
@@ -1271,7 +1361,8 @@
     "legende": "Spécificité d'action de la salive : comparaison de deux tubes à essai (A et B) contenant des substrats différents, pour mettre en évidence que la salive n'agit que sur l'amidon — schéma.",
     "source": "",
     "fichier": "images/illustrations/svt/3e/097_la_specificite_daction_de_la_salive.png",
-    "mots_cles": "la nutrition chez lhomme la specificite daction de la salive"
+    "mots_cles": "la nutrition chez lhomme la specificite daction de la salive",
+    "taille": "grande"
   },
   {
     "id": "img099",
@@ -1285,7 +1376,8 @@
     "legende": "Tableau des leucocytes (granulocytes, lymphocytes, monocytes) — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/3e/099_tableau_des_leucocytes_granulocytes_lymp.png",
-    "mots_cles": "la nutrition chez lhomme mise en evidence des constituants d"
+    "mots_cles": "la nutrition chez lhomme mise en evidence des constituants d",
+    "taille": "grande"
   },
   {
     "id": "img100",
@@ -1299,7 +1391,8 @@
     "legende": "Les différents types de leucocytes observés au microscope — schéma recréé",
     "source": "",
     "fichier": "images/illustrations/svt/3e/100_les_differents_types_de_leucocytes_obser.png",
-    "mots_cles": "la nutrition chez lhomme mise en evidence des constituants d"
+    "mots_cles": "la nutrition chez lhomme mise en evidence des constituants d",
+    "taille": "grande"
   },
   {
     "id": "img101",
@@ -1313,7 +1406,8 @@
     "legende": "Sédimentation du sang : tube à essai laissé au repos, séparation du sang en plasma et éléments figurés sédimentés — schéma. [légende reconstituée, à vérifier auprès du document source]",
     "source": "",
     "fichier": "images/illustrations/svt/3e/101_la_sedimentation_du_sang.png",
-    "mots_cles": "la nutrition chez lhomme la sedimentation du sang le sang la"
+    "mots_cles": "la nutrition chez lhomme la sedimentation du sang le sang la",
+    "taille": "grande"
   },
   {
     "id": "img102",
@@ -1327,7 +1421,8 @@
     "legende": "Construction de l'image A'B' d'un objet AB à travers une lentille convergente : rayon parallèle à l'axe puis réfracté par F', rayon passant par le centre optique O sans déviation.",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique/3e/102_construction_de_l_image_a_b_d_un_objet_a.png",
-    "mots_cles": "les lentilles convergentes les lentilles lentilles convergen"
+    "mots_cles": "les lentilles convergentes les lentilles lentilles convergen",
+    "taille": "grande"
   },
   {
     "id": "img103",
@@ -1341,7 +1436,8 @@
     "legende": "Comparaison des deux instruments : la balance mesure la masse (constante), le dynamomètre mesure le poids (varie avec le lieu, P = m×g).",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique/3e/103_comparaison_des_deux_instruments_la_bala.png",
-    "mots_cles": "masse et poids d un corps masse et poids d un corps comparai"
+    "mots_cles": "masse et poids d un corps masse et poids d un corps comparai",
+    "taille": "grande"
   },
   {
     "id": "img104",
@@ -1355,7 +1451,8 @@
     "legende": "Dispositif de mesure de la poussée d'Archimède : solide suspendu au dynamomètre, immergé dans l'eau. Bilan des forces : poids P, tension du fil T, poussée d'Archimède.",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique/3e/104_dispositif_de_mesure_de_la_poussee_d_arc.png",
-    "mots_cles": "dispositif de mesure de la poussee d archimede les forces po"
+    "mots_cles": "dispositif de mesure de la poussee d archimede les forces po",
+    "taille": "grande"
   },
   {
     "id": "img105",
@@ -1369,7 +1466,8 @@
     "legende": "Condition d'équilibre d'un solide soumis à deux forces : F1 et F2 de même intensité, même droite d'action, de sens opposés.",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique/3e/105_condition_d_equilibre_d_un_solide_soumis.png",
-    "mots_cles": "equilibre d un solide soumis a deux forces equilibre d un so"
+    "mots_cles": "equilibre d un solide soumis a deux forces equilibre d un so",
+    "taille": "grande"
   },
   {
     "id": "img106",
@@ -1383,7 +1481,8 @@
     "legende": "Conservation de l'énergie mécanique au cours d'un mouvement pendulaire : conversion entre énergie potentielle (points hauts) et énergie cinétique (point bas).",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique/3e/106_conservation_de_l_energie_mecanique_au_c.png",
-    "mots_cles": "energie mecanique energie mecanique conservation de l energi"
+    "mots_cles": "energie mecanique energie mecanique conservation de l energi",
+    "taille": "grande"
   },
   {
     "id": "img107",
@@ -1397,7 +1496,8 @@
     "legende": "Comparaison de deux montages à tension identique (12 V) : l'éclat de la lampe (la puissance P = U×I) dépend de l'intensité du courant.",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique/3e/107_comparaison_de_deux_montages_a_tension_i.png",
-    "mots_cles": "puissance et energie electriques puissance et energie electr"
+    "mots_cles": "puissance et energie electriques puissance et energie electr",
+    "taille": "grande"
   },
   {
     "id": "img108",
@@ -1411,7 +1511,8 @@
     "legende": "Réalise le montage ci-dessus : ampèremètre en série pour mesurer l'intensité, voltmètre en dérivation aux bornes du conducteur ohmique pour mesurer la tension.",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique/3e/108_realise_le_montage_ci_dessus_amperemetre.png",
-    "mots_cles": "montage diviseur de tension le conducteur ohmique diviseur d"
+    "mots_cles": "montage diviseur de tension le conducteur ohmique diviseur d",
+    "taille": "grande"
   },
   {
     "id": "img109",
@@ -1425,7 +1526,8 @@
     "legende": "Schéma de la décomposition de l'eau par électrolyse : générateur, électrodes, tubes à essai inversés recueillant le dioxygène et le dihydrogène (rapport de volumes 1:2).",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique-chimie/3e/109_schema_de_la_decomposition_de_l_eau_par_.png",
-    "mots_cles": "decomposition de l eau par electrolyse electrolyse et synthe"
+    "mots_cles": "decomposition de l eau par electrolyse electrolyse et synthe",
+    "taille": "grande"
   },
   {
     "id": "img110",
@@ -1439,7 +1541,8 @@
     "legende": "Test caractéristique de la combustion d'un alcane : le gaz produit trouble l'eau de chaux, mettant en évidence la formation de dioxyde de carbone.",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique-chimie/3e/110_test_caracteristique_de_la_combustion_d_.png",
-    "mots_cles": "combustion des alcanes les alcanes test caracteristique de l"
+    "mots_cles": "combustion des alcanes les alcanes test caracteristique de l",
+    "taille": "grande"
   },
   {
     "id": "img111",
@@ -1453,7 +1556,8 @@
     "legende": "Oxydation d'un corps pur simple : la laine de fer incandescente brûle vivement dans une atmosphère de dioxygène, formant de l'oxyde de fer.",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique-chimie/3e/111_oxydation_d_un_corps_pur_simple_la_laine.png",
-    "mots_cles": "oxydation du fer dans le dioxygene oxydation des corps purs "
+    "mots_cles": "oxydation du fer dans le dioxygene oxydation des corps purs ",
+    "taille": "grande"
   },
   {
     "id": "img112",
@@ -1467,7 +1571,8 @@
     "legende": "Réduction de l'oxyde de cuivre (noir) par le carbone : formation de cuivre métallique (rougeâtre) et dégagement de dioxyde de carbone (test à l'eau de chaux).",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique-chimie/3e/112_reduction_de_l_oxyde_de_cuivre_noir_par_.png",
-    "mots_cles": "reduction de l oxyde de cuivre par le carbone reduction des "
+    "mots_cles": "reduction de l oxyde de cuivre par le carbone reduction des ",
+    "taille": "grande"
   },
   {
     "id": "img113",
@@ -1481,6 +1586,937 @@
     "legende": "Échelle de pH : classement des solutions acides (pH < 7), neutres (pH = 7) et basiques (pH > 7), illustré par trois solutions courantes.",
     "source": "Schéma recréé en interne (convention scientifique standard, sans source externe copiée).",
     "fichier": "images/illustrations/physique-chimie/3e/113_echelle_de_ph_classement_des_solutions_a.png",
-    "mots_cles": "mesure et classement du ph de solutions solutions acides bas"
+    "mots_cles": "mesure et classement du ph de solutions solutions acides bas",
+    "taille": "grande"
+  },
+  {
+    "id": "img114",
+    "matiere": "svt",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Reproduction chez les spermaphytes",
+    "fiche": "STRUCTURE DE LA FLEUR",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Structure d'une fleur (coupe légendée) : pétale, sépale, étamine, pistil, ovaire, ovule",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/6e/114_structure_dune_fleur.png",
+    "mots_cles": "structure de la fleur petale sepale etamine pistil ovaire ovule pedoncule",
+    "taille": "grande"
+  },
+  {
+    "id": "img115",
+    "matiere": "svt",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Reproduction chez les spermaphytes",
+    "fiche": "LA POLLINISATION",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La pollinisation : transport du pollen d'une fleur à l'autre par un insecte",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/6e/115_la_pollinisation.png",
+    "mots_cles": "pollinisation transport du pollen insecte anthere stigmate",
+    "taille": "grande"
+  },
+  {
+    "id": "img116",
+    "matiere": "svt",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Reproduction chez les spermaphytes",
+    "fiche": "DE LA FLEUR AU FRUIT",
+    "lecon": "",
+    "type": "schema",
+    "legende": "De la fleur au fruit : transformation de l'ovaire en fruit et des ovules en graines",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/6e/116_de_la_fleur_au_fruit.png",
+    "mots_cles": "fleur fecondee fruit transformation ovaire graines ovules paroi du fruit",
+    "taille": "grande"
+  },
+  {
+    "id": "img117",
+    "matiere": "svt",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Reproduction chez les spermaphytes",
+    "fiche": "COUPE D'UNE GRAINE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Coupe d'une graine de haricot (dicotylédone) : tégument, cotylédons, gemmule, radicule",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/6e/117_coupe_dune_graine.png",
+    "mots_cles": "coupe graine haricot tegument cotyledons gemmule radicule tigelle",
+    "taille": "grande"
+  },
+  {
+    "id": "img118",
+    "matiere": "svt",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Reproduction chez les spermaphytes",
+    "fiche": "LA GERMINATION",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Les étapes de la germination de la graine, de la graine au repos à la jeune plantule",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/6e/118_la_germination.png",
+    "mots_cles": "germination graine radicule tige jeune plantule etapes",
+    "taille": "grande"
+  },
+  {
+    "id": "img119",
+    "matiere": "svt",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "La digestion des aliments",
+    "fiche": "LE SYSTEME DIGESTIF",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le système digestif : bouche, œsophage, foie, estomac, pancréas, intestin grêle, gros intestin, anus",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/5e/119_le_systeme_digestif.png",
+    "mots_cles": "systeme digestif bouche oesophage estomac foie pancreas intestin grele gros intestin colon anus",
+    "taille": "grande"
+  },
+  {
+    "id": "img120",
+    "matiere": "svt",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "La digestion des aliments",
+    "fiche": "LES DENTS ET LA MASTICATION",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Les dents et la mastication : incisives, canines, prémolaires, molaires et leur rôle",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/5e/120_les_dents_et_la_mastication.png",
+    "mots_cles": "dents mastication incisives canines premolaires molaires",
+    "taille": "grande"
+  },
+  {
+    "id": "img121",
+    "matiere": "svt",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "La digestion des aliments",
+    "fiche": "L ESTOMAC",
+    "lecon": "",
+    "type": "schema",
+    "legende": "L'estomac : arrivée par l'œsophage, brassage du bol alimentaire par le suc gastrique, sortie vers l'intestin",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/5e/121_lestomac.png",
+    "mots_cles": "estomac bol alimentaire suc gastrique brassage oesophage pylore",
+    "taille": "grande"
+  },
+  {
+    "id": "img122",
+    "matiere": "svt",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "La digestion des aliments",
+    "fiche": "LES VILLOSITES INTESTINALES",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Les villosités intestinales et l'absorption des nutriments vers le sang",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/5e/122_les_villosites_intestinales.png",
+    "mots_cles": "villosites intestinales absorption nutriments intestin grele vaisseau sanguin",
+    "taille": "grande"
+  },
+  {
+    "id": "img123",
+    "matiere": "svt",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "La digestion des aliments",
+    "fiche": "LE TRAJET DES ALIMENTS",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le trajet des aliments dans le tube digestif, de la bouche à l'anus (schéma de synthèse)",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/5e/123_le_trajet_des_aliments.png",
+    "mots_cles": "trajet aliments tube digestif synthese bouche oesophage estomac intestin anus",
+    "taille": "grande"
+  },
+  {
+    "id": "img124",
+    "matiere": "svt",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "La reproduction humaine",
+    "fiche": "APPAREIL REPRODUCTEUR MASCULIN",
+    "lecon": "",
+    "type": "schema",
+    "legende": "L'appareil reproducteur masculin : testicule, épididyme, canal déférent, vésicule séminale, prostate, urètre",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/4e/124_appareil_reproducteur_masculin.png",
+    "mots_cles": "appareil reproducteur masculin testicule epididyme canal deferent prostate vesicule seminale uretre spermatozoides",
+    "taille": "grande"
+  },
+  {
+    "id": "img125",
+    "matiere": "svt",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "La reproduction humaine",
+    "fiche": "APPAREIL REPRODUCTEUR FEMININ",
+    "lecon": "",
+    "type": "schema",
+    "legende": "L'appareil reproducteur féminin : ovaire, trompe de Fallope, utérus, col de l'utérus, vagin",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/4e/125_appareil_reproducteur_feminin.png",
+    "mots_cles": "appareil reproducteur feminin ovaire trompe de fallope uterus col vagin ovules",
+    "taille": "grande"
+  },
+  {
+    "id": "img126",
+    "matiere": "svt",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "La reproduction humaine",
+    "fiche": "LE CYCLE MENSTRUEL",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le cycle menstruel de 28 jours : règles, ovulation au jour 14, évolution de l'épaisseur de l'endomètre",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/4e/126_le_cycle_menstruel.png",
+    "mots_cles": "cycle menstruel regles ovulation endometre jours",
+    "taille": "grande"
+  },
+  {
+    "id": "img127",
+    "matiere": "svt",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "La reproduction humaine",
+    "fiche": "LA FECONDATION",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La fécondation : rencontre de l'ovule et des spermatozoïdes dans la trompe de Fallope, formation de la cellule-œuf",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/4e/127_la_fecondation.png",
+    "mots_cles": "fecondation ovule spermatozoides cellule oeuf trompe de fallope zygote",
+    "taille": "grande"
+  },
+  {
+    "id": "img128",
+    "matiere": "svt",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "La reproduction humaine",
+    "fiche": "LA GROSSESSE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La grossesse : le fœtus dans l'utérus, liquide amniotique, placenta, cordon ombilical",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/4e/128_la_grossesse.png",
+    "mots_cles": "grossesse foetus uterus liquide amniotique placenta cordon ombilical",
+    "taille": "grande"
+  },
+  {
+    "id": "img129",
+    "matiere": "svt",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "La cellule",
+    "fiche": "LA CELLULE ANIMALE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La cellule animale : membrane plasmique, noyau, mitochondries, réticulum endoplasmique, appareil de Golgi, ribosomes",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/2nde/129_la_cellule_animale.png",
+    "mots_cles": "cellule animale membrane plasmique noyau mitochondrie reticulum endoplasmique golgi ribosomes cytoplasme",
+    "taille": "grande"
+  },
+  {
+    "id": "img130",
+    "matiere": "svt",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "La cellule",
+    "fiche": "LA CELLULE VEGETALE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La cellule végétale : paroi pecto-cellulosique, membrane plasmique, noyau, vacuole, chloroplastes, mitochondries",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/2nde/130_la_cellule_vegetale.png",
+    "mots_cles": "cellule vegetale paroi pectocellulosique vacuole chloroplaste noyau membrane mitochondrie",
+    "taille": "grande"
+  },
+  {
+    "id": "img131",
+    "matiere": "svt",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "La cellule",
+    "fiche": "COMPARAISON CELLULE ANIMALE VEGETALE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Comparaison cellule animale et cellule végétale : différences de paroi, chloroplastes, vacuole et forme",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/2nde/131_comparaison_cellule_animale_vegetale.png",
+    "mots_cles": "comparaison cellule animale vegetale differences paroi chloroplaste vacuole forme",
+    "taille": "grande"
+  },
+  {
+    "id": "img132",
+    "matiere": "svt",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "La cellule",
+    "fiche": "LE NOYAU ET LES CHROMOSOMES",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le noyau et les chromosomes : chromatine diffuse au repos, chromosomes condensés en X avant la division",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/2nde/132_le_noyau_et_les_chromosomes.png",
+    "mots_cles": "noyau chromosomes chromatine adn condense enveloppe nucleaire",
+    "taille": "grande"
+  },
+  {
+    "id": "img133",
+    "matiere": "svt",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "La cellule",
+    "fiche": "LA DIVISION CELLULAIRE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La division cellulaire (mitose simplifiée) en 4 étapes : cellule mère, alignement, séparation, deux cellules filles",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/2nde/133_la_division_cellulaire.png",
+    "mots_cles": "division cellulaire mitose etapes cellule mere cellules filles chromosomes",
+    "taille": "grande"
+  },
+  {
+    "id": "img134",
+    "matiere": "svt",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "La génétique",
+    "fiche": "LE GENE ET SES ALLELES",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le gène et ses allèles : homozygote (AA, aa) et hétérozygote (Aa), un allèle du père et un de la mère",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/1ere/134_le_gene_et_ses_alleles.png",
+    "mots_cles": "gene alleles homozygote heterozygote genotype chromosomes",
+    "taille": "grande"
+  },
+  {
+    "id": "img135",
+    "matiere": "svt",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "La génétique",
+    "fiche": "LE CROISEMENT MONOHYBRIDE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le croisement monohybride : échiquier de croisement Aa x Aa, proportions 1 AA : 2 Aa : 1 aa",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/1ere/135_le_croisement_monohybride.png",
+    "mots_cles": "croisement monohybride echiquier gametes genotype phenotype proportions",
+    "taille": "grande"
+  },
+  {
+    "id": "img136",
+    "matiere": "svt",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "La génétique",
+    "fiche": "DOMINANCE ET RECESSIVITE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Dominance et récessivité : AA et Aa ont le même phénotype (allèle dominant), aa a le phénotype récessif",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/1ere/136_dominance_et_recessivite.png",
+    "mots_cles": "dominance recessivite genotype phenotype allele dominant recessif",
+    "taille": "grande"
+  },
+  {
+    "id": "img137",
+    "matiere": "svt",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "La génétique",
+    "fiche": "ARBRE GENEALOGIQUE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "L'arbre généalogique : transmission d'un caractère héréditaire sur plusieurs générations",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/1ere/137_larbre_genealogique.png",
+    "mots_cles": "arbre genealogique heredite generations caractere transmission",
+    "taille": "grande"
+  },
+  {
+    "id": "img138",
+    "matiere": "svt",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "La génétique",
+    "fiche": "LE CARYOTYPE HUMAIN",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le caryotype humain : 46 chromosomes (23 paires), 22 paires d'autosomes et 1 paire de chromosomes sexuels",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/svt/1ere/138_le_caryotype_humain.png",
+    "mots_cles": "caryotype humain chromosomes paires autosomes chromosomes sexuels",
+    "taille": "grande"
+  },
+  {
+    "id": "img139",
+    "matiere": "physique",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "Les forces et le mouvement",
+    "fiche": "LA REPRESENTATION D'UNE FORCE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Représentation vectorielle d'une force : point d'application, direction, sens, valeur",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/1ere/img139_la_representation_dune_force.png",
+    "mots_cles": "representation dune force vecteur point dapplication direction sens valeur newton",
+    "taille": "grande"
+  },
+  {
+    "id": "img140",
+    "matiere": "physique",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "Les forces et le mouvement",
+    "fiche": "LES LOIS DE NEWTON",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Les trois lois de Newton : principe d'inertie, F = m×a, action-réaction",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/1ere/img140_les_lois_de_newton.png",
+    "mots_cles": "lois de newton principe dinertie action reaction masse acceleration",
+    "taille": "grande"
+  },
+  {
+    "id": "img141",
+    "matiere": "physique",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "Les forces et le mouvement",
+    "fiche": "LE MOUVEMENT DE CHUTE LIBRE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Chute libre d'un objet : vitesse croissante au cours du temps sous l'effet du poids",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/1ere/img141_le_mouvement_de_chute_libre.png",
+    "mots_cles": "mouvement de chute libre vitesse poids temps acceleration",
+    "taille": "grande"
+  },
+  {
+    "id": "img142",
+    "matiere": "physique",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "Les forces et le mouvement",
+    "fiche": "LE TRAVAIL D'UNE FORCE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le travail d'une force : W = F × d, déplacement du point d'application",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/1ere/img142_le_travail_dune_force.png",
+    "mots_cles": "travail dune force distance parcourue joule newton deplacement",
+    "taille": "grande"
+  },
+  {
+    "id": "img143",
+    "matiere": "physique",
+    "niveau": "1ere",
+    "serie": "",
+    "theme": "Les forces et le mouvement",
+    "fiche": "L'ENERGIE MECANIQUE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Conservation de l'énergie mécanique lors d'une chute : Ec + Ep = constante",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/1ere/img143_lenergie_mecanique.png",
+    "mots_cles": "energie mecanique cinetique potentielle conservation chute balle",
+    "taille": "grande"
+  },
+  {
+    "id": "img144",
+    "matiere": "physique",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "Les circuits électriques",
+    "fiche": "LES SYMBOLES NORMALISES",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Symboles normalisés : générateur, lampe, interrupteur, résistor, ampèremètre, voltmètre",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/2nde/img144_les_symboles_normalises.png",
+    "mots_cles": "symboles normalises circuit generateur lampe interrupteur resistor amperemetre voltmetre",
+    "taille": "grande"
+  },
+  {
+    "id": "img145",
+    "matiere": "physique",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "Les circuits électriques",
+    "fiche": "LE CIRCUIT ELECTRIQUE SIMPLE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Circuit électrique simple fermé : générateur, interrupteur et lampe, sens du courant",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/2nde/img145_le_circuit_electrique_simple.png",
+    "mots_cles": "circuit electrique simple generateur interrupteur lampe sens du courant circuit ferme",
+    "taille": "grande"
+  },
+  {
+    "id": "img146",
+    "matiere": "physique",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "Les circuits électriques",
+    "fiche": "MONTAGE EN SERIE ET EN DERIVATION",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Comparaison du montage en série et du montage en dérivation (parallèle)",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/2nde/img146_serie_et_derivation.png",
+    "mots_cles": "montage serie derivation parallele lampes branche courant",
+    "taille": "grande"
+  },
+  {
+    "id": "img147",
+    "matiere": "physique",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "Les circuits électriques",
+    "fiche": "LA LOI D'OHM",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La loi d'Ohm : U = R × I, montage avec ampèremètre et voltmètre",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/2nde/img147_la_loi_dohm.png",
+    "mots_cles": "loi dohm tension resistance intensite amperemetre voltmetre",
+    "taille": "grande"
+  },
+  {
+    "id": "img148",
+    "matiere": "physique",
+    "niveau": "2nde",
+    "serie": "",
+    "theme": "Les circuits électriques",
+    "fiche": "UTILISER UN MULTIMETRE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Utilisation d'un multimètre en voltmètre (dérivation) ou en ampèremètre (série)",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/2nde/img148_utiliser_un_multimetre.png",
+    "mots_cles": "multimetre voltmetre amperemetre derivation serie branchement calibre",
+    "taille": "grande"
+  },
+  {
+    "id": "img149",
+    "matiere": "physique",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "La matière et ses états",
+    "fiche": "LES TROIS ETATS DE LA MATIERE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Les trois états de la matière : solide, liquide, gaz — organisation des particules",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/6e/img149_les_trois_etats_de_la_matiere.png",
+    "mots_cles": "etats de la matiere solide liquide gaz particules organisation",
+    "taille": "grande"
+  },
+  {
+    "id": "img150",
+    "matiere": "physique",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "La matière et ses états",
+    "fiche": "LES CHANGEMENTS D'ETAT",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Les changements d'état de l'eau : fusion, solidification, vaporisation, liquéfaction",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/6e/img150_les_changements_detat.png",
+    "mots_cles": "changements detat fusion solidification vaporisation liquefaction sublimation",
+    "taille": "grande"
+  },
+  {
+    "id": "img151",
+    "matiere": "physique",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "La matière et ses états",
+    "fiche": "MESURER UN VOLUME",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Mesurer un volume avec une éprouvette graduée : lecture du ménisque",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/6e/img151_mesurer_un_volume.png",
+    "mots_cles": "mesurer un volume eprouvette graduee menisque lecture mL",
+    "taille": "grande"
+  },
+  {
+    "id": "img152",
+    "matiere": "physique",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "La matière et ses états",
+    "fiche": "MESURER UNE MASSE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Mesurer une masse avec une balance électronique : plateau, écran, tare",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/6e/img152_mesurer_une_masse.png",
+    "mots_cles": "mesurer une masse balance electronique plateau ecran tare grammes",
+    "taille": "grande"
+  },
+  {
+    "id": "img153",
+    "matiere": "physique",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "La matière et ses états",
+    "fiche": "MELANGE HOMOGENE ET HETEROGENE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Mélange homogène (eau salée) et mélange hétérogène (eau + sable)",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/6e/img153_melange_homogene_heterogene.png",
+    "mots_cles": "melange homogene heterogene eau salee sable constituants phase",
+    "taille": "grande"
+  },
+  {
+    "id": "img154",
+    "matiere": "physique",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "Corps purs, mélanges et techniques de séparation",
+    "fiche": "CORPS PUR ET MELANGE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Corps pur, mélange homogène et mélange hétérogène : eau distillée, eau sucrée, eau boueuse",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/5e/img154_corps_pur_et_melange.png",
+    "mots_cles": "corps pur melange homogene heterogene eau distillee sucree boueuse espece chimique",
+    "taille": "grande"
+  },
+  {
+    "id": "img155",
+    "matiere": "physique",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "Corps purs, mélanges et techniques de séparation",
+    "fiche": "LA DISSOLUTION",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La dissolution : soluté, solvant et solution — le sucre qui se dissout dans l'eau",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/5e/img155_la_dissolution.png",
+    "mots_cles": "dissolution solute solvant solution sucre eau grains disperses",
+    "taille": "grande"
+  },
+  {
+    "id": "img156",
+    "matiere": "physique",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "Corps purs, mélanges et techniques de séparation",
+    "fiche": "LA FILTRATION",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La filtration : entonnoir et papier filtre pour séparer un mélange hétérogène",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/5e/img156_la_filtration.png",
+    "mots_cles": "filtration entonnoir papier filtre filtrat eau boueuse particules solides",
+    "taille": "grande"
+  },
+  {
+    "id": "img157",
+    "matiere": "physique",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "Corps purs, mélanges et techniques de séparation",
+    "fiche": "LA DECANTATION",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La décantation : dépôt progressif d'un solide dans un liquide sous l'effet de la gravité",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/5e/img157_la_decantation.png",
+    "mots_cles": "decantation depot sediment gravite liquide clair particules solides",
+    "taille": "grande"
+  },
+  {
+    "id": "img158",
+    "matiere": "physique",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "Corps purs, mélanges et techniques de séparation",
+    "fiche": "LA DISTILLATION SIMPLE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La distillation simple : ballon, thermomètre, réfrigérant, distillat — séparer l'eau et le sel",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/5e/img158_la_distillation_simple.png",
+    "mots_cles": "distillation simple ballon thermometre refrigerant distillat eau salee ebullition",
+    "taille": "grande"
+  },
+  {
+    "id": "img159",
+    "matiere": "physique",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "Les combustions et réactions chimiques",
+    "fiche": "LA COMBUSTION DU CARBONE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La combustion du carbone dans le dioxygène : formation de dioxyde de carbone",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/4e/img159_la_combustion_du_carbone.png",
+    "mots_cles": "combustion carbone dioxygene dioxyde de carbone reaction chimique combustible comburant",
+    "taille": "grande"
+  },
+  {
+    "id": "img160",
+    "matiere": "physique",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "Les combustions et réactions chimiques",
+    "fiche": "TEST DE L'EAU DE CHAUX",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Le test caractéristique du CO₂ : l'eau de chaux se trouble en présence de dioxyde de carbone",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/4e/img160_test_de_leau_de_chaux.png",
+    "mots_cles": "test eau de chaux trouble dioxyde de carbone CO2 precipite carbonate de calcium",
+    "taille": "grande"
+  },
+  {
+    "id": "img161",
+    "matiere": "physique",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "Les combustions et réactions chimiques",
+    "fiche": "LA COMBUSTION DU METHANE",
+    "lecon": "",
+    "type": "schema",
+    "legende": "La combustion complète du méthane : flamme bleue, dioxyde de carbone et eau",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/4e/img161_la_combustion_du_methane.png",
+    "mots_cles": "combustion methane gaz cuisine flamme bleue complete dioxygene",
+    "taille": "grande"
+  },
+  {
+    "id": "img162",
+    "matiere": "physique",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "Les combustions et réactions chimiques",
+    "fiche": "COMBUSTION INCOMPLETE ET DANGERS",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Les dangers d'une combustion incomplète : suie, flamme jaune, monoxyde de carbone toxique",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/4e/img162_combustion_incomplete_dangers.png",
+    "mots_cles": "combustion incomplete suie flamme jaune monoxyde de carbone CO toxique danger aeration",
+    "taille": "grande"
+  },
+  {
+    "id": "img163",
+    "matiere": "physique",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "Les combustions et réactions chimiques",
+    "fiche": "MOLECULES ET ATOMES",
+    "lecon": "",
+    "type": "schema",
+    "legende": "Molécules et atomes : dioxygène, eau, dioxyde de carbone, méthane",
+    "source": "Schéma recréé",
+    "fichier": "images/illustrations/physique/4e/img163_molecules_et_atomes.png",
+    "mots_cles": "molecules atomes hydrogene oxygene carbone dioxygene eau dioxyde de carbone methane",
+    "taille": "grande"
+  },
+  {
+    "id": "art001",
+    "matiere": "arts_plastiques",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "ETUDE DU MATERIEL D'EXPRESSION GRAPHIQUE",
+    "lecon": "Leçon 1",
+    "type": "schema",
+    "legende": "Le matériel d'expression graphique -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/6e/6e_01_materiel_expression_graphique.png",
+    "mots_cles": "materiel expression graphique crayon fusain plume pinceau gomme outils dessin",
+    "taille": "grande"
+  },
+  {
+    "id": "art002",
+    "matiere": "arts_plastiques",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "ETUDE DES AGENTS GRAPHIQUES",
+    "lecon": "Leçon 2",
+    "type": "schema",
+    "legende": "Les agents graphiques : point, ligne, tache, hachure -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/6e/6e_02_agents_graphiques.png",
+    "mots_cles": "agents graphiques point ligne tache hachure elements base dessin",
+    "taille": "grande"
+  },
+  {
+    "id": "art003",
+    "matiere": "arts_plastiques",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "ETUDE DES COULEURS MATIERES",
+    "lecon": "Leçon 3",
+    "type": "schema",
+    "legende": "Le cercle chromatique et les couples de couleurs complémentaires -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/6e/6e_03_cercle_chromatique.png",
+    "mots_cles": "cercle chromatique couleurs complementaires primaires secondaires roue couleur",
+    "taille": "grande"
+  },
+  {
+    "id": "art004",
+    "matiere": "arts_plastiques",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "ETUDE DES PRINCIPAUX TYPES DE COMPOSITIONS GRAPHIQUES",
+    "lecon": "Leçon 4",
+    "type": "schema",
+    "legende": "Les types de compositions graphiques : symétrique, asymétrique, en frise, rayonnante -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/6e/6e_04_compositions_graphiques.png",
+    "mots_cles": "composition graphique symetrique asymetrique frise rayonnante rythme",
+    "taille": "grande"
+  },
+  {
+    "id": "art005",
+    "matiere": "arts_plastiques",
+    "niveau": "6e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "TECHNIQUES D'ANIMATION DE SURFACE",
+    "lecon": "Leçon 5",
+    "type": "schema",
+    "legende": "Les techniques d'animation de surface : hachures, pointillé, dégradé -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/6e/6e_05_animation_surface.png",
+    "mots_cles": "animation surface hachures croisees pointille degrade texture valeur",
+    "taille": "grande"
+  },
+  {
+    "id": "art006",
+    "matiere": "arts_plastiques",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "RAPPORTS DE PROPORTIONS",
+    "lecon": "Leçon 1",
+    "type": "schema",
+    "legende": "La méthode du quadrillage pour reproduire une image en respectant les proportions -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/5e/5e_01_methode_quadrillage.png",
+    "mots_cles": "quadrillage proportions reproduction image agrandissement echelle grille",
+    "taille": "grande"
+  },
+  {
+    "id": "art007",
+    "matiere": "arts_plastiques",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "OMBRES ET LUMIERE",
+    "lecon": "Leçon 2",
+    "type": "schema",
+    "legende": "Les différents types d'ombres et les techniques de pose des ombres, lumière et valeurs -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/5e/5e_02_ombres_lumiere_valeurs.png",
+    "mots_cles": "ombre lumiere valeur ombre propre ombre portee demi teinte reflet echelle valeurs",
+    "taille": "grande"
+  },
+  {
+    "id": "art008",
+    "matiere": "arts_plastiques",
+    "niveau": "5e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "HARMONIES DE COULEURS",
+    "lecon": "Leçon 3",
+    "type": "schema",
+    "legende": "Les harmonies de couleurs (complémentaire, analogue, triadique) et les sept contrastes -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/5e/5e_03_harmonies_couleurs.png",
+    "mots_cles": "harmonie couleur complementaire analogue triadique contraste itten",
+    "taille": "grande"
+  },
+  {
+    "id": "art009",
+    "matiere": "arts_plastiques",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "DESSIN DE LETTRES ET DE MOTS",
+    "lecon": "Leçon 1",
+    "type": "schema",
+    "legende": "L'anatomie d'une lettre : hampe, panse, jambage, empattement -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/4e/4e_01_bases_calligraphie.png",
+    "mots_cles": "calligraphie lettrage hampe panse jambage empattement anatomie lettre",
+    "taille": "grande"
+  },
+  {
+    "id": "art010",
+    "matiere": "arts_plastiques",
+    "niveau": "4e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "TECHNIQUE DE REPRESENTATION EN TROIS DIMENSIONS",
+    "lecon": "Leçon 7",
+    "type": "schema",
+    "legende": "Cube et cylindre en représentation à trois dimensions -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/4e/4e_02_representation_trois_dimensions.png",
+    "mots_cles": "trois dimensions perspective cube cylindre face fuyante arete volume",
+    "taille": "grande"
+  },
+  {
+    "id": "art011",
+    "matiere": "arts_plastiques",
+    "niveau": "3e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "BANDE DESSINEE",
+    "lecon": "Leçon 1",
+    "type": "schema",
+    "legende": "Les éléments caractéristiques d'une Bande Dessinée : case, bulle, cartouche, onomatopée -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/3e/3e_01_elements_bande_dessinee.png",
+    "mots_cles": "bande dessinee case bulle cartouche onomatopee planche vignette decoupage",
+    "taille": "grande"
+  },
+  {
+    "id": "art012",
+    "matiere": "arts_plastiques",
+    "niveau": "3e",
+    "serie": "",
+    "theme": "Communication par le langage plastique",
+    "fiche": "CONCEPTION D'UN DEPLIANT",
+    "lecon": "Leçon 3",
+    "type": "schema",
+    "legende": "La structure d'un dépliant : couverture, rabat, dos et plis -- schéma recréé",
+    "source": "",
+    "fichier": "images/illustrations/arts_plastiques/3e/3e_02_structure_depliant.png",
+    "mots_cles": "depliant structure couverture rabat dos plis pliage brochure",
+    "taille": "grande"
   }
 ]
