@@ -614,7 +614,16 @@ function appliquerTailleIllustrations(element) {
     });
 }
 
-function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature) {
+// ❖ RESTITUTION DU FLUX — style « professionnel » (ChatGPT/Claude/Gemini) ❖
+// Ancien comportement : chaque fragment reçu rejouait le fondu CSS sur TOUT
+// le texte déjà affiché (remove/reflow/add à chaque appel), ce qui provoquait
+// un scintillement continu et peu soigné le temps que la réponse s'écrive.
+// Nouveau comportement : le fondu d'entrée ne joue plus qu'UNE fois, au tout
+// premier fragment (transition douce depuis la bulle de réflexion) ; les
+// fragments suivants mettent simplement le texte à jour sans réanimation.
+// Pendant la frappe, un curseur clignotant (▍) marque la fin du texte déjà
+// reçu -- signal de frappe en cours standard, retiré au rendu final.
+function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enCoursDeFrappe) {
     const source = attenuerSignature ? attenuerSignatureDocument(texteMarkdown) : texteMarkdown;
     let html = marked.parse(source);
     if (attenuerSignature) {
@@ -622,11 +631,17 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature) {
             .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
             .replace(JETON_SIGNATURE_FIN, '</span>');
     }
+    if (enCoursDeFrappe) {
+        html += '<span class="curseur-frappe">▍</span>';
+    }
     element.innerHTML = html;
     appliquerTailleIllustrations(element);
-    element.classList.remove('fondu-reponse');
-    void element.offsetWidth; // force le reflow : relance l'animation CSS
-    element.classList.add('fondu-reponse');
+    if (!element.dataset.fonduJoue) {
+        element.dataset.fonduJoue = "1";
+        element.classList.remove('fondu-reponse');
+        void element.offsetWidth; // force le reflow : lance l'animation CSS
+        element.classList.add('fondu-reponse');
+    }
 }
 
 function scrollToBottom(elementId) {
@@ -1272,7 +1287,7 @@ async function sendSasMessage() {
                                 // On ne remplace la bulle animée que lorsqu'il y a
                                 // vraiment quelque chose à montrer.
                                 if (texteIntegralSas.length > 0) {
-                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas);
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas, false, true);
                                     scrollToElementTop('sas-chat-history', botLoadingDiv);
                                 }
                             }
@@ -1293,6 +1308,7 @@ async function sendSasMessage() {
                 botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta question ?";
                 ajouterMascotte(botLoadingDiv, 'erreur');
             } else {
+                afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas); // rendu final, curseur retiré
                 ajouterMascotte(botLoadingDiv, 'succes');
                 declencherEtincelleMascotte(botLoadingDiv);
             }
@@ -1435,7 +1451,7 @@ async function sendTeacherMessage(outil) {
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralTeacher += (dataObj.answer || "");
                                 if (texteIntegralTeacher.length > 0) {
-                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true);
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, true);
                                     scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
                                 }
                             }
@@ -1451,6 +1467,8 @@ async function sendTeacherMessage(outil) {
 
             if (!texteIntegralTeacher) {
                 botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta demande ?";
+            } else {
+                afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true); // rendu final, curseur retiré
             }
         }
 
@@ -2044,7 +2062,7 @@ async function sendAreneMessage() {
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegral += (dataObj.answer || "");
                                 if (texteIntegral.length > 0) {
-                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegral);
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegral, false, true);
                                     scrollToElementTop('arene-chat-history', botLoadingDiv);
                                 }
                             }
@@ -2056,6 +2074,8 @@ async function sendAreneMessage() {
 
             if (!texteIntegral) {
                 botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ?";
+            } else {
+                afficherReponseAvecFondu(botLoadingDiv, texteIntegral); // rendu final, curseur retiré
             }
         }
 

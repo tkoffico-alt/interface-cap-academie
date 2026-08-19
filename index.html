@@ -669,6 +669,21 @@
         }
         .fondu-reponse { animation: fonduTexteReponse 0.35s ease-out; }
 
+        /* ❖ Curseur de frappe : marque la fin du texte déjà reçu pendant le
+           flux SSE (comme ChatGPT/Claude/Gemini), sans jamais réanimer le
+           texte déjà affiché. Retiré au rendu final. Voir afficherReponseAvecFondu()
+           dans app.js. */
+        @keyframes clignoteCurseurFrappe {
+            0%, 45% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        .curseur-frappe {
+            display: inline-block;
+            color: currentColor;
+            opacity: 0.75;
+            animation: clignoteCurseurFrappe 1s steps(1) infinite;
+        }
+
     </style>
 </head>
 <body>
@@ -1497,4 +1512,40 @@
                     inputSVT.style.opacity = "1";
 
                     inputPC.placeholder = "Requis (/20)";
-                 
+                    inputSVT.placeholder = "Requis (/20)";
+                } else {
+                    // Séries littéraires (A, G) : Les piliers se mettent en sommeil
+                    inputPC.removeAttribute('required');
+                    inputSVT.removeAttribute('required');
+
+                    // Verrouiller et griser les champs
+                    inputPC.disabled = true;
+                    inputSVT.disabled = true;
+                    inputPC.style.backgroundColor = "#E2E8F0"; // Gris doux
+                    inputSVT.style.backgroundColor = "#E2E8F0";
+                    inputPC.style.opacity = "0.6"; // Légère transparence
+
+                    // Effacer d'éventuelles notes saisies par erreur
+                    inputPC.value = "";
+                    inputSVT.value = "";
+
+                    inputPC.placeholder = "Non requis";
+                    inputSVT.placeholder = "Non requis";
+                }
+            }
+            if (selectSerie && inputPC && inputSVT) {
+                // 1. Ajustement initial (Série D par défaut)
+                ajusterChampsScientifiques();
+
+                // 2. Écoute de chaque changement
+                selectSerie.addEventListener('change', ajusterChampsScientifiques);
+            }
+        });
+    </script>
+    <!-- Vercel Web Analytics -->
+    <script type="module">
+        import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1.3.1/dist/index.js';
+        inject();
+    </script>
+</body>
+</html>
