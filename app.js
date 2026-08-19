@@ -636,6 +636,23 @@ function scrollToBottom(elementId) {
     }
 }
 
+// ❖ POSITIONNEMENT SUR LE DÉBUT D'UNE RÉPONSE (et non sur sa fin) ❖
+// Une réponse longue qui dépasse la hauteur visible forçait jusqu'ici
+// l'utilisateur à remonter manuellement pour en lire le début, puisque le
+// défilement suivait le bas du flux à chaque fragment reçu. On aligne
+// désormais le haut de la bulle de réponse avec le haut de la zone visible
+// dès qu'elle commence à s'afficher, et on la maintient à cette position
+// pendant tout le flux (au lieu de continuer à suivre le bas) -- l'élève
+// lit sa réponse depuis le début, comme un texte normal, sans manipulation.
+function scrollToElementTop(elementId, element) {
+    const conteneur = document.getElementById(elementId);
+    if (!conteneur || !element) return;
+    const rectConteneur = conteneur.getBoundingClientRect();
+    const rectElement = element.getBoundingClientRect();
+    const decalage = rectElement.top - rectConteneur.top;
+    conteneur.scrollTop += decalage - 8; // légère marge de respiration en haut
+}
+
 // =======================================================================
 // ❖ LA MÉMOIRE LOCALE (HISTORIQUE) ❖
 // =======================================================================
@@ -1186,7 +1203,7 @@ async function sendSasMessage() {
     botLoadingDiv.innerHTML = creerBulleReflexion("L'Assistant rassemble son savoir...");
     ajouterMascotte(botLoadingDiv, 'reflexion');
     chatHistory.appendChild(botLoadingDiv);
-    scrollToBottom('sas-chat-history');
+    scrollToElementTop('sas-chat-history', botLoadingDiv);
 
     try {
         const response = await fetch('https://api.edukatchat.org/api/sas/chat', {
@@ -1256,7 +1273,7 @@ async function sendSasMessage() {
                                 // vraiment quelque chose à montrer.
                                 if (texteIntegralSas.length > 0) {
                                     afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas);
-                                    scrollToBottom('sas-chat-history');
+                                    scrollToElementTop('sas-chat-history', botLoadingDiv);
                                 }
                             }
                             if (dataObj.conversation_id) {
@@ -1312,7 +1329,9 @@ async function sendSasMessage() {
         button.style.opacity = '1';
         button.style.cursor = 'pointer';
         inputField.focus();
-        scrollToBottom('sas-chat-history');
+        // ❖ Volontairement pas de scrollToBottom ici : on reste ancré sur le
+        // début de la réponse (voir scrollToElementTop plus haut) plutôt que
+        // de sauter à la fin une fois le flux terminé.
     }
 }
 
@@ -1355,7 +1374,7 @@ async function sendTeacherMessage(outil) {
     botLoadingDiv.className = 'message bot-message apparition-fluide';
     botLoadingDiv.innerHTML = creerBulleReflexion("Le Cabinet compile les données. L'esprit rassemble le savoir...");
     chatHistory.appendChild(botLoadingDiv);
-    scrollToBottom(`${outil}-chat-history`);
+    scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
 
@@ -1417,7 +1436,7 @@ async function sendTeacherMessage(outil) {
                                 texteIntegralTeacher += (dataObj.answer || "");
                                 if (texteIntegralTeacher.length > 0) {
                                     afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true);
-                                    scrollToBottom(`${outil}-chat-history`);
+                                    scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
                                 }
                             }
                             if (dataObj.conversation_id) {
@@ -1456,7 +1475,7 @@ async function sendTeacherMessage(outil) {
         button.style.opacity = '1';
         button.style.cursor = 'pointer';
         inputField.focus();
-        scrollToBottom(`${outil}-chat-history`);
+        // ❖ Volontairement pas de scrollToBottom ici : voir sendSasMessage.
     }
 }
 
@@ -1967,7 +1986,7 @@ async function sendAreneMessage() {
     botLoadingDiv.className = 'message bot-message apparition-fluide';
     botLoadingDiv.innerHTML = creerBulleReflexion("L'esprit rassemble le savoir...");
     chatHistory.appendChild(botLoadingDiv);
-    scrollToBottom('arene-chat-history');
+    scrollToElementTop('arene-chat-history', botLoadingDiv);
 
     const sceau = localStorage.getItem('eduka_sceau') || "";
 
@@ -2026,7 +2045,7 @@ async function sendAreneMessage() {
                                 texteIntegral += (dataObj.answer || "");
                                 if (texteIntegral.length > 0) {
                                     afficherReponseAvecFondu(botLoadingDiv, texteIntegral);
-                                    scrollToBottom('arene-chat-history');
+                                    scrollToElementTop('arene-chat-history', botLoadingDiv);
                                 }
                             }
                             if (dataObj.conversation_id) areneConversationId = dataObj.conversation_id;
@@ -2053,7 +2072,7 @@ async function sendAreneMessage() {
         button.disabled = false;
         button.style.opacity = '1';
         inputField.focus();
-        scrollToBottom('arene-chat-history');
+        // ❖ Volontairement pas de scrollToBottom ici : voir sendSasMessage.
     }
 }
 
