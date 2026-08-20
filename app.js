@@ -969,6 +969,66 @@ function triggerVisionUpsell(chatHistoryId) {
 // =======================================================================
 let sasConversationIds = {};
 
+// ❖ CLÔTURE AUTOMATIQUE DE SESSION — Le protocole de clôture (bilan,
+// mémoire, rapport aux parents) ne doit plus dépendre du seul jugement
+// de l'agent quant à la "fin" d'une conversation : un élève qui ferme
+// l'onglet, met l'application en arrière-plan, ou s'arrête simplement
+// de répondre après une seule question, ne dit jamais explicitement
+// "au revoir". On détecte donc ces trois cas côté interface et on
+// envoie un message sentinelle que le prompt Sas est instruit à
+// reconnaître pour déclencher immédiatement la clôture.
+const SENTINEL_FIN_SESSION_SAS = "[FIN_DE_SESSION_AUTOMATIQUE]";
+const DELAI_INACTIVITE_CLOTURE_MS = 15 * 60 * 1000; // 15 minutes sans nouveau message
+let sasSessionOuverte = false;       // vrai dès qu'un premier échange a réussi
+let sasClotureDejaEnvoyee = false;   // évite les doublons de rapport
+let minuteurInactiviteSas = null;
+
+function reinitialiserMinuteurInactiviteSas() {
+    if (minuteurInactiviteSas) clearTimeout(minuteurInactiviteSas);
+    minuteurInactiviteSas = setTimeout(() => {
+        declencherClotureAutomatiqueSas('inactivite');
+    }, DELAI_INACTIVITE_CLOTURE_MS);
+}
+
+function declencherClotureAutomatiqueSas(raison) {
+    if (!sasSessionOuverte || sasClotureDejaEnvoyee) return;
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+    if (!sceau) return; // pas d'abonné identifié, rien à clôturer/rapporter
+
+    sasClotureDejaEnvoyee = true;
+    if (minuteurInactiviteSas) clearTimeout(minuteurInactiviteSas);
+
+    try {
+        const payload = JSON.stringify({
+            query: SENTINEL_FIN_SESSION_SAS,
+            conversation_id: sasConversationIds[avatarActif] || "",
+            matricule: sceau,
+            avatar: avatarActif,
+            device_id: (typeof obtenirDeviceId === 'function') ? obtenirDeviceId() : "",
+            classe: classeActive,
+            methode_travail: (typeof methodeTravailActive !== 'undefined') ? methodeTravailActive : "",
+            gestion_stress: (typeof gestionStressActive !== 'undefined') ? gestionStressActive : ""
+        });
+
+        // fetch({keepalive:true}) plutôt que sendBeacon : autorise un
+        // Content-Type JSON explicite tout en survivant à la fermeture
+        // de l'onglet, ce que sendBeacon ne garantit pas aussi proprement.
+        fetch('https://api.edukatchat.org/api/sas/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true
+        }).catch(() => {});
+    } catch (e) {
+        console.warn("Clôture automatique impossible :", e);
+    }
+}
+
+window.addEventListener('beforeunload', () => declencherClotureAutomatiqueSas('fermeture'));
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') declencherClotureAutomatiqueSas('arriere-plan');
+});
+
 function handleSasKeyPress(event) {
     if (event.key === 'Enter') sendSasMessage();
 }
@@ -1240,6 +1300,14 @@ async function sendSasMessage() {
         if (!response.ok) {
             throw new Error(`Le serveur a répondu avec l'état : ${response.status}`);
         }
+
+        // ❖ Un échange a bien eu lieu : la session est "ouverte" et pourra
+        // donc être clôturée automatiquement (fermeture d'onglet, mise en
+        // arrière-plan, ou inactivité prolongée) même si l'élève ne dit
+        // jamais explicitement au revoir.
+        sasSessionOuverte = true;
+        sasClotureDejaEnvoyee = false;
+        reinitialiserMinuteurInactiviteSas();
 
         const contentType = response.headers.get("content-type");
 
