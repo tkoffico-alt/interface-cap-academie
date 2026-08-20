@@ -441,10 +441,14 @@ function switchTeacherTool(toolID) {
     document.getElementById('container-atelier-custom').classList.remove('active');
     document.getElementById('container-forge-custom').classList.remove('active');
     document.getElementById('container-cabinet-custom').classList.remove('active');
+    document.getElementById('container-forge_primaire-custom').classList.remove('active');
+    document.getElementById('container-cabinet_primaire-custom').classList.remove('active');
 
     document.getElementById('tab-atelier').classList.remove('active');
     document.getElementById('tab-forge').classList.remove('active');
     document.getElementById('tab-cabinet').classList.remove('active');
+    document.getElementById('tab-forge_primaire').classList.remove('active');
+    document.getElementById('tab-cabinet_primaire').classList.remove('active');
 
     if (toolID === 'atelier') {
         document.getElementById('container-atelier-custom').classList.add('active');
@@ -455,6 +459,12 @@ function switchTeacherTool(toolID) {
     } else if (toolID === 'cabinet') {
         document.getElementById('container-cabinet-custom').classList.add('active');
         document.getElementById('tab-cabinet').classList.add('active');
+    } else if (toolID === 'forge_primaire') {
+        document.getElementById('container-forge_primaire-custom').classList.add('active');
+        document.getElementById('tab-forge_primaire').classList.add('active');
+    } else if (toolID === 'cabinet_primaire') {
+        document.getElementById('container-cabinet_primaire-custom').classList.add('active');
+        document.getElementById('tab-cabinet_primaire').classList.add('active');
     }
 
     scrollToBottom(`${toolID}-chat-history`);
@@ -692,7 +702,7 @@ function restoreChatHistories() {
     // choisi, connu seulement une fois le portail de matière franchi
     // (voir validerProfilEtEntrer). On restaure ici uniquement les outils
     // de l'espace enseignant, qui n'ont qu'un seul historique chacun.
-    const outils = ['atelier', 'forge', 'cabinet'];
+    const outils = ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'];
 
     outils.forEach(outil => {
         const savedHtml = localStorage.getItem(`eduka_chat_${outil}`);
@@ -1425,7 +1435,9 @@ async function sendSasMessage() {
 let teacherConversationIds = {
     'atelier': "",
     'forge': "",
-    'cabinet': ""
+    'cabinet': "",
+    'forge_primaire': "",
+    'cabinet_primaire': ""
 };
 
 function handleTeacherKeyPress(event, outil) {

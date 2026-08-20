@@ -1068,6 +1068,12 @@
                 <button id="tab-cabinet" class="tab-btn" onclick="switchTeacherTool('cabinet')">
                     ⚜ Le Cabinet d'Étude
                 </button>
+                <button id="tab-forge_primaire" class="tab-btn" onclick="switchTeacherTool('forge_primaire')">
+                    ✦ La Forge (Primaire)
+                </button>
+                <button id="tab-cabinet_primaire" class="tab-btn" onclick="switchTeacherTool('cabinet_primaire')">
+                    ⚜ Le Cabinet (Primaire)
+                </button>
             </div>
         </div>
 
@@ -1180,6 +1186,54 @@
                         </button>
                         <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
                         <button class="btn-envoyer-icon" onclick="sendTeacherMessage('cabinet')" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Forge Primaire (Instituteurs) -->
+            <div id="container-forge_primaire-custom" class="custom-chat-container">
+                <div id="forge_primaire-chat-history" class="chat-history">
+                    <div class="message system-message">Bienvenue dans la Forge Primaire. Précisez la classe (CP1 à CM2), la matière et la leçon pour structurer votre fiche de préparation ou d'évaluation.</div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion" data-outil="forge_primaire" data-message="Je veux créer une fiche de préparation, aide-moi à cadrer classe, matière et leçon.">📖 Nouvelle fiche de préparation</button>
+                        <button type="button" class="btn-suggestion" data-outil="forge_primaire" data-message="Je veux créer une fiche d'évaluation pour cette leçon.">📝 Nouvelle fiche d'évaluation</button>
+                        <button type="button" class="btn-suggestion" data-outil="forge_primaire" data-message="Ajoute des exercices d'application à la dernière fiche.">🧩 Ajouter des exercices</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="triggerVisionUpsell('forge_primaire-chat-history')" title="Joindre un extrait de livre">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <input type="text" id="forge_primaire-user-input" placeholder="Ex: Fiche de préparation, CE1, Français, la lecture..." onkeypress="handleTeacherKeyPress(event, 'forge_primaire')">
+                        <button class="btn-envoyer-icon" onclick="sendTeacherMessage('forge_primaire')" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Cabinet Primaire (Instituteurs) -->
+            <div id="container-cabinet_primaire-custom" class="custom-chat-container">
+                <div id="cabinet_primaire-chat-history" class="chat-history">
+                    <div class="message system-message">Bienvenue dans le Cabinet Primaire. Posez une question de pédagogie générale, ou décrivez la situation d'un élève précis pour un accompagnement ciblé.</div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion" data-outil="cabinet_primaire" data-message="Donne-moi un conseil pédagogique pour un point du programme que je maîtrise moins.">🧑‍🏫 Conseil pédagogique</button>
+                        <button type="button" class="btn-suggestion" data-outil="cabinet_primaire" data-message="J'ai un élève en difficulté, aide-moi à analyser sa situation.">📊 Un élève en difficulté</button>
+                        <button type="button" class="btn-suggestion" data-outil="cabinet_primaire" data-message="Comment gérer une classe à plusieurs niveaux de compréhension ?">🧭 Gestion de classe</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="triggerVisionUpsell('cabinet_primaire-chat-history')" title="Joindre une situation d'apprentissage">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <input type="text" id="cabinet_primaire-user-input" placeholder="Ex: Comment aider un élève de CE1 qui déchiffre encore mal ?" onkeypress="handleTeacherKeyPress(event, 'cabinet_primaire')">
+                        <button class="btn-envoyer-icon" onclick="sendTeacherMessage('cabinet_primaire')" title="Envoyer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
                                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                             </svg>
