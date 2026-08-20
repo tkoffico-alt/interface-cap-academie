@@ -480,6 +480,52 @@
             color: #0F172A;
         }
 
+        /* ❖ Repérage même AU REPOS (pas seulement à l'état actif) : les 3
+           onglets secondaires portent une teinte bleue discrète, les 2
+           onglets Primaire une teinte verte discrète, dès le premier coup
+           d'œil sur la barre -- avant même de cliquer sur quoi que ce soit.
+           L'onglet actif reste plus saturé/rempli (règles plus haut), la
+           différence de teinte entre les deux groupes est ce qui distingue
+           "secondaire" de "primaire" en un instant. */
+        #tab-atelier:not(.active), #tab-forge:not(.active), #tab-cabinet:not(.active) {
+            background-color: rgba(59, 130, 246, 0.08);
+            color: #93C5FD;
+        }
+        #tab-atelier:not(.active):hover, #tab-forge:not(.active):hover, #tab-cabinet:not(.active):hover {
+            background-color: rgba(59, 130, 246, 0.16);
+            color: #DBEAFE;
+        }
+        #tab-forge_primaire:not(.active), #tab-cabinet_primaire:not(.active) {
+            background-color: rgba(16, 185, 129, 0.08);
+            color: #6EE7B7;
+        }
+        #tab-forge_primaire:not(.active):hover, #tab-cabinet_primaire:not(.active):hover {
+            background-color: rgba(16, 185, 129, 0.16);
+            color: #A7F3D0;
+        }
+        body.light-theme #tab-atelier:not(.active),
+        body.light-theme #tab-forge:not(.active),
+        body.light-theme #tab-cabinet:not(.active) {
+            background-color: #EFF6FF;
+            color: #2563EB;
+            box-shadow: none;
+        }
+        body.light-theme #tab-atelier:not(.active):hover,
+        body.light-theme #tab-forge:not(.active):hover,
+        body.light-theme #tab-cabinet:not(.active):hover {
+            background-color: #DBEAFE;
+        }
+        body.light-theme #tab-forge_primaire:not(.active),
+        body.light-theme #tab-cabinet_primaire:not(.active) {
+            background-color: #ECFDF5;
+            color: #059669;
+            box-shadow: none;
+        }
+        body.light-theme #tab-forge_primaire:not(.active):hover,
+        body.light-theme #tab-cabinet_primaire:not(.active):hover {
+            background-color: #D1FAE5;
+        }
+
         /* ❖ Identité "Espace Enseignant" distincte de celle de l'élève : un
            bleu ardoise sobre et concentré plutôt que le bleu-violet vif
            utilisé côté Sas -- un simple repère de couleur qui distingue
