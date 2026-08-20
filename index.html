@@ -135,7 +135,9 @@
         #container-sas-custom .chat-input-area > .suggestions-rapides,
         #container-atelier-custom .chat-input-area > .suggestions-rapides,
         #container-forge-custom .chat-input-area > .suggestions-rapides,
-        #container-cabinet-custom .chat-input-area > .suggestions-rapides {
+        #container-cabinet-custom .chat-input-area > .suggestions-rapides,
+        #container-forge_primaire-custom .chat-input-area > .suggestions-rapides,
+        #container-cabinet_primaire-custom .chat-input-area > .suggestions-rapides {
             width: 100%;
             max-width: 1000px;
         }
@@ -207,7 +209,9 @@
            Cabinet), pour une identité cohérente entre onglet et suggestions. */
         #container-atelier-custom .suggestions-rapides .btn-suggestion,
         #container-forge-custom .suggestions-rapides .btn-suggestion,
-        #container-cabinet-custom .suggestions-rapides .btn-suggestion {
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion {
             border-radius: 14px;
             padding: 7px 13px;
             box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
@@ -215,7 +219,9 @@
         }
         #container-atelier-custom .suggestions-rapides .btn-suggestion:hover,
         #container-forge-custom .suggestions-rapides .btn-suggestion:hover,
-        #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover {
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
         }
@@ -231,6 +237,19 @@
             background-color: #EDE9FE; color: #6D28D9; border-color: #C4B5FD;
         }
         #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover { background-color: #DDD6FE; }
+        /* ❖ Espace Instituteurs (Primaire) : une SEULE identité verte
+           partagée entre la Forge Primaire et le Cabinet Primaire (au lieu
+           d'une teinte par outil comme côté secondaire) -- l'objectif ici
+           est de reconnaître "je suis dans le Primaire" en un coup d'œil,
+           peu importe l'outil précis ouvert. */
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion {
+            background-color: #D1FAE5; color: #047857; border-color: #6EE7B7;
+        }
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion:hover {
+            background-color: #A7F3D0;
+        }
 
         /* ❖ Deuxième passe d'allègement : les boutons "Copier pour Word" /
            "Imprimer / PDF" ressemblaient encore à des boutons d'action
@@ -396,12 +415,25 @@
             color: #C4B5FD;
             box-shadow: none;
         }
+        /* ❖ Primaire : même vert pour les deux onglets (Forge et Cabinet),
+           volontairement identique entre eux -- voir la note plus haut sur
+           l'identité "Primaire" unifiée. */
+        #tab-forge_primaire.active,
+        #tab-cabinet_primaire.active {
+            background-color: rgba(16, 185, 129, 0.16);
+            color: #6EE7B7;
+            box-shadow: none;
+        }
         body.light-theme .btn-retour { background-color: #F8FAFC; }
         body.light-theme .teacher-navigation { background-color: #EEF2F7; }
         body.light-theme .tab-btn.active { background-color: #3B82F6; color: #FFFFFF; }
         body.light-theme #tab-atelier.active { background-color: #DBEAFE; color: #1D4ED8; box-shadow: none; }
         body.light-theme #tab-forge.active { background-color: #FEF3C7; color: #B45309; box-shadow: none; }
         body.light-theme #tab-cabinet.active { background-color: #EDE9FE; color: #6D28D9; box-shadow: none; }
+        body.light-theme #tab-forge_primaire.active,
+        body.light-theme #tab-cabinet_primaire.active {
+            background-color: #D1FAE5; color: #047857; box-shadow: none;
+        }
 
         /* ❖ Les onglets inactifs "flottaient" sans repère visuel avant le
            survol (juste du texte nu dans le halo du conteneur) -- un fond
@@ -434,6 +466,14 @@
         #container-forge-custom .user-message,
         #container-cabinet-custom .user-message {
             background: linear-gradient(135deg, #334155 0%, #1E3A8A 100%);
+            border-bottom-right-radius: 6px;
+        }
+        /* ❖ Primaire : bulle utilisateur teintée de vert plutôt que le bleu
+           ardoise du secondaire -- on reconnaît l'espace même en pleine
+           conversation, sans avoir à regarder l'onglet actif. */
+        #container-forge_primaire-custom .user-message,
+        #container-cabinet_primaire-custom .user-message {
+            background: linear-gradient(135deg, #134E4A 0%, #047857 100%);
             border-bottom-right-radius: 6px;
         }
 
@@ -1069,10 +1109,10 @@
                     ⚜ Le Cabinet d'Étude
                 </button>
                 <button id="tab-forge_primaire" class="tab-btn" onclick="switchTeacherTool('forge_primaire')">
-                    ✦ La Forge (Primaire)
+                    🌱 La Forge (Primaire)
                 </button>
                 <button id="tab-cabinet_primaire" class="tab-btn" onclick="switchTeacherTool('cabinet_primaire')">
-                    ⚜ Le Cabinet (Primaire)
+                    🌱 Le Cabinet (Primaire)
                 </button>
             </div>
         </div>
