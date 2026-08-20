@@ -13,7 +13,7 @@
            la zone de saisie sur petit écran mobile. min-width:0 permet au
            champ texte de se rétrécir au lieu de forcer le débordement, et
            la media query réduit légèrement les boutons ronds sous 420px. */
-        .chat-input-wrapper { flex-wrap: nowrap; }
+        .chat-input-wrapper { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .chat-input-wrapper input[type="text"] { min-width: 0; flex: 1 1 auto; }
         .btn-icone-outil {
             width: 36px; height: 36px; min-width: 36px;
@@ -48,10 +48,31 @@
         body.light-theme .btn-icone-outil.btn-icone-bleu,
         body.light-theme .btn-icone-outil.btn-icone-violet,
         body.light-theme .btn-icone-outil.btn-icone-ambre { color: #fff; }
-        @media (max-width: 420px) {
+        @media (max-width: 480px) {
             .btn-icone-outil { width: 30px; height: 30px; min-width: 30px; font-size: 0.9em; }
             .btn-icone-outil svg { width: 14px; height: 14px; }
-            .chat-input-wrapper { gap: 4px; }
+            .chat-input-wrapper { gap: 4px; padding-left: 2px; padding-right: 2px; }
+        }
+        /* ❖ Le bouton "trombone" (Primaire) est le SEUL bouton de la rangée
+           pour ces deux outils (pas de bibliothèque d'illustrations ni de
+           formules au primaire) -- son style "neutre" gris passe-partout,
+           conçu pour se fondre entre des boutons colorés voisins, devient
+           illisible tout seul sur fond clair mobile. On lui donne l'accent
+           vert Primaire pour qu'il reste visible. */
+        #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre,
+        #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre {
+            border-color: #10B981;
+            color: #10B981;
+        }
+        #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre:hover,
+        #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre:hover {
+            background-color: rgba(16, 185, 129, 0.14);
+            color: #059669;
+        }
+        body.light-theme #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre,
+        body.light-theme #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre {
+            border-color: #10B981;
+            color: #059669;
         }
 
         /* ❖ Le menu de navigation qui remplace le simple bouton "Retour" :
@@ -600,6 +621,29 @@
                 align-items: center;
                 flex-wrap: wrap;
                 gap: 0.4rem;
+            }
+            /* ❖ Sur téléphone, les 5 onglets de l'Espace Enseignant se
+               repliaient sur plusieurs lignes { l'intérieur d'un même fond
+               en pilule (border-radius: 999px), ce qui dessinait un gros
+               "ovale" vertical prenant une hauteur d'écran disproportionnée.
+               On force ici une seule ligne défilable horizontalement, avec
+               des pastilles plus compactes -- comme un vrai sélecteur
+               d'onglets mobile plutôt qu'un bloc qui s'empile. */
+            .teacher-navigation {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                justify-content: flex-start;
+                max-width: 100%;
+            }
+            .teacher-navigation::-webkit-scrollbar { height: 3px; }
+            .tab-btn {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.78rem;
+                white-space: nowrap;
+                flex-shrink: 0;
             }
         }
 
