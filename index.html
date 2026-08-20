@@ -148,7 +148,9 @@
         #container-sas-custom .chat-input-area,
         #container-atelier-custom .chat-input-area,
         #container-forge-custom .chat-input-area,
-        #container-cabinet-custom .chat-input-area {
+        #container-cabinet-custom .chat-input-area,
+        #container-forge_primaire-custom .chat-input-area,
+        #container-cabinet_primaire-custom .chat-input-area {
             flex-direction: column;
             align-items: center;
             gap: 6px;
@@ -246,18 +248,18 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
         }
-        #container-atelier-custom .suggestions-rapides .btn-suggestion {
+        /* ❖ Même bleu uniforme que les onglets pour les trois outils
+           secondaires (voir note plus haut sur l'uniformisation). */
+        #container-atelier-custom .suggestions-rapides .btn-suggestion,
+        #container-forge-custom .suggestions-rapides .btn-suggestion,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion {
             background-color: #DBEAFE; color: #1D4ED8; border-color: #93C5FD;
         }
-        #container-atelier-custom .suggestions-rapides .btn-suggestion:hover { background-color: #BFDBFE; }
-        #container-forge-custom .suggestions-rapides .btn-suggestion {
-            background-color: #FEF3C7; color: #B45309; border-color: #FCD34D;
+        #container-atelier-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover {
+            background-color: #BFDBFE;
         }
-        #container-forge-custom .suggestions-rapides .btn-suggestion:hover { background-color: #FDE68A; }
-        #container-cabinet-custom .suggestions-rapides .btn-suggestion {
-            background-color: #EDE9FE; color: #6D28D9; border-color: #C4B5FD;
-        }
-        #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover { background-color: #DDD6FE; }
         /* ❖ Espace Instituteurs (Primaire) : une SEULE identité verte
            partagée entre la Forge Primaire et le Cabinet Primaire (au lieu
            d'une teinte par outil comme côté secondaire) -- l'objectif ici
@@ -421,19 +423,17 @@
             color: #FFFFFF;
             box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
         }
-        #tab-atelier.active {
+        /* ❖ Uniformisation demandée : Atelier, Forge et Cabinet du secondaire
+           partagent désormais UNE SEULE couleur (bleu) plutôt que trois
+           teintes distinctes -- ce qui les identifie ensemble comme "le
+           secondaire", face au vert unique du Primaire. L'onglet actif reste
+           le seul { changer d'aspect (fond plein) en entrant dans une
+           fenêtre donnée ; les autres retombent en gris neutre inactif. */
+        #tab-atelier.active,
+        #tab-forge.active,
+        #tab-cabinet.active {
             background-color: rgba(59, 130, 246, 0.16);
             color: #93C5FD;
-            box-shadow: none;
-        }
-        #tab-forge.active {
-            background-color: rgba(245, 158, 11, 0.16);
-            color: #FCD34D;
-            box-shadow: none;
-        }
-        #tab-cabinet.active {
-            background-color: rgba(139, 92, 246, 0.16);
-            color: #C4B5FD;
             box-shadow: none;
         }
         /* ❖ Primaire : même vert pour les deux onglets (Forge et Cabinet),
@@ -448,9 +448,11 @@
         body.light-theme .btn-retour { background-color: #F8FAFC; }
         body.light-theme .teacher-navigation { background-color: #EEF2F7; }
         body.light-theme .tab-btn.active { background-color: #3B82F6; color: #FFFFFF; }
-        body.light-theme #tab-atelier.active { background-color: #DBEAFE; color: #1D4ED8; box-shadow: none; }
-        body.light-theme #tab-forge.active { background-color: #FEF3C7; color: #B45309; box-shadow: none; }
-        body.light-theme #tab-cabinet.active { background-color: #EDE9FE; color: #6D28D9; box-shadow: none; }
+        body.light-theme #tab-atelier.active,
+        body.light-theme #tab-forge.active,
+        body.light-theme #tab-cabinet.active {
+            background-color: #DBEAFE; color: #1D4ED8; box-shadow: none;
+        }
         body.light-theme #tab-forge_primaire.active,
         body.light-theme #tab-cabinet_primaire.active {
             background-color: #D1FAE5; color: #047857; box-shadow: none;
