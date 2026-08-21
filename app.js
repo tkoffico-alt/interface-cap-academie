@@ -569,7 +569,9 @@ function naviguerVers(destination) {
 // place avec un message d'accueil générique. Rien n'est envoyé
 // automatiquement -- WhatsApp s'ouvre avec le message déjà rempli,
 // l'utilisateur reste libre de le modifier avant d'envoyer.
-const NUMERO_AVIS_FONDATEUR = "225748337699"; // 07 48 33 76 99, format international sans le 0 initial
+const NUMERO_AVIS_FONDATEUR = "2250748337699"; // 07 48 33 76 99 -- le 0 initial est CONSERVÉ après l'indicatif
+// 225, à l'identique du numéro "Besoin d'aide ?" déjà en place (2250142674315) : contrairement à
+// la règle E.164 habituelle, WhatsApp Business ne reconnaît ce numéro que sous cette forme ici.
 
 const NOMS_ESPACES_POUR_AVIS = {
     atelier: "L'Atelier des Évaluations",
