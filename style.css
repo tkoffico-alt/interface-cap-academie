@@ -720,6 +720,16 @@ iframe.active {
     font-size: 0.85rem;
 }
 
+/* ❖ Préambule libre (Atelier des Évaluations) : titre que le modèle
+   écrit avant "PARTIE A" (discipline/niveau/thème), sans structure
+   imposée par le prompt -- simple emphase, pas une carte à part. */
+.fiche-preambule {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--fiche-accent);
+    margin-top: 0 !important;
+}
+
 /* ❖ Carte CORRIGÉ (Atelier des Évaluations) : accent ambre pour la
    distinguer visuellement des questions -- c'est la réponse, pas
    l'énoncé, l'enseignant doit pouvoir la repérer d'un coup d'œil. */

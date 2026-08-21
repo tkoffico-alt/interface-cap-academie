@@ -663,7 +663,13 @@ function trouverOccurrencesFiche(texte) {
     const occurrences = [];
 
     Object.entries(ALTERNATIVES_SECTION_FICHE).forEach(([type, variantes]) => {
-        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*)?(?:${variantes.join('|')})[ \\t]*:?[ \\t]*$`, 'gim');
+        // ❖ Permissif à dessein : le modèle ne se limite pas toujours au
+        // libellé nu ("PARTIE A") -- il écrit parfois "PARTIE A :
+        // ÉVALUATION DES RESSOURCES (10 POINTS)" sur la même ligne. On
+        // exige seulement que la ligne COMMENCE par le libellé recherché ;
+        // tout ce qui suit sur cette même ligne est absorbé dans la
+        // légende affichée plutôt que de faire échouer la détection.
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
         let m;
         while ((m = re.exec(texte)) !== null) {
             occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
@@ -970,7 +976,13 @@ function trouverOccurrencesEvaluation(texte) {
     const occurrences = [];
 
     Object.entries(ALTERNATIVES_SECTION_EVALUATION).forEach(([type, variantes]) => {
-        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*)?(?:${variantes.join('|')})[ \\t]*:?[ \\t]*$`, 'gim');
+        // ❖ Permissif à dessein : le modèle ne se limite pas toujours au
+        // libellé nu ("PARTIE A") -- il écrit parfois "PARTIE A :
+        // ÉVALUATION DES RESSOURCES (10 POINTS)" sur la même ligne. On
+        // exige seulement que la ligne COMMENCE par le libellé recherché ;
+        // tout ce qui suit sur cette même ligne est absorbé dans la
+        // légende affichée plutôt que de faire échouer la détection.
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
         let m;
         while ((m = re.exec(texte)) !== null) {
             occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
@@ -1012,6 +1024,13 @@ function analyserEvaluation(texteBrut) {
     const titres = {};
     occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
 
+    // ❖ Le prompt n'impose aucun en-tête formel : le modèle écrit souvent
+    // librement un titre avant "PARTIE A" (ex: "DEVOIR DE SVT - NIVEAU 6E
+    // / THÈME : ..."). Sans cette capture, ce texte disparaissait
+    // silencieusement -- perte d'information plutôt qu'un simple défaut
+    // esthétique.
+    const preambuleTexte = texte.slice(0, occurrences[0].start).trim();
+
     const occPartieA = occurrences.find(o => o.type === 'partieA');
     const occPartieB = occurrences.find(o => o.type === 'partieB');
     const occBareme = occurrences.find(o => o.type === 'bareme');
@@ -1028,12 +1047,16 @@ function analyserEvaluation(texteBrut) {
     // couperait le corrigé après seulement quelques mots).
     const corrigeTexte = occCorrige ? texte.slice(occCorrige.end).trim() : '';
 
-    return { partieATexte, partieBTexte, baremeTexte, corrigeTexte, titres };
+    return { preambuleTexte, partieATexte, partieBTexte, baremeTexte, corrigeTexte, titres };
 }
 
 function construireHTMLEvaluation(analyse, classeAccent) {
-    const { partieATexte, partieBTexte, baremeTexte, corrigeTexte, titres } = analyse;
+    const { preambuleTexte, partieATexte, partieBTexte, baremeTexte, corrigeTexte, titres } = analyse;
     let html = '';
+
+    if (preambuleTexte) {
+        html += `<div class="fiche-preambule">${texteVersHtmlLegerFiche(preambuleTexte)}</div>`;
+    }
 
     if (partieATexte) {
         html += `<div class="fiche-section-titre">📄 ${echapperHTMLFiche(titres.partieA || '')}</div>`;
