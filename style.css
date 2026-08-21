@@ -864,11 +864,54 @@ body.light-theme .fiche-phase-ligne {
 
 .system-message {
     align-self: center;
-    background-color: transparent;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: rgba(59, 130, 246, 0.06);
+    border: 1px solid rgba(59, 130, 246, 0.16);
     color: #94A3B8;
-    font-style: italic;
+    font-style: normal;
     text-align: center;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    padding: 1.1rem 1.5rem;
+    border-radius: 14px;
+}
+
+.system-message-icone {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.system-message-titre {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #3B82F6;
+}
+
+.system-message-texte {
+    color: #94A3B8;
+}
+
+/* ❖ Variante verte : réservée aux espaces Primaire (Forge/Cabinet
+   Primaire), cohérente avec l'identité de couleur déjà utilisée pour
+   les fiches du primaire (--fiche-accent / .accent-vert) ailleurs
+   dans le site. */
+.system-message.accent-vert {
+    background-color: rgba(16, 185, 129, 0.06);
+    border-color: rgba(16, 185, 129, 0.18);
+}
+.system-message.accent-vert .system-message-titre { color: #10B981; }
+
+body.light-theme .system-message {
+    background-color: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.14);
+}
+body.light-theme .system-message.accent-vert {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-color: rgba(16, 185, 129, 0.16);
 }
 
 .chat-input-area {
