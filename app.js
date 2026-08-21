@@ -359,6 +359,7 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
     gestionStressActive = stress;
 
     avatarActif = disciplineEnAttente;
+    mettreAJourBanniereMatiere();
 
     document.getElementById('home-view').style.display = 'none';
     document.getElementById('app-view').style.display = 'flex';
@@ -394,10 +395,14 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
             const welcomeDiv = document.createElement('div');
             welcomeDiv.className = 'message system-message';
 
+            // ❖ Le nom de la matière n'a plus besoin d'être répété ici :
+            // la bannière persistante au-dessus du fil (voir
+            // #banniere-matiere) le montre déjà en grand, en permanence.
+            // Ce message se concentre donc sur l'invitation à démarrer.
             if (espaceActuel === 'eleve') {
-                welcomeDiv.innerHTML = `L'Académie Premium vous ouvre ses portes. Le Répétiteur de <strong>${formaterNomMatiere(avatarActif)}</strong> est à votre écoute.`;
+                welcomeDiv.innerHTML = `L'Académie Premium vous ouvre ses portes. Votre répétiteur vous écoute.`;
             } else {
-                welcomeDiv.innerHTML = `L'Espace de Préparation est prêt. Le Répétiteur de <strong>${formaterNomMatiere(avatarActif)}</strong> vous écoute.`;
+                welcomeDiv.innerHTML = `L'espace est prêt. Posez votre première question pour commencer.`;
             }
 
             chatHistory.appendChild(welcomeDiv);
@@ -435,6 +440,29 @@ function formaterNomMatiere(code) {
         'musique': 'Éducation Musicale', 'arts_plastiques': 'Arts Plastiques'
     };
     return noms[code] || 'cette discipline';
+}
+
+const ICONES_MATIERES = {
+    'maths': '📐', 'physique': '⚗️', 'svt': '🧬', 'tice': '💻',
+    'francais': '📖', 'philosophie': '🦉', 'histoire_geo': '🗺️',
+    'edhc': '🤝', 'anglais': '🇬🇧', 'espagnol': '🇪🇸', 'allemand': '🇩🇪',
+    'musique': '🎵', 'arts_plastiques': '🎨'
+};
+
+function iconePourMatiere(code) {
+    return ICONES_MATIERES[code] || '📚';
+}
+
+// ❖ Met à jour la bannière persistante d'identité de matière (voir
+// #banniere-matiere dans index.html). Appelée dès que avatarActif
+// change -- première entrée dans l'espace ou changement de matière en
+// cours de route via le bouton "📚" -- pour que le repère visuel reste
+// toujours synchronisé avec la matière réellement active.
+function mettreAJourBanniereMatiere() {
+    const nomEl = document.getElementById('banniere-matiere-nom');
+    const iconeEl = document.getElementById('banniere-matiere-icone');
+    if (nomEl) nomEl.textContent = formaterNomMatiere(avatarActif);
+    if (iconeEl) iconeEl.textContent = iconePourMatiere(avatarActif);
 }
 
 function switchTeacherTool(toolID) {
