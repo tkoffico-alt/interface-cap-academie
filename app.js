@@ -620,7 +620,7 @@ function attenuerSignatureDocument(texteMarkdown) {
 const ALTERNATIVES_SECTION_FICHE = {
     header: ["EN-?T[ÊE]TE ADMINISTRATIF", "HEADER", "ENCABEZADO", "KOPFDATEN"],
     tableau: [
-        "TABLEAU DES HABILET[ÉE]S ET CONTENUS",
+        "TABLEAU DES HABIL[ÉE]T[ÉE]S ET CONTENUS",
         "TABLE OF SKILLS AND CONTENTS",
         "TABLA DE HABILIDADES Y CONTENIDOS",
         "TABELLE DER F[ÄA]HIGKEITEN UND INHALTE"
@@ -651,7 +651,10 @@ const ALTERNATIVES_PHASE_FICHE = {
 };
 
 function nettoyerLigneFiche(ligne) {
-    return ligne.trim().replace(/^[#*>\-•\s]+/, '').replace(/[\s:]+$/, '');
+    return ligne.trim()
+        .replace(/^[#*>\-•\s]+/, '')
+        .replace(/^\d+[.)]\s*/, '') // ex: "1. IDENTIFICATION" -> "IDENTIFICATION" (numérotation du canevas primaire)
+        .replace(/[\s:]+$/, '');
 }
 
 // Repère, dans le TEXTE ENTIER (pas ligne par ligne), toutes les
@@ -949,6 +952,199 @@ function construireRenduFiche(source, outil) {
 }
 
 // =======================================================================
+// ❖ LA CARTE "FICHE PRIMAIRE" — RESKIN VISUEL (FORGE PRIMAIRE) ❖
+// =======================================================================
+// La Forge Primaire suit un canevas propre au primaire ivoirien, distinct
+// de celui du secondaire : 8 sections numérotées (IDENTIFICATION,
+// COMPÉTENCE, THÈME, LEÇON, SITUATION D'APPRENTISSAGE, TABLEAU
+// HABILÉTÉS/CONTENUS, MATÉRIEL DIDACTIQUE, DÉROULEMENT PÉDAGOGIQUE), ce
+// dernier se déclinant en trois moments simples (PRÉSENTATION,
+// DÉVELOPPEMENT, ÉVALUATION/RÉINVESTISSEMENT) -- PAS le triple ACTIVITÉ DU
+// PROFESSEUR / ACTIVITÉ DE LA CLASSE / TRACE ÉCRITE du secondaire. Toutes
+// ces sections sont des titres seuls sur leur ligne (parfois précédés
+// d'un numéro "1.", "8."), jamais des libellés en ligne avec leur
+// contenu -- un seul type de motif suffit donc ici, pas de distinction
+// majeures/inline comme pour le secondaire.
+const ALTERNATIVES_SECTION_FICHE_PRIMAIRE = {
+    identification: ["IDENTIFICATION"],
+    competence: ["COMP[ÉE]TENCE"],
+    theme: ["TH[ÈE]ME"],
+    lecon: ["LE[ÇC]ON"],
+    situation: ["SITUATION D['’]APPRENTISSAGE"],
+    tableau: ["TABLEAU HABIL[ÉE]T[ÉE]S\\s*/?\\s*CONTENUS", "TABLEAU DES HABIL[ÉE]T[ÉE]S ET CONTENUS"],
+    materiel: ["MAT[ÉE]RIEL DIDACTIQUE"],
+    deroulement: ["D[ÉE]ROULEMENT P[ÉE]DAGOGIQUE"],
+    presentation: ["PR[ÉE]SENTATION"],
+    developpement: ["D[ÉE]VELOPPEMENT"],
+    evaluationPhase: ["[ÉE]VALUATION\\s*/?\\s*R[ÉE]INVESTISSEMENT", "R[ÉE]INVESTISSEMENT", "[ÉE]VALUATION"]
+};
+
+function trouverOccurrencesFichePrimaire(texte) {
+    const occurrences = [];
+    Object.entries(ALTERNATIVES_SECTION_FICHE_PRIMAIRE).forEach(([type, variantes]) => {
+        // ❖ Préfixe élargi par rapport au secondaire : le canevas primaire
+        // numérote explicitement chaque section ("1. IDENTIFICATION",
+        // "8. DÉROULEMENT PÉDAGOGIQUE").
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+function analyserFichePrimaire(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        .trim();
+    if (!texte) return null;
+
+    const occurrences = trouverOccurrencesFichePrimaire(texte);
+    const aIdentification = occurrences.some(o => o.type === 'identification');
+    // ❖ Une fiche d'ÉVALUATION primaire remplace les points 7-8 par des
+    // exercices libres, sans libellés imposés par le prompt -- dans ce
+    // cas il n'y a rien de fiable à quoi s'accrocher, on se replie donc
+    // sur l'affichage standard plutôt que de deviner une structure.
+    const aDeroulement = occurrences.some(o => o.type === 'deroulement');
+    if (!aIdentification || !aDeroulement) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        return texte.slice(occ.end, finBorne).trim();
+    }
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    function contenuDe(type) {
+        const occ = occurrences.find(o => o.type === type);
+        return occ ? contenuApres(occ) : '';
+    }
+
+    // --- En-tête : IDENTIFICATION (Classe/Matière/Effectif/Durée) fournit
+    // déjà des lignes "Label : Valeur" -> badges. On y ajoute Compétence,
+    // Thème et Leçon comme badges supplémentaires plutôt que d'ouvrir
+    // trois mini-sections séparées, pour garder une vue d'ensemble
+    // compacte (dans l'esprit "respiration visuelle" demandé).
+    const badges = [];
+    const occIdentification = occurrences.find(o => o.type === 'identification');
+    if (occIdentification) {
+        contenuApres(occIdentification).split('\n').forEach(l => {
+            const l2 = l.trim();
+            if (!l2 || estLigneSeparatriceFiche(l2)) return;
+            const sepIdx = l2.indexOf(':');
+            if (sepIdx > -1 && sepIdx < 60) {
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+            } else {
+                badges.push({ label: '', valeur: l2 });
+            }
+        });
+    }
+    ['competence', 'theme', 'lecon'].forEach(type => {
+        const valeur = contenuDe(type);
+        if (valeur) badges.push({ label: titres[type] || type, valeur });
+    });
+
+    const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?)\s*[:\-]?\s*(Contenus?|Contents?)?$/i;
+    const lignesTableau = occurrences.some(o => o.type === 'tableau')
+        ? contenuDe('tableau')
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l && !estLigneSeparatriceFiche(l))
+            .map(l => nettoyerLigneTableauFiche(l))
+            .filter(l => !motifEnTeteColonnes.test(l.replace(/\s*—\s*/g, ' ').trim()))
+        : [];
+
+    const situationTexte = contenuDe('situation');
+    const materielTexte = contenuDe('materiel');
+
+    // --- Déroulement pédagogique : trois moments simples (titre + texte
+    // libre), pas de triple à décoder comme au secondaire.
+    const phases = ['presentation', 'developpement', 'evaluationPhase']
+        .map(type => ({ type, titre: titres[type] || '', contenu: contenuDe(type) }))
+        .filter(p => p.contenu);
+
+    return { badges, lignesTableau, situationTexte, materielTexte, phases, titres };
+}
+
+function construireHTMLFichePrimaire(analyse) {
+    const { badges, lignesTableau, situationTexte, materielTexte, phases, titres } = analyse;
+    let html = '';
+
+    if (badges.length) {
+        html += `<div class="fiche-section-titre">🧭 ${echapperHTMLFiche(titres.identification || '')}</div>`;
+        html += '<div class="fiche-bloc-entete">';
+        badges.forEach(b => {
+            const estCompetence = /comp[ée]t/i.test(b.label);
+            html += `<span class="fiche-badge${estCompetence ? ' fiche-badge-competence' : ''}">`;
+            if (b.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(b.label)} :</span> `;
+            html += `${echapperHTMLFiche(b.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    if (situationTexte) {
+        html += `<div class="fiche-section-titre">💡 ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
+    }
+
+    if (lignesTableau.length) {
+        html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titres.tableau || '')}</div>`;
+        html += '<div class="fiche-carte fiche-liste-simple">';
+        lignesTableau.forEach(l => {
+            html += `<div>${echapperHTMLFiche(l)}</div>`;
+        });
+        html += '</div>';
+    }
+
+    if (materielTexte) {
+        html += `<div class="fiche-section-titre">🧰 ${echapperHTMLFiche(titres.materiel || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
+    }
+
+    if (phases.length) {
+        html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
+        phases.forEach(p => {
+            html += '<div class="fiche-carte fiche-phase">';
+            html += `<div class="fiche-phase-titre">${echapperHTMLFiche(p.titre)}</div>`;
+            html += `<div class="fiche-phase-ligne">${texteVersHtmlLegerFiche(p.contenu)}</div>`;
+            html += '</div>';
+        });
+    }
+
+    return `<div class="fiche-lecon accent-vert">${html}</div>`;
+}
+
+function construireRenduFichePrimaire(source) {
+    let corps = source;
+    let signatureHTML = '';
+    const idxDebut = corps.indexOf(JETON_SIGNATURE_DEBUT);
+    if (idxDebut !== -1) {
+        signatureHTML = corps.slice(idxDebut);
+        corps = corps.slice(0, idxDebut);
+    }
+
+    const analyse = analyserFichePrimaire(corps);
+    if (!analyse) return null;
+
+    let html = construireHTMLFichePrimaire(analyse);
+
+    if (signatureHTML) {
+        let sigParsed = marked.parse(signatureHTML);
+        sigParsed = sigParsed
+            .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+            .replace(JETON_SIGNATURE_FIN, '</span>');
+        html += sigParsed;
+    }
+    return html;
+}
+
+// =======================================================================
 // ❖ LA CARTE "ÉVALUATION" — RESKIN VISUEL (ATELIER DES ÉVALUATIONS) ❖
 // =======================================================================
 // Même principe que la carte "fiche de leçon" ci-dessus, mais adapté à la
@@ -1172,8 +1368,10 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
     // leçon, Atelier = évaluation). Repli automatique sur le rendu
     // standard sinon.
     let html = null;
-    if (!enCoursDeFrappe && (outil === 'forge' || outil === 'forge_primaire')) {
+    if (!enCoursDeFrappe && outil === 'forge') {
         html = construireRenduFiche(source, outil);
+    } else if (!enCoursDeFrappe && outil === 'forge_primaire') {
+        html = construireRenduFichePrimaire(source);
     } else if (!enCoursDeFrappe && outil === 'atelier') {
         html = construireRenduEvaluation(source);
     }
