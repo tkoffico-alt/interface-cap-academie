@@ -588,6 +588,314 @@ function attenuerSignatureDocument(texteMarkdown) {
     );
 }
 
+// =======================================================================
+// ❖ LA CARTE "FICHE DE LEÇON" — RESKIN VISUEL (FORGE / FORGE PRIMAIRE) ❖
+// =======================================================================
+// La Forge (secondaire et primaire) répond en texte structuré par des
+// libellés de section (EN-TÊTE ADMINISTRATIF, TABLEAU DES HABILETÉS ET
+// CONTENUS, SITUATION D'APPRENTISSAGE, DÉROULEMENT DU COURS, puis pour
+// chaque phase ACTIVITÉ DU PROFESSEUR / ACTIVITÉ DE LA CLASSE / TRACE
+// ÉCRITE VALIDÉE) -- jamais de tableau Markdown (interdit par le prompt).
+// Plutôt que de laisser ce texte s'afficher comme un simple bloc de
+// paragraphes, on le découpe ici en sections reconnues pour le présenter
+// en badges de métadonnées, cartes arrondies et lignes horizontales
+// discrètes (voir les classes .fiche-* dans style.css).
+//
+// Ces libellés existent aussi en anglais/espagnol/allemand depuis la
+// règle de langue des langues vivantes -- les motifs ci-dessous
+// reconnaissent les quatre variantes. Le TEXTE AFFICHÉ pour chaque titre
+// de section, lui, n'est jamais traduit ici : on réutilise tel quel le
+// libellé écrit par le modèle (déjà dans la bonne langue), ce qui évite
+// tout dictionnaire de traduction à maintenir côté interface.
+//
+// Sécurité : si l'en-tête ou le déroulement ne sont pas identifiés sans
+// ambiguïté, analyserFicheLecon() renvoie null et l'appelant se replie
+// silencieusement sur le rendu standard (marked.parse) -- cette carte ne
+// remplace jamais un contenu qu'elle ne comprend pas complètement.
+
+// ❖ Titres de GRANDE section : toujours seuls sur leur ligne dans les
+// exemples observés ("HEADER", "EN-TÊTE ADMINISTRATIF :", "LEARNING
+// SITUATION", etc.) -- on exige donc que la ligne entière (une fois les
+// puces/# et le ':' final retirés) corresponde exactement au libellé.
+const ALTERNATIVES_SECTION_FICHE = {
+    header: ["EN-?T[ÊE]TE ADMINISTRATIF", "HEADER", "ENCABEZADO", "KOPFDATEN"],
+    tableau: [
+        "TABLEAU DES HABILET[ÉE]S ET CONTENUS",
+        "TABLE OF SKILLS AND CONTENTS",
+        "TABLA DE HABILIDADES Y CONTENIDOS",
+        "TABELLE DER F[ÄA]HIGKEITEN UND INHALTE"
+    ],
+    situation: [
+        "SITUATION D['’]APPRENTISSAGE",
+        "LEARNING SITUATION",
+        "SITUACI[ÓO]N DE APRENDIZAJE",
+        "LERNSITUATION"
+    ],
+    deroulement: [
+        "D[ÉE]ROULEMENT DU COURS(?:\\s*\\([^)]*\\))?",
+        "LESSON PROCEDURE",
+        "DESARROLLO DE LA CLASE",
+        "UNTERRICHTSABLAUF"
+    ]
+};
+
+// ❖ Libellés de PHASE : d'après la structure exigée par le prompt
+// ("- ACTIVITÉ DU PROFESSEUR : [...]"), le modèle écrit le libellé ET son
+// contenu sur la MÊME ligne, séparés par ':'. Ces motifs ne matchent donc
+// que le DÉBUT de la ligne (pas la ligne entière) -- tout ce qui suit le
+// ':' est capturé comme contenu par analyserFicheLecon().
+const ALTERNATIVES_PHASE_FICHE = {
+    prof: ["ACTIVIT[ÉE] DU PROFESSEUR", "TEACHER['’]S ACTIVITY", "ACTIVIDAD DEL PROFESOR", "LEHRERAKTIVIT[ÄA]T"],
+    classe: ["ACTIVIT[ÉE] DE LA CLASSE", "STUDENTS['’] ACTIVITY", "ACTIVIDAD DE LA CLASE", "SCH[ÜU]LERAKTIVIT[ÄA]T"],
+    trace: ["TRACE [ÉE]CRITE VALID[ÉE]E", "VALIDATED NOTES", "APUNTES VALIDADOS", "G[ÜU]LTIGE MITSCHRIFT"]
+};
+
+function nettoyerLigneFiche(ligne) {
+    return ligne.trim().replace(/^[#*>\-•\s]+/, '').replace(/[\s:]+$/, '');
+}
+
+// Repère, dans le TEXTE ENTIER (pas ligne par ligne), toutes les
+// occurrences de libellés de section et de phase, avec leur position
+// exacte (utile pour ensuite découper le contenu associé à chacune par
+// simple différence de position avec l'occurrence suivante -- quel que
+// soit son type). Triées par ordre d'apparition dans le document.
+function trouverOccurrencesFiche(texte) {
+    const occurrences = [];
+
+    Object.entries(ALTERNATIVES_SECTION_FICHE).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*)?(?:${variantes.join('|')})[ \\t]*:?[ \\t]*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++; // garde-fou anti-boucle infinie
+        }
+    });
+
+    Object.entries(ALTERNATIVES_PHASE_FICHE).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•]\\s*)?(?:${variantes.join('|')})[ \\t]*:[ \\t]*`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+function echapperHTMLFiche(s) {
+    return (s || "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Conversion très légère (gras résiduel + paragraphes/listes) sans passer
+// par marked.parse en entier : le texte d'une fiche ne contient jamais de
+// vrai Markdown (interdit par le prompt), seulement parfois un "**" isolé
+// qu'on neutralise ici par sécurité.
+function texteVersHtmlLegerFiche(bloc) {
+    if (!bloc) return '';
+    const echappe = echapperHTMLFiche(bloc).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    const paragraphes = echappe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    return paragraphes.map(p => {
+        const lignes = p.split('\n').map(l => l.trim()).filter(Boolean);
+        const toutesEnListe = lignes.length > 1 && lignes.every(l => /^[-•]\s+/.test(l));
+        if (toutesEnListe) {
+            return '<ul>' + lignes.map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('') + '</ul>';
+        }
+        return `<p>${lignes.join('<br>')}</p>`;
+    }).join('');
+}
+
+// Sépare un segment de texte (contenu entre la fin d'une "TRACE ÉCRITE
+// VALIDÉE" et le début de la phase suivante) entre la trace elle-même et
+// le titre de la phase suivante (ex: "2. Développement :"), sur la base
+// du dernier paragraphe s'il est court -- heuristique volontairement
+// prudente : en cas de doute, tout reste dans la trace plutôt que de
+// risquer de tronquer un titre au mauvais endroit.
+function separerTraceEtTitreSuivant(segment) {
+    const paragraphes = segment.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    if (paragraphes.length === 0) return { trace: '', titreSuivant: '' };
+    if (paragraphes.length === 1) return { trace: paragraphes[0], titreSuivant: '' };
+    const dernier = paragraphes[paragraphes.length - 1];
+    if (dernier.length <= 80 && !dernier.includes('\n')) {
+        return { trace: paragraphes.slice(0, -1).join('\n\n'), titreSuivant: dernier.replace(/^[-•\s]+/, '') };
+    }
+    return { trace: paragraphes.join('\n\n'), titreSuivant: '' };
+}
+
+function analyserFicheLecon(texteBrut) {
+    const texte = (texteBrut || '').replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '').trim();
+    if (!texte) return null;
+
+    const occurrences = trouverOccurrencesFiche(texte);
+    const aHeader = occurrences.some(o => o.type === 'header');
+    const aDeroulement = occurrences.some(o => o.type === 'deroulement');
+    if (!aHeader || !aDeroulement) return null;
+
+    // Le contenu associé à une occurrence s'arrête pile au début de la
+    // PROCHAINE occurrence (quel que soit son type) -- fonctionne aussi
+    // bien pour les grandes sections (contenu jusqu'au prochain titre) que
+    // pour les libellés de phase (contenu jusqu'au libellé suivant).
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        return texte.slice(occ.end, finBorne).trim();
+    }
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    const occHeader = occurrences.find(o => o.type === 'header');
+    const occTableau = occurrences.find(o => o.type === 'tableau');
+    const occSituation = occurrences.find(o => o.type === 'situation');
+    const occDeroulement = occurrences.find(o => o.type === 'deroulement');
+
+    // --- En-tête : lignes "Label : Valeur" -> badges
+    const badges = [];
+    if (occHeader) {
+        contenuApres(occHeader).split('\n').forEach(l => {
+            const l2 = l.trim();
+            if (!l2) return;
+            const sepIdx = l2.indexOf(':');
+            if (sepIdx > -1 && sepIdx < 60) {
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+            } else {
+                badges.push({ label: '', valeur: l2 });
+            }
+        });
+    }
+
+    // --- Tableau des habiletés : liste simple (une ligne = une rangée),
+    // sans grille -- exactement l'esprit "ligne horizontale subtile"
+    // demandé plutôt qu'un vrai tableau à colonnes.
+    const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?|Habilidades?|F[äa]higkeiten)\s*[:\-]?\s*(Contenus?|Contents?|Contenidos?|Inhalte)?$/i;
+    const lignesTableau = occTableau
+        ? contenuApres(occTableau).split('\n').map(l => l.trim()).filter(l => l && !motifEnTeteColonnes.test(l))
+        : [];
+
+    // --- Situation d'apprentissage
+    const situationTexte = occSituation ? contenuApres(occSituation) : '';
+
+    // --- Déroulement : repérage des triples prof/classe/trace, dans
+    // l'ordre, sans supposer un nombre fixe de phases (le bouton "Ajouter
+    // des activités" peut en générer davantage). Le déroulement est
+    // toujours la dernière grande section du document.
+    const deroulementDebut = occDeroulement.end;
+    const deroulementFin = texte.length;
+    const marqueursPhase = occurrences.filter(o =>
+        ['prof', 'classe', 'trace'].includes(o.type) && o.start >= deroulementDebut && o.start < deroulementFin
+    );
+
+    const phases = [];
+    let titreCourant = (() => {
+        const premierProf = marqueursPhase.find(m => m.type === 'prof');
+        if (!premierProf) return '';
+        return texte.slice(deroulementDebut, premierProf.start).replace(/^[\s\-•]+/, '').trim();
+    })();
+
+    for (let k = 0; k < marqueursPhase.length;) {
+        const mProf = marqueursPhase[k];
+        if (!mProf || mProf.type !== 'prof') { k++; continue; }
+        const mClasse = marqueursPhase[k + 1] && marqueursPhase[k + 1].type === 'classe' ? marqueursPhase[k + 1] : null;
+        const mTrace = mClasse && marqueursPhase[k + 2] && marqueursPhase[k + 2].type === 'trace' ? marqueursPhase[k + 2] : null;
+
+        const contenuProf = texte.slice(mProf.end, mClasse ? mClasse.start : deroulementFin).trim();
+        const contenuClasse = mClasse ? texte.slice(mClasse.end, mTrace ? mTrace.start : deroulementFin).trim() : '';
+
+        let contenuTrace = '';
+        let titreSuivant = '';
+        if (mTrace) {
+            const prochainProf = marqueursPhase.slice(k + 3).find(m => m.type === 'prof');
+            const finSegment = prochainProf ? prochainProf.start : deroulementFin;
+            // On ne coupe pas juste avant le prochain "prof" : il faut
+            // englober aussi son titre de phase pour pouvoir l'en extraire.
+            const separation = separerTraceEtTitreSuivant(texte.slice(mTrace.end, finSegment).trim());
+            contenuTrace = separation.trace;
+            titreSuivant = separation.titreSuivant;
+        }
+
+        phases.push({ titre: titreCourant, prof: contenuProf, classe: contenuClasse, trace: contenuTrace });
+        titreCourant = titreSuivant;
+        k += mTrace ? 3 : (mClasse ? 2 : 1);
+    }
+
+    if (!phases.length) return null;
+
+    return { badges, lignesTableau, situationTexte, phases, titres };
+}
+
+function construireHTMLFiche(analyse, classeAccent) {
+    const { badges, lignesTableau, situationTexte, phases, titres } = analyse;
+    let html = '';
+
+    if (badges.length) {
+        html += `<div class="fiche-section-titre">🧭 ${echapperHTMLFiche(titres.header || '')}</div>`;
+        html += '<div class="fiche-bloc-entete">';
+        badges.forEach(b => {
+            const estCompetence = /comp[ée]t|competenc|kompetenz/i.test(b.label);
+            html += `<span class="fiche-badge${estCompetence ? ' fiche-badge-competence' : ''}">`;
+            if (b.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(b.label)} :</span> `;
+            html += `${echapperHTMLFiche(b.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    if (lignesTableau.length) {
+        html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titres.tableau || '')}</div>`;
+        html += '<div class="fiche-carte fiche-liste-simple">';
+        lignesTableau.forEach(l => {
+            html += `<div>${echapperHTMLFiche(l).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`;
+        });
+        html += '</div>';
+    }
+
+    if (situationTexte) {
+        html += `<div class="fiche-section-titre">💡 ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
+    }
+
+    if (phases.length) {
+        html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
+        phases.forEach(p => {
+            html += '<div class="fiche-carte fiche-phase">';
+            if (p.titre) html += `<div class="fiche-phase-titre">${echapperHTMLFiche(p.titre)}</div>`;
+            if (p.prof) html += `<div class="fiche-phase-ligne"><span class="fiche-phase-legende legende-prof">🗣️ ${echapperHTMLFiche(titres.prof || '')}</span>${texteVersHtmlLegerFiche(p.prof)}</div>`;
+            if (p.classe) html += `<div class="fiche-phase-ligne"><span class="fiche-phase-legende">✍️ ${echapperHTMLFiche(titres.classe || '')}</span>${texteVersHtmlLegerFiche(p.classe)}</div>`;
+            if (p.trace) html += `<div class="fiche-phase-ligne"><span class="fiche-phase-legende legende-trace">📌 ${echapperHTMLFiche(titres.trace || '')}</span>${texteVersHtmlLegerFiche(p.trace)}</div>`;
+            html += '</div>';
+        });
+    }
+
+    return `<div class="fiche-lecon${classeAccent || ''}">${html}</div>`;
+}
+
+// Point d'entrée : tente le rendu enrichi, ou renvoie null pour laisser
+// l'appelant se replier sur marked.parse (comportement historique).
+function construireRenduFiche(source, outil) {
+    let corps = source;
+    let signatureHTML = '';
+    const idxDebut = corps.indexOf(JETON_SIGNATURE_DEBUT);
+    if (idxDebut !== -1) {
+        signatureHTML = corps.slice(idxDebut);
+        corps = corps.slice(0, idxDebut);
+    }
+
+    const analyse = analyserFicheLecon(corps);
+    if (!analyse) return null;
+
+    const classeAccent = outil === 'forge_primaire' ? ' accent-vert' : '';
+    let html = construireHTMLFiche(analyse, classeAccent);
+
+    if (signatureHTML) {
+        let sigParsed = marked.parse(signatureHTML);
+        sigParsed = sigParsed
+            .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+            .replace(JETON_SIGNATURE_FIN, '</span>');
+        html += sigParsed;
+    }
+    return html;
+}
+
 // ❖ TAILLE DES ILLUSTRATIONS (grande / compacte) ❖
 // L'IA ne connaît QUE l'URL de l'image (voir illustrations_disponibles côté
 // gateway) et se contente de la recopier en Markdown ![alt](url) -- elle ne
@@ -633,13 +941,25 @@ function appliquerTailleIllustrations(element) {
 // fragments suivants mettent simplement le texte à jour sans réanimation.
 // Pendant la frappe, un curseur clignotant (▍) marque la fin du texte déjà
 // reçu -- signal de frappe en cours standard, retiré au rendu final.
-function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enCoursDeFrappe) {
+function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enCoursDeFrappe, outil) {
     const source = attenuerSignature ? attenuerSignatureDocument(texteMarkdown) : texteMarkdown;
-    let html = marked.parse(source);
-    if (attenuerSignature) {
-        html = html
-            .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
-            .replace(JETON_SIGNATURE_FIN, '</span>');
+
+    // ❖ Reskin "fiche de leçon" : tenté uniquement une fois la réponse
+    // entièrement reçue (jamais pendant la frappe, pour ne pas afficher
+    // une structure encore incomplète) et uniquement pour la Forge /
+    // Forge Primaire. Repli automatique sur le rendu standard sinon.
+    let html = null;
+    if (!enCoursDeFrappe && (outil === 'forge' || outil === 'forge_primaire')) {
+        html = construireRenduFiche(source, outil);
+    }
+
+    if (html === null) {
+        html = marked.parse(source);
+        if (attenuerSignature) {
+            html = html
+                .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+                .replace(JETON_SIGNATURE_FIN, '</span>');
+        }
     }
     if (enCoursDeFrappe) {
         html += '<span class="curseur-frappe">▍</span>';
@@ -1531,7 +1851,7 @@ async function sendTeacherMessage(outil) {
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralTeacher += (dataObj.answer || "");
                                 if (texteIntegralTeacher.length > 0) {
-                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, true);
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, true, outil);
                                     scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
                                 }
                             }
@@ -1548,7 +1868,7 @@ async function sendTeacherMessage(outil) {
             if (!texteIntegralTeacher) {
                 botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta demande ?";
             } else {
-                afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true); // rendu final, curseur retiré
+                afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, false, outil); // rendu final, curseur retiré
             }
         }
 
@@ -1627,6 +1947,93 @@ function imprimerDocument(bouton) {
             }
             .document-aere li {
                 margin-bottom: 0.5em;
+            }
+            /* ❖ Reskin "fiche de leçon" : cette zone d'impression est un
+               <style> isolé (voir commentaire plus haut sur la cause du
+               logo intermittent) -- il ne reprend pas automatiquement
+               style.css, donc les classes .fiche-* doivent être redéfinies
+               ici en version imprimable (fond blanc, pas d'ombre, accent
+               conservé pour le repérage bleu/vert secondaire/primaire). */
+            .document-aere .fiche-lecon {
+                white-space: normal;
+                --fiche-accent: #3B82F6;
+                --fiche-accent-douce: #EFF6FF;
+            }
+            .document-aere .fiche-lecon.accent-vert {
+                --fiche-accent: #059669;
+                --fiche-accent-douce: #ECFDF5;
+            }
+            .document-aere .fiche-lecon > * + * { margin-top: 1.1em; }
+            .document-aere .fiche-section-titre {
+                font-size: 10pt;
+                letter-spacing: 0.04em;
+                font-weight: 700;
+                color: var(--fiche-accent);
+                text-transform: uppercase;
+                margin-top: 1.2em;
+            }
+            .document-aere .fiche-bloc-entete {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-top: 0.4em;
+            }
+            .document-aere .fiche-badge {
+                display: inline-block;
+                padding: 3px 10px;
+                border-radius: 999px;
+                background: var(--fiche-accent-douce);
+                color: var(--fiche-accent);
+                border: 1px solid var(--fiche-accent);
+                font-size: 10pt;
+                font-weight: 600;
+            }
+            .document-aere .fiche-badge-label { opacity: 0.75; font-weight: 500; }
+            .document-aere .fiche-badge.fiche-badge-competence {
+                display: block;
+                width: 100%;
+                background: #F1F5F9;
+                color: #0F172A;
+                border-color: #CBD5E1;
+            }
+            .document-aere .fiche-carte {
+                border: 1px solid #CBD5E1;
+                border-radius: 10px;
+                padding: 12px 16px;
+                margin-top: 0.4em;
+            }
+            .document-aere .fiche-liste-simple > div,
+            .document-aere .fiche-phase-ligne {
+                padding: 6px 0;
+                border-top: 1px solid #E5E7EB;
+            }
+            .document-aere .fiche-liste-simple > div:first-child,
+            .document-aere .fiche-phase-ligne:first-of-type {
+                border-top: none;
+                padding-top: 0;
+            }
+            .document-aere .fiche-phase-titre {
+                font-weight: 700;
+                color: var(--fiche-accent);
+            }
+            .document-aere .fiche-phase-legende {
+                display: block;
+                font-size: 8.5pt;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                font-weight: 700;
+                color: #475569;
+                margin-bottom: 2px;
+            }
+            .document-aere .fiche-lecon p { margin: 0 0 0.4em; white-space: normal; }
+            .document-aere .fiche-lecon p:last-child { margin-bottom: 0; }
+            .document-aere .fiche-lecon ul { margin: 0.3em 0 0.4em 1.1em; padding: 0; }
+            .document-aere .fiche-lecon + .signature-doc,
+            .document-aere .fiche-lecon .signature-doc {
+                display: block;
+                margin-top: 1em;
+                opacity: 0.6;
+                font-size: 9pt;
             }
         </style>
 

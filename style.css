@@ -568,8 +568,183 @@ iframe.active {
     border: 1px solid #334155;
     color: #E2E8F0;
     border-bottom-left-radius: 0;
-    white-space: pre-wrap; 
-    word-wrap: break-word; 
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* ❖ CARTE "FICHE DE LEÇON" — reskin visuel (Forge / Forge Primaire) ❖
+   Rendu enrichi construit par construireRenduFiche()/construireHTMLFiche()
+   dans app.js, uniquement quand le texte généré est reconnu comme une
+   fiche de leçon structurée. Palette bleue par défaut (secondaire),
+   accent-vert pour le primaire -- cohérent avec l'identité de couleur déjà
+   en place sur les onglets. En cas d'échec du parsing, ce bloc n'apparaît
+   jamais : l'appelant se replie sur le rendu Markdown standard. */
+.fiche-lecon {
+    --fiche-accent: #3B82F6;
+    --fiche-accent-douce: rgba(59, 130, 246, 0.14);
+    white-space: normal;
+}
+.fiche-lecon.accent-vert {
+    --fiche-accent: #10B981;
+    --fiche-accent-douce: rgba(16, 185, 129, 0.14);
+}
+
+.fiche-lecon > * + * {
+    margin-top: 1.4rem;
+}
+
+.fiche-section-titre {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--fiche-accent);
+    text-transform: uppercase;
+}
+
+.fiche-bloc-entete {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.6rem !important;
+}
+.fiche-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: var(--fiche-accent-douce);
+    color: var(--fiche-accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--fiche-accent-douce);
+}
+.fiche-badge-label {
+    opacity: 0.75;
+    font-weight: 500;
+}
+.fiche-badge.fiche-badge-competence {
+    width: 100%;
+    border-radius: 12px;
+    background: var(--fiche-accent);
+    color: #FFFFFF;
+    padding: 0.6rem 1rem;
+}
+.fiche-badge.fiche-badge-competence .fiche-badge-label {
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 1;
+}
+
+.fiche-carte {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 16px;
+    padding: 1.1rem 1.3rem;
+    box-shadow: 0 4px 14px rgba(2, 6, 23, 0.18);
+    margin-top: 0.6rem !important;
+}
+
+.fiche-liste-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.fiche-liste-simple > div {
+    padding: 0.55rem 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+.fiche-liste-simple > div:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+.fiche-liste-simple > div:last-child {
+    padding-bottom: 0;
+}
+
+.fiche-phase {
+    display: flex;
+    flex-direction: column;
+}
+.fiche-phase-titre {
+    font-weight: 700;
+    color: var(--fiche-accent);
+    font-size: 0.95rem;
+}
+.fiche-phase-ligne {
+    padding: 0.65rem 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+.fiche-phase-ligne:first-of-type {
+    border-top: none;
+    padding-top: 0;
+}
+.fiche-phase-titre + .fiche-phase-ligne {
+    border-top: none;
+}
+.fiche-phase-legende {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: 0.65;
+    margin-bottom: 0.25rem;
+}
+.fiche-phase-legende.legende-prof {
+    color: var(--fiche-accent);
+    opacity: 0.9;
+}
+.fiche-phase-legende.legende-trace {
+    color: #F59E0B;
+    opacity: 0.9;
+}
+
+.fiche-lecon p {
+    margin: 0 0 0.5rem;
+    white-space: normal;
+}
+.fiche-lecon p:last-child {
+    margin-bottom: 0;
+}
+.fiche-lecon ul {
+    margin: 0.3rem 0 0.5rem 1.1rem;
+    padding: 0;
+}
+.fiche-lecon .signature-doc {
+    display: block;
+    margin-top: 1.4rem;
+    opacity: 0.55;
+    font-size: 0.85rem;
+}
+
+body.light-theme .fiche-carte {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+body.light-theme .fiche-liste-simple > div,
+body.light-theme .fiche-phase-ligne {
+    border-top-color: #EEF0F3;
+}
+
+/* ❖ Impression : les ombres/badges arrondis restent lisibles, mais on
+   retire l'ombre portée (parasite en noir et blanc) et on force un
+   contraste fort quelle que soit l'accent de couleur. */
+@media print {
+    .fiche-carte {
+        box-shadow: none;
+        border: 1px solid #CBD5E1;
+    }
+    .fiche-badge {
+        border: 1px solid currentColor;
+    }
+    .fiche-badge.fiche-badge-competence {
+        background: #F1F5F9 !important;
+        color: #0F172A !important;
+    }
 }
 
 .system-message {
