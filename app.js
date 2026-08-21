@@ -560,6 +560,47 @@ function naviguerVers(destination) {
     }
 }
 
+// ❖ "DONNER MON AVIS" — WHATSAPP PRÉ-REMPLI VERS LE FONDATEUR (PAS LE
+// GARDIEN DE L'ACCUEIL) ❖
+// Distinct du bouton "Besoin d'aide ?" (qui pointe vers le numéro
+// professionnel, géré par l'agent Gardien de l'Accueil) : celui-ci
+// pointe vers le numéro personnel de Constant, pour que les retours
+// arrivent directement chez lui, sans qu'un agent IA ne réponde à la
+// place avec un message d'accueil générique. Rien n'est envoyé
+// automatiquement -- WhatsApp s'ouvre avec le message déjà rempli,
+// l'utilisateur reste libre de le modifier avant d'envoyer.
+const NUMERO_AVIS_FONDATEUR = "225748337699"; // 07 48 33 76 99, format international sans le 0 initial
+
+const NOMS_ESPACES_POUR_AVIS = {
+    atelier: "L'Atelier des Évaluations",
+    forge: "La Forge des Leçons",
+    cabinet: "Le Cabinet d'Étude",
+    forge_primaire: "La Forge (Primaire)",
+    cabinet_primaire: "Le Cabinet (Primaire)"
+};
+
+function detecterEspaceActuelPourAvis() {
+    for (const [outil, nom] of Object.entries(NOMS_ESPACES_POUR_AVIS)) {
+        const conteneur = document.getElementById(`container-${outil}-custom`);
+        if (conteneur && conteneur.classList.contains('active')) return nom;
+    }
+    const conteneurSas = document.getElementById('container-sas-custom');
+    if (conteneurSas && conteneurSas.classList.contains('active')) {
+        return "Espace Élève";
+    }
+    // Repli générique : l'espace n'a pas pu être identifié précisément
+    // (accueil, Espace Parents, Boussole, etc.) -- pas bloquant, le
+    // message reste utile même sans cette précision.
+    return "EdukaTchat";
+}
+
+function donnerAvisWhatsApp() {
+    const espace = detecterEspaceActuelPourAvis();
+    const texte = `Bonjour ! Je donne mon avis sur EdukaTchat 😊\nEspace : ${espace}\nMon impression : `;
+    const url = `https://wa.me/${NUMERO_AVIS_FONDATEUR}?text=${encodeURIComponent(texte)}`;
+    window.open(url, '_blank', 'noopener');
+}
+
 // ❖ LE FONDU PROGRESSIF DE LA RÉPONSE ❖
 // botLoadingDiv.innerHTML est réécrit en entier à chaque fragment reçu du
 // flux SSE (nécessaire pour que marked.parse() reforme correctement le
