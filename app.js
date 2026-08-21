@@ -724,7 +724,18 @@ function separerTraceEtTitreSuivant(segment) {
 }
 
 function analyserFicheLecon(texteBrut) {
-    const texte = (texteBrut || '').replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '').trim();
+    // ❖ Le prompt de la Forge n'interdit pas explicitement le Markdown
+    // (contrairement à celui de l'Atelier des Évaluations) : le modèle
+    // décore parfois ses propres titres de section avec des "**" (gras).
+    // Comme la détection des libellés ci-dessous exige une correspondance
+    // exacte de la ligne, un seul "**" résiduel suffisait à la faire
+    // échouer entièrement (repli silencieux vers l'affichage brut). On
+    // neutralise donc toute étoile avant l'analyse -- la fiche ne contient
+    // jamais de vrai Markdown à préserver, cette perte est sans risque.
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        .trim();
     if (!texte) return null;
 
     const occurrences = trouverOccurrencesFiche(texte);
