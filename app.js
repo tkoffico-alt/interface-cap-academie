@@ -684,26 +684,50 @@ function trouverOccurrencesFiche(texte) {
     return occurrences;
 }
 
+// ❖ Le prompt de la Forge n'interdit pas non plus les séparateurs visuels
+// ("---", "***", parfois un vrai tableau Markdown "| A | B |" avec sa ligne
+// "|---|---|") : sans ce filtre, ces lignes se seraient affichées telles
+// quelles comme un badge/une ligne de contenu vide ou du charabia à
+// pipes ("| Habiletés | Contenus |" littéral) une fois sorties du contexte
+// où marked.parse les interprétait auparavant comme un <hr>/<table>.
+function estLigneSeparatriceFiche(ligne) {
+    return /^[\s\-_*|:]{3,}$/.test(ligne);
+}
+
+// Si le modèle a malgré tout écrit une vraie ligne de tableau Markdown
+// ("| Expliquer | La formation... |"), on retire les pipes et on
+// recompose une ligne lisible plutôt que d'afficher les barres verticales
+// littéralement.
+function nettoyerLigneTableauFiche(ligne) {
+    if (/^\s*\|.*\|\s*$/.test(ligne)) {
+        const cellules = ligne.split('|').map(c => c.trim()).filter(Boolean);
+        return cellules.join('  —  ');
+    }
+    return ligne;
+}
+
 function echapperHTMLFiche(s) {
     return (s || "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Conversion très légère (gras résiduel + paragraphes/listes) sans passer
-// par marked.parse en entier : le texte d'une fiche ne contient jamais de
-// vrai Markdown (interdit par le prompt), seulement parfois un "**" isolé
-// qu'on neutralise ici par sécurité.
+// Conversion très légère (paragraphes/listes) sans passer par marked.parse
+// en entier -- les astérisques de gras résiduels sont déjà neutralisés en
+// amont par analyserFicheLecon(), il ne reste ici qu'à filtrer les lignes
+// purement séparatrices ("---", etc., voir estLigneSeparatriceFiche) et à
+// reconstituer paragraphes/listes.
 function texteVersHtmlLegerFiche(bloc) {
     if (!bloc) return '';
-    const echappe = echapperHTMLFiche(bloc).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    const echappe = echapperHTMLFiche(bloc);
     const paragraphes = echappe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
     return paragraphes.map(p => {
-        const lignes = p.split('\n').map(l => l.trim()).filter(Boolean);
+        const lignes = p.split('\n').map(l => l.trim()).filter(l => l && !estLigneSeparatriceFiche(l));
+        if (!lignes.length) return '';
         const toutesEnListe = lignes.length > 1 && lignes.every(l => /^[-•]\s+/.test(l));
         if (toutesEnListe) {
             return '<ul>' + lignes.map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('') + '</ul>';
         }
         return `<p>${lignes.join('<br>')}</p>`;
-    }).join('');
+    }).filter(Boolean).join('');
 }
 
 // Sépare un segment de texte (contenu entre la fin d'une "TRACE ÉCRITE
@@ -761,12 +785,15 @@ function analyserFicheLecon(texteBrut) {
     const occSituation = occurrences.find(o => o.type === 'situation');
     const occDeroulement = occurrences.find(o => o.type === 'deroulement');
 
-    // --- En-tête : lignes "Label : Valeur" -> badges
+    // --- En-tête : lignes "Label : Valeur" -> badges. Les lignes
+    // purement séparatrices ("---" utilisé par le modèle comme délimiteur
+    // visuel entre sections) sont ignorées plutôt que de devenir un badge
+    // vide.
     const badges = [];
     if (occHeader) {
         contenuApres(occHeader).split('\n').forEach(l => {
             const l2 = l.trim();
-            if (!l2) return;
+            if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
                 badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
@@ -778,10 +805,18 @@ function analyserFicheLecon(texteBrut) {
 
     // --- Tableau des habiletés : liste simple (une ligne = une rangée),
     // sans grille -- exactement l'esprit "ligne horizontale subtile"
-    // demandé plutôt qu'un vrai tableau à colonnes.
+    // demandé plutôt qu'un vrai tableau à colonnes. Si le modèle a quand
+    // même produit un vrai tableau Markdown ("| A | B |" + sa ligne
+    // "|---|---|"), on retire les pipes/séparateurs plutôt que de les
+    // afficher tels quels.
     const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?|Habilidades?|F[äa]higkeiten)\s*[:\-]?\s*(Contenus?|Contents?|Contenidos?|Inhalte)?$/i;
     const lignesTableau = occTableau
-        ? contenuApres(occTableau).split('\n').map(l => l.trim()).filter(l => l && !motifEnTeteColonnes.test(l))
+        ? contenuApres(occTableau)
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l && !estLigneSeparatriceFiche(l))
+            .map(l => nettoyerLigneTableauFiche(l))
+            .filter(l => !motifEnTeteColonnes.test(l.replace(/\s*—\s*/g, ' ').trim()))
         : [];
 
     // --- Situation d'apprentissage
@@ -907,6 +942,158 @@ function construireRenduFiche(source, outil) {
     return html;
 }
 
+// =======================================================================
+// ❖ LA CARTE "ÉVALUATION" — RESKIN VISUEL (ATELIER DES ÉVALUATIONS) ❖
+// =======================================================================
+// Même principe que la carte "fiche de leçon" ci-dessus, mais adapté à la
+// structure propre à l'Atelier des Évaluations : PARTIE A / PARTIE B
+// (terminée par un "BARÈME TOTAL : XX points" en ligne, pas un titre à
+// part) / CORRIGÉ. Réutilise les mêmes fonctions génériques
+// (echapperHTMLFiche, texteVersHtmlLegerFiche, estLigneSeparatriceFiche,
+// nettoyerLigneFiche) -- seuls les libellés reconnus changent.
+
+const ALTERNATIVES_SECTION_EVALUATION = {
+    partieA: ["PARTIE A(?:\\s*\\([^)]*\\))?", "PART A(?:\\s*\\([^)]*\\))?", "PARTE A(?:\\s*\\([^)]*\\))?", "TEIL A(?:\\s*\\([^)]*\\))?"],
+    partieB: ["PARTIE B(?:\\s*\\([^)]*\\))?", "PART B(?:\\s*\\([^)]*\\))?", "PARTE B(?:\\s*\\([^)]*\\))?", "TEIL B(?:\\s*\\([^)]*\\))?"],
+    corrige: ["CORRIG[ÉE]", "ANSWER KEY", "SOLUCIONARIO", "L[ÖO]SUNGEN"]
+};
+
+// ❖ Le barème n'est pas un titre à part : le prompt demande explicitement
+// "la PARTIE B se termine par 'BARÈME TOTAL : XX points'" -- un libellé en
+// tête de ligne suivi de son contenu sur la même ligne, comme les
+// libellés de phase de la Forge.
+const ALTERNATIVES_INLINE_EVALUATION = {
+    bareme: ["BAR[ÈE]ME TOTAL", "TOTAL SCORE", "PUNTUACI[ÓO]N TOTAL", "GESAMTPUNKTZAHL"]
+};
+
+function trouverOccurrencesEvaluation(texte) {
+    const occurrences = [];
+
+    Object.entries(ALTERNATIVES_SECTION_EVALUATION).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*)?(?:${variantes.join('|')})[ \\t]*:?[ \\t]*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+
+    Object.entries(ALTERNATIVES_INLINE_EVALUATION).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•]\\s*)?(?:${variantes.join('|')})[ \\t]*:[ \\t]*`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+function analyserEvaluation(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        .trim();
+    if (!texte) return null;
+
+    const occurrences = trouverOccurrencesEvaluation(texte);
+    const aPartieA = occurrences.some(o => o.type === 'partieA');
+    const aPartieB = occurrences.some(o => o.type === 'partieB');
+    if (!aPartieA || !aPartieB) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        return texte.slice(occ.end, finBorne).trim();
+    }
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    const occPartieA = occurrences.find(o => o.type === 'partieA');
+    const occPartieB = occurrences.find(o => o.type === 'partieB');
+    const occBareme = occurrences.find(o => o.type === 'bareme');
+    const occCorrige = occurrences.find(o => o.type === 'corrige');
+
+    const partieATexte = contenuApres(occPartieA);
+    const partieBTexte = contenuApres(occPartieB);
+    const baremeTexte = occBareme ? contenuApres(occBareme).split('\n')[0].trim() : '';
+    // ❖ Le CORRIGÉ est toujours la toute dernière partie du document (règle
+    // explicite du prompt) et reprend souvent ses propres sous-titres
+    // "PARTIE A"/"PARTIE B" à l'identique -- on prend donc tout ce qui
+    // suit jusqu'à la fin du texte plutôt que jusqu'à la PROCHAINE
+    // occurrence, qui serait alors l'un de ces sous-titres dupliqués (et
+    // couperait le corrigé après seulement quelques mots).
+    const corrigeTexte = occCorrige ? texte.slice(occCorrige.end).trim() : '';
+
+    return { partieATexte, partieBTexte, baremeTexte, corrigeTexte, titres };
+}
+
+function construireHTMLEvaluation(analyse, classeAccent) {
+    const { partieATexte, partieBTexte, baremeTexte, corrigeTexte, titres } = analyse;
+    let html = '';
+
+    if (partieATexte) {
+        html += `<div class="fiche-section-titre">📄 ${echapperHTMLFiche(titres.partieA || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieATexte)}</div>`;
+    }
+
+    if (partieBTexte || baremeTexte) {
+        html += `<div class="fiche-section-titre">🧩 ${echapperHTMLFiche(titres.partieB || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieBTexte)}</div>`;
+        if (baremeTexte) {
+            html += `<div class="fiche-bloc-entete"><span class="fiche-badge fiche-badge-competence">${echapperHTMLFiche(titres.bareme || 'BARÈME TOTAL')} : ${echapperHTMLFiche(baremeTexte)}</span></div>`;
+        }
+    }
+
+    if (corrigeTexte) {
+        html += `<div class="fiche-section-titre">🔑 ${echapperHTMLFiche(titres.corrige || '')}</div>`;
+        html += `<div class="fiche-carte fiche-corrige">${texteVersHtmlLegerFiche(corrigeTexte)}</div>`;
+    }
+
+    return `<div class="fiche-lecon${classeAccent || ''}">${html}</div>`;
+}
+
+function construireRenduEvaluation(source) {
+    let corps = source;
+    let signatureHTML = '';
+    const idxDebut = corps.indexOf(JETON_SIGNATURE_DEBUT);
+    if (idxDebut !== -1) {
+        signatureHTML = corps.slice(idxDebut);
+        corps = corps.slice(0, idxDebut);
+    }
+
+    const analyse = analyserEvaluation(corps);
+    if (!analyse) return null;
+
+    let html = construireHTMLEvaluation(analyse, '');
+
+    if (signatureHTML) {
+        let sigParsed = marked.parse(signatureHTML);
+        sigParsed = sigParsed
+            .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+            .replace(JETON_SIGNATURE_FIN, '</span>');
+        html += sigParsed;
+    }
+    return html;
+}
+
+// ❖ LA CARTE "MISSION" (DEVOIR) — ESPACE ÉLÈVE ❖
+// Remplace le bloc de code brut (gris, monospace, généré par
+// marked.parse pour un ```...```) par une carte arrondie identifiable,
+// sans changer le contenu texte du devoir lui-même. Opère sur le HTML déjà
+// généré par marked.parse -- pas de parsing du texte source, juste un
+// habillage visuel du bloc <pre><code> qu'il a produit.
+function habillerBlocsDevoirs(html) {
+    return html.replace(
+        /<pre><code(?:\s+class="[^"]*")?>([\s\S]*?)<\/code><\/pre>/g,
+        (correspondanceComplete, contenu) =>
+            `<div class="mission-devoir"><div class="mission-devoir-titre">📘 Devoir</div><pre class="mission-devoir-contenu"><code>${contenu}</code></pre></div>`
+    );
+}
+
 // ❖ TAILLE DES ILLUSTRATIONS (grande / compacte) ❖
 // L'IA ne connaît QUE l'URL de l'image (voir illustrations_disponibles côté
 // gateway) et se contente de la recopier en Markdown ![alt](url) -- elle ne
@@ -952,16 +1139,20 @@ function appliquerTailleIllustrations(element) {
 // fragments suivants mettent simplement le texte à jour sans réanimation.
 // Pendant la frappe, un curseur clignotant (▍) marque la fin du texte déjà
 // reçu -- signal de frappe en cours standard, retiré au rendu final.
-function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enCoursDeFrappe, outil) {
+function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enCoursDeFrappe, outil, styliserDevoir) {
     const source = attenuerSignature ? attenuerSignatureDocument(texteMarkdown) : texteMarkdown;
 
-    // ❖ Reskin "fiche de leçon" : tenté uniquement une fois la réponse
+    // ❖ Reskin visuel enrichi : tenté uniquement une fois la réponse
     // entièrement reçue (jamais pendant la frappe, pour ne pas afficher
-    // une structure encore incomplète) et uniquement pour la Forge /
-    // Forge Primaire. Repli automatique sur le rendu standard sinon.
+    // une structure encore incomplète), et uniquement pour les outils
+    // dont la structure est connue (Forge/Forge Primaire = fiche de
+    // leçon, Atelier = évaluation). Repli automatique sur le rendu
+    // standard sinon.
     let html = null;
     if (!enCoursDeFrappe && (outil === 'forge' || outil === 'forge_primaire')) {
         html = construireRenduFiche(source, outil);
+    } else if (!enCoursDeFrappe && outil === 'atelier') {
+        html = construireRenduEvaluation(source);
     }
 
     if (html === null) {
@@ -970,6 +1161,20 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
             html = html
                 .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
                 .replace(JETON_SIGNATURE_FIN, '</span>');
+        }
+        // ❖ "Mission" (Espace Élève) : le prompt du Sas est délibérément
+        // conversationnel et sans structure (ni listes, ni emoji hors
+        // clôture) -- on ne touche pas à cette philosophie. Le seul
+        // élément régulier et détectable est le devoir, que le prompt
+        // demande explicitement de générer "à l'intérieur d'un bloc de
+        // code en texte brut" : marked.parse le transforme en
+        // <pre><code>...</code></pre>, qu'on habille ici en carte
+        // "Mission" plutôt que de le laisser en bloc de code brut gris.
+        // N'agit que sur la réponse finale (jamais pendant la frappe, un
+        // bloc de code encore ouvert se parse mal) et seulement si un tel
+        // bloc est réellement présent.
+        if (styliserDevoir && !enCoursDeFrappe) {
+            html = habillerBlocsDevoirs(html);
         }
     }
     if (enCoursDeFrappe) {
@@ -1717,7 +1922,7 @@ async function sendSasMessage() {
                 botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta question ?";
                 ajouterMascotte(botLoadingDiv, 'erreur');
             } else {
-                afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas); // rendu final, curseur retiré
+                afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas, false, false, undefined, true); // rendu final, curseur retiré, carte "Mission" pour un éventuel devoir
                 ajouterMascotte(botLoadingDiv, 'succes');
                 declencherEtincelleMascotte(botLoadingDiv);
             }
@@ -2045,6 +2250,33 @@ function imprimerDocument(bouton) {
                 margin-top: 1em;
                 opacity: 0.6;
                 font-size: 9pt;
+            }
+            .document-aere .fiche-carte.fiche-corrige {
+                border-color: #FBBF24;
+                background: #FFFBEB;
+            }
+            .document-aere .mission-devoir {
+                border: 1px solid #BFDBFE;
+                background: #EFF6FF;
+                border-radius: 14px;
+                padding: 12px 16px;
+                margin-top: 0.6em;
+            }
+            .document-aere .mission-devoir-titre {
+                font-size: 9pt;
+                letter-spacing: 0.04em;
+                font-weight: 700;
+                color: #2563EB;
+                text-transform: uppercase;
+                margin-bottom: 6px;
+            }
+            .document-aere .mission-devoir-contenu {
+                background: transparent;
+                border: none;
+                padding: 0;
+                margin: 0;
+                white-space: pre-wrap;
+                font-family: inherit;
             }
         </style>
 

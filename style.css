@@ -720,6 +720,71 @@ iframe.active {
     font-size: 0.85rem;
 }
 
+/* ❖ Carte CORRIGÉ (Atelier des Évaluations) : accent ambre pour la
+   distinguer visuellement des questions -- c'est la réponse, pas
+   l'énoncé, l'enseignant doit pouvoir la repérer d'un coup d'œil. */
+.fiche-carte.fiche-corrige {
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.06);
+}
+body.light-theme .fiche-carte.fiche-corrige {
+    border-color: #FDE68A;
+    background: #FFFBEB;
+}
+
+/* ❖ Carte "Mission" (devoir) -- Espace Élève. Bords très arrondis pour
+   rester dans l'esprit "carte de jeu" plutôt que document administratif,
+   cohérent avec l'identité bleue de l'Élève Général. Le contenu (texte du
+   devoir) n'est jamais modifié, seul son habillage change : marked.parse
+   le produit en <pre><code>, habillerBlocsDevoirs() dans app.js l'entoure
+   de ce conteneur. */
+.mission-devoir {
+    margin-top: 0.8rem;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    background: rgba(59, 130, 246, 0.07);
+    border-radius: 20px;
+    padding: 1rem 1.3rem;
+}
+.mission-devoir-titre {
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: #60A5FA;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+}
+.mission-devoir-contenu {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: inherit;
+}
+/* ❖ Spécificité volontairement renforcée (3 classes) : .message.bot-message
+   code (règle existante, pour le code inline) a une spécificité de
+   (0,2,1) qui l'emporterait sinon sur une règle plus simple ici et
+   laisserait le "pilule grise" de code inline s'appliquer par erreur au
+   devoir entier. */
+.message.bot-message .mission-devoir-contenu code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-weight: 400;
+    font-family: inherit;
+}
+body.light-theme .mission-devoir {
+    background: #EFF6FF;
+    border-color: #BFDBFE;
+}
+body.light-theme .mission-devoir-titre {
+    color: #2563EB;
+}
+
 body.light-theme .fiche-carte {
     background: #FFFFFF;
     border: 1px solid #E5E7EB;
