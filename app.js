@@ -445,7 +445,7 @@ function formaterNomMatiere(code) {
 const ICONES_MATIERES = {
     'maths': '📐', 'physique': '⚗️', 'svt': '🧬', 'tice': '💻',
     'francais': '📖', 'philosophie': '🦉', 'histoire_geo': '🗺️',
-    'edhc': '🤝', 'anglais': '🇬🇧', 'espagnol': '🇪🇸', 'allemand': '🇩🇪',
+    'edhc': '🤝', 'anglais': '📘', 'espagnol': '📙', 'allemand': '📕',
     'musique': '🎵', 'arts_plastiques': '🎨'
 };
 
