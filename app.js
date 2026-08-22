@@ -1022,7 +1022,14 @@ function analyserFicheLecon(texteBrut) {
     // même produit un vrai tableau Markdown ("| A | B |" + sa ligne
     // "|---|---|"), on retire les pipes/séparateurs plutôt que de les
     // afficher tels quels.
-    const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?|Habilidades?|F[äa]higkeiten)\s*[:\-]?\s*(Contenus?|Contents?|Contenidos?|Inhalte)?$/i;
+    // ❖ Les deux mots de l'en-tête (ex: "Habiletés" / "Contenus") sont
+    // parfois écrits sur deux lignes SÉPARÉES plutôt que combinées sur une
+    // seule -- le second mot, seul sur sa ligne, ne matchait alors jamais
+    // (le groupe 1 exigeait "Habiletés", le groupe 2 "Contenus" était
+    // optionnel mais ne pouvait pas apparaître seul) et se glissait comme
+    // fausse ligne de tableau. Les deux mots sont donc désormais acceptés
+    // indifféremment en position 1 OU 2, seuls ou combinés.
+    const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?|Habilidades?|F[äa]higkeiten|Contenus?|Contents?|Contenidos?|Inhalte)\s*[:\-]?\s*(Habilet[ée]s?|Skills?|Habilidades?|F[äa]higkeiten|Contenus?|Contents?|Contenidos?|Inhalte)?$/i;
     const lignesTableau = occTableau
         ? contenuApres(occTableau)
             .split('\n')
@@ -1257,7 +1264,10 @@ function analyserFichePrimaire(texteBrut) {
         if (valeur) badges.push({ label: titres[type] || type, valeur });
     });
 
-    const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?)\s*[:\-]?\s*(Contenus?|Contents?)?$/i;
+    // ❖ Même correctif que la Forge secondaire (voir trouverOccurrencesFiche
+    // ci-dessus) : "Habiletés" et "Contenus" acceptés seuls ou combinés,
+    // dans n'importe quel ordre.
+    const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?|Contenus?|Contents?)\s*[:\-]?\s*(Habilet[ée]s?|Skills?|Contenus?|Contents?)?$/i;
     const lignesTableau = occurrences.some(o => o.type === 'tableau')
         ? contenuDe('tableau')
             .split('\n')
@@ -1337,10 +1347,18 @@ function construireHTMLFichePrimaire(analyse) {
 // 1. IDENTIFICATION, 2. OBJECTIFS DE L'ÉVALUATION, 3. EXERCICES
 // D'ÉVALUATION, 4. BARÈME, 5. CORRIGÉ -- numérotées comme le reste du
 // canevas primaire.
+// ❖ "exercices" doit repérer le DÉBUT du bloc d'exercices même quand le
+// modèle omet le titre de section formel "EXERCICES D'ÉVALUATION" et
+// enchaîne directement sur "EXERCICE 1 : ...", "EXERCICE 2 : ...", etc.
+// -- cas réel observé. On ajoute donc "EXERCICE 1" (au singulier, avec le
+// numéro 1 précisément) comme ancre de repli : elle marque le début du
+// bloc SANS créer une nouvelle occurrence à chaque "EXERCICE 2/3/4"
+// suivant (qui casserait la découpe en s'arrêtant après le premier
+// exercice) -- ceux-ci restent de simples lignes de contenu.
 const ALTERNATIVES_SECTION_EVALUATION_PRIMAIRE = {
     identification: ["IDENTIFICATION"],
     objectifs: ["OBJECTIFS DE L['’]?[ÉE]VALUATION", "OBJECTIFS"],
-    exercices: ["EXERCICES D['’]?[ÉE]VALUATION", "EXERCICES"],
+    exercices: ["EXERCICES D['’]?[ÉE]VALUATION", "EXERCICE\\s*(?:N|n)?°?\\s*1\\b"],
     bareme: ["BAR[ÈE]ME"],
     corrige: ["CORRIG[ÉE]"]
 };
@@ -1367,9 +1385,14 @@ function analyserEvaluationPrimaire(texteBrut) {
     if (!texte) return null;
 
     const occurrences = trouverOccurrencesEvaluationPrimaire(texte);
-    const aIdentification = occurrences.some(o => o.type === 'identification');
+    // ❖ IDENTIFICATION n'est PAS une ancre fiable ici : le modèle omet
+    // parfois cette section et enchaîne directement sur un titre libre
+    // ("ÉVALUATION DE MATHÉMATIQUES - CM2", Thème/Durée en lignes libres)
+    // avant EXERCICE 1 -- ce texte reste alors capté par preambuleTexte
+    // (voir plus bas). Seul EXERCICES est systématiquement présent :
+    // c'est la seule ancre requise pour reconnaître ce canevas.
     const aExercices = occurrences.some(o => o.type === 'exercices');
-    if (!aIdentification || !aExercices) return null;
+    if (!aExercices) return null;
 
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
