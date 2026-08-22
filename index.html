@@ -1018,9 +1018,19 @@
 
             <button class="btn-entrer" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; font-size: 1.1em; padding: 10px; border: none; border-radius: 5px; cursor: pointer;" onclick="verifyMatriculeEnseignant()">Valider l'accès</button>
 
-            <p id="modal-feedback-enseignant" class="feedback-text" style="margin-top: 15px; font-weight: bold; min-height: 20px;"></p>
+            <p id="modal-feedback-enseignant" class="feedback-text" style="margin-top: 10px; font-weight: bold; min-height: 20px;"></p>
 
-            <button onclick="continuerEnFreemiumEnseignant()" style="margin-top: 5px; background: none; border: none; color: #6B7280; text-decoration: underline; cursor: pointer; font-size: 0.9em; padding: 6px;">Continuer sans code (essai gratuit)</button>
+            <!-- ❖ Repensé en vrai bouton secondaire (au lieu d'un simple
+                 lien discret) : un enseignant qui découvre l'écran ne doit
+                 pas se demander si l'essai gratuit existe vraiment -- il
+                 doit le voir aussi clairement que "Valider l'accès". -->
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0;">
+                <div style="flex: 1; height: 1px; background: rgba(107, 114, 128, 0.25);"></div>
+                <span style="font-size: 0.75em; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">ou</span>
+                <div style="flex: 1; height: 1px; background: rgba(107, 114, 128, 0.25);"></div>
+            </div>
+
+            <button onclick="continuerEnFreemiumEnseignant()" style="width: 100%; background: transparent; border: 2px solid #3B82F6; color: #3B82F6; font-weight: bold; font-size: 1em; padding: 10px; border-radius: 5px; cursor: pointer;">🎁 Essayer gratuitement, sans code</button>
 
             <div style="margin-top: 15px; font-size: 0.9em; color: #6B7280;">
                 Pas encore de Code d'accès ?<br>
