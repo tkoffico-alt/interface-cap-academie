@@ -969,6 +969,14 @@ function analyserFicheLecon(texteBrut) {
     const texte = (texteBrut || '')
         .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
         .replace(/\*/g, '')
+        // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
+        // titre ("### BARÈME", "#### EXERCICE 1 : ...") -- la détection de
+        // libellé ci-dessous ne tolérait qu'UN SEUL "#" en préfixe, donc
+        // un "###"/"####" faisait échouer le repérage de toute la section
+        // (repli silencieux vers l'affichage brut, "###"/"####" laissés
+        // tels quels dans le texte). On retire toute suite de "#" en
+        // début de ligne, comme pour les "*" ci-dessus.
+        .replace(/^#+\s*/gm, '')
         .trim();
     if (!texte) return null;
 
@@ -1211,6 +1219,14 @@ function analyserFichePrimaire(texteBrut) {
     const texte = (texteBrut || '')
         .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
         .replace(/\*/g, '')
+        // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
+        // titre ("### BARÈME", "#### EXERCICE 1 : ...") -- la détection de
+        // libellé ci-dessous ne tolérait qu'UN SEUL "#" en préfixe, donc
+        // un "###"/"####" faisait échouer le repérage de toute la section
+        // (repli silencieux vers l'affichage brut, "###"/"####" laissés
+        // tels quels dans le texte). On retire toute suite de "#" en
+        // début de ligne, comme pour les "*" ci-dessus.
+        .replace(/^#+\s*/gm, '')
         .trim();
     if (!texte) return null;
 
@@ -1374,13 +1390,36 @@ function trouverOccurrencesEvaluationPrimaire(texte) {
         }
     });
     occurrences.sort((a, b) => a.start - b.start);
-    return occurrences;
+
+    // ❖ "EXERCICE 1" (ancre de repli, voir ALTERNATIVES_SECTION_EVALUATION_
+    // PRIMAIRE) réapparaît presque toujours une seconde fois, bien plus
+    // loin dans le texte -- le BARÈME et le CORRIGÉ listent chacun "EXERCICE
+    // 1 : ..." comme simple sous-point. Sans ce filtre, cette répétition
+    // était détectée comme une NOUVELLE occurrence "exercices", ce qui
+    // coupait le BARÈME en plein milieu et faisait perdre le CORRIGÉ
+    // (absorbé dans le mauvais bloc). Seule la toute première occurrence
+    // "exercices" -- la vraie, en tête du bloc -- doit compter.
+    let dejaVuExercices = false;
+    return occurrences.filter(o => {
+        if (o.type !== 'exercices') return true;
+        if (dejaVuExercices) return false;
+        dejaVuExercices = true;
+        return true;
+    });
 }
 
 function analyserEvaluationPrimaire(texteBrut) {
     const texte = (texteBrut || '')
         .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
         .replace(/\*/g, '')
+        // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
+        // titre ("### BARÈME", "#### EXERCICE 1 : ...") -- la détection de
+        // libellé ci-dessous ne tolérait qu'UN SEUL "#" en préfixe, donc
+        // un "###"/"####" faisait échouer le repérage de toute la section
+        // (repli silencieux vers l'affichage brut, "###"/"####" laissés
+        // tels quels dans le texte). On retire toute suite de "#" en
+        // début de ligne, comme pour les "*" ci-dessus.
+        .replace(/^#+\s*/gm, '')
         .trim();
     if (!texte) return null;
 
@@ -1583,6 +1622,14 @@ function analyserEvaluation(texteBrut) {
     const texte = (texteBrut || '')
         .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
         .replace(/\*/g, '')
+        // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
+        // titre ("### BARÈME", "#### EXERCICE 1 : ...") -- la détection de
+        // libellé ci-dessous ne tolérait qu'UN SEUL "#" en préfixe, donc
+        // un "###"/"####" faisait échouer le repérage de toute la section
+        // (repli silencieux vers l'affichage brut, "###"/"####" laissés
+        // tels quels dans le texte). On retire toute suite de "#" en
+        // début de ligne, comme pour les "*" ci-dessus.
+        .replace(/^#+\s*/gm, '')
         .trim();
     if (!texte) return null;
 
