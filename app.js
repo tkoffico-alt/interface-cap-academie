@@ -1843,17 +1843,18 @@ function restoreChatHistories() {
 }
 
 function initTheme() {
-    // ❖ Clair par défaut (inversion voulue -- l'ancien défaut était
-    // sombre) : on n'ajoute PAS light-theme (donc on reste en sombre)
-    // seulement si l'utilisateur a explicitement choisi 'dark' via le
-    // bouton ☀️/🌙. Sans préférence enregistrée, un nouveau visiteur
-    // démarre désormais en clair.
+    // ❖ Clair = base par défaut, désormais directement dans le CSS (plus
+    // besoin d'ajouter de classe) -- le sombre devient l'exception,
+    // activée via la classe 'dark-theme' (voir style.css : chaque règle
+    // "body.dark-theme .xxx" est posée juste après sa règle de base).
+    // Un visiteur sans préférence enregistrée démarre donc en clair ; seul
+    // un choix explicite 'dark' (bouton ☀️/🌙) ajoute la classe.
     const savedTheme = localStorage.getItem('eduka_theme');
-    if (savedTheme !== 'dark') {
-        document.body.classList.add('light-theme');
-        updateThemeButtonUI(true);
-    } else {
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
         updateThemeButtonUI(false);
+    } else {
+        updateThemeButtonUI(true);
     }
 }
 
@@ -1948,9 +1949,9 @@ function declencherEtincelleMascotte(bulleDiv) {
 }
 
 function toggleTheme() {
-    const isLight = document.body.classList.toggle('light-theme');
-    localStorage.setItem('eduka_theme', isLight ? 'light' : 'dark');
-    updateThemeButtonUI(isLight);
+    const isDark = document.body.classList.toggle('dark-theme');
+    localStorage.setItem('eduka_theme', isDark ? 'dark' : 'light');
+    updateThemeButtonUI(!isDark);
 }
 
 function updateThemeButtonUI(isLight) {

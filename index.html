@@ -38,16 +38,20 @@
         .btn-icone-outil.btn-icone-bleu:hover,
         .btn-icone-outil.btn-icone-violet:hover,
         .btn-icone-outil.btn-icone-ambre:hover { transform: scale(1.08); filter: brightness(1.1); }
-        /* ❖ Correctif thème clair : body.light-theme .btn-attachment (deux
-           classes) est plus spécifique que .btn-icone-outil seule (une
-           classe) et repassait l'icône en gris terne (#64748B) sur les
-           quatre boutons colorés, quel que soit le fond. On regagne la
-           priorité avec une sélection tout aussi spécifique. */
-        body.light-theme .btn-icone-outil.btn-icone-teal,
-        body.light-theme .btn-icone-outil.btn-icone-orange,
-        body.light-theme .btn-icone-outil.btn-icone-bleu,
-        body.light-theme .btn-icone-outil.btn-icone-violet,
-        body.light-theme .btn-icone-outil.btn-icone-ambre { color: #fff; }
+        /* ❖ Correctif thème sombre (le clair étant désormais la base, ce
+           correctif change de camp) : body.dark-theme .btn-attachment
+           (deux classes) est plus spécifique que .btn-icone-outil seule
+           (une classe) et repasserait l'icône en gris terne (#94A3B8) sur
+           les quatre boutons colorés, quel que soit le fond. On regagne
+           la priorité avec une sélection tout aussi spécifique. En clair
+           (la base), .btn-icone-outil l'emporte déjà naturellement sur
+           .btn-attachment par ordre de déclaration -- aucun correctif
+           nécessaire de ce côté. */
+        body.dark-theme .btn-icone-outil.btn-icone-teal,
+        body.dark-theme .btn-icone-outil.btn-icone-orange,
+        body.dark-theme .btn-icone-outil.btn-icone-bleu,
+        body.dark-theme .btn-icone-outil.btn-icone-violet,
+        body.dark-theme .btn-icone-outil.btn-icone-ambre { color: #fff; }
         @media (max-width: 480px) {
             .btn-icone-outil { width: 30px; height: 30px; min-width: 30px; font-size: 0.9em; }
             .btn-icone-outil svg { width: 14px; height: 14px; }
@@ -62,16 +66,15 @@
         #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre,
         #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre {
             border-color: #10B981;
+            color: #059669;
+        }
+        body.dark-theme #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre,
+        body.dark-theme #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre {
             color: #10B981;
         }
         #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre:hover,
         #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre:hover {
             background-color: rgba(16, 185, 129, 0.14);
-            color: #059669;
-        }
-        body.light-theme #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre,
-        body.light-theme #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre {
-            border-color: #10B981;
             color: #059669;
         }
 
@@ -85,8 +88,8 @@
             top: calc(100% + 8px);
             left: 0;
             min-width: 240px;
-            background-color: #1E293B;
-            border: 1px solid #334155;
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
             border-radius: 12px;
             padding: 8px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.35);
@@ -99,6 +102,7 @@
             transform: translateY(-6px);
             transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
         }
+        body.dark-theme .menu-navigation-panel { background-color: #1E293B; border-color: #334155; }
         .menu-navigation-panel.ouvert {
             opacity: 1;
             visibility: visible;
@@ -110,18 +114,17 @@
             text-align: left;
             background: transparent;
             border: none;
-            color: #E2E8F0;
+            color: #1E293B;
             font-size: 0.88em;
             padding: 9px 10px;
             border-radius: 8px;
             cursor: pointer;
         }
-        .menu-nav-item:hover { background-color: #334155; }
-        .menu-nav-separateur { height: 1px; background-color: #334155; margin: 6px 4px; }
-        body.light-theme .menu-navigation-panel { background-color: #FFFFFF; border-color: #E2E8F0; }
-        body.light-theme .menu-nav-item { color: #1E293B; }
-        body.light-theme .menu-nav-item:hover { background-color: #F1F5F9; }
-        body.light-theme .menu-nav-separateur { background-color: #E2E8F0; }
+        body.dark-theme .menu-nav-item { color: #E2E8F0; }
+        .menu-nav-item:hover { background-color: #F1F5F9; }
+        body.dark-theme .menu-nav-item:hover { background-color: #334155; }
+        .menu-nav-separateur { height: 1px; background-color: #E2E8F0; margin: 6px 4px; }
+        body.dark-theme .menu-nav-separateur { background-color: #334155; }
 
         /* ❖ Les suggestions rapides : un élève qui ne sait pas quoi demander
            (surtout un premier contact, ou un jour sans idée précise) peut
@@ -220,10 +223,10 @@
             background-color: #EDE9FE; color: #6D28D9; border-color: #DDD6FE;
         }
         #sas-suggestions-rapides .btn-suggestion-rentree:hover { background-color: #DDD6FE; }
-        body.light-theme #sas-suggestions-rapides .btn-suggestion-guide { background-color: #E0E7FF; color: #4338CA; }
-        body.light-theme #sas-suggestions-rapides .btn-suggestion-reviser { background-color: #D1FAE5; color: #047857; }
-        body.light-theme #sas-suggestions-rapides .btn-suggestion-exercice { background-color: #FFEDD5; color: #C2410C; }
-        body.light-theme #sas-suggestions-rapides .btn-suggestion-rentree { background-color: #EDE9FE; color: #6D28D9; }
+        /* ❖ Les 4 pastilles pastel ci-dessus étaient auparavant réaffirmées
+           à l'identique sous body.light-theme (mêmes valeurs, aucun
+           changement) -- redondant, retiré : ces teintes pastel + texte
+           saturé se lisent déjà correctement sur fond clair comme sombre. */
 
         /* ❖ Les suggestions des 3 outils enseignants reprennent la même
            forme "carte" que celles du Sas (élève) plutôt que la pilule
@@ -298,7 +301,7 @@
         .message-actions .btn-action-doc {
             border: none;
             background: transparent;
-            color: #94A3B8;
+            color: #64748B;
             opacity: 0.5;
             padding: 5px;
             width: 26px;
@@ -310,8 +313,8 @@
         .message-actions .btn-action-doc:hover,
         .message-actions .btn-action-doc:focus-visible {
             opacity: 1;
-            color: #3B82F6;
-            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563EB;
+            background-color: rgba(59, 130, 246, 0.08);
         }
         /* ❖ Marque ™ : discrète, en attendant le dépôt officiel auprès de
            l'OAPI -- posée sur le wordmark principal (en-tête), au pied de
@@ -337,10 +340,14 @@
            cas où une règle antérieure (dégradé/text-fill transparent sur
            .logo-chat) traînerait encore dans style.css ou une mise en cache. */
         .logo-eduka, .logo-chat, .logo-t {
-            color: #F8FAFC !important;
+            color: #0F172A !important;
             background: none !important;
             -webkit-background-clip: initial !important;
             background-clip: initial !important;
+            -webkit-text-fill-color: #0F172A !important;
+        }
+        body.dark-theme .logo-eduka, body.dark-theme .logo-chat, body.dark-theme .logo-t {
+            color: #F8FAFC !important;
             -webkit-text-fill-color: #F8FAFC !important;
         }
         .logo-t {
@@ -358,17 +365,13 @@
             display: block;
             fill: currentColor;
         }
-        body.light-theme .logo-eduka, body.light-theme .logo-chat, body.light-theme .logo-t {
-            color: #0F172A !important;
-            -webkit-text-fill-color: #0F172A !important;
+        body.dark-theme .message-actions .btn-action-doc {
+            color: #94A3B8;
         }
-        body.light-theme .message-actions .btn-action-doc {
-            color: #64748B;
-        }
-        body.light-theme .message-actions .btn-action-doc:hover,
-        body.light-theme .message-actions .btn-action-doc:focus-visible {
-            color: #2563EB;
-            background-color: rgba(59, 130, 246, 0.08);
+        body.dark-theme .message-actions .btn-action-doc:hover,
+        body.dark-theme .message-actions .btn-action-doc:focus-visible {
+            color: #3B82F6;
+            background-color: rgba(59, 130, 246, 0.1);
         }
 
         /* ❖ Refonte de la barre d'outils (Retour au menu, Mode Clair/Sombre,
@@ -378,7 +381,7 @@
         .toolbar { gap: 0.6rem; }
         .btn-retour {
             border-radius: 999px;
-            background-color: rgba(148, 163, 184, 0.08);
+            background-color: #F8FAFC;
             padding: 0.55rem 1.1rem;
             letter-spacing: 0.01em;
             transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
@@ -400,10 +403,12 @@
         }
         .teacher-navigation {
             gap: 0.3rem;
-            background-color: rgba(148, 163, 184, 0.07);
+            background-color: #EEF2F7;
             padding: 0.3rem;
             border-radius: 999px;
         }
+        body.dark-theme .btn-retour { background-color: rgba(148, 163, 184, 0.08); }
+        body.dark-theme .teacher-navigation { background-color: rgba(148, 163, 184, 0.07); }
         .tab-btn {
             border-radius: 999px;
             padding: 0.5rem 1.1rem;
@@ -432,30 +437,29 @@
         #tab-atelier.active,
         #tab-forge.active,
         #tab-cabinet.active {
+            background-color: #DBEAFE;
+            color: #1D4ED8;
+            box-shadow: none;
+        }
+        body.dark-theme #tab-atelier.active,
+        body.dark-theme #tab-forge.active,
+        body.dark-theme #tab-cabinet.active {
             background-color: rgba(59, 130, 246, 0.16);
             color: #93C5FD;
-            box-shadow: none;
         }
         /* ❖ Primaire : même vert pour les deux onglets (Forge et Cabinet),
            volontairement identique entre eux -- voir la note plus haut sur
            l'identité "Primaire" unifiée. */
         #tab-forge_primaire.active,
         #tab-cabinet_primaire.active {
-            background-color: rgba(16, 185, 129, 0.16);
-            color: #6EE7B7;
+            background-color: #D1FAE5;
+            color: #047857;
             box-shadow: none;
         }
-        body.light-theme .btn-retour { background-color: #F8FAFC; }
-        body.light-theme .teacher-navigation { background-color: #EEF2F7; }
-        body.light-theme .tab-btn.active { background-color: #3B82F6; color: #FFFFFF; }
-        body.light-theme #tab-atelier.active,
-        body.light-theme #tab-forge.active,
-        body.light-theme #tab-cabinet.active {
-            background-color: #DBEAFE; color: #1D4ED8; box-shadow: none;
-        }
-        body.light-theme #tab-forge_primaire.active,
-        body.light-theme #tab-cabinet_primaire.active {
-            background-color: #D1FAE5; color: #047857; box-shadow: none;
+        body.dark-theme #tab-forge_primaire.active,
+        body.dark-theme #tab-cabinet_primaire.active {
+            background-color: rgba(16, 185, 129, 0.16);
+            color: #6EE7B7;
         }
 
         /* ❖ Les onglets inactifs "flottaient" sans repère visuel avant le
@@ -463,21 +467,22 @@
            discret dès le repos les fait lire comme de vrais onglets d'un
            logiciel métier, pas comme un simple lien texte. */
         .tab-btn:not(.active) {
-            background-color: rgba(255, 255, 255, 0.06);
-            color: #94A3B8;
-        }
-        .tab-btn:not(.active):hover {
-            background-color: rgba(255, 255, 255, 0.12);
-            color: #E2E8F0;
-        }
-        body.light-theme .tab-btn:not(.active) {
             background-color: #FFFFFF;
             color: #64748B;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
         }
-        body.light-theme .tab-btn:not(.active):hover {
+        body.dark-theme .tab-btn:not(.active) {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #94A3B8;
+            box-shadow: none;
+        }
+        .tab-btn:not(.active):hover {
             background-color: #F8FAFC;
             color: #0F172A;
+        }
+        body.dark-theme .tab-btn:not(.active):hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #E2E8F0;
         }
 
         /* ❖ Repérage même AU REPOS (pas seulement à l'état actif) : les 3
@@ -488,42 +493,42 @@
            différence de teinte entre les deux groupes est ce qui distingue
            "secondaire" de "primaire" en un instant. */
         #tab-atelier:not(.active), #tab-forge:not(.active), #tab-cabinet:not(.active) {
-            background-color: rgba(59, 130, 246, 0.08);
-            color: #93C5FD;
-        }
-        #tab-atelier:not(.active):hover, #tab-forge:not(.active):hover, #tab-cabinet:not(.active):hover {
-            background-color: rgba(59, 130, 246, 0.16);
-            color: #DBEAFE;
-        }
-        #tab-forge_primaire:not(.active), #tab-cabinet_primaire:not(.active) {
-            background-color: rgba(16, 185, 129, 0.08);
-            color: #6EE7B7;
-        }
-        #tab-forge_primaire:not(.active):hover, #tab-cabinet_primaire:not(.active):hover {
-            background-color: rgba(16, 185, 129, 0.16);
-            color: #A7F3D0;
-        }
-        body.light-theme #tab-atelier:not(.active),
-        body.light-theme #tab-forge:not(.active),
-        body.light-theme #tab-cabinet:not(.active) {
             background-color: #EFF6FF;
             color: #2563EB;
             box-shadow: none;
         }
-        body.light-theme #tab-atelier:not(.active):hover,
-        body.light-theme #tab-forge:not(.active):hover,
-        body.light-theme #tab-cabinet:not(.active):hover {
+        body.dark-theme #tab-atelier:not(.active),
+        body.dark-theme #tab-forge:not(.active),
+        body.dark-theme #tab-cabinet:not(.active) {
+            background-color: rgba(59, 130, 246, 0.08);
+            color: #93C5FD;
+        }
+        #tab-atelier:not(.active):hover, #tab-forge:not(.active):hover, #tab-cabinet:not(.active):hover {
             background-color: #DBEAFE;
         }
-        body.light-theme #tab-forge_primaire:not(.active),
-        body.light-theme #tab-cabinet_primaire:not(.active) {
+        body.dark-theme #tab-atelier:not(.active):hover,
+        body.dark-theme #tab-forge:not(.active):hover,
+        body.dark-theme #tab-cabinet:not(.active):hover {
+            background-color: rgba(59, 130, 246, 0.16);
+            color: #DBEAFE;
+        }
+        #tab-forge_primaire:not(.active), #tab-cabinet_primaire:not(.active) {
             background-color: #ECFDF5;
-            color: #059669;
+            color: #04795A;
             box-shadow: none;
         }
-        body.light-theme #tab-forge_primaire:not(.active):hover,
-        body.light-theme #tab-cabinet_primaire:not(.active):hover {
+        body.dark-theme #tab-forge_primaire:not(.active),
+        body.dark-theme #tab-cabinet_primaire:not(.active) {
+            background-color: rgba(16, 185, 129, 0.08);
+            color: #6EE7B7;
+        }
+        #tab-forge_primaire:not(.active):hover, #tab-cabinet_primaire:not(.active):hover {
             background-color: #D1FAE5;
+        }
+        body.dark-theme #tab-forge_primaire:not(.active):hover,
+        body.dark-theme #tab-cabinet_primaire:not(.active):hover {
+            background-color: rgba(16, 185, 129, 0.16);
+            color: #A7F3D0;
         }
 
         /* ❖ Identité "Espace Enseignant" distincte de celle de l'élève : un
@@ -618,12 +623,12 @@
             align-items: center;
             gap: 0.15rem;
             margin-left: 1rem;
-            background-color: rgba(255, 255, 255, 0.06);
+            background-color: #EEF2F7;
             padding: 0.3rem;
             border-radius: 999px;
         }
-        body.light-theme .toolbar-outils {
-            background-color: #EEF2F7;
+        body.dark-theme .toolbar-outils {
+            background-color: rgba(255, 255, 255, 0.06);
         }
         .btn-icon-groupe {
             width: 38px;
@@ -638,21 +643,22 @@
             font-size: 1.05rem;
             line-height: 1;
             cursor: pointer;
-            color: #94A3B8;
+            color: #64748B;
             transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
         }
+        body.dark-theme .btn-icon-groupe {
+            color: #94A3B8;
+        }
         .btn-icon-groupe:hover {
-            background-color: rgba(255, 255, 255, 0.12);
-            color: #F8FAFC;
-            transform: translateY(-1px);
-        }
-        body.light-theme .btn-icon-groupe {
-            color: #64748B;
-        }
-        body.light-theme .btn-icon-groupe:hover {
             background-color: #FFFFFF;
             color: #0F172A;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+            transform: translateY(-1px);
+        }
+        body.dark-theme .btn-icon-groupe:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #F8FAFC;
+            box-shadow: none;
         }
 
         /* ❖ Correctif mobile portrait : dans style.css, une règle plus
@@ -717,28 +723,31 @@
         .chat-input-wrapper input {
             padding: 1.05rem 1.4rem;
             border-radius: 999px;
+            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.12);
+            background-color: #FFFFFF;
+        }
+        body.dark-theme .chat-input-wrapper input {
             box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+            background-color: #020617;
         }
         .chat-input-wrapper input:focus {
-            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.25);
-        }
-        body.light-theme .chat-input-wrapper input {
-            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.12);
-        }
-        body.light-theme .chat-input-wrapper input:focus {
             box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+        }
+        body.dark-theme .chat-input-wrapper input:focus {
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.25);
         }
 
         /* ❖ Fond légèrement teinté plutôt que blanc pur : moins "clinique",
            plus confortable pour les yeux lors de longues lectures. Ne
            touche que l'espace de travail (chat), pas l'accueil (qui garde
            son dégradé propre). */
-        body.light-theme #app-view,
-        body.light-theme .custom-chat-container {
+        #app-view,
+        .custom-chat-container {
             background-color: #F7F5F2;
         }
-        body.light-theme .chat-input-wrapper input {
-            background-color: #FFFFFF;
+        body.dark-theme #app-view,
+        body.dark-theme .custom-chat-container {
+            background-color: #020617;
         }
 
         /* ❖ Mode Mascotte (optionnel, activé/désactivé via le bouton dédié
