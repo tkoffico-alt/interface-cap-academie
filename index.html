@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>EdukaTchat | La plateforme numérique de l'enseignement ivoirien</title>
     <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- ❖ PWA -- installabilité mobile (Android : bandeau/menu "Installer
+         l'application" ; iOS : "Partager -> Sur l'écran d'accueil"). Voir
+         manifest.json et service-worker.js pour le détail. -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="EdukaTchat">
+
     <link rel="stylesheet" href="style.css">
     <style>
         /* ❖ Correctif barre d'outils du chat : l'ajout du micro (en plus du
@@ -1810,6 +1821,16 @@
     <script type="module">
         import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1.3.1/dist/index.js';
         inject();
+    </script>
+    <!-- ❖ PWA -- enregistrement du service worker (condition technique pour
+         que Chrome/Android propose l'installation). Échec silencieux si le
+         navigateur ne supporte pas les service workers (ex: vieux Safari). -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+            });
+        }
     </script>
 </body>
 </html>
