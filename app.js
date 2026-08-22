@@ -1843,10 +1843,17 @@ function restoreChatHistories() {
 }
 
 function initTheme() {
+    // ❖ Clair par défaut (inversion voulue -- l'ancien défaut était
+    // sombre) : on n'ajoute PAS light-theme (donc on reste en sombre)
+    // seulement si l'utilisateur a explicitement choisi 'dark' via le
+    // bouton ☀️/🌙. Sans préférence enregistrée, un nouveau visiteur
+    // démarre désormais en clair.
     const savedTheme = localStorage.getItem('eduka_theme');
-    if (savedTheme === 'light') {
+    if (savedTheme !== 'dark') {
         document.body.classList.add('light-theme');
         updateThemeButtonUI(true);
+    } else {
+        updateThemeButtonUI(false);
     }
 }
 
