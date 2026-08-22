@@ -114,16 +114,125 @@ async function openSpace(space) {
         document.getElementById('discipline-modal').classList.add('active');
 
     } else if (space === 'enseignant') {
-        document.getElementById('home-view').style.display = 'none';
-        document.getElementById('app-view').style.display = 'flex';
+        const codeEnseignant = localStorage.getItem('eduka_sceau_enseignant');
 
-        document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
-        document.getElementById('container-sas-custom').classList.remove('active');
-        document.getElementById('teacher-tabs-container').style.display = 'flex';
-        const btnMatieresEnseignant = document.getElementById('btn-matieres');
-        if (btnMatieresEnseignant) btnMatieresEnseignant.style.display = 'none';
-        switchTeacherTool('atelier');
+        if (!codeEnseignant) {
+            ouvrirModaleAccesEnseignant();
+            return;
+        }
+
+        // ❖ Revérification silencieuse à chaque entrée (le code peut avoir
+        // expiré depuis la dernière visite) -- même logique que l'accès
+        // élève ci-dessus.
+        try {
+            const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sceau: codeEnseignant, espace_cible: 'enseignant' })
+            });
+            const data = await response.json();
+            if (data.valide) {
+                entrerDansEspaceEnseignant();
+            } else {
+                localStorage.removeItem('eduka_sceau_enseignant');
+                ouvrirModaleAccesEnseignant();
+            }
+        } catch (error) {
+            console.error("Erreur de vérification enseignant", error);
+            // ❖ Réseau instable : on ne bloque pas un enseignant déjà
+            // abonné -- le serveur retranchera de toute façon sur le
+            // Freemium si le Sceau s'avère finalement invalide au premier
+            // envoi de message.
+            entrerDansEspaceEnseignant();
+        }
     }
+}
+
+// ❖ Sépare l'affichage effectif de l'espace enseignant (appelé une fois
+// l'accès tranché -- code validé ou essai Freemium accepté) de la
+// décision d'accès elle-même (openSpace ci-dessus).
+function entrerDansEspaceEnseignant() {
+    document.getElementById('home-view').style.display = 'none';
+    document.getElementById('app-view').style.display = 'flex';
+
+    document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+    document.getElementById('container-sas-custom').classList.remove('active');
+    document.getElementById('teacher-tabs-container').style.display = 'flex';
+    const btnMatieresEnseignant = document.getElementById('btn-matieres');
+    if (btnMatieresEnseignant) btnMatieresEnseignant.style.display = 'none';
+    switchTeacherTool('atelier');
+}
+
+// =======================================================================
+// ❖ LA MODALE D'ACCÈS ESPACE ENSEIGNANT (CODE OPTIONNEL) ❖
+// =======================================================================
+function ouvrirModaleAccesEnseignant() {
+    const feedback = document.getElementById('modal-feedback-enseignant');
+    if (feedback) feedback.textContent = '';
+    const champ = document.getElementById('matricule-enseignant-input');
+    if (champ) champ.value = '';
+    document.getElementById('enseignant-code-modal').classList.add('active');
+}
+
+function fermerModaleAccesEnseignant() {
+    document.getElementById('enseignant-code-modal').classList.remove('active');
+}
+
+function handleMatriculeEnseignantKeyPress(event) {
+    if (event.key === 'Enter') {
+        verifyMatriculeEnseignant();
+    }
+}
+
+async function verifyMatriculeEnseignant() {
+    const matricule = document.getElementById('matricule-enseignant-input').value.trim();
+    const feedback = document.getElementById('modal-feedback-enseignant');
+
+    if (!matricule) {
+        feedback.textContent = "Le Code d'accès ne peut être vide.";
+        feedback.style.color = "#F87171";
+        return;
+    }
+
+    feedback.textContent = "Vérification de votre Code en cours...";
+    feedback.style.color = "#60A5FA";
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sceau: matricule, espace_cible: 'enseignant' })
+        });
+        const data = await response.json();
+
+        if (data.valide === true) {
+            feedback.textContent = data.message;
+            feedback.style.color = "#10B981";
+            localStorage.setItem('eduka_sceau_enseignant', matricule);
+
+            setTimeout(() => {
+                fermerModaleAccesEnseignant();
+                entrerDansEspaceEnseignant();
+            }, 700);
+        } else {
+            feedback.textContent = data.message || "Code invalide.";
+            feedback.style.color = "#F87171";
+        }
+    } catch (error) {
+        console.error("Erreur de vérification enseignant", error);
+        feedback.textContent = "Le réseau est instable. Impossible de vérifier l'accès.";
+        feedback.style.color = "#F87171";
+    }
+}
+
+// ❖ L'échappatoire Freemium : un enseignant non (encore) abonné doit
+// pouvoir essayer l'outil sans code, comme prévu par le quota serveur
+// (verifier_freemium, limite=3 -- voir gateway/main.py). Aucun Sceau
+// n'est stocké dans ce cas : sendTeacherMessage() enverra un matricule
+// vide, et le serveur appliquera de lui-même le Freemium.
+function continuerEnFreemiumEnseignant() {
+    fermerModaleAccesEnseignant();
+    entrerDansEspaceEnseignant();
 }
 
 function fermerVestibule() {
@@ -2300,7 +2409,10 @@ async function sendTeacherMessage(outil) {
     chatHistory.appendChild(botLoadingDiv);
     scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
 
-    const sceau = localStorage.getItem('eduka_sceau') || "";
+    // ❖ Sceau propre à l'espace enseignant (voir ouvrirModaleAccesEnseignant),
+    // distinct de 'eduka_sceau' (élève) -- vide si l'enseignant a choisi
+    // l'essai Freemium, auquel cas le serveur applique de lui-même son quota.
+    const sceau = localStorage.getItem('eduka_sceau_enseignant') || "";
 
     try {
         const response = await fetch('https://api.edukatchat.org/api/enseignant/chat', {
@@ -2325,7 +2437,7 @@ async function sendTeacherMessage(outil) {
         if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
             if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
-                botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
+                botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='ouvrirModaleAccesEnseignant()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
             } else {
                 botLoadingDiv.textContent = data.answer || "La source est silencieuse.";
             }
