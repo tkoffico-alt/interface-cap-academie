@@ -908,14 +908,35 @@ function texteVersHtmlLegerFiche(bloc) {
     if (!bloc) return '';
     const echappe = echapperHTMLFiche(bloc);
     const paragraphes = echappe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-    return paragraphes.map(p => {
+
+    // ❖ Le modèle produit souvent des listes "aérées" : une puce isolée
+    // par paragraphe, séparée de la suivante par une ligne vide (plutôt
+    // que des puces collées sur des lignes consécutives). Sans ce
+    // regroupement, chaque puce isolée retombait dans la branche <p>
+    // ci-dessous avec son "- " laissé tel quel au lieu de devenir une
+    // vraie liste -- visible par ex. sur OBJECTIFS DE L'ÉVALUATION
+    // (Forge Primaire) ou BARÈME.
+    const blocs = [];
+    paragraphes.forEach(p => {
         const lignes = p.split('\n').map(l => l.trim()).filter(l => l && !estLigneSeparatriceFiche(l));
-        if (!lignes.length) return '';
-        const toutesEnListe = lignes.length > 1 && lignes.every(l => /^[-•]\s+/.test(l));
-        if (toutesEnListe) {
-            return '<ul>' + lignes.map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('') + '</ul>';
+        if (!lignes.length) return;
+        const estPuceUnique = lignes.length === 1 && /^[-•]\s+/.test(lignes[0]);
+        const dernier = blocs[blocs.length - 1];
+        if (estPuceUnique && dernier && dernier.estListe) {
+            dernier.lignes.push(lignes[0]);
+        } else if (estPuceUnique) {
+            blocs.push({ estListe: true, lignes: [lignes[0]] });
+        } else {
+            blocs.push({ estListe: false, lignes });
         }
-        return `<p>${lignes.join('<br>')}</p>`;
+    });
+
+    return blocs.map(b => {
+        const toutesEnListe = b.estListe || (b.lignes.length > 1 && b.lignes.every(l => /^[-•]\s+/.test(l)));
+        if (toutesEnListe) {
+            return '<ul>' + b.lignes.map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('') + '</ul>';
+        }
+        return `<p>${b.lignes.join('<br>')}</p>`;
     }).filter(Boolean).join('');
 }
 
@@ -981,7 +1002,10 @@ function analyserFicheLecon(texteBrut) {
     const badges = [];
     if (occHeader) {
         contenuApres(occHeader).split('\n').forEach(l => {
-            const l2 = l.trim();
+            // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
+            // AVANT de chercher le ":" -- sinon il reste collé au libellé
+            // du badge ("- Classe" au lieu de "Classe").
+            const l2 = l.trim().replace(/^[-•]\s*/, '');
             if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
@@ -1185,10 +1209,10 @@ function analyserFichePrimaire(texteBrut) {
 
     const occurrences = trouverOccurrencesFichePrimaire(texte);
     const aIdentification = occurrences.some(o => o.type === 'identification');
-    // ❖ Une fiche d'ÉVALUATION primaire remplace les points 7-8 par des
-    // exercices libres, sans libellés imposés par le prompt -- dans ce
-    // cas il n'y a rien de fiable à quoi s'accrocher, on se replie donc
-    // sur l'affichage standard plutôt que de deviner une structure.
+    // ❖ Une fiche d'ÉVALUATION primaire suit un canevas différent (pas de
+    // DÉROULEMENT PÉDAGOGIQUE) -- son propre parseur dédié prend le relais
+    // dans ce cas, voir analyserEvaluationPrimaire() et son appel depuis
+    // construireRenduFichePrimaire().
     const aDeroulement = occurrences.some(o => o.type === 'deroulement');
     if (!aIdentification || !aDeroulement) return null;
 
@@ -1215,7 +1239,10 @@ function analyserFichePrimaire(texteBrut) {
     const occIdentification = occurrences.find(o => o.type === 'identification');
     if (occIdentification) {
         contenuApres(occIdentification).split('\n').forEach(l => {
-            const l2 = l.trim();
+            // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
+            // AVANT de chercher le ":" -- sinon il reste collé au libellé
+            // du badge ("- Classe" au lieu de "Classe").
+            const l2 = l.trim().replace(/^[-•]\s*/, '');
             if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
@@ -1300,6 +1327,146 @@ function construireHTMLFichePrimaire(analyse) {
     return `<div class="fiche-lecon accent-vert">${html}</div>`;
 }
 
+// =======================================================================
+// ❖ LA CARTE "ÉVALUATION PRIMAIRE" (FORGE PRIMAIRE) ❖
+// =======================================================================
+// La Forge Primaire ne produit pas que des fiches de préparation : sur
+// demande ("Nouvelle fiche d'évaluation"), elle suit un second canevas,
+// distinct de celui de la préparation (IDENTIFICATION/.../DÉROULEMENT
+// PÉDAGOGIQUE) ET de l'Atelier des Évaluations secondaire (PARTIE A/B) :
+// 1. IDENTIFICATION, 2. OBJECTIFS DE L'ÉVALUATION, 3. EXERCICES
+// D'ÉVALUATION, 4. BARÈME, 5. CORRIGÉ -- numérotées comme le reste du
+// canevas primaire.
+const ALTERNATIVES_SECTION_EVALUATION_PRIMAIRE = {
+    identification: ["IDENTIFICATION"],
+    objectifs: ["OBJECTIFS DE L['’]?[ÉE]VALUATION", "OBJECTIFS"],
+    exercices: ["EXERCICES D['’]?[ÉE]VALUATION", "EXERCICES"],
+    bareme: ["BAR[ÈE]ME"],
+    corrige: ["CORRIG[ÉE]"]
+};
+
+function trouverOccurrencesEvaluationPrimaire(texte) {
+    const occurrences = [];
+    Object.entries(ALTERNATIVES_SECTION_EVALUATION_PRIMAIRE).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+function analyserEvaluationPrimaire(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        .trim();
+    if (!texte) return null;
+
+    const occurrences = trouverOccurrencesEvaluationPrimaire(texte);
+    const aIdentification = occurrences.some(o => o.type === 'identification');
+    const aExercices = occurrences.some(o => o.type === 'exercices');
+    if (!aIdentification || !aExercices) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        return texte.slice(occ.end, finBorne).trim();
+    }
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    function contenuDe(type) {
+        const occ = occurrences.find(o => o.type === type);
+        return occ ? contenuApres(occ) : '';
+    }
+
+    // ❖ Même filet de sécurité que l'Atelier des Évaluations : le modèle
+    // introduit parfois librement la fiche avant "1. IDENTIFICATION"
+    // ("Voici une fiche d'évaluation de mathématiques pour le niveau
+    // CM2..."), sans quoi cette phrase disparaîtrait silencieusement.
+    const preambuleTexte = texte.slice(0, occurrences[0].start).trim();
+
+    const badges = [];
+    const occIdentification = occurrences.find(o => o.type === 'identification');
+    if (occIdentification) {
+        contenuApres(occIdentification).split('\n').forEach(l => {
+            // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
+            // AVANT de chercher le ":" -- sinon il reste collé au libellé
+            // du badge ("- Classe" au lieu de "Classe").
+            const l2 = l.trim().replace(/^[-•]\s*/, '');
+            if (!l2 || estLigneSeparatriceFiche(l2)) return;
+            const sepIdx = l2.indexOf(':');
+            if (sepIdx > -1 && sepIdx < 60) {
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+            } else {
+                badges.push({ label: '', valeur: l2 });
+            }
+        });
+    }
+
+    const objectifsTexte = contenuDe('objectifs');
+    const exercicesTexte = contenuDe('exercices');
+    const baremeTexte = contenuDe('bareme');
+
+    // ❖ Même précaution que l'Atelier des Évaluations (secondaire) : le
+    // corrigé reprend souvent ses propres numéros d'exercices en
+    // sous-titres, qui seraient sinon redétectés comme de nouvelles
+    // occurrences et tronqueraient le corrigé après quelques mots -- on
+    // va donc jusqu'à la fin du texte plutôt que jusqu'à la prochaine
+    // occurrence.
+    const occCorrige = occurrences.find(o => o.type === 'corrige');
+    const corrigeTexte = occCorrige ? texte.slice(occCorrige.end).trim() : '';
+
+    return { preambuleTexte, badges, objectifsTexte, exercicesTexte, baremeTexte, corrigeTexte, titres };
+}
+
+function construireHTMLEvaluationPrimaire(analyse) {
+    const { preambuleTexte, badges, objectifsTexte, exercicesTexte, baremeTexte, corrigeTexte, titres } = analyse;
+    let html = '';
+
+    if (preambuleTexte) {
+        html += `<div class="fiche-preambule">${texteVersHtmlLegerFiche(preambuleTexte)}</div>`;
+    }
+
+    if (badges.length) {
+        html += `<div class="fiche-section-titre">🧭 ${echapperHTMLFiche(titres.identification || '')}</div>`;
+        html += '<div class="fiche-bloc-entete">';
+        badges.forEach(b => {
+            html += `<span class="fiche-badge">`;
+            if (b.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(b.label)} :</span> `;
+            html += `${echapperHTMLFiche(b.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    if (objectifsTexte) {
+        html += `<div class="fiche-section-titre">🎯 ${echapperHTMLFiche(titres.objectifs || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(objectifsTexte)}</div>`;
+    }
+
+    if (exercicesTexte) {
+        html += `<div class="fiche-section-titre">✏️ ${echapperHTMLFiche(titres.exercices || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(exercicesTexte)}</div>`;
+    }
+
+    if (baremeTexte) {
+        html += `<div class="fiche-section-titre">📊 ${echapperHTMLFiche(titres.bareme || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(baremeTexte)}</div>`;
+    }
+
+    if (corrigeTexte) {
+        html += `<div class="fiche-section-titre">🔑 ${echapperHTMLFiche(titres.corrige || '')}</div>`;
+        html += `<div class="fiche-carte fiche-corrige">${texteVersHtmlLegerFiche(corrigeTexte)}</div>`;
+    }
+
+    return `<div class="fiche-lecon accent-vert">${html}</div>`;
+}
+
 function construireRenduFichePrimaire(source) {
     let corps = source;
     let signatureHTML = '';
@@ -1309,10 +1476,20 @@ function construireRenduFichePrimaire(source) {
         corps = corps.slice(0, idxDebut);
     }
 
-    const analyse = analyserFichePrimaire(corps);
-    if (!analyse) return null;
+    // ❖ Deux canevas possibles pour un même outil (forge_primaire) : on
+    // tente d'abord la fiche de préparation (la plus fréquente), puis la
+    // fiche d'évaluation si la première échoue -- silencieusement, sans
+    // jamais afficher d'erreur : si aucune des deux ne correspond, on se
+    // replie sur le rendu Markdown standard (voir afficherReponseAvecFondu).
+    const anaPreparation = analyserFichePrimaire(corps);
+    let html = anaPreparation ? construireHTMLFichePrimaire(anaPreparation) : null;
 
-    let html = construireHTMLFichePrimaire(analyse);
+    if (html === null) {
+        const anaEvaluation = analyserEvaluationPrimaire(corps);
+        if (anaEvaluation) html = construireHTMLEvaluationPrimaire(anaEvaluation);
+    }
+
+    if (html === null) return null;
 
     if (signatureHTML) {
         let sigParsed = marked.parse(signatureHTML);
