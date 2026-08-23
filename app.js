@@ -1351,7 +1351,17 @@ function analyserFichePrimaire(texteBrut) {
         });
     }
     ['competence', 'theme', 'lecon'].forEach(type => {
-        const valeur = contenuDe(type);
+        // ❖ Le modèle intercale volontiers une règle horizontale Markdown
+        // ("---") entre deux sections. Sans filtrage, elle restait collée à
+        // la valeur du badge ("Le groupement par 10 et la notion de
+        // dizaine. ---"). On écarte donc les lignes purement séparatrices,
+        // et on recompose la valeur sur une seule ligne.
+        const valeur = contenuDe(type)
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l && !estLigneSeparatriceFiche(l))
+            .join(' ')
+            .trim();
         if (valeur) badges.push({ label: titres[type] || type, valeur });
     });
 
