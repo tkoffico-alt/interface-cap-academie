@@ -53,11 +53,18 @@ document.addEventListener('click', function (evenement) {
         outilsDejaAmorces.add(outil); // un clic manuel vaut amorçage : plus d'auto-envoi ensuite
         const champ = document.getElementById(`${outil}-user-input`);
         if (champ && !champ.disabled) {
-            // ❖ Une « Nouvelle fiche » repart d'un fil Dify vierge (voir
-            // reinitialiserConversationEnseignant). « Ajouter des exercices »
-            // porte au contraire sur la fiche précédente : on garde le fil.
+            // ❖ Un clic sur une suggestion ouvre un nouveau sujet : on repart
+            // d'un fil Dify vierge (voir reinitialiserConversationEnseignant).
+            // La logique est volontairement inversée -- on réinitialise PAR
+            // DÉFAUT, sauf pour les rares boutons qui prolongent l'échange
+            // précédent. Une première version ne déclenchait que sur
+            // « Nouvelle fiche… » et laissait donc le Cabinet, dont les
+            // boutons s'appellent « Conseil pédagogique », « Un élève en
+            // difficulté » et « Gestion de classe », accumuler indéfiniment
+            // ses consultations dans un seul fil.
             const libelle = `${bouton.textContent || ''} ${bouton.dataset.message || ''}`;
-            if (/nouvelle\s+fiche/i.test(libelle)) reinitialiserConversationEnseignant(outil);
+            const prolongeLEchange = /ajoute[rz]?\s+des\s+exercices|derni[èe]re\s+fiche/i.test(libelle);
+            if (!prolongeLEchange) reinitialiserConversationEnseignant(outil);
             champ.value = bouton.dataset.message || "";
             sendTeacherMessage(outil);
         }
