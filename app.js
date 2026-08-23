@@ -1543,7 +1543,10 @@ function analyserFichePNAPAS(texteBrut) {
     const champs = [];
     identificationTexte.split('\n').forEach(l => {
         const l2 = l.trim().replace(/^[-•]\s*/, '');
-        if (!l2 || estLigneSeparatriceFiche(l2)) return;
+        // ❖ estLigneSeparatriceFiche exige au moins trois caractères : une
+        // règle courte ("--") passait donc au travers et s'affichait comme
+        // un badge vide en fin d'identification.
+        if (!l2 || estLigneSeparatriceFiche(l2) || /^[\s\-_—–]+$/.test(l2)) return;
         const sepIdx = l2.indexOf(':');
         if (sepIdx > -1 && sepIdx < 60) {
             champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
@@ -1658,7 +1661,17 @@ function construireHTMLFichePNAPAS(analyse) {
     html += '</tbody></table></div>';
 
     if (apresTableau) {
-        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(apresTableau)}</div>`;
+        // ❖ La trace écrite est la seule section qui suivait le tableau sans
+        // titre : elle s'affichait en carte nue au milieu de sections toutes
+        // coiffées d'un intitulé. On la détecte pour lui rendre le sien.
+        const motifTrace = /^\s*(TRACE\s+[ÉE]CRITE)\s*:?\s*\n?/i;
+        const correspondance = apresTableau.match(motifTrace);
+        if (correspondance) {
+            html += `<div class="fiche-section-titre">✍️ ${echapperHTMLFiche(correspondance[1])}</div>`;
+            html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(apresTableau.slice(correspondance[0].length).trim())}</div>`;
+        } else {
+            html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(apresTableau)}</div>`;
+        }
     }
 
     return `<div class="fiche-lecon accent-vert fiche-lecon-pnapas">${html}</div>`;
