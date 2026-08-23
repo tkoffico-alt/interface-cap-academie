@@ -1190,7 +1190,12 @@ const ALTERNATIVES_SECTION_FICHE_PRIMAIRE = {
     theme: ["TH[ÈE]ME"],
     lecon: ["LE[ÇC]ON"],
     situation: ["SITUATION D['’]APPRENTISSAGE"],
-    tableau: ["TABLEAU HABIL[ÉE]T[ÉE]S\\s*/?\\s*CONTENUS", "TABLEAU DES HABIL[ÉE]T[ÉE]S ET CONTENUS"],
+    // ❖ "CONTENUS" seul est accepté en plus des deux libellés complets :
+    // au CE2 en français, le PNAPAS supprime le tableau des habiletés et
+    // rebaptise la section "Contenus" (phrases verbales). Sans cet alias,
+    // la ligne n'était pas reconnue comme un titre de section et son
+    // contenu se retrouvait absorbé dans la SITUATION D'APPRENTISSAGE.
+    tableau: ["TABLEAU HABIL[ÉE]T[ÉE]S\\s*/?\\s*CONTENUS", "TABLEAU DES HABIL[ÉE]T[ÉE]S ET CONTENUS", "CONTENUS\\s*:?\\s*$"],
     materiel: ["MAT[ÉE]RIEL DIDACTIQUE"],
     deroulement: ["D[ÉE]ROULEMENT P[ÉE]DAGOGIQUE"],
     presentation: ["PR[ÉE]SENTATION"],
@@ -1215,8 +1220,71 @@ function trouverOccurrencesFichePrimaire(texte) {
     return occurrences;
 }
 
+// ❖ Le canevas officiel PNAPAS présente le déroulement sous forme de
+// tableau à quatre colonnes (Phases didactiques / Activités de
+// l'enseignant.e / Stratégies pédagogiques / Activités des apprenant.e.s).
+// Les trois moments s'y trouvent donc DANS des cellules
+// ("| PRÉSENTATION | ... |"), alors que trouverOccurrencesFichePrimaire()
+// exige un titre seul en début de ligne (préfixes tolérés : -, •, #, *, >
+// ou un numéro, mais pas "|"). Sans conversion préalable, `phases` restait
+// vide et, le rendu du déroulement étant conditionné à `if (phases.length)`,
+// TOUT le bloc disparaissait de la carte alors que le texte était bien là.
+// On réécrit donc chaque ligne de tableau dont la première cellule est un
+// nom de phase en "titre de phase + contenu étiqueté" ; le reste du
+// parseur est inchangé.
+const MOTIF_PHASE_CELLULE_FICHE = /^(PR[ÉE]SENTATION|D[ÉE]VELOPPEMENT|[ÉE]VALUATION(?:\s*\/?\s*R[ÉE]INVESTISSEMENT)?|R[ÉE]INVESTISSEMENT)$/i;
+const ETIQUETTES_DEFAUT_DEROULEMENT_FICHE = [
+    "Activités de l'enseignant.e",
+    'Stratégies pédagogiques',
+    'Activités des apprenant.e.s'
+];
+
+function decouperCellulesTableauFiche(ligne) {
+    return ligne.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+}
+
+function normaliserTableauDeroulementFiche(texte) {
+    const lignes = texte.split('\n');
+    const sortie = [];
+    // Libellés de colonnes du dernier en-tête de tableau rencontré : ils
+    // servent à étiqueter les cellules des lignes de phase qui suivent,
+    // pour ne pas perdre l'information "qui fait quoi".
+    let etiquettes = null;
+
+    lignes.forEach(ligne => {
+        if (!/^\s*\|.*\|\s*$/.test(ligne)) { sortie.push(ligne); return; }
+
+        const cellules = decouperCellulesTableauFiche(ligne);
+        const premiere = (cellules[0] || '').trim();
+
+        if (!MOTIF_PHASE_CELLULE_FICHE.test(premiere)) {
+            // En-tête de tableau (au moins trois colonnes, et pas une
+            // ligne de séparation "|---|---|") -> on mémorise ses libellés.
+            if (cellules.length >= 3 && !/^[\s\-:|]+$/.test(ligne)) etiquettes = cellules.slice(1);
+            sortie.push(ligne);
+            return;
+        }
+
+        sortie.push(premiere);
+        cellules.slice(1).forEach((cellule, i) => {
+            // Les cellules multi-lignes sont écrites avec des <br> : on les
+            // rend au parseur sous forme de vraies lignes.
+            const contenu = cellule.replace(/<br\s*\/?>/gi, '\n').trim();
+            if (!contenu) return;
+            const etiquette = (etiquettes && etiquettes[i]) || ETIQUETTES_DEFAUT_DEROULEMENT_FICHE[i] || '';
+            if (etiquette) sortie.push(`${etiquette} :`);
+            contenu.split('\n').forEach(l => {
+                const l2 = l.trim();
+                if (l2) sortie.push(/^[-•]/.test(l2) ? l2 : `- ${l2}`);
+            });
+        });
+    });
+
+    return sortie.join('\n');
+}
+
 function analyserFichePrimaire(texteBrut) {
-    const texte = (texteBrut || '')
+    const texteNettoye = (texteBrut || '')
         .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
         .replace(/\*/g, '')
         // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
@@ -1228,7 +1296,9 @@ function analyserFichePrimaire(texteBrut) {
         // début de ligne, comme pour les "*" ci-dessus.
         .replace(/^#+\s*/gm, '')
         .trim();
-    if (!texte) return null;
+    if (!texteNettoye) return null;
+
+    const texte = normaliserTableauDeroulementFiche(texteNettoye);
 
     const occurrences = trouverOccurrencesFichePrimaire(texte);
     const aIdentification = occurrences.some(o => o.type === 'identification');
