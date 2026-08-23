@@ -3301,13 +3301,13 @@ function imprimerDocument(bouton) {
 
         <div class="document-aere">
             ${contenuHTML}
-
-            <div style="margin-top: 50px; text-align: center; border-top: 2px solid #E5E7EB; padding-top: 20px; white-space: normal; line-height: 1.2;">
-                <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; display: block; margin: 0 auto;">
-                <strong style="font-size: 14pt; color: #1F2937; letter-spacing: 1px; display: block; margin-top: -12px;">EdukaTchat™</strong>
-                <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 2px;">© Propriété Intellectuelle Exclusive | Document officiel généré par IA</span>
-            </div>
         </div>`;
+        // ❖ Aucun pied de page n'est ajouté ici : la fiche porte déjà sa
+        // propre signature (« ❖ Architecture Pédagogique EdukaTchat ❖ »),
+        // mieux intégrée à la mise en page. Le bloc précédent — sceau,
+        // « EdukaTchat™ » et mention de propriété — faisait doublon et,
+        // avec ses 50 px de marge haute et son image de 60 px, poussait
+        // régulièrement une page supplémentaire ne contenant que lui.
 
     window.print();
 }
