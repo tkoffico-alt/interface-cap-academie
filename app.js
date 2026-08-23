@@ -1469,6 +1469,24 @@ function construireHTMLFichePrimaire(analyse) {
 
 const NIVEAUX_HORS_PNAPAS_FICHE = /\bCM\s*[12]\b/i;
 
+// ❖ Le modèle referme volontiers sa réponse par une phrase adressée à
+// l'instituteur (« Cette fiche est prête à être utilisée en classe. Si vous
+// avez besoin d'une autre séance, n'hésitez pas… »). Placée avant la
+// signature, elle atterrissait dans la carte de la trace écrite et se
+// retrouvait imprimée au milieu du document que l'instituteur range dans
+// son cahier de préparation. On retire donc les derniers paragraphes qui
+// s'adressent visiblement au lecteur -- jamais ceux du milieu, pour ne pas
+// amputer un contenu pédagogique qui emploierait « vous ».
+const MOTIF_PHRASE_ACCOMPAGNEMENT_FICHE = /n'h[ée]sitez pas|si vous (?:avez besoin|souhaitez|voulez|le souhaitez)|cette fiche est pr[êe]te|dites-moi si|je (?:peux|reste) (?:vous|[àa] votre)|souhaitez-vous (?:que|des|une)/i;
+
+function retirerPhrasesAccompagnementFiche(texte) {
+    const paragraphes = texte.split(/\n\s*\n/);
+    while (paragraphes.length && MOTIF_PHRASE_ACCOMPAGNEMENT_FICHE.test(paragraphes[paragraphes.length - 1])) {
+        paragraphes.pop();
+    }
+    return paragraphes.join('\n\n').trim();
+}
+
 function extraireLignesTableauDeroulementFiche(region) {
     const lignes = region.split('\n').map(l => l.trim()).filter(Boolean);
     const enTetes = [];
@@ -1578,7 +1596,9 @@ function analyserFichePNAPAS(texteBrut) {
     // récupérerait le tableau entier en guise de « suite ».
     const idxDernierPipe = region.lastIndexOf('|');
     const idxFinTableau = idxDernierPipe === -1 ? -1 : region.indexOf('\n', idxDernierPipe);
-    const apresTableau = idxFinTableau === -1 ? '' : region.slice(idxFinTableau + 1).trim();
+    const apresTableau = idxFinTableau === -1
+        ? ''
+        : retirerPhrasesAccompagnementFiche(region.slice(idxFinTableau + 1).trim());
 
     const titres = {};
     occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
