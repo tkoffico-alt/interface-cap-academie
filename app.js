@@ -1446,6 +1446,225 @@ function construireHTMLFichePrimaire(analyse) {
 }
 
 // =======================================================================
+// ❖ LA CARTE "FICHE PNAPAS NATIVE" (FORGE PRIMAIRE) ❖
+// =======================================================================
+// Le canevas officiel PNAPAS diffère de celui de l'APC sur trois points :
+// son identification regroupe thème, séquence, séance, durée, support,
+// matériel et documents (là où l'APC ouvre une section COMPÉTENCE, absente
+// du modèle PNAPAS) ; son déroulement est un tableau à quatre colonnes
+// (Phases didactiques / Activités de l'enseignant.e / Stratégies
+// pédagogiques / Activités des apprenant.e.s) ; et au CE2 en français le
+// tableau des habiletés disparaît au profit de « Contenus » en phrases
+// verbales.
+//
+// On rend donc ce canevas tel quel plutôt que de le replier dans la carte
+// APC : c'est la forme que l'instituteur a sous les yeux en formation, et
+// celle que son conseiller pédagogique attend.
+//
+// Déclencheur : la présence d'un vrai tableau de déroulement à au moins
+// trois colonnes dont la première cellule porte un nom de phase. Si le
+// modèle n'a pas produit ce tableau, ou si le niveau relève du CM (où le
+// PNAPAS n'est pas en vigueur), on renvoie null et la carte APC reprend la
+// main -- silencieusement, comme partout ailleurs ici.
+
+const NIVEAUX_HORS_PNAPAS_FICHE = /\bCM\s*[12]\b/i;
+
+function extraireLignesTableauDeroulementFiche(region) {
+    const lignes = region.split('\n').map(l => l.trim()).filter(Boolean);
+    const enTetes = [];
+    const rangs = [];
+
+    lignes.forEach(ligne => {
+        if (!/^\|.*\|$/.test(ligne)) return;
+        if (/^[\s\-:|]+$/.test(ligne)) return;
+        const cellules = decouperCellulesTableauFiche(ligne);
+        if (cellules.length < 3) return;
+
+        // ❖ La cellule de phase porte souvent un sous-titre sur une seconde
+        // ligne ("PRÉSENTATION <br> Routine", "DÉVELOPPEMENT <br>
+        // J'apprends") : on teste donc sa PREMIÈRE ligne, une fois les
+        // <br> convertis, et non la cellule entière.
+        const premiereLigne = (cellules[0] || '').replace(/<br\s*\/?>/gi, '\n').split('\n')[0].trim();
+        if (MOTIF_PHASE_CELLULE_FICHE.test(premiereLigne)) {
+            rangs.push(cellules.map(c => c.replace(/<br\s*\/?>/gi, '\n').trim()));
+        } else if (!enTetes.length && !rangs.length) {
+            enTetes.push(...cellules);
+        }
+    });
+
+    return { enTetes, rangs };
+}
+
+function analyserFichePNAPAS(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        .replace(/^#+\s*/gm, '')
+        .trim();
+    if (!texte) return null;
+
+    // ❖ L'identification PNAPAS contient des champs « Thème : … » et
+    // « Leçon : … » qui, dans le canevas APC, sont des TITRES de section.
+    // Sans ce filtre, la première de ces lignes clôturait l'identification
+    // et avalait tous les champs suivants (séquence, séance, support,
+    // documents) comme s'ils étaient le contenu de la section THÈME.
+    // Distinction retenue : un titre de section est seul sur sa ligne
+    // ("3. THÈME"), un champ d'identification porte sa valeur après un
+    // deux-points ("- Thème : Nombres et opérations").
+    const occurrences = trouverOccurrencesFichePrimaire(texte).filter(o => {
+        if (o.type !== 'theme' && o.type !== 'lecon') return true;
+        const apresDeuxPoints = (o.texte || '').split(':').slice(1).join(':').trim();
+        return !apresDeuxPoints;
+    });
+    const occIdentification = occurrences.find(o => o.type === 'identification');
+    const occDeroulement = occurrences.find(o => o.type === 'deroulement');
+    if (!occIdentification || !occDeroulement) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        return texte.slice(occ.end, finBorne).trim();
+    }
+    function contenuDe(type) {
+        const occ = occurrences.find(o => o.type === type);
+        return occ ? contenuApres(occ) : '';
+    }
+
+    // La région de déroulement court jusqu'à la fin du texte : les phases y
+    // sont des cellules, pas des titres de section, donc aucune occurrence
+    // ne vient la borner.
+    const region = texte.slice(occDeroulement.end);
+    const { enTetes, rangs } = extraireLignesTableauDeroulementFiche(region);
+    if (!rangs.length) return null;
+
+    const identificationTexte = contenuApres(occIdentification);
+    if (NIVEAUX_HORS_PNAPAS_FICHE.test(identificationTexte)) return null;
+
+    const champs = [];
+    identificationTexte.split('\n').forEach(l => {
+        const l2 = l.trim().replace(/^[-•]\s*/, '');
+        if (!l2 || estLigneSeparatriceFiche(l2)) return;
+        const sepIdx = l2.indexOf(':');
+        if (sepIdx > -1 && sepIdx < 60) {
+            champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+        } else {
+            champs.push({ label: '', valeur: l2 });
+        }
+    });
+
+    // Le thème et la leçon peuvent figurer À LA FOIS comme champ
+    // d'identification PNAPAS et comme section APC : on ne les ajoute en
+    // badge que s'ils n'ont pas déjà été relevés plus haut.
+    const clef = v => v.toLowerCase().replace(/[\s.;:,]+/g, ' ').trim();
+    const dejaPresents = new Set(champs.map(c => clef(c.valeur)));
+    ['theme', 'lecon'].forEach(type => {
+        const valeur = contenuDe(type)
+            .split('\n').map(l => l.trim())
+            .filter(l => l && !estLigneSeparatriceFiche(l))
+            .join(' ').trim();
+        if (valeur && !dejaPresents.has(clef(valeur))) {
+            champs.push({ label: (titresDe(occurrences, type) || type), valeur });
+            dejaPresents.add(clef(valeur));
+        }
+    });
+
+    // Le reste du déroulement après la dernière ligne de tableau (trace
+    // écrite, remarques) : on le conserve plutôt que de le perdre. Si le
+    // tableau termine le texte, il n'y a pas de retour à la ligne après le
+    // dernier pipe -- sans ce garde-fou, indexOf renvoie -1 et l'on
+    // récupérerait le tableau entier en guise de « suite ».
+    const idxDernierPipe = region.lastIndexOf('|');
+    const idxFinTableau = idxDernierPipe === -1 ? -1 : region.indexOf('\n', idxDernierPipe);
+    const apresTableau = idxFinTableau === -1 ? '' : region.slice(idxFinTableau + 1).trim();
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    // ❖ Les habiletés/contenus arrivent tantôt en liste, tantôt en tableau
+    // Markdown : on décompose les lignes de tableau comme le fait la carte
+    // APC, pour ne pas afficher de barres verticales à l'écran.
+    const motifEnTeteHabiletes = /^(Habilet[ée]s?|Contenus?)\s*[:\-]?\s*(Habilet[ée]s?|Contenus?)?$/i;
+    const contenusTexte = contenuDe('tableau')
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !estLigneSeparatriceFiche(l))
+        .map(l => (/^\|.*\|$/.test(l) ? nettoyerLigneTableauFiche(l) : l))
+        .filter(l => !motifEnTeteHabiletes.test(l.replace(/\s*—\s*/g, ' ').trim()))
+        .join('\n');
+
+    return {
+        champs,
+        situationTexte: contenuDe('situation'),
+        contenusTexte,
+        materielTexte: contenuDe('materiel'),
+        enTetes: enTetes.length >= 3 ? enTetes : ['Phases didactiques', "Activités de l'enseignant.e", 'Stratégies pédagogiques', 'Activités des apprenant.e.s'],
+        rangs,
+        apresTableau: apresTableau && !/^[\s\-:|]+$/.test(apresTableau) ? apresTableau : '',
+        titres
+    };
+}
+
+function titresDe(occurrences, type) {
+    const occ = occurrences.find(o => o.type === type);
+    return occ ? occ.texte : '';
+}
+
+function construireHTMLFichePNAPAS(analyse) {
+    const { champs, situationTexte, contenusTexte, materielTexte, enTetes, rangs, apresTableau, titres } = analyse;
+    let html = '';
+
+    if (champs.length) {
+        html += `<div class="fiche-section-titre">🧭 ${echapperHTMLFiche(titres.identification || '')}</div>`;
+        html += '<div class="fiche-bloc-entete">';
+        champs.forEach(c => {
+            html += '<span class="fiche-badge">';
+            if (c.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(c.label)} :</span> `;
+            html += `${echapperHTMLFiche(c.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    if (situationTexte) {
+        html += `<div class="fiche-section-titre">💡 ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
+    }
+
+    if (contenusTexte) {
+        html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titres.tableau || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(contenusTexte)}</div>`;
+    }
+
+    if (materielTexte) {
+        html += `<div class="fiche-section-titre">🧰 ${echapperHTMLFiche(titres.materiel || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
+    }
+
+    html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
+    html += '<div class="fiche-carte fiche-carte-tableau">';
+    html += '<table class="fiche-deroulement-table"><thead><tr>';
+    enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
+    html += '</tr></thead><tbody>';
+    rangs.forEach(rang => {
+        html += '<tr>';
+        enTetes.forEach((enTete, i) => {
+            const cellule = rang[i] || '';
+            // data-libelle porte le nom de la colonne : c'est lui qui
+            // s'affiche en étiquette quand le tableau se replie en cartes
+            // sur les petits écrans (voir style.css).
+            html += `<td data-libelle="${echapperHTMLFiche(enTete)}">${texteVersHtmlLegerFiche(cellule)}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    if (apresTableau) {
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(apresTableau)}</div>`;
+    }
+
+    return `<div class="fiche-lecon accent-vert fiche-lecon-pnapas">${html}</div>`;
+}
+
+// =======================================================================
 // ❖ LA CARTE "ÉVALUATION PRIMAIRE" (FORGE PRIMAIRE) ❖
 // =======================================================================
 // La Forge Primaire ne produit pas que des fiches de préparation : sur
@@ -1635,8 +1854,18 @@ function construireRenduFichePrimaire(source) {
     // fiche d'évaluation si la première échoue -- silencieusement, sans
     // jamais afficher d'erreur : si aucune des deux ne correspond, on se
     // replie sur le rendu Markdown standard (voir afficherReponseAvecFondu).
-    const anaPreparation = analyserFichePrimaire(corps);
-    let html = anaPreparation ? construireHTMLFichePrimaire(anaPreparation) : null;
+    // ❖ On tente d'abord le canevas PNAPAS natif : il est le plus exigeant
+    // (il réclame un vrai tableau de déroulement à quatre colonnes et un
+    // niveau du CP au CE2), donc s'il accepte, c'est à coup sûr la bonne
+    // carte. La carte APC, plus tolérante, prendrait sinon la main sur des
+    // fiches PNAPAS et les afficherait dans le mauvais canevas.
+    const anaPnapas = analyserFichePNAPAS(corps);
+    let html = anaPnapas ? construireHTMLFichePNAPAS(anaPnapas) : null;
+
+    if (html === null) {
+        const anaPreparation = analyserFichePrimaire(corps);
+        if (anaPreparation) html = construireHTMLFichePrimaire(anaPreparation);
+    }
 
     if (html === null) {
         const anaEvaluation = analyserEvaluationPrimaire(corps);

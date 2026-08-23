@@ -787,6 +787,114 @@ body.dark-theme .fiche-liste-simple > div { border-top-color: rgba(148, 163, 184
     padding-bottom: 0;
 }
 
+/* ❖ Le déroulement du canevas PNAPAS natif : un vrai tableau à quatre
+   colonnes, tel qu'il figure dans les fiches modèles officielles. */
+.fiche-carte-tableau {
+    padding: 0;
+    overflow: hidden;
+}
+.fiche-deroulement-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.88rem;
+}
+.fiche-deroulement-table th,
+.fiche-deroulement-table td {
+    padding: 0.7rem 0.85rem;
+    border: 1px solid #EEF0F3;
+    text-align: left;
+    vertical-align: top;
+}
+body.dark-theme .fiche-deroulement-table th,
+body.dark-theme .fiche-deroulement-table td { border-color: rgba(148, 163, 184, 0.16); }
+.fiche-deroulement-table th {
+    background: #F8FAFC;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    color: var(--fiche-accent);
+}
+body.dark-theme .fiche-deroulement-table th { background: rgba(255, 255, 255, 0.04); }
+.fiche-deroulement-table td:first-child { font-weight: 600; }
+.fiche-deroulement-table p { margin: 0; }
+.fiche-deroulement-table p + p { margin-top: 0.35rem; }
+/* La première colonne (les phases) est plus étroite : elle ne porte qu'un
+   intitulé, là où les trois autres portent des activités rédigées. */
+.fiche-deroulement-table th:first-child,
+.fiche-deroulement-table td:first-child { width: 20%; }
+
+/* ❖ Sous 600 px, le tableau se replie en cartes empilées : une carte par
+   phase, chaque colonne devenant une ligne étiquetée par son en-tête
+   (repris depuis l'attribut data-libelle). Quatre colonnes sur un écran de
+   téléphone donneraient trois mots par ligne ou un défilement horizontal :
+   ni l'un ni l'autre n'est acceptable pour un instituteur qui prépare sa
+   classe sur son téléphone. */
+@media (max-width: 600px) {
+    .fiche-deroulement-table,
+    .fiche-deroulement-table tbody,
+    .fiche-deroulement-table tr,
+    .fiche-deroulement-table td {
+        display: block;
+        width: auto;
+    }
+    .fiche-deroulement-table thead {
+        display: none;
+    }
+    .fiche-deroulement-table tr {
+        padding: 0.9rem 1rem;
+        border-top: 1px solid #EEF0F3;
+    }
+    body.dark-theme .fiche-deroulement-table tr { border-top-color: rgba(148, 163, 184, 0.16); }
+    .fiche-deroulement-table tr:first-child { border-top: none; }
+    .fiche-deroulement-table td {
+        border: none;
+        padding: 0.45rem 0 0;
+    }
+    .fiche-deroulement-table td:first-child {
+        width: auto;
+        padding-top: 0;
+        color: var(--fiche-accent);
+        font-size: 0.95rem;
+    }
+    .fiche-deroulement-table td::before {
+        content: attr(data-libelle);
+        display: block;
+        font-size: 0.72rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        opacity: 0.6;
+        margin-bottom: 0.15rem;
+    }
+    .fiche-deroulement-table td:first-child::before { display: none; }
+    .fiche-deroulement-table td:empty { display: none; }
+}
+
+/* ❖ À l'impression, on rétablit toujours le tableau complet, quelle que
+   soit la largeur de la fenêtre : la feuille A4 a la place, et c'est cette
+   mise en forme-là que l'instituteur range dans son cahier de préparation.
+   Cette règle doit rester APRÈS le repli ci-dessus pour l'emporter. */
+@media print {
+    .fiche-deroulement-table { display: table; }
+    .fiche-deroulement-table thead { display: table-header-group; }
+    .fiche-deroulement-table tbody { display: table-row-group; }
+    .fiche-deroulement-table tr {
+        display: table-row;
+        padding: 0;
+        border-top: none;
+        break-inside: avoid;
+    }
+    .fiche-deroulement-table td {
+        display: table-cell;
+        border: 1px solid #D1D5DB;
+        padding: 0.6rem 0.7rem;
+    }
+    .fiche-deroulement-table td::before { display: none; }
+    .fiche-deroulement-table th:first-child,
+    .fiche-deroulement-table td:first-child { width: 20%; }
+    .fiche-carte-tableau { box-shadow: none; }
+}
+
 .fiche-phase {
     display: flex;
     flex-direction: column;
