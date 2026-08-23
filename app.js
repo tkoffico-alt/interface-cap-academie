@@ -1567,7 +1567,16 @@ function analyserFichePNAPAS(texteBrut) {
         if (!l2 || estLigneSeparatriceFiche(l2) || /^[\s\-_—–]+$/.test(l2)) return;
         const sepIdx = l2.indexOf(':');
         if (sepIdx > -1 && sepIdx < 60) {
-            champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+            const label = l2.slice(0, sepIdx).trim();
+            let valeur = l2.slice(sepIdx + 1).trim();
+            // ❖ Le modèle répète volontiers le libellé dans sa valeur
+            // ("Séance : Séance 1 : Lecture de…"), ce qui donne un badge
+            // bègue. On retire la répétition en gardant le numéro, qui lui
+            // porte une information : "Séance : 1 — Lecture de…".
+            const motifRepetition = new RegExp(
+                '^' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*(\\d+)?\\s*[:.\\-—]?\\s*', 'i');
+            valeur = valeur.replace(motifRepetition, (m, num) => (num ? num + ' — ' : ''));
+            champs.push({ label, valeur: valeur.trim() || l2.slice(sepIdx + 1).trim() });
         } else {
             champs.push({ label: '', valeur: l2 });
         }
