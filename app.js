@@ -53,6 +53,11 @@ document.addEventListener('click', function (evenement) {
         outilsDejaAmorces.add(outil); // un clic manuel vaut amorçage : plus d'auto-envoi ensuite
         const champ = document.getElementById(`${outil}-user-input`);
         if (champ && !champ.disabled) {
+            // ❖ Une « Nouvelle fiche » repart d'un fil Dify vierge (voir
+            // reinitialiserConversationEnseignant). « Ajouter des exercices »
+            // porte au contraire sur la fiche précédente : on garde le fil.
+            const libelle = `${bouton.textContent || ''} ${bouton.dataset.message || ''}`;
+            if (/nouvelle\s+fiche/i.test(libelle)) reinitialiserConversationEnseignant(outil);
             champ.value = bouton.dataset.message || "";
             sendTeacherMessage(outil);
         }
@@ -2701,6 +2706,32 @@ let teacherConversationIds = {
     'forge_primaire': "",
     'cabinet_primaire': ""
 };
+
+// ❖ Repartir d'une conversation Dify vierge.
+// Sans cela, le conversation_id d'un outil enseignant est créé au premier
+// message puis conservé indéfiniment (persisté dans localStorage par
+// saveChatHistory, restauré par restoreChatHistories) : toutes les fiches
+// jamais produites par cet instituteur s'accumulaient dans UN SEUL fil
+// Dify. Conséquences observées en production :
+//   - le modèle reste cohérent avec ses propres réponses antérieures et
+//     recopie leur structure au lieu de suivre le contexte fraîchement
+//     récupéré -- une fiche fautive se reproduisait ainsi mot pour mot,
+//     même après correction du prompt, du modèle et des bases ;
+//   - le coût en jetons croît à chaque fiche, l'historique étant renvoyé
+//     en entier à chaque appel.
+// On remet donc le compteur à zéro quand l'instituteur demande une
+// NOUVELLE fiche. « Ajouter des exercices », en revanche, se rapporte à la
+// fiche précédente : ce bouton doit conserver le fil.
+function reinitialiserConversationEnseignant(outil) {
+    if (!(outil in teacherConversationIds)) return;
+    teacherConversationIds[outil] = "";
+    try {
+        localStorage.removeItem(`eduka_conv_${outil}`);
+    } catch (e) {
+        // localStorage indisponible (navigation privée stricte) : le
+        // simple reset en mémoire ci-dessus suffit pour la session.
+    }
+}
 
 function handleTeacherKeyPress(event, outil) {
     if (event.key === 'Enter') sendTeacherMessage(outil);
