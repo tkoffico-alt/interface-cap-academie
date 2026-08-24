@@ -1492,7 +1492,14 @@ const MOTIF_PHRASE_ACCOMPAGNEMENT_FICHE = /n'h[ée]sitez pas|si vous (?:avez bes
 
 function retirerPhrasesAccompagnementFiche(texte) {
     const paragraphes = texte.split(/\n\s*\n/);
-    while (paragraphes.length && MOTIF_PHRASE_ACCOMPAGNEMENT_FICHE.test(paragraphes[paragraphes.length - 1])) {
+    // ❖ Un simple séparateur ("---") qui introduisait la phrase
+    // d'accompagnement devient orphelin une fois celle-ci retirée : on le
+    // retire lui aussi, sans quoi il s'affiche tel quel (marked.parse ne le
+    // reconnaît plus comme ligne horizontale une fois collé au jeton de fin
+    // de signature).
+    const estParagrapheAccessoire = p =>
+        MOTIF_PHRASE_ACCOMPAGNEMENT_FICHE.test(p) || estLigneSeparatriceFiche(p.trim());
+    while (paragraphes.length && estParagrapheAccessoire(paragraphes[paragraphes.length - 1])) {
         paragraphes.pop();
     }
     return paragraphes.join('\n\n').trim();
