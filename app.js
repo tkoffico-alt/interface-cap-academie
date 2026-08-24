@@ -1070,7 +1070,12 @@ function analyserFicheLecon(texteBrut) {
             // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
             // AVANT de chercher le ":" -- sinon il reste collé au libellé
             // du badge ("- Classe" au lieu de "Classe").
-            const l2 = l.trim().replace(/^[-•]\s*/, '');
+            // ❖ "+" et non un seul caractère : une ligne séparatrice ("---")
+            // ne perdait qu'UN tiret ("- Classe" -> "Classe" fonctionnait,
+            // mais "---" -> "--" ne faisait plus les 3 caractères exigés par
+            // estLigneSeparatriceFiche ci-dessous, et survivait comme badge
+            // fantôme vide en fin d'identification.
+            const l2 = l.trim().replace(/^[-•]+\s*/, '');
             if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
@@ -1413,7 +1418,12 @@ function analyserFichePrimaire(texteBrut) {
             // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
             // AVANT de chercher le ":" -- sinon il reste collé au libellé
             // du badge ("- Classe" au lieu de "Classe").
-            const l2 = l.trim().replace(/^[-•]\s*/, '');
+            // ❖ "+" et non un seul caractère : une ligne séparatrice ("---")
+            // ne perdait qu'UN tiret ("- Classe" -> "Classe" fonctionnait,
+            // mais "---" -> "--" ne faisait plus les 3 caractères exigés par
+            // estLigneSeparatriceFiche ci-dessous, et survivait comme badge
+            // fantôme vide en fin d'identification.
+            const l2 = l.trim().replace(/^[-•]+\s*/, '');
             if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
@@ -1642,10 +1652,13 @@ function analyserFichePNAPAS(texteBrut) {
 
     const champs = [];
     identificationTexte.split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
-        const l2 = l.trim().replace(/^[-•]\s*/, '');
+        const l2 = l.trim().replace(/^[-•]+\s*/, '');
         // ❖ estLigneSeparatriceFiche exige au moins trois caractères : une
         // règle courte ("--") passait donc au travers et s'affichait comme
-        // un badge vide en fin d'identification.
+        // un badge vide en fin d'identification. Le "+" ci-dessus (plutôt
+        // qu'un seul caractère) traite la cause à la racine : "---" ne perd
+        // plus qu'UN tiret ("---" -> "--", toujours trop court) mais la
+        // totalité de la ligne séparatrice.
         if (!l2 || estLigneSeparatriceFiche(l2) || /^[\s\-_—–]+$/.test(l2)) return;
         const sepIdx = l2.indexOf(':');
         if (sepIdx > -1 && sepIdx < 60) {
@@ -1912,7 +1925,12 @@ function analyserEvaluationPrimaire(texteBrut) {
             // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
             // AVANT de chercher le ":" -- sinon il reste collé au libellé
             // du badge ("- Classe" au lieu de "Classe").
-            const l2 = l.trim().replace(/^[-•]\s*/, '');
+            // ❖ "+" et non un seul caractère : une ligne séparatrice ("---")
+            // ne perdait qu'UN tiret ("- Classe" -> "Classe" fonctionnait,
+            // mais "---" -> "--" ne faisait plus les 3 caractères exigés par
+            // estLigneSeparatriceFiche ci-dessous, et survivait comme badge
+            // fantôme vide en fin d'identification.
+            const l2 = l.trim().replace(/^[-•]+\s*/, '');
             if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
