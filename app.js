@@ -774,7 +774,18 @@ const JETON_SIGNATURE_DEBUT = '§§SIGNATURE_DEBUT§§';
 const JETON_SIGNATURE_FIN = '§§SIGNATURE_FIN§§';
 
 function attenuerSignatureDocument(texteMarkdown) {
-    return texteMarkdown.replace(
+    // ❖ Le prompt demande explicitement que rien ne suive la signature,
+    // mais le modèle s'en affranchit parfois (« Si cette fiche vous
+    // convient, je peux préparer la suivante... N'hésitez pas... »). Comme
+    // la regex ci-dessous capture tout ce qui suit le losange ❖ pour le
+    // restyler en bloc signature, une phrase d'accompagnement placée APRÈS
+    // la signature se retrouvait entraînée avec elle et s'affichait quand
+    // même, restylée mais bien visible. On applique donc le même nettoyage
+    // que celui utilisé pour la trace écrite (retirerPhrasesAccompagnementFiche)
+    // sur le texte entier avant de repérer la signature, pour intercepter
+    // ce cas comme celui, plus courant, où la phrase précède la signature.
+    const texteNettoye = retirerPhrasesAccompagnementFiche(texteMarkdown);
+    return texteNettoye.replace(
         /(❖\s*Architecture Pédagogique EdukaTchat[\s\S]*)/,
         `${JETON_SIGNATURE_DEBUT}$1${JETON_SIGNATURE_FIN}`
     );
