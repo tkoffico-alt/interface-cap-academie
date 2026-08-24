@@ -906,6 +906,40 @@ function estLigneSeparatriceFiche(ligne) {
     return /^[\s\-_*|:]{3,}$/.test(ligne);
 }
 
+// ❖ Champs d'identification reconnus. Le prompt exige "un champ par ligne"
+// (Classe, Matière, Leçon, Semaine, Documents de référence, etc.), mais le
+// modèle agglutine parfois plusieurs champs sur une seule ligne malgré
+// cette consigne ("Leçon : X : Semaine : Y Documents de référence : Z").
+// Comme la règle est déterministe (l'ordre des champs n'a pas besoin
+// d'interprétation), on la fait respecter ici plutôt que d'empiler encore
+// des reformulations de prompt qui ne changent rien à ce genre d'oubli
+// ponctuel du modèle.
+const CHAMPS_IDENTIFICATION_CONNUS_FICHE = [
+    'Classe', 'Mati[èe]re', 'Effectif', 'Dur[ée]e', 'Le[çc]on', 'Semaine',
+    'S[ée]quence', 'S[ée]ance', 'Support', 'Documents?\\s+de\\s+r[ée]f[ée]rence',
+    'Th[èe]me', 'Comp[ée]tence'
+];
+
+// Sépare une ligne d'identification qui agglutine plusieurs champs connus
+// ("Label : valeur Label2 : valeur2") en autant de lignes "Label : valeur"
+// distinctes. Ligne sans agglutination (0 ou 1 champ reconnu) -> renvoyée
+// telle quelle, dans un tableau à un seul élément : aucun changement de
+// comportement pour le cas normal, déjà correctement géré ligne par ligne.
+function decouperChampsAgglutinesLigneFiche(ligne) {
+    const motif = new RegExp(`(?:${CHAMPS_IDENTIFICATION_CONNUS_FICHE.join('|')})\\s*:`, 'gi');
+    const positions = [];
+    let m;
+    while ((m = motif.exec(ligne)) !== null) {
+        positions.push(m.index);
+        if (m[0].length === 0) motif.lastIndex++;
+    }
+    if (positions.length <= 1) return [ligne];
+    return positions.map((debut, i) => {
+        const fin = i + 1 < positions.length ? positions[i + 1] : ligne.length;
+        return ligne.slice(debut, fin).trim().replace(/[\s:]+$/, '');
+    });
+}
+
 // Si le modèle a malgré tout écrit une vraie ligne de tableau Markdown
 // ("| Expliquer | La formation... |"), on retire les pipes et on
 // recompose une ligne lisible plutôt que d'afficher les barres verticales
@@ -1032,7 +1066,7 @@ function analyserFicheLecon(texteBrut) {
     // vide.
     const badges = [];
     if (occHeader) {
-        contenuApres(occHeader).split('\n').forEach(l => {
+        contenuApres(occHeader).split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
             // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
             // AVANT de chercher le ":" -- sinon il reste collé au libellé
             // du badge ("- Classe" au lieu de "Classe").
@@ -1330,7 +1364,21 @@ function analyserFichePrimaire(texteBrut) {
 
     const texte = normaliserTableauDeroulementFiche(texteNettoye);
 
-    const occurrences = trouverOccurrencesFichePrimaire(texte);
+    // ❖ Même ambiguïté que la fiche PNAPAS (voir analyserFichePNAPAS) : la
+    // fiche APC a ses propres sections COMPÉTENCE / THÈME / LEÇON, mais le
+    // modèle les glisse parfois comme simples champs dans le bloc
+    // IDENTIFICATION ("Leçon : La multiplication : Semaine : …"). Sans
+    // filtre, cette ligne est détectée comme le TITRE d'une section
+    // "LEÇON" à part entière, ce qui tronque l'identification en plein
+    // milieu et fait disparaître tous les champs suivants (Semaine,
+    // Documents de référence...). Distinction retenue : un titre de
+    // section est seul sur sa ligne, un champ d'identification porte sa
+    // valeur après un deux-points.
+    const occurrences = trouverOccurrencesFichePrimaire(texte).filter(o => {
+        if (!['competence', 'theme', 'lecon'].includes(o.type)) return true;
+        const apresDeuxPoints = (o.texte || '').split(':').slice(1).join(':').trim();
+        return !apresDeuxPoints;
+    });
     const aIdentification = occurrences.some(o => o.type === 'identification');
     // ❖ Une fiche d'ÉVALUATION primaire suit un canevas différent (pas de
     // DÉROULEMENT PÉDAGOGIQUE) -- son propre parseur dédié prend le relais
@@ -1361,7 +1409,7 @@ function analyserFichePrimaire(texteBrut) {
     const badges = [];
     const occIdentification = occurrences.find(o => o.type === 'identification');
     if (occIdentification) {
-        contenuApres(occIdentification).split('\n').forEach(l => {
+        contenuApres(occIdentification).split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
             // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
             // AVANT de chercher le ":" -- sinon il reste collé au libellé
             // du badge ("- Classe" au lieu de "Classe").
@@ -1593,7 +1641,7 @@ function analyserFichePNAPAS(texteBrut) {
     if (NIVEAUX_HORS_PNAPAS_FICHE.test(identificationTexte)) return null;
 
     const champs = [];
-    identificationTexte.split('\n').forEach(l => {
+    identificationTexte.split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
         const l2 = l.trim().replace(/^[-•]\s*/, '');
         // ❖ estLigneSeparatriceFiche exige au moins trois caractères : une
         // règle courte ("--") passait donc au travers et s'affichait comme
@@ -1860,7 +1908,7 @@ function analyserEvaluationPrimaire(texteBrut) {
     const badges = [];
     const occIdentification = occurrences.find(o => o.type === 'identification');
     if (occIdentification) {
-        contenuApres(occIdentification).split('\n').forEach(l => {
+        contenuApres(occIdentification).split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
             // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
             // AVANT de chercher le ":" -- sinon il reste collé au libellé
             // du badge ("- Classe" au lieu de "Classe").
