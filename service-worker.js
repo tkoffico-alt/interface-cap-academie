@@ -15,7 +15,7 @@
 // style.css pour forcer les appareils déjà installés à récupérer la
 // nouvelle version (sinon ils resteraient sur une version mise en cache).
 
-const CACHE_VERSION = 'edukatchat-shell-v6';
+const CACHE_VERSION = 'edukatchat-shell-v7';
 
 const FICHIERS_COQUILLE = [
     '/',

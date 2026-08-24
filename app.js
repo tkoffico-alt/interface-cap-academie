@@ -1223,7 +1223,14 @@ const ALTERNATIVES_SECTION_FICHE_PRIMAIRE = {
     deroulement: ["D[ÉE]ROULEMENT P[ÉE]DAGOGIQUE"],
     presentation: ["PR[ÉE]SENTATION"],
     developpement: ["D[ÉE]VELOPPEMENT"],
-    evaluationPhase: ["[ÉE]VALUATION\\s*/?\\s*R[ÉE]INVESTISSEMENT", "R[ÉE]INVESTISSEMENT", "[ÉE]VALUATION"]
+    evaluationPhase: ["[ÉE]VALUATION\\s*/?\\s*R[ÉE]INVESTISSEMENT", "R[ÉE]INVESTISSEMENT", "[ÉE]VALUATION"],
+    // ❖ La trace écrite n'était reconnue nulle part dans la carte APC :
+    // faute d'être un titre de section, elle était absorbée dans le contenu
+    // de la phase qui la précédait (le plus souvent ÉVALUATION) et
+    // s'affichait noyée à l'intérieur de celle-ci. Or c'est ce que
+    // l'instituteur recopie au tableau : il doit la retrouver d'un coup
+    // d'œil. La déclarer ici la borne proprement et lui rend sa section.
+    trace: ["TRACE [ÉE]CRITE"]
 };
 
 function trouverOccurrencesFichePrimaire(texte) {
@@ -1405,11 +1412,13 @@ function analyserFichePrimaire(texteBrut) {
         .map(type => ({ type, titre: titres[type] || '', contenu: contenuDe(type) }))
         .filter(p => p.contenu);
 
-    return { badges, lignesTableau, situationTexte, materielTexte, phases, titres };
+    const traceTexte = contenuDe('trace');
+
+    return { badges, lignesTableau, situationTexte, materielTexte, phases, traceTexte, titres };
 }
 
 function construireHTMLFichePrimaire(analyse) {
-    const { badges, lignesTableau, situationTexte, materielTexte, phases, titres } = analyse;
+    const { badges, lignesTableau, situationTexte, materielTexte, phases, traceTexte, titres } = analyse;
     let html = '';
 
     if (badges.length) {
@@ -1451,6 +1460,13 @@ function construireHTMLFichePrimaire(analyse) {
             html += `<div class="fiche-phase-ligne">${texteVersHtmlLegerFiche(p.contenu)}</div>`;
             html += '</div>';
         });
+    }
+
+    // Section à part entière, après le déroulement -- même traitement que
+    // dans la carte PNAPAS, pour que les deux canevas se ressemblent.
+    if (traceTexte) {
+        html += `<div class="fiche-section-titre">✍️ ${echapperHTMLFiche(titres.trace || 'TRACE ÉCRITE')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(traceTexte)}</div>`;
     }
 
     return `<div class="fiche-lecon accent-vert">${html}</div>`;
