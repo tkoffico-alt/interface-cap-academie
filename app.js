@@ -1659,6 +1659,22 @@ function titresDe(occurrences, type) {
     return occ ? occ.texte : '';
 }
 
+// ❖ Exception PNAPAS : au CE2 en français, le tableau des habiletés a été
+// supprimé au profit d'une simple rubrique « CONTENUS » rédigée en phrases
+// verbales. La règle est fixe et sans jugement à porter -- or le modèle
+// retombe régulièrement sur le titre par défaut malgré des consignes
+// répétées (trois échecs mesurés). On l'impose donc ici, où le résultat est
+// déterministe, plutôt que de continuer à le demander au modèle.
+function titreContenusFichePNAPAS(champs, titreParDefaut) {
+    const valeurDe = motifLabel => {
+        const champ = (champs || []).find(c => motifLabel.test(c.label || ''));
+        return champ ? (champ.valeur || '') : '';
+    };
+    const estCE2 = /\bCE\s*2\b/i.test(valeurDe(/classe/i));
+    const estFrancais = /fran[çc]ais/i.test(valeurDe(/mati[èe]re/i));
+    return (estCE2 && estFrancais) ? 'CONTENUS' : titreParDefaut;
+}
+
 function construireHTMLFichePNAPAS(analyse) {
     const { champs, situationTexte, contenusTexte, materielTexte, enTetes, rangs, apresTableau, titres } = analyse;
     let html = '';
@@ -1680,7 +1696,8 @@ function construireHTMLFichePNAPAS(analyse) {
     }
 
     if (contenusTexte) {
-        html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titres.tableau || '')}</div>`;
+        const titreContenus = titreContenusFichePNAPAS(champs, titres.tableau || '');
+        html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titreContenus)}</div>`;
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(contenusTexte)}</div>`;
     }
 
