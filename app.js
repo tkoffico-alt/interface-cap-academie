@@ -2707,8 +2707,28 @@ function declencherClotureAutomatiqueSas(raison) {
 }
 
 window.addEventListener('beforeunload', () => declencherClotureAutomatiqueSas('fermeture'));
+
+// ❖ Délai de grâce avant de clôturer sur mise en arrière-plan : un
+// verrouillage d'écran ou un changement furtif d'application pendant que
+// l'élève réfléchit à sa réponse (sans toucher à rien) déclenchait la
+// même clôture qu'un abandon réel -- la session semblait "se déconnecter"
+// en pleine réflexion, alors que l'élève n'était jamais parti. On
+// n'envoie la sentinelle que si l'onglet reste caché au-delà de ce délai.
+const DELAI_GRACE_ARRIERE_PLAN_MS = 90 * 1000; // 90 secondes
+let minuteurGraceArrierePlan = null;
+
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') declencherClotureAutomatiqueSas('arriere-plan');
+    if (document.visibilityState === 'hidden') {
+        if (minuteurGraceArrierePlan) clearTimeout(minuteurGraceArrierePlan);
+        minuteurGraceArrierePlan = setTimeout(() => {
+            declencherClotureAutomatiqueSas('arriere-plan');
+        }, DELAI_GRACE_ARRIERE_PLAN_MS);
+    } else if (document.visibilityState === 'visible') {
+        if (minuteurGraceArrierePlan) {
+            clearTimeout(minuteurGraceArrierePlan);
+            minuteurGraceArrierePlan = null;
+        }
+    }
 });
 
 function handleSasKeyPress(event) {
