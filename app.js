@@ -1049,7 +1049,14 @@ function analyserFicheLecon(texteBrut) {
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
         const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
-        return texte.slice(occ.end, finBorne).trim();
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
     }
 
     const titres = {};
@@ -1395,7 +1402,14 @@ function analyserFichePrimaire(texteBrut) {
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
         const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
-        return texte.slice(occ.end, finBorne).trim();
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
     }
 
     const titres = {};
@@ -1633,7 +1647,14 @@ function analyserFichePNAPAS(texteBrut) {
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
         const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
-        return texte.slice(occ.end, finBorne).trim();
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
     }
     function contenuDe(type) {
         const occ = occurrences.find(o => o.type === type);
@@ -1901,7 +1922,14 @@ function analyserEvaluationPrimaire(texteBrut) {
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
         const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
-        return texte.slice(occ.end, finBorne).trim();
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
     }
 
     const titres = {};
@@ -2121,7 +2149,14 @@ function analyserEvaluation(texteBrut) {
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
         const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
-        return texte.slice(occ.end, finBorne).trim();
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
     }
 
     const titres = {};
@@ -2714,7 +2749,7 @@ window.addEventListener('beforeunload', () => declencherClotureAutomatiqueSas('f
 // même clôture qu'un abandon réel -- la session semblait "se déconnecter"
 // en pleine réflexion, alors que l'élève n'était jamais parti. On
 // n'envoie la sentinelle que si l'onglet reste caché au-delà de ce délai.
-const DELAI_GRACE_ARRIERE_PLAN_MS = 90 * 1000; // 90 secondes
+const DELAI_GRACE_ARRIERE_PLAN_MS = 5 * 60 * 1000; // 5 minutes -- le minuteur d'inactivité (15 min) reste le vrai filet contre un abandon réel, celui-ci n'est qu'un raccourci plus rapide
 let minuteurGraceArrierePlan = null;
 
 document.addEventListener('visibilitychange', () => {
