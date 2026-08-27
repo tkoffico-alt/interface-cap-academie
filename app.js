@@ -2702,6 +2702,114 @@ function triggerVisionUpsell(chatHistoryId) {
 }
 
 // =======================================================================
+// ❖ L'ANALYSE VISUELLE RÉELLE (JOINDRE UNE IMAGE) ❖
+// =======================================================================
+// ❖ Jusqu'ici, le bouton trombone de chaque outil se contentait toujours
+// d'afficher l'upsell ci-dessus, sans jamais vérifier le vrai statut
+// Premium ni proposer d'envoi réel. Corrigé le 27/08/2026 : un Sceau local
+// présent déclenche désormais un vrai sélecteur de fichier puis un
+// téléversement vers /api/chat/televerser_image (voir gateway/main.py,
+// section 9.4) ; l'upsell ci-dessus ne s'affiche plus que si le serveur
+// confirme l'absence de droit Premium (ou si aucun Sceau n'est enregistré
+// localement, ce qui évite un aller-retour serveur inutile).
+
+// ❖ Un seul input file caché, réutilisé par tous les outils.
+let inputFichierImageCache = null;
+
+function obtenirInputFichierImage() {
+    if (!inputFichierImageCache) {
+        inputFichierImageCache = document.createElement('input');
+        inputFichierImageCache.type = 'file';
+        inputFichierImageCache.accept = 'image/*';
+        inputFichierImageCache.capture = 'environment';
+        inputFichierImageCache.style.display = 'none';
+        document.body.appendChild(inputFichierImageCache);
+    }
+    return inputFichierImageCache;
+}
+
+// ❖ fichiersEnAttente[chatHistoryId] = { id: <upload_file_id Dify>, nom }
+// -- vidé après l'envoi du message suivant, ou par annulation manuelle.
+const fichiersEnAttente = {};
+
+function declencherJoindreImage(chatHistoryId, contexte) {
+    const sceau = contexte === 'sas'
+        ? (localStorage.getItem('eduka_sceau') || "")
+        : (localStorage.getItem('eduka_sceau_enseignant') || "");
+
+    if (!sceau) {
+        // ❖ Sans Sceau local, le serveur refuserait de toute façon --
+        // inutile de solliciter le réseau pour afficher l'upsell.
+        triggerVisionUpsell(chatHistoryId);
+        return;
+    }
+
+    const input = obtenirInputFichierImage();
+    input.value = ''; // permet de resélectionner le même fichier deux fois de suite
+    input.onchange = () => {
+        const fichier = input.files && input.files[0];
+        if (!fichier) return;
+        televerserImageChat(chatHistoryId, contexte, sceau, fichier);
+    };
+    input.click();
+}
+
+async function televerserImageChat(chatHistoryId, contexte, sceau, fichier) {
+    const chatHistory = document.getElementById(chatHistoryId);
+
+    const bulleEnvoi = document.createElement('div');
+    bulleEnvoi.className = 'message bot-message';
+    bulleEnvoi.innerHTML = `<div style="font-size: 0.9em;">📎 Envoi de l'image en cours...</div>`;
+    chatHistory.appendChild(bulleEnvoi);
+    scrollToBottom(chatHistoryId);
+
+    try {
+        const formData = new FormData();
+        formData.append('fichier', fichier);
+        formData.append('contexte', contexte);
+        formData.append('matricule', sceau);
+
+        const response = await fetch('https://api.edukatchat.org/api/chat/televerser_image', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        bulleEnvoi.remove();
+
+        if (data.success) {
+            fichiersEnAttente[chatHistoryId] = { id: data.id, nom: fichier.name };
+            const bulleConfirmation = document.createElement('div');
+            bulleConfirmation.className = 'message bot-message';
+            bulleConfirmation.innerHTML = `<div style="font-size: 0.9em;">📎 Image jointe (« ${fichier.name} ») — elle sera envoyée avec ton prochain message. <a href="#" onclick="annulerImageJointe('${chatHistoryId}', this); return false;" style="color:#EF4444;">Annuler</a></div>`;
+            chatHistory.appendChild(bulleConfirmation);
+            scrollToBottom(chatHistoryId);
+        } else if (data.premium_requis) {
+            triggerVisionUpsell(chatHistoryId);
+        } else {
+            const bulleErreur = document.createElement('div');
+            bulleErreur.className = 'message bot-message';
+            bulleErreur.textContent = data.message || "L'envoi de l'image a échoué. Réessaie dans un instant.";
+            chatHistory.appendChild(bulleErreur);
+            scrollToBottom(chatHistoryId);
+        }
+    } catch (e) {
+        bulleEnvoi.remove();
+        const bulleErreur = document.createElement('div');
+        bulleErreur.className = 'message bot-message';
+        bulleErreur.textContent = "L'envoi de l'image a échoué. Vérifie ta connexion et réessaie.";
+        chatHistory.appendChild(bulleErreur);
+        scrollToBottom(chatHistoryId);
+    }
+}
+
+function annulerImageJointe(chatHistoryId, lien) {
+    delete fichiersEnAttente[chatHistoryId];
+    const bulle = lien.closest('.message');
+    if (bulle) bulle.remove();
+}
+
+// =======================================================================
 // ❖ LOGIQUE DE L'ESPACE DE PRÉPARATION (LE SAS) ❖
 // =======================================================================
 let sasConversationIds = {};
@@ -3038,6 +3146,12 @@ async function sendSasMessage() {
     scrollToElementTop('sas-chat-history', botLoadingDiv);
 
     try {
+        // ❖ Une image jointe via le trombone (voir declencherJoindreImage)
+        // reste en attente jusqu'à l'envoi du prochain message -- inclue
+        // ici puis effacée juste après, pour ne pas la réenvoyer avec les
+        // messages suivants.
+        const imageJointeSas = fichiersEnAttente['sas-chat-history'];
+
         const response = await fetch('https://api.edukatchat.org/api/sas/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3049,9 +3163,11 @@ async function sendSasMessage() {
                 device_id: obtenirDeviceId(),
                 classe: classeActive,
                 methode_travail: methodeTravailActive,
-                gestion_stress: gestionStressActive
+                gestion_stress: gestionStressActive,
+                fichier_id: (imageJointeSas && imageJointeSas.id) || ""
             })
         });
+        if (imageJointeSas) delete fichiersEnAttente['sas-chat-history'];
 
         // 1. Vérification de la stabilité
         if (!response.ok) {
@@ -3250,6 +3366,9 @@ async function sendTeacherMessage(outil) {
     // l'essai Freemium, auquel cas le serveur applique de lui-même son quota.
     const sceau = localStorage.getItem('eduka_sceau_enseignant') || "";
 
+    // ❖ Voir la note équivalente dans sendSasMessage.
+    const imageJointeTeacher = fichiersEnAttente[`${outil}-chat-history`];
+
     try {
         const response = await fetch('https://api.edukatchat.org/api/enseignant/chat', {
             method: 'POST',
@@ -3259,9 +3378,11 @@ async function sendTeacherMessage(outil) {
                 conversation_id: teacherConversationIds[outil] || "",
                 outil: outil,
                 matricule: sceau,
-                device_id: obtenirDeviceId()
+                device_id: obtenirDeviceId(),
+                fichier_id: (imageJointeTeacher && imageJointeTeacher.id) || ""
             })
         });
+        if (imageJointeTeacher) delete fichiersEnAttente[`${outil}-chat-history`];
 
         // 1. Vérification de la stabilité du serveur
         if (!response.ok) {
