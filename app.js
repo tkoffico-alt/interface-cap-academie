@@ -3167,7 +3167,15 @@ async function sendSasMessage() {
                 fichier_id: (imageJointeSas && imageJointeSas.id) || ""
             })
         });
-        if (imageJointeSas) delete fichiersEnAttente['sas-chat-history'];
+        // ❖ Correction (27/08/2026) : l'image jointe n'est plus effacée
+        // ici, juste après l'envoi -- elle ne l'était pas seulement en cas
+        // de vrai succès, mais aussi quand Dify répondait en erreur (message
+        // de repli "L'Assistant est momentanément indisponible..."),
+        // faisant perdre silencieusement l'image jointe et obligeant à la
+        // rejoindre avant de pouvoir réessayer. On ne l'efface désormais
+        // qu'une fois un vrai conversation_id Dify obtenu (voir plus bas),
+        // signe que le message -- et l'image -- ont bien été reçus.
+        let imageEnvoyeeAvecSucces = false;
 
         // 1. Vérification de la stabilité
         if (!response.ok) {
@@ -3193,7 +3201,10 @@ async function sendSasMessage() {
             } else {
                 ajouterMascotte(botLoadingDiv, 'erreur');
             }
-            if (data.conversation_id) sasConversationIds[avatarActif] = data.conversation_id;
+            if (data.conversation_id) {
+                sasConversationIds[avatarActif] = data.conversation_id;
+                imageEnvoyeeAvecSucces = true;
+            }
         }
         else {
             // ❖ La bulle de réflexion (points animés) reste affichée telle
@@ -3234,6 +3245,7 @@ async function sendSasMessage() {
                             }
                             if (dataObj.conversation_id) {
                                 sasConversationIds[avatarActif] = dataObj.conversation_id;
+                                imageEnvoyeeAvecSucces = true;
                             }
                         } catch(e) {
                             console.warn("L'équilibre se rétablit : un fragment de conscience a été réassemblé.");
@@ -3254,6 +3266,8 @@ async function sendSasMessage() {
                 declencherEtincelleMascotte(botLoadingDiv);
             }
         }
+
+        if (imageJointeSas && imageEnvoyeeAvecSucces) delete fichiersEnAttente['sas-chat-history'];
 
         // ❖ Prononciation ciblée : on insère un petit haut-parleur juste
         // après chaque phrase entre guillemets (c'est déjà la convention que
@@ -3382,7 +3396,11 @@ async function sendTeacherMessage(outil) {
                 fichier_id: (imageJointeTeacher && imageJointeTeacher.id) || ""
             })
         });
-        if (imageJointeTeacher) delete fichiersEnAttente[`${outil}-chat-history`];
+        // ❖ Voir la note équivalente dans sendSasMessage : l'image jointe
+        // n'est effacée qu'une fois un vrai conversation_id Dify obtenu,
+        // jamais juste après l'envoi (sinon un échec Dify fait perdre
+        // l'image en silence).
+        let imageEnvoyeeAvecSucces = false;
 
         // 1. Vérification de la stabilité du serveur
         if (!response.ok) {
@@ -3398,7 +3416,10 @@ async function sendTeacherMessage(outil) {
             } else {
                 botLoadingDiv.textContent = data.answer || "La source est silencieuse.";
             }
-            if (data.conversation_id) teacherConversationIds[outil] = data.conversation_id;
+            if (data.conversation_id) {
+                teacherConversationIds[outil] = data.conversation_id;
+                imageEnvoyeeAvecSucces = true;
+            }
         }
         else {
             // ❖ Voir la note équivalente dans sendSasMessage : la bulle
@@ -3434,6 +3455,7 @@ async function sendTeacherMessage(outil) {
                             }
                             if (dataObj.conversation_id) {
                                 teacherConversationIds[outil] = dataObj.conversation_id;
+                                imageEnvoyeeAvecSucces = true;
                             }
                         } catch(e) {
                             console.warn("L'équilibre se rétablit : un fragment de conscience a été réassemblé.");
@@ -3448,6 +3470,8 @@ async function sendTeacherMessage(outil) {
                 afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, false, outil); // rendu final, curseur retiré
             }
         }
+
+        if (imageJointeTeacher && imageEnvoyeeAvecSucces) delete fichiersEnAttente[`${outil}-chat-history`];
 
         if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
