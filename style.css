@@ -1458,11 +1458,10 @@ body.dark-theme .pwa-install-banner { background-color: #064E3B; border-bottom-c
 .pwa-install-banner.active { display: flex; }
 
 .pwa-install-icone {
-    width: 40px;
     height: 40px;
-    border-radius: 10px;
+    width: auto;
+    border-radius: 8px;
     flex-shrink: 0;
-    object-fit: cover;
 }
 
 .pwa-install-texte { flex: 1 1 auto; min-width: 0; }
