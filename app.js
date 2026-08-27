@@ -563,15 +563,32 @@ function formaterNomMatiere(code) {
     return noms[code] || 'cette discipline';
 }
 
+// ❖ Icônes vectorielles au trait fin (style feather-icons : stroke
+// currentColor, sans remplissage), en remplacement des émojis colorés
+// d'origine -- demande de Constant du 27/08/2026 pour un rendu plus
+// sobre et "intellectuel" du bandeau de discipline. currentColor permet
+// à chaque icône d'hériter automatiquement de la couleur du texte
+// (.banniere-matiere-icone), sans déclaration de couleur ici.
+const SVG_MATIERE_DEFAUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5c-2-1.3-4.5-2-7-2v14c2.5 0 5 .7 7 2 2-1.3 4.5-2 7-2V3c-2.5 0-5 .7-7 2Z"/><path d="M12 5v14"/></svg>';
+
 const ICONES_MATIERES = {
-    'maths': '📐', 'physique': '⚗️', 'svt': '🧬', 'tice': '💻',
-    'francais': '📖', 'philosophie': '🦉', 'histoire_geo': '🗺️',
-    'edhc': '🤝', 'anglais': '📘', 'espagnol': '📙', 'allemand': '📕',
-    'musique': '🎵', 'arts_plastiques': '🎨'
+    'maths': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 21 19 3 19Z"/><circle cx="12" cy="14" r="4"/></svg>',
+    'physique': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-3.5L14 9V3"/></svg>',
+    'svt': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20c9 0 14-5 14-14 0-1 0-2-.3-3C9 3.5 5 8 5 17c0 1 0 2 0 3Z"/><path d="M5 20c3-6 6-9 12-13"/></svg>',
+    'tice': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>',
+    'francais': SVG_MATIERE_DEFAUT,
+    'philosophie': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9c0-3 2.5-6 7-6s7 3 7 6"/><circle cx="8.5" cy="10" r="2.4"/><circle cx="15.5" cy="10" r="2.4"/><path d="M12 12.2 10.7 14h2.6Z"/><path d="M6 15c0 3 2.5 5 6 5s6-2 6-5"/></svg>',
+    'histoire_geo': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 2.5 4.5 5.8 4.5 9s-1.7 6.5-4.5 9c-2.8-2.5-4.5-5.8-4.5-9s1.7-6.5 4.5-9Z"/></svg>',
+    'edhc': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>',
+    'anglais': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4v-4H4Z"/><path d="M8 10h8M8 13h5"/></svg>',
+    'espagnol': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4v-4H4Z"/><path d="M8 10h8M8 13h5"/></svg>',
+    'allemand': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4v-4H4Z"/><path d="M8 10h8M8 13h5"/></svg>',
+    'musique': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="18" r="2.5"/><circle cx="16" cy="16" r="2.5"/><path d="M9.5 18V6l9-1.8V14"/></svg>',
+    'arts_plastiques': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 8 0 1 0 0 16c1 0 1.8-.7 1.8-1.6 0-.4-.2-.8-.4-1.1-.2-.3-.4-.6-.4-1 0-.7.6-1.3 1.3-1.3H16a5 4.5 0 0 0 5-4.5C21 5.9 17 3 12 3Z"/><circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.8" r="1" fill="currentColor" stroke="none"/></svg>'
 };
 
 function iconePourMatiere(code) {
-    return ICONES_MATIERES[code] || '📚';
+    return ICONES_MATIERES[code] || SVG_MATIERE_DEFAUT;
 }
 
 // ❖ Met à jour la bannière persistante d'identité de matière (voir
@@ -583,7 +600,10 @@ function mettreAJourBanniereMatiere() {
     const nomEl = document.getElementById('banniere-matiere-nom');
     const iconeEl = document.getElementById('banniere-matiere-icone');
     if (nomEl) nomEl.textContent = formaterNomMatiere(avatarActif);
-    if (iconeEl) iconeEl.textContent = iconePourMatiere(avatarActif);
+    // ❖ innerHTML (pas textContent) : ces icônes sont du SVG, pas du texte
+    // brut. Toutes les valeurs viennent du dictionnaire fixe ci-dessus
+    // (jamais d'entrée utilisateur), donc aucun risque d'injection.
+    if (iconeEl) iconeEl.innerHTML = iconePourMatiere(avatarActif);
 }
 
 function switchTeacherTool(toolID) {
