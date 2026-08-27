@@ -839,6 +839,21 @@
     </style>
 </head>
 <body>
+    <!-- ❖ BANNIÈRE D'INSTALLATION PWA -- masquée par défaut (classe .active
+         ajoutée par app.js seulement quand le navigateur capture réellement
+         `beforeinstallprompt`, donc jamais sur iOS Safari qui n'a pas cet
+         évènement). Logo réel de l'app (icon-192.png), pas la marque "T"
+         stylisée de l'en-tête : cf. demande de Constant du 26/08/2026. -->
+    <div id="pwa-install-banner" class="pwa-install-banner">
+        <img src="icon-192.png" alt="Logo EdukaTchat" class="pwa-install-icone">
+        <div class="pwa-install-texte">
+            <strong>Installez EdukaTchat sur votre appareil</strong>
+            <p>Accédez directement à EdukaTchat depuis votre écran d'accueil.</p>
+        </div>
+        <button type="button" class="pwa-install-bouton" onclick="installerPWA()">Installer</button>
+        <button type="button" class="pwa-install-fermer" onclick="fermerBanniereInstallationPWA()" aria-label="Fermer">✕</button>
+    </div>
+
     <div class="watermark-background"></div>
 
     <!-- CHAMBRE D'IMPRESSION SECRÈTE -->

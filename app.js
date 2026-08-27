@@ -4211,3 +4211,47 @@ function copierFormule(fiche, carteElement) {
         document.getElementById('formules-feedback').textContent = "Impossible de copier automatiquement.";
     });
 }
+
+// =======================================================================
+// ❖ LA BANNIÈRE D'INSTALLATION PWA ❖
+// =======================================================================
+// Chrome/Edge sur Android ne rendent l'installation possible qu'après avoir
+// capturé l'évènement `beforeinstallprompt` -- inexistant sur iOS Safari,
+// qui garde son propre chemin ("Partager -> Sur l'écran d'accueil", déjà
+// documenté dans index.html). La bannière ne s'affiche donc que là où cet
+// évènement existe réellement : jamais de fausse promesse d'installation.
+let evenementInstallationDiffere = null;
+const CLE_BANNIERE_PWA_MASQUEE = 'eduka_banniere_pwa_masquee';
+
+window.addEventListener('beforeinstallprompt', (evenement) => {
+    evenement.preventDefault();
+    evenementInstallationDiffere = evenement;
+    if (localStorage.getItem(CLE_BANNIERE_PWA_MASQUEE)) return;
+    const banniere = document.getElementById('pwa-install-banner');
+    if (banniere) banniere.classList.add('active');
+});
+
+async function installerPWA() {
+    const banniere = document.getElementById('pwa-install-banner');
+    if (!evenementInstallationDiffere) {
+        if (banniere) banniere.classList.remove('active');
+        return;
+    }
+    evenementInstallationDiffere.prompt();
+    await evenementInstallationDiffere.userChoice;
+    evenementInstallationDiffere = null;
+    if (banniere) banniere.classList.remove('active');
+}
+
+function fermerBanniereInstallationPWA() {
+    const banniere = document.getElementById('pwa-install-banner');
+    if (banniere) banniere.classList.remove('active');
+    // ❖ Un refus explicite ne doit pas être réimposé à chaque visite.
+    localStorage.setItem(CLE_BANNIERE_PWA_MASQUEE, '1');
+}
+
+window.addEventListener('appinstalled', () => {
+    const banniere = document.getElementById('pwa-install-banner');
+    if (banniere) banniere.classList.remove('active');
+    localStorage.setItem(CLE_BANNIERE_PWA_MASQUEE, '1');
+});
