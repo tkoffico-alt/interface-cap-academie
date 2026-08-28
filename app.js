@@ -152,16 +152,17 @@ async function openSpace(space) {
         } catch (error) {
             console.error("Erreur de vérification enseignant", error);
             // ❖ Réseau instable : on ne bloque pas un enseignant déjà
-            // abonné -- le serveur retranchera de toute façon sur le
-            // Freemium si le Sceau s'avère finalement invalide au premier
-            // envoi de message.
+            // abonné -- si son Sceau s'avère finalement invalide, le
+            // serveur le lui signalera au premier envoi de message (plus
+            // d'essai Freemium en repli depuis le 28/08/2026 : sans Sceau
+            // ENS- valide, le serveur bloque directement).
             entrerDansEspaceEnseignant();
         }
     }
 }
 
 // ❖ Sépare l'affichage effectif de l'espace enseignant (appelé une fois
-// l'accès tranché -- code validé ou essai Freemium accepté) de la
+// le Code d'accès validé) de la
 // décision d'accès elle-même (openSpace ci-dessus).
 function entrerDansEspaceEnseignant() {
     document.getElementById('home-view').style.display = 'none';
@@ -237,15 +238,14 @@ async function verifyMatriculeEnseignant() {
     }
 }
 
-// ❖ L'échappatoire Freemium : un enseignant non (encore) abonné doit
-// pouvoir essayer l'outil sans code, comme prévu par le quota serveur
-// (verifier_freemium, limite=3 -- voir gateway/main.py). Aucun Sceau
-// n'est stocké dans ce cas : sendTeacherMessage() enverra un matricule
-// vide, et le serveur appliquera de lui-même le Freemium.
-function continuerEnFreemiumEnseignant() {
-    fermerModaleAccesEnseignant();
-    entrerDansEspaceEnseignant();
-}
+// ❖ continuerEnFreemiumEnseignant() a été retirée le 28/08/2026 : l'essai
+// gratuit sans code de l'Espace Enseignant a été supprimé (décision de
+// Constant, déconseillé sur le plan commercial). Le bouton correspondant
+// n'existe plus dans index.html -- seule la voie du Code d'accès
+// (verifyMatriculeEnseignant) mène désormais à entrerDansEspaceEnseignant().
+// Le palier gratuit de l'Espace de Préparation et des Ateliers de Maîtrise
+// côté élève, lui, reste inchangé (voir sendSasMessage / verifier_freemium
+// côté serveur pour ces deux-là).
 
 function fermerVestibule() {
     document.getElementById('discipline-modal').classList.remove('active');

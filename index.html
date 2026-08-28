@@ -1038,20 +1038,22 @@
         </div>
     </div>
     <!-- 1bis. MODALE D'ACCÈS ESPACE ENSEIGNANT -->
-    <!-- ❖ Distincte de #premium-modal (élève) : contrairement à l'accès
-         élève, un code n'est pas obligatoire ici -- un enseignant non
-         encore abonné garde le droit à son essai Freemium (voir le bouton
-         "Continuer sans code" ci-dessous), conformément à la logique déjà
-         en place côté serveur (verifier_freemium, limite=3). Le code Sceau
-         saisi est vérifié via /verifier-sceau (espace_cible: 'enseignant',
-         qui exige un préfixe ENS-) et stocké séparément du Sceau élève,
-         sous 'eduka_sceau_enseignant', pour qu'un même appareil puisse
-         porter les deux sans conflit. -->
+    <!-- ❖ Distincte de #premium-modal (élève). Un Code d'accès (Sceau
+         ENS-) est désormais OBLIGATOIRE ici -- l'essai Freemium sans code
+         a été retiré le 28/08/2026 (décision de Constant, déconseillé sur
+         le plan commercial). Contrairement à l'accès élève, qui garde son
+         palier gratuit (Espace de Préparation, Ateliers de Maîtrise), plus
+         aucune voie de contournement du Code n'existe côté enseignant, ni
+         ici ni côté serveur (voir gateway/main.py, /api/enseignant/chat).
+         Le code Sceau saisi est vérifié via /verifier-sceau
+         (espace_cible: 'enseignant', qui exige un préfixe ENS-) et stocké
+         séparément du Sceau élève, sous 'eduka_sceau_enseignant', pour
+         qu'un même appareil puisse porter les deux sans conflit. -->
     <div id="enseignant-code-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 400px; text-align: center;">
             <button class="modal-close" onclick="fermerModaleAccesEnseignant()">×</button>
             <h3 style="margin-bottom: 15px;">🔮 Espace Enseignant</h3>
-            <p style="margin-bottom: 25px; color: #4B5563;">Saisissez votre Code d'accès enseignant pour un usage illimité, ou essayez gratuitement sans code.</p>
+            <p style="margin-bottom: 25px; color: #4B5563;">Saisissez votre Code d'accès enseignant pour un usage illimité.</p>
 
             <input type="text" id="matricule-enseignant-input" class="input-matricule" placeholder="Ex: ENS-ABCD1" onkeypress="handleMatriculeEnseignantKeyPress(event)" style="width: 100%; text-align: center; letter-spacing: 2px; font-weight: bold; margin-bottom: 15px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
 
@@ -1059,17 +1061,12 @@
 
             <p id="modal-feedback-enseignant" class="feedback-text" style="margin-top: 10px; font-weight: bold; min-height: 20px;"></p>
 
-            <!-- ❖ Repensé en vrai bouton secondaire (au lieu d'un simple
-                 lien discret) : un enseignant qui découvre l'écran ne doit
-                 pas se demander si l'essai gratuit existe vraiment -- il
-                 doit le voir aussi clairement que "Valider l'accès". -->
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0;">
-                <div style="flex: 1; height: 1px; background: rgba(107, 114, 128, 0.25);"></div>
-                <span style="font-size: 0.75em; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">ou</span>
-                <div style="flex: 1; height: 1px; background: rgba(107, 114, 128, 0.25);"></div>
-            </div>
-
-            <button onclick="continuerEnFreemiumEnseignant()" style="width: 100%; background: transparent; border: 2px solid #3B82F6; color: #3B82F6; font-weight: bold; font-size: 1em; padding: 10px; border-radius: 5px; cursor: pointer;">🎁 Essayer gratuitement, sans code</button>
+            <!-- ❖ Le bouton d'essai gratuit sans code a été retiré le
+                 28/08/2026 (décision de Constant, déconseillé sur le plan
+                 commercial) -- contrairement à l'Espace de Préparation et
+                 aux Ateliers de Maîtrise côté élève, qui conservent leur
+                 palier gratuit. Seule la voie du Code d'accès reste
+                 proposée ici. -->
 
             <div style="margin-top: 15px; font-size: 0.9em; color: #6B7280;">
                 Pas encore de Code d'accès ?<br>
