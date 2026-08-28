@@ -1025,6 +1025,7 @@ body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-niveau-3 td { background
 }
 .tableau-plan-hebdo td.plan-hebdo-cellule-groupe::before {
     content: '';
+    display: block;
     position: absolute;
     left: 0.35rem;
     top: 0.9rem;
