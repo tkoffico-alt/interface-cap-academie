@@ -828,6 +828,8 @@ body.dark-theme .fiche-liste-simple > div { border-top-color: rgba(148, 163, 184
     border: 1px solid #EEF0F3;
     text-align: left;
     vertical-align: top;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 body.dark-theme .fiche-deroulement-table th,
 body.dark-theme .fiche-deroulement-table td { border-color: rgba(148, 163, 184, 0.16); }
