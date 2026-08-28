@@ -993,6 +993,65 @@ body.dark-theme .plan-hebdo-semaine + .plan-hebdo-semaine { border-top-color: rg
     margin-bottom: 0.6rem;
 }
 
+/* ❖ Coloration douce du tableau du Plan de session hebdomadaire par niveau
+   (cas hétérogène PNAPAS, section 6 BIS du prompt Forge Primaire) --
+   inspirée du canevas officiel (rangs teintés par groupe), mais avec des
+   teintes pastel + une pastille de couleur sur la cellule "Groupes de
+   niveau" plutôt que des aplats francs, pour rester dans l'esprit visuel
+   sobre du reste de l'application. Cycle sur 3 teintes -- niveau 1
+   (collectif), niveau 2, niveau 3 -- réappliqué à chaque nouvelle journée
+   par construireHTMLFichePlanHebdo() (classes plan-hebdo-niveau-1/2/3,
+   posées sur le <tr>). Sans rapport avec --fiche-accent (bleu/vert) : ce
+   sont des couleurs de repérage au sein du tableau, pas la couleur de
+   l'outil.
+   Impression : print-color-adjust force la survie des teintes au format
+   PDF (le "Print to PDF" de Windows, utilisé pour vérifier ces fiches,
+   n'imprime pas toujours les couleurs de fond par défaut). */
+.tableau-plan-hebdo { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.tableau-plan-hebdo tbody tr.plan-hebdo-niveau-1 td { background: rgba(20, 184, 166, 0.07); }
+.tableau-plan-hebdo tbody tr.plan-hebdo-niveau-2 td { background: rgba(245, 158, 11, 0.07); }
+.tableau-plan-hebdo tbody tr.plan-hebdo-niveau-3 td { background: rgba(139, 92, 246, 0.07); }
+body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-niveau-1 td { background: rgba(45, 212, 191, 0.09); }
+body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-niveau-2 td { background: rgba(251, 191, 36, 0.08); }
+body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-niveau-3 td { background: rgba(167, 139, 250, 0.1); }
+
+/* Pastille + accent de bordure sur la cellule "Groupes de niveau" elle-même
+   -- c'est elle qui porte l'étiquette du niveau, la couleur y est donc plus
+   affirmée que sur le reste du rang. */
+.tableau-plan-hebdo td.plan-hebdo-cellule-groupe {
+    font-weight: 600;
+    position: relative;
+    padding-left: 1.1rem;
+}
+.tableau-plan-hebdo td.plan-hebdo-cellule-groupe::before {
+    content: '';
+    position: absolute;
+    left: 0.35rem;
+    top: 0.9rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+}
+.plan-hebdo-niveau-1 td.plan-hebdo-cellule-groupe { color: #0F766E; }
+.plan-hebdo-niveau-1 td.plan-hebdo-cellule-groupe::before { background: #14B8A6; }
+.plan-hebdo-niveau-2 td.plan-hebdo-cellule-groupe { color: #B45309; }
+.plan-hebdo-niveau-2 td.plan-hebdo-cellule-groupe::before { background: #F59E0B; }
+.plan-hebdo-niveau-3 td.plan-hebdo-cellule-groupe { color: #6D28D9; }
+.plan-hebdo-niveau-3 td.plan-hebdo-cellule-groupe::before { background: #8B5CF6; }
+body.dark-theme .plan-hebdo-niveau-1 td.plan-hebdo-cellule-groupe { color: #5EEAD4; }
+body.dark-theme .plan-hebdo-niveau-2 td.plan-hebdo-cellule-groupe { color: #FCD34D; }
+body.dark-theme .plan-hebdo-niveau-3 td.plan-hebdo-cellule-groupe { color: #C4B5FD; }
+
+/* Séparation visuelle nette entre deux journées : un filet plus marqué au
+   sommet du 1er rang de chaque jour (repéré via la même détection que le
+   cycle de couleurs -- 1ère colonne "Jour" non vide). */
+.tableau-plan-hebdo tbody tr.plan-hebdo-jour-debut td {
+    border-top: 2px solid #CBD5E1;
+}
+body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-jour-debut td {
+    border-top-color: rgba(148, 163, 184, 0.4);
+}
+
 .fiche-phase {
     display: flex;
     flex-direction: column;

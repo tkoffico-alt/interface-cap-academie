@@ -1886,7 +1886,7 @@ function construireHTMLFichePNAPAS(analyse) {
 const ALTERNATIVES_SECTION_PLAN_HEBDO = {
     identification: ["PLAN DE SESSION HEBDOMADAIRE"],
     semaine: ["Semaine\\b"],
-    tableau: ["D[ÉE]TAIL DU PLAN PAR JOUR"],
+    tableau: ["D[ÉE]TAIL DU PLAN PAR JOUR", "Tableau\\s+hebdomadaire"],
     activites: ["D[ÉE]TAIL DES ACTIVIT[ÉE]S"],
     materiel: ["MAT[ÉE]RIEL N[ÉE]CESSAIRE(?:\\s+POUR\\s+LA\\s+SEMAINE)?"],
     observations: ["POINTS\\s+D['’]OBSERVATION(?:\\s+POUR\\s+L['’]ENSEIGNANT)?"]
@@ -2017,6 +2017,15 @@ function decouperBlocSemaine(texteBloc) {
         const sepIdx = l2.indexOf(':');
         if (sepIdx > -1 && sepIdx < 60) {
             champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+        } else if (champs.length) {
+            // ❖ Ligne sans deux-points : presque toujours la suite d'une
+            // valeur rédigée sur plusieurs lignes par l'agent (ex. "Objectif
+            // mensuel : ..." suivi d'une deuxième phrase sur sa propre
+            // ligne), jamais un nouveau champ indépendant dans cette zone
+            // d'identification -- on la rattache donc au champ précédent
+            // plutôt que d'en faire une pastille fantôme sans étiquette.
+            const dernier = champs[champs.length - 1];
+            dernier.valeur = dernier.valeur ? `${dernier.valeur} ${l2}` : l2;
         } else {
             champs.push({ label: '', valeur: l2 });
         }
@@ -2165,11 +2174,28 @@ function construireHTMLFichePlanHebdo(analyse) {
         html += '<table class="fiche-deroulement-table tableau-plan-hebdo"><thead><tr>';
         sem.enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
         html += '</tr></thead><tbody>';
+        // ❖ Coloration douce par niveau (cas hétérogène uniquement, quand une
+        // colonne "Groupes de niveau" existe) : la 1ère colonne "Jour" n'est
+        // renseignée que sur le 1er rang d'une journée (les rangs suivants
+        // l'ont vide) -- ce vide sert de repère naturel pour détecter le
+        // début d'une nouvelle journée, sans dépendre d'un nombre de rangs
+        // fixe. Le cycle niveau 1/2/3 repart à zéro à chaque journée et
+        // tourne indéfiniment si jamais une journée en compte plus de trois,
+        // plutôt que de casser l'affichage.
+        const idxGroupesNiveau = sem.enTetes.findIndex(t => /groupes?\s+de\s+niveau/i.test(t));
+        let niveauCycle = 0;
         sem.rangs.forEach(rang => {
-            html += '<tr>';
+            const nouvelleJournee = (rang[0] || '').trim() !== '';
+            if (nouvelleJournee) niveauCycle = 0;
+            const classesRang = [];
+            if (nouvelleJournee) classesRang.push('plan-hebdo-jour-debut');
+            if (idxGroupesNiveau !== -1) classesRang.push(`plan-hebdo-niveau-${(niveauCycle % 3) + 1}`);
+            niveauCycle++;
+            html += classesRang.length ? `<tr class="${classesRang.join(' ')}">` : '<tr>';
             sem.enTetes.forEach((enTete, i) => {
                 const cellule = rang[i] || '';
-                html += `<td data-libelle="${echapperHTMLFiche(enTete)}">${texteVersHtmlLegerFiche(cellule)}</td>`;
+                const classeCellule = i === idxGroupesNiveau ? ' class="plan-hebdo-cellule-groupe"' : '';
+                html += `<td data-libelle="${echapperHTMLFiche(enTete)}"${classeCellule}>${texteVersHtmlLegerFiche(cellule)}</td>`;
             });
             html += '</tr>';
         });
