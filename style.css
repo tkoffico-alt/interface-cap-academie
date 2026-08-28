@@ -918,6 +918,57 @@ body.dark-theme .fiche-deroulement-table th { background: rgba(255, 255, 255, 0.
     .fiche-carte-tableau { box-shadow: none; }
 }
 
+/* ❖ Le tableau du Plan de session hebdomadaire a 7 colonnes (Jour /
+   Objectifs / Activités / Matériels / SP / Durée / Observations), contre 4
+   pour le déroulement PNAPAS -- la 1ère colonne n'y porte qu'un jour de la
+   semaine ("Lundi"), pas un intitulé de phase : 20% de large serait
+   disproportionné. Sélecteur à deux classes = plus spécifique que
+   .fiche-deroulement-table seul, donc l'emporte y compris dans le bloc
+   @media print ci-dessus, sans avoir à dupliquer la règle. */
+.fiche-deroulement-table.tableau-plan-hebdo th:first-child,
+.fiche-deroulement-table.tableau-plan-hebdo td:first-child {
+    width: 9%;
+}
+
+/* ❖ Hiérarchie à trois niveaux (catégorie -> activité -> points) du bloc
+   "Détail des activités" du Plan de session hebdomadaire -- voir
+   structurerActivitesPlanHebdo() / htmlActivitesPlanHebdo() dans app.js. */
+.plan-hebdo-activites {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+.plan-hebdo-categorie + .plan-hebdo-categorie {
+    padding-top: 1.1rem;
+    border-top: 1px solid #EEF0F3;
+}
+body.dark-theme .plan-hebdo-categorie + .plan-hebdo-categorie { border-top-color: rgba(148, 163, 184, 0.16); }
+.plan-hebdo-categorie-titre {
+    font-weight: 700;
+    color: var(--fiche-accent);
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+}
+.plan-hebdo-activite {
+    margin-left: 0.9rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--fiche-accent-douce);
+}
+.plan-hebdo-activite + .plan-hebdo-activite {
+    margin-top: 0.7rem;
+}
+.plan-hebdo-activite-titre {
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+.plan-hebdo-activite-points {
+    margin: 0.3rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.88rem;
+}
+.plan-hebdo-activite-points li { margin-bottom: 0.2rem; }
+.plan-hebdo-activite-points li:last-child { margin-bottom: 0; }
+
 .fiche-phase {
     display: flex;
     flex-direction: column;

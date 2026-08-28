@@ -937,7 +937,10 @@ function estLigneSeparatriceFiche(ligne) {
 const CHAMPS_IDENTIFICATION_CONNUS_FICHE = [
     'Classe', 'Mati[èe]re', 'Effectif', 'Dur[ée]e', 'Le[çc]on', 'Semaine',
     'S[ée]quence', 'S[ée]ance', 'Support', 'Documents?\\s+de\\s+r[ée]f[ée]rence',
-    'Th[èe]me', 'Comp[ée]tence'
+    'Th[èe]me', 'Comp[ée]tence',
+    // ❖ Champs propres au canevas "Plan de session hebdomadaire" (PNAPAS,
+    // classe hétérogène) -- voir analyserFichePlanHebdo().
+    'Groupe de niveau', 'Objectif mensuel', 'Objectif de la semaine'
 ];
 
 // Sépare une ligne d'identification qui agglutine plusieurs champs connus
@@ -1860,6 +1863,256 @@ function construireHTMLFichePNAPAS(analyse) {
 }
 
 // =======================================================================
+// ❖ LA CARTE "PLAN DE SESSION HEBDOMADAIRE" (FORGE PRIMAIRE, REMÉDIATION
+// PNAPAS, CLASSE HÉTÉROGÈNE) ❖
+// =======================================================================
+// Ajoutée le 28/08/2026 : ce canevas n'a rien à voir avec une fiche de
+// leçon quotidienne -- c'est le plan d'une semaine entière (répartition
+// par jour, plusieurs catégories d'activités détaillées, matériel,
+// points d'observation), tel que décrit dans le "Guide de Remédiation
+// Mathématiques CE-CM" du PNAPAS. Jusqu'ici affiché en Markdown brut,
+// faute d'un parseur dédié.
+const ALTERNATIVES_SECTION_PLAN_HEBDO = {
+    identification: ["PLAN DE SESSION HEBDOMADAIRE"],
+    tableau: ["D[ÉE]TAIL DU PLAN PAR JOUR"],
+    activites: ["D[ÉE]TAIL DES ACTIVIT[ÉE]S"],
+    materiel: ["MAT[ÉE]RIEL N[ÉE]CESSAIRE(?:\\s+POUR\\s+LA\\s+SEMAINE)?"],
+    observations: ["POINTS\\s+D['’]OBSERVATION(?:\\s+POUR\\s+L['’]ENSEIGNANT)?"]
+};
+
+function trouverOccurrencesPlanHebdo(texte) {
+    const occurrences = [];
+    Object.entries(ALTERNATIVES_SECTION_PLAN_HEBDO).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+// Contrairement au tableau de déroulement (dont la 1ère colonne porte des
+// libellés de PHASE reconnus, voir MOTIF_PHASE_CELLULE_FICHE), le tableau
+// hebdomadaire n'a pas de vocabulaire fixe en 1ère colonne (ce sont des
+// jours de la semaine) : la 1ère ligne de tableau rencontrée est donc
+// toujours l'en-tête, toutes les suivantes sont des rangs de données.
+function extraireLignesTableauPlanHebdo(region) {
+    const lignes = region.split('\n').map(l => l.trim()).filter(Boolean);
+    const enTetes = [];
+    const rangs = [];
+    lignes.forEach(ligne => {
+        if (!/^\|.*\|$/.test(ligne)) return;
+        if (/^[\s\-:|]+$/.test(ligne)) return;
+        const cellules = decouperCellulesTableauFiche(ligne);
+        if (cellules.length < 3) return;
+        if (!enTetes.length) {
+            enTetes.push(...cellules);
+        } else {
+            rangs.push(cellules.map(c => c.replace(/<br\s*\/?>/gi, '\n').trim()));
+        }
+    });
+    return { enTetes, rangs };
+}
+
+// Découpe le bloc "DÉTAIL DES ACTIVITÉS" en sa hiérarchie réelle :
+// catégories numérotées ("1. Lecture des nombres de deux chiffres :") ->
+// activités ("- Activité 1 : Lecture du tableau des nombres.") -> points
+// (puces libres sous chaque activité). Aucun des découpeurs génériques
+// existants (texteVersHtmlLegerFiche) ne préserve cette hiérarchie à trois
+// niveaux -- elle est propre à ce canevas.
+function structurerActivitesPlanHebdo(texte) {
+    if (!texte) return [];
+    const lignes = texte.split('\n').map(l => l.trim()).filter(Boolean);
+    const categories = [];
+    let categorieCourante = null;
+    let activiteCourante = null;
+
+    const motifCategorie = /^\d+[.)]\s*(.+?)\s*:?\s*$/;
+    const motifActivite = /^[-•]\s*Activit[ée]\s*\d*\s*:\s*(.+)$/i;
+    const motifPuce = /^[-•]\s*(.+)$/;
+
+    lignes.forEach(ligne => {
+        if (estLigneSeparatriceFiche(ligne)) return;
+
+        const mCategorie = ligne.match(motifCategorie);
+        if (mCategorie) {
+            categorieCourante = { titre: mCategorie[1].trim(), activites: [] };
+            categories.push(categorieCourante);
+            activiteCourante = null;
+            return;
+        }
+        if (!categorieCourante) return; // texte avant la première catégorie numérotée -- ignoré
+
+        const mActivite = ligne.match(motifActivite);
+        if (mActivite) {
+            activiteCourante = { titre: mActivite[1].trim(), points: [] };
+            categorieCourante.activites.push(activiteCourante);
+            return;
+        }
+
+        const mPuce = ligne.match(motifPuce);
+        if (mPuce) {
+            if (!activiteCourante) {
+                // Puce orpheline directement sous la catégorie (pas
+                // d'activité nommée) : on lui crée un conteneur sans titre
+                // plutôt que de la perdre.
+                activiteCourante = { titre: '', points: [] };
+                categorieCourante.activites.push(activiteCourante);
+            }
+            activiteCourante.points.push(mPuce[1].trim());
+        }
+    });
+
+    return categories;
+}
+
+function htmlActivitesPlanHebdo(categories) {
+    if (!categories || !categories.length) return '';
+    let html = '<div class="plan-hebdo-activites">';
+    categories.forEach(cat => {
+        html += '<div class="plan-hebdo-categorie">';
+        html += `<div class="plan-hebdo-categorie-titre">${echapperHTMLFiche(cat.titre)}</div>`;
+        cat.activites.forEach(act => {
+            html += '<div class="plan-hebdo-activite">';
+            if (act.titre) html += `<div class="plan-hebdo-activite-titre">${echapperHTMLFiche(act.titre)}</div>`;
+            if (act.points.length) {
+                html += '<ul class="plan-hebdo-activite-points">';
+                act.points.forEach(p => { html += `<li>${echapperHTMLFiche(p)}</li>`; });
+                html += '</ul>';
+            }
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function analyserFichePlanHebdo(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        .replace(/^#+\s*/gm, '')
+        .trim();
+    if (!texte) return null;
+
+    const occurrences = trouverOccurrencesPlanHebdo(texte);
+    const occIdentification = occurrences.find(o => o.type === 'identification');
+    const occTableau = occurrences.find(o => o.type === 'tableau');
+    // Signature exigée : sans ces deux ancres (le titre du canevas ET son
+    // tableau hebdomadaire), ce n'est presque certainement pas un plan de
+    // session -- repli silencieux vers l'affichage brut.
+    if (!occIdentification || !occTableau) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
+    }
+    function contenuDe(type) {
+        const occ = occurrences.find(o => o.type === type);
+        return occ ? contenuApres(occ) : '';
+    }
+
+    const champs = [];
+    contenuApres(occIdentification).split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
+        const l2 = l.trim().replace(/^[-•]+\s*/, '');
+        if (!l2 || estLigneSeparatriceFiche(l2) || /^[\s\-_—–]+$/.test(l2)) return;
+        const sepIdx = l2.indexOf(':');
+        if (sepIdx > -1 && sepIdx < 60) {
+            champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+        } else {
+            champs.push({ label: '', valeur: l2 });
+        }
+    });
+
+    // Le titre principal ("PLAN DE SESSION HEBDOMADAIRE — MATHÉMATIQUES CE2")
+    // porte souvent la matière/le niveau après le tiret : on le garde comme
+    // sous-titre de la carte plutôt que de le perdre.
+    const titrePrincipal = occIdentification.texte
+        .replace(/^PLAN\s+DE\s+SESSION\s+HEBDOMADAIRE\s*[—\-:]*\s*/i, '')
+        .trim();
+
+    // ❖ Attention à ne PAS passer par contenuApres() ici : elle convertit
+    // les <br> en retours à la ligne sur toute la région, ce qui casse en
+    // plein milieu chaque ligne "| ... |" du tableau (une cellule à <br>
+    // multiples désynchronise alors le nombre de "|" par ligne physique).
+    // On tranche donc le texte BRUT, et extraireLignesTableauPlanHebdo se
+    // charge elle-même de convertir les <br> à l'intérieur de chaque
+    // cellule une fois les colonnes déjà découpées (même principe que
+    // extraireLignesTableauDeroulementFiche pour la carte PNAPAS).
+    const idxOccTableau = occurrences.indexOf(occTableau);
+    const finTableauBorne = idxOccTableau + 1 < occurrences.length
+        ? occurrences[idxOccTableau + 1].start
+        : texte.length;
+    const { enTetes, rangs } = extraireLignesTableauPlanHebdo(texte.slice(occTableau.end, finTableauBorne));
+    if (!rangs.length) return null;
+
+    return {
+        titrePrincipal,
+        champs,
+        enTetes,
+        rangs,
+        activites: structurerActivitesPlanHebdo(contenuDe('activites')),
+        materielTexte: contenuDe('materiel'),
+        observationsTexte: contenuDe('observations')
+    };
+}
+
+function construireHTMLFichePlanHebdo(analyse) {
+    const { titrePrincipal, champs, enTetes, rangs, activites, materielTexte, observationsTexte } = analyse;
+    let html = '';
+
+    html += '<div class="fiche-section-titre">🗓️ PLAN DE SESSION HEBDOMADAIRE'
+        + (titrePrincipal ? ' — ' + echapperHTMLFiche(titrePrincipal) : '') + '</div>';
+
+    if (champs.length) {
+        html += '<div class="fiche-bloc-entete">';
+        champs.forEach(c => {
+            html += '<span class="fiche-badge">';
+            if (c.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(c.label)} :</span> `;
+            html += `${echapperHTMLFiche(c.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    html += '<div class="fiche-section-titre">📅 Détail du plan par jour</div>';
+    html += '<div class="fiche-carte fiche-carte-tableau">';
+    html += '<table class="fiche-deroulement-table tableau-plan-hebdo"><thead><tr>';
+    enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
+    html += '</tr></thead><tbody>';
+    rangs.forEach(rang => {
+        html += '<tr>';
+        enTetes.forEach((enTete, i) => {
+            const cellule = rang[i] || '';
+            html += `<td data-libelle="${echapperHTMLFiche(enTete)}">${texteVersHtmlLegerFiche(cellule)}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    if (activites.length) {
+        html += '<div class="fiche-section-titre">🧩 Détail des activités</div>';
+        html += '<div class="fiche-carte">' + htmlActivitesPlanHebdo(activites) + '</div>';
+    }
+
+    if (materielTexte) {
+        html += '<div class="fiche-section-titre">🧰 Matériel nécessaire pour la semaine</div>';
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
+    }
+
+    if (observationsTexte) {
+        html += '<div class="fiche-section-titre">🔎 Points d\'observation pour l\'enseignant</div>';
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(observationsTexte)}</div>`;
+    }
+
+    return `<div class="fiche-lecon accent-vert fiche-lecon-plan-hebdo">${html}</div>`;
+}
+
+// =======================================================================
 // ❖ LA CARTE "ÉVALUATION PRIMAIRE" (FORGE PRIMAIRE) ❖
 // =======================================================================
 // La Forge Primaire ne produit pas que des fiches de préparation : sur
@@ -2061,13 +2314,23 @@ function construireRenduFichePrimaire(source) {
     // fiche d'évaluation si la première échoue -- silencieusement, sans
     // jamais afficher d'erreur : si aucune des deux ne correspond, on se
     // replie sur le rendu Markdown standard (voir afficherReponseAvecFondu).
-    // ❖ On tente d'abord le canevas PNAPAS natif : il est le plus exigeant
+    // ❖ Le plan de session hebdomadaire est tenté en tout premier : son
+    // titre ("PLAN DE SESSION HEBDOMADAIRE") est une signature tellement
+    // distinctive qu'il n'y a aucun risque de confusion avec les autres
+    // canevas -- pas besoin d'attendre que les autres échouent par
+    // élimination (ajouté le 28/08/2026).
+    const anaPlanHebdo = analyserFichePlanHebdo(corps);
+    let html = anaPlanHebdo ? construireHTMLFichePlanHebdo(anaPlanHebdo) : null;
+
+    // ❖ On tente ensuite le canevas PNAPAS natif : il est le plus exigeant
     // (il réclame un vrai tableau de déroulement à quatre colonnes et un
     // niveau du CP au CE2), donc s'il accepte, c'est à coup sûr la bonne
     // carte. La carte APC, plus tolérante, prendrait sinon la main sur des
     // fiches PNAPAS et les afficherait dans le mauvais canevas.
-    const anaPnapas = analyserFichePNAPAS(corps);
-    let html = anaPnapas ? construireHTMLFichePNAPAS(anaPnapas) : null;
+    if (html === null) {
+        const anaPnapas = analyserFichePNAPAS(corps);
+        html = anaPnapas ? construireHTMLFichePNAPAS(anaPnapas) : null;
+    }
 
     if (html === null) {
         const anaPreparation = analyserFichePrimaire(corps);
