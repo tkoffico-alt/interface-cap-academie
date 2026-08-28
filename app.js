@@ -1872,13 +1872,41 @@ function construireHTMLFichePNAPAS(analyse) {
 // points d'observation), tel que décrit dans le "Guide de Remédiation
 // Mathématiques CE-CM" du PNAPAS. Jusqu'ici affiché en Markdown brut,
 // faute d'un parseur dédié.
+// ❖ Deux variantes réelles observées pour ce canevas (28/08/2026) :
+// 1. Une SEULE semaine, détaillée : titre + champs + "DÉTAIL DU PLAN PAR
+//    JOUR" (titre explicite) + tableau 7 colonnes + Détail des activités +
+//    Matériel + Points d'observation.
+// 2. UN MOIS entier, condensé : titre unique, puis plusieurs blocs
+//    "Semaine : N" à la suite, chacun avec ses propres champs et son
+//    propre tableau (5 colonnes, PAS de titre "DÉTAIL DU PLAN PAR JOUR"),
+//    sans Détail des activités/Matériel/Points d'observation.
+// "semaine" sert de frontière entre blocs répétés -- "tableau" reste un
+// simple titre optionnel À L'INTÉRIEUR d'un bloc (jamais une frontière),
+// pour rester transparent dans les deux cas (voir analyserFichePlanHebdo).
 const ALTERNATIVES_SECTION_PLAN_HEBDO = {
     identification: ["PLAN DE SESSION HEBDOMADAIRE"],
+    semaine: ["Semaine\\b"],
     tableau: ["D[ÉE]TAIL DU PLAN PAR JOUR"],
     activites: ["D[ÉE]TAIL DES ACTIVIT[ÉE]S"],
     materiel: ["MAT[ÉE]RIEL N[ÉE]CESSAIRE(?:\\s+POUR\\s+LA\\s+SEMAINE)?"],
     observations: ["POINTS\\s+D['’]OBSERVATION(?:\\s+POUR\\s+L['’]ENSEIGNANT)?"]
 };
+
+// Types d'occurrence qui délimitent un bloc "semaine" (jamais "tableau",
+// qui n'est qu'un titre optionnel transparent à l'intérieur d'un bloc --
+// voir le commentaire ci-dessus).
+const TYPES_FRONTIERE_SEMAINE_PLAN_HEBDO = ['semaine', 'activites', 'materiel', 'observations'];
+
+// Une ligne qui est en réalité un TITRE de section connu (ex. "DÉTAIL DU
+// PLAN PAR JOUR" isolé dans le bloc d'une semaine, cas de la variante 1)
+// ne doit jamais être avalée comme un champ "Label : valeur" -- elle est
+// déjà repérée par ailleurs comme occurrence de type 'tableau'.
+function estTitreSectionPlanHebdoConnu(ligne) {
+    return Object.values(ALTERNATIVES_SECTION_PLAN_HEBDO).some(variantes => {
+        const re = new RegExp(`^(?:${variantes.join('|')})\\s*:?\\s*$`, 'i');
+        return re.test(ligne.trim());
+    });
+}
 
 function trouverOccurrencesPlanHebdo(texte) {
     const occurrences = [];
@@ -1969,6 +1997,39 @@ function structurerActivitesPlanHebdo(texte) {
     return categories;
 }
 
+// Découpe le contenu d'UN bloc "Semaine : ..." (déjà isolé par
+// analyserFichePlanHebdo, frontières incluses) en ses champs
+// d'identification (Groupe de niveau / Objectif mensuel / Objectif de la
+// semaine, éventuellement un titre "DÉTAIL DU PLAN PAR JOUR" à ignorer) et
+// son propre tableau -- la 1ère ligne "| ... |" rencontrée marque la
+// bascule de l'un vers l'autre.
+function decouperBlocSemaine(texteBloc) {
+    const lignes = texteBloc.split('\n');
+    const idxPremiereLigneTableau = lignes.findIndex(l => /^\s*\|.*\|\s*$/.test(l.trim()));
+    const champsBrut = idxPremiereLigneTableau === -1 ? texteBloc : lignes.slice(0, idxPremiereLigneTableau).join('\n');
+    const tableauBrut = idxPremiereLigneTableau === -1 ? '' : lignes.slice(idxPremiereLigneTableau).join('\n');
+
+    const champs = [];
+    champsBrut.split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
+        const l2 = l.trim().replace(/^[-•]+\s*/, '');
+        if (!l2 || estLigneSeparatriceFiche(l2) || /^[\s\-_—–]+$/.test(l2)) return;
+        if (estTitreSectionPlanHebdoConnu(l2)) return;
+        const sepIdx = l2.indexOf(':');
+        if (sepIdx > -1 && sepIdx < 60) {
+            champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+        } else {
+            champs.push({ label: '', valeur: l2 });
+        }
+    });
+
+    // ❖ Même prudence que dans analyserFichePlanHebdo : on ne convertit les
+    // <br> qu'à l'intérieur des cellules, jamais avant, sous peine de
+    // casser les lignes "| ... |" du tableau en plein milieu.
+    const { enTetes, rangs } = extraireLignesTableauPlanHebdo(tableauBrut);
+
+    return { champs, enTetes, rangs };
+}
+
 function htmlActivitesPlanHebdo(categories) {
     if (!categories || !categories.length) return '';
     let html = '<div class="plan-hebdo-activites">';
@@ -2001,11 +2062,11 @@ function analyserFichePlanHebdo(texteBrut) {
 
     const occurrences = trouverOccurrencesPlanHebdo(texte);
     const occIdentification = occurrences.find(o => o.type === 'identification');
-    const occTableau = occurrences.find(o => o.type === 'tableau');
-    // Signature exigée : sans ces deux ancres (le titre du canevas ET son
-    // tableau hebdomadaire), ce n'est presque certainement pas un plan de
-    // session -- repli silencieux vers l'affichage brut.
-    if (!occIdentification || !occTableau) return null;
+    const occsSemaine = occurrences.filter(o => o.type === 'semaine');
+    // Signature exigée : sans le titre du canevas ET au moins un bloc
+    // "Semaine", ce n'est presque certainement pas un plan de session --
+    // repli silencieux vers l'affichage brut.
+    if (!occIdentification || !occsSemaine.length) return null;
 
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
@@ -2017,45 +2078,50 @@ function analyserFichePlanHebdo(texteBrut) {
         return occ ? contenuApres(occ) : '';
     }
 
-    const champs = [];
-    contenuApres(occIdentification).split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
-        const l2 = l.trim().replace(/^[-•]+\s*/, '');
-        if (!l2 || estLigneSeparatriceFiche(l2) || /^[\s\-_—–]+$/.test(l2)) return;
-        const sepIdx = l2.indexOf(':');
-        if (sepIdx > -1 && sepIdx < 60) {
-            champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
-        } else {
-            champs.push({ label: '', valeur: l2 });
-        }
-    });
-
     // Le titre principal ("PLAN DE SESSION HEBDOMADAIRE — MATHÉMATIQUES CE2")
     // porte souvent la matière/le niveau après le tiret : on le garde comme
-    // sous-titre de la carte plutôt que de le perdre.
+    // sous-titre de la carte plutôt que de le perdre. Absent dans la
+    // variante "plan mensuel", où le titre est nu -- titrePrincipal reste
+    // alors vide, ce que le rendu gère déjà.
     const titrePrincipal = occIdentification.texte
         .replace(/^PLAN\s+DE\s+SESSION\s+HEBDOMADAIRE\s*[—\-:]*\s*/i, '')
         .trim();
 
-    // ❖ Attention à ne PAS passer par contenuApres() ici : elle convertit
-    // les <br> en retours à la ligne sur toute la région, ce qui casse en
-    // plein milieu chaque ligne "| ... |" du tableau (une cellule à <br>
-    // multiples désynchronise alors le nombre de "|" par ligne physique).
-    // On tranche donc le texte BRUT, et extraireLignesTableauPlanHebdo se
-    // charge elle-même de convertir les <br> à l'intérieur de chaque
-    // cellule une fois les colonnes déjà découpées (même principe que
-    // extraireLignesTableauDeroulementFiche pour la carte PNAPAS).
-    const idxOccTableau = occurrences.indexOf(occTableau);
-    const finTableauBorne = idxOccTableau + 1 < occurrences.length
-        ? occurrences[idxOccTableau + 1].start
-        : texte.length;
-    const { enTetes, rangs } = extraireLignesTableauPlanHebdo(texte.slice(occTableau.end, finTableauBorne));
-    if (!rangs.length) return null;
+    // Chaque bloc "Semaine" s'étend jusqu'à la PROCHAINE frontière (une
+    // autre "Semaine", ou Détail des activités/Matériel/Points
+    // d'observation) -- jamais jusqu'à une occurrence "tableau", qui n'est
+    // qu'un titre optionnel transparent À L'INTÉRIEUR du bloc (variante 1).
+    // On tranche le texte BRUT (pas contenuApres, qui convertirait les
+    // <br> et casserait les lignes "| ... |" du tableau en plein milieu) --
+    // decouperBlocSemaine() et extraireLignesTableauPlanHebdo() se
+    // chargent de cette conversion cellule par cellule, une fois les
+    // colonnes déjà découpées.
+    const semaines = occsSemaine.map(occSem => {
+        const idx = occurrences.indexOf(occSem);
+        const suivante = occurrences.slice(idx + 1).find(o => TYPES_FRONTIERE_SEMAINE_PLAN_HEBDO.includes(o.type));
+        const finBloc = suivante ? suivante.start : texte.length;
+        const bloc = decouperBlocSemaine(texte.slice(occSem.end, finBloc));
+
+        // ❖ Le champ "Semaine" lui-même (ex. "Semaine : n°--- du -- au --"
+        // ou "Semaine : 3") est porté par l'occurrence-frontière, pas par
+        // decouperBlocSemaine -- on le réinjecte en tête des champs pour ne
+        // jamais perdre l'information (numéro, date). construireHTMLFiche-
+        // PlanHebdo() décide ensuite de l'afficher en badge (une seule
+        // semaine) ou en sous-titre (plusieurs semaines, où libelleSemaine
+        // sert de numéro affiché plutôt que la simple position dans la
+        // liste).
+        const sepIdx = occSem.texte.indexOf(':');
+        const libelleSemaine = (sepIdx > -1 ? occSem.texte.slice(sepIdx + 1) : '').trim();
+        bloc.champs.unshift({ label: 'Semaine', valeur: libelleSemaine });
+        bloc.libelleSemaine = libelleSemaine;
+        return bloc;
+    }).filter(s => s.rangs.length); // garde-fou : une "semaine" sans tableau n'est pas exploitable
+
+    if (!semaines.length) return null;
 
     return {
         titrePrincipal,
-        champs,
-        enTetes,
-        rangs,
+        semaines,
         activites: structurerActivitesPlanHebdo(contenuDe('activites')),
         materielTexte: contenuDe('materiel'),
         observationsTexte: contenuDe('observations')
@@ -2063,36 +2129,53 @@ function analyserFichePlanHebdo(texteBrut) {
 }
 
 function construireHTMLFichePlanHebdo(analyse) {
-    const { titrePrincipal, champs, enTetes, rangs, activites, materielTexte, observationsTexte } = analyse;
+    const { titrePrincipal, semaines, activites, materielTexte, observationsTexte } = analyse;
     let html = '';
 
     html += '<div class="fiche-section-titre">🗓️ PLAN DE SESSION HEBDOMADAIRE'
         + (titrePrincipal ? ' — ' + echapperHTMLFiche(titrePrincipal) : '') + '</div>';
 
-    if (champs.length) {
-        html += '<div class="fiche-bloc-entete">';
-        champs.forEach(c => {
-            html += '<span class="fiche-badge">';
-            if (c.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(c.label)} :</span> `;
-            html += `${echapperHTMLFiche(c.valeur)}</span>`;
-        });
-        html += '</div>';
-    }
-
     html += '<div class="fiche-section-titre">📅 Détail du plan par jour</div>';
-    html += '<div class="fiche-carte fiche-carte-tableau">';
-    html += '<table class="fiche-deroulement-table tableau-plan-hebdo"><thead><tr>';
-    enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
-    html += '</tr></thead><tbody>';
-    rangs.forEach(rang => {
-        html += '<tr>';
-        enTetes.forEach((enTete, i) => {
-            const cellule = rang[i] || '';
-            html += `<td data-libelle="${echapperHTMLFiche(enTete)}">${texteVersHtmlLegerFiche(cellule)}</td>`;
+    semaines.forEach((sem, index) => {
+        html += '<div class="plan-hebdo-semaine">';
+        // ❖ Le sous-titre "Semaine N" n'apparaît que s'il y a plusieurs
+        // semaines (variante "plan mensuel") -- pour une seule semaine
+        // (variante détaillée), le badge "Semaine" (avec sa date, ex.
+        // "n°--- du -- au --") suffit à s'identifier, un sous-titre
+        // répétitif n'apporterait rien. Le libellé réel (numéro déclaré
+        // par l'agent) est préféré à la simple position dans la liste,
+        // au cas où la numérotation ne serait pas parfaitement séquentielle.
+        // Une fois affiché en sous-titre, le badge "Semaine" redondant est
+        // retiré des badges pour ne pas répéter l'information deux fois.
+        let champsAffiches = sem.champs;
+        if (semaines.length > 1) {
+            html += `<div class="plan-hebdo-semaine-titre">Semaine ${echapperHTMLFiche(sem.libelleSemaine || String(index + 1))}</div>`;
+            champsAffiches = sem.champs.filter(c => c.label !== 'Semaine');
+        }
+        if (champsAffiches.length) {
+            html += '<div class="fiche-bloc-entete">';
+            champsAffiches.forEach(c => {
+                html += '<span class="fiche-badge">';
+                if (c.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(c.label)} :</span> `;
+                html += `${echapperHTMLFiche(c.valeur)}</span>`;
+            });
+            html += '</div>';
+        }
+        html += '<div class="fiche-carte fiche-carte-tableau">';
+        html += '<table class="fiche-deroulement-table tableau-plan-hebdo"><thead><tr>';
+        sem.enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
+        html += '</tr></thead><tbody>';
+        sem.rangs.forEach(rang => {
+            html += '<tr>';
+            sem.enTetes.forEach((enTete, i) => {
+                const cellule = rang[i] || '';
+                html += `<td data-libelle="${echapperHTMLFiche(enTete)}">${texteVersHtmlLegerFiche(cellule)}</td>`;
+            });
+            html += '</tr>';
         });
-        html += '</tr>';
+        html += '</tbody></table></div>';
+        html += '</div>';
     });
-    html += '</tbody></table></div>';
 
     if (activites.length) {
         html += '<div class="fiche-section-titre">🧩 Détail des activités</div>';

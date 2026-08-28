@@ -969,6 +969,28 @@ body.dark-theme .plan-hebdo-categorie + .plan-hebdo-categorie { border-top-color
 .plan-hebdo-activite-points li { margin-bottom: 0.2rem; }
 .plan-hebdo-activite-points li:last-child { margin-bottom: 0; }
 
+/* ❖ Variante "plan mensuel" du Plan de session hebdomadaire : plusieurs
+   blocs Semaine à la suite, chacun avec ses propres badges et son propre
+   tableau -- voir construireHTMLFichePlanHebdo() dans app.js. */
+.plan-hebdo-semaine + .plan-hebdo-semaine {
+    margin-top: 1.4rem;
+    padding-top: 1.4rem;
+    border-top: 1px dashed #D9DEE6;
+}
+body.dark-theme .plan-hebdo-semaine + .plan-hebdo-semaine { border-top-color: rgba(148, 163, 184, 0.24); }
+.plan-hebdo-semaine-titre {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--fiche-accent);
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
 .fiche-phase {
     display: flex;
     flex-direction: column;
