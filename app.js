@@ -1292,7 +1292,17 @@ function construireRenduFiche(source, outil) {
 // contenu -- un seul type de motif suffit donc ici, pas de distinction
 // majeures/inline comme pour le secondaire.
 const ALTERNATIVES_SECTION_FICHE_PRIMAIRE = {
-    identification: ["IDENTIFICATION"],
+    // ❖ "FICHE DE PR[ÉE]PARATION" ajouté le 29/08/2026 : le modèle renomme
+    // parfois tout le bloc d'en-tête ainsi au lieu de "IDENTIFICATION"
+    // (observé sur une fiche CE1 Français "La phrase" qui ne comportait
+    // aucun titre IDENTIFICATION du tout -- toute la fiche échouait alors
+    // silencieusement à être reconnue, repli sur l'affichage brut
+    // générique). Risque théorique non observé en pratique : si une fiche
+    // portait un jour un titre de couverture "FICHE DE PRÉPARATION" suivi
+    // PLUS LOIN d'un vrai titre IDENTIFICATION distinct, seul le premier
+    // (la couverture) serait retenu comme zone d'identification -- à
+    // surveiller si ce cas se présente un jour.
+    identification: ["IDENTIFICATION", "FICHE DE PR[ÉE]PARATION"],
     competence: ["COMP[ÉE]TENCE"],
     theme: ["TH[ÈE]ME"],
     lecon: ["LE[ÇC]ON"],
@@ -1518,8 +1528,24 @@ function analyserFichePrimaire(texteBrut) {
 
     // --- Déroulement pédagogique : trois moments simples (titre + texte
     // libre), pas de triple à décoder comme au secondaire.
-    const phases = ['presentation', 'developpement', 'evaluationPhase']
-        .map(type => ({ type, titre: titres[type] || '', contenu: contenuDe(type) }))
+    // ❖ Bug réel trouvé le 29/08/2026 (fiche CE1 Français "La phrase") : le
+    // modèle scinde parfois DÉVELOPPEMENT en plusieurs sous-blocs titrés
+    // séparément ("DÉVELOPPEMENT … Je fais" puis "DÉVELOPPEMENT … Nous
+    // faisons", convention PNAPAS -- section "Je fais/Nous faisons/Tu fais"
+    // du prompt Forge Primaire). L'ancien code ne retenait que la PREMIÈRE
+    // occurrence de chaque type (via contenuDe, qui fait occurrences.find),
+    // donc le second bloc DÉVELOPPEMENT disparaissait silencieusement --
+    // son contenu n'était capté nulle part, y compris pas absorbé par la
+    // section suivante. On construit donc désormais une carte par
+    // OCCURRENCE de phase (contenuApres, borné par l'occurrence suivante
+    // quel que soit son type), pas une carte par type fixe : le cas normal
+    // (une seule occurrence par type) produit exactement le même résultat
+    // qu'avant, le cas à sous-blocs répétés produit désormais une carte par
+    // sous-bloc au lieu d'en perdre le contenu.
+    const TYPES_PHASE_FICHE_PRIMAIRE = ['presentation', 'developpement', 'evaluationPhase'];
+    const phases = occurrences
+        .filter(o => TYPES_PHASE_FICHE_PRIMAIRE.includes(o.type))
+        .map(o => ({ type: o.type, titre: o.texte, contenu: contenuApres(o) }))
         .filter(p => p.contenu);
 
     const traceTexte = contenuDe('trace');
@@ -1869,21 +1895,24 @@ function construireHTMLFichePNAPAS(analyse) {
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
     }
 
-    // ❖ Coloration par phase du tableau à 4 colonnes (29/08/2026) : ce
-    // même tableau sert à la fois à la vraie fiche PNAPAS (maths/français
+    // ❖ Coloration par phase du tableau à 4 colonnes (29/08/2026, étendue le
+    // 29/08/2026 aux vraies fiches PNAPAS elles-mêmes à la demande de
+    // Constant -- "on n'a pas prévu d'embellir ici aussi ?"). Ce même
+    // tableau sert à la fois à la vraie fiche PNAPAS (maths/français
     // CP-CE2, jamais de section COMPÉTENCE) et à une fiche APC dont l'agent
     // a spontanément rédigé le déroulement sous forme de tableau plutôt que
-    // de cartes (ex. ESC -- voir CLAUDE.md). On ne colore que le second cas
-    // (estFicheAPC, calculé dans analyserFichePNAPAS depuis la présence
-    // d'une section COMPÉTENCE) -- jamais les vraies fiches PNAPAS, pour ne
-    // pas toucher à un canevas officiel déjà validé tel quel.
+    // de cartes (ex. ESC -- voir CLAUDE.md). classerPhaseFichePrimaire ne
+    // regarde que le nom de la phase (PRÉSENTATION/DÉVELOPPEMENT/
+    // ÉVALUATION), identique dans les deux canevas -- estFicheAPC ne sert
+    // donc plus à restreindre la coloration, seulement conservé au cas où
+    // un autre usage en aurait besoin plus tard.
     html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
     html += '<div class="fiche-carte fiche-carte-tableau">';
     html += '<table class="fiche-deroulement-table"><thead><tr>';
     enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
     html += '</tr></thead><tbody>';
     rangs.forEach(rang => {
-        const classePhase = estFicheAPC ? classerPhaseFichePrimaire(rang[0]) : '';
+        const classePhase = classerPhaseFichePrimaire(rang[0]);
         html += classePhase ? `<tr class="${classePhase}">` : '<tr>';
         enTetes.forEach((enTete, i) => {
             const cellule = rang[i] || '';
