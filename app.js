@@ -963,6 +963,21 @@ function decouperChampsAgglutinesLigneFiche(ligne) {
     });
 }
 
+// ❖ Filet de sécurité pour les valeurs "creuses" (placeholders) que le
+// modèle glisse parfois malgré la consigne explicite de les omettre
+// ("Effectif : (à compléter)", "Semaine : (à préciser)"...) — y compris
+// pour Effectif, alors même que le prompt cite déjà cet exemple précis
+// comme interdit. Plutôt que d'empiler une énième reformulation de
+// prompt pour un cas déjà nommé explicitement, on neutralise ici le
+// symptôme visible, de façon déterministe : si la valeur entière n'est
+// qu'un tel commentaire, elle est vidée. Le badge garde son étiquette
+// ("Effectif :") mais reste vide -- exactement le rendu voulu pour un
+// champ que l'instituteur remplit lui-même à la main.
+const MOTIF_VALEUR_CREUSE_FICHE = /^\(?\s*[àa]\s*(compl[ée]ter|pr[ée]ciser|remplir|d[ée]finir|ajuster)\b[^)]*\)?\.?\s*$/i;
+function nettoyerValeurChampCreuseFiche(valeur) {
+    return MOTIF_VALEUR_CREUSE_FICHE.test((valeur || '').trim()) ? '' : valeur;
+}
+
 // Si le modèle a malgré tout écrit une vraie ligne de tableau Markdown
 // ("| Expliquer | La formation... |"), on retire les pipes et on
 // recompose une ligne lisible plutôt que d'afficher les barres verticales
@@ -1109,7 +1124,7 @@ function analyserFicheLecon(texteBrut) {
             if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
-                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
             } else {
                 badges.push({ label: '', valeur: l2 });
             }
@@ -1464,7 +1479,7 @@ function analyserFichePrimaire(texteBrut) {
             if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
-                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
             } else {
                 badges.push({ label: '', valeur: l2 });
             }
@@ -1735,7 +1750,7 @@ function analyserFichePNAPAS(texteBrut) {
             const motifRepetition = new RegExp(
                 '^' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*(\\d+)?\\s*[:.\\-—]?\\s*', 'i');
             valeur = valeur.replace(motifRepetition, (m, num) => (num ? num + ' — ' : ''));
-            champs.push({ label, valeur: valeur.trim() || l2.slice(sepIdx + 1).trim() });
+            champs.push({ label, valeur: nettoyerValeurChampCreuseFiche(valeur.trim() || l2.slice(sepIdx + 1).trim()) });
         } else {
             champs.push({ label: '', valeur: l2 });
         }
@@ -2052,7 +2067,7 @@ function decouperBlocSemaine(texteBloc) {
         if (estTitreSectionPlanHebdoConnu(l2)) return;
         const sepIdx = l2.indexOf(':');
         if (sepIdx > -1 && sepIdx < 60) {
-            champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+            champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
         } else if (champs.length) {
             // ❖ Ligne sans deux-points : presque toujours la suite d'une
             // valeur rédigée sur plusieurs lignes par l'agent (ex. "Objectif
@@ -2380,7 +2395,7 @@ function analyserEvaluationPrimaire(texteBrut) {
             if (!l2 || estLigneSeparatriceFiche(l2)) return;
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
-                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: l2.slice(sepIdx + 1).trim() });
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
             } else {
                 badges.push({ label: '', valeur: l2 });
             }
