@@ -1791,7 +1791,14 @@ function analyserFichePNAPAS(texteBrut) {
         enTetes: enTetes.length >= 3 ? enTetes : ['Phases didactiques', "Activités de l'enseignant.e", 'Stratégies pédagogiques', 'Activités des apprenant.e.s'],
         rangs,
         apresTableau: apresTableau && !/^[\s\-:|]+$/.test(apresTableau) ? apresTableau : '',
-        titres
+        titres,
+        // ❖ Coloration par phase (29/08/2026) : une vraie fiche PNAPAS ne
+        // comporte jamais de section COMPÉTENCE (section 6 du prompt Forge
+        // Primaire) -- sa présence, détectée ici via la même reconnaissance
+        // de titres de section que le reste de ce parseur, signale donc
+        // sans ambiguïté une fiche APC qui s'est simplement rédigée sous
+        // forme de tableau plutôt que de cartes.
+        estFicheAPC: occurrences.some(o => o.type === 'competence')
     };
 }
 
@@ -1817,7 +1824,7 @@ function titreContenusFichePNAPAS(champs, titreParDefaut) {
 }
 
 function construireHTMLFichePNAPAS(analyse) {
-    const { champs, situationTexte, contenusTexte, materielTexte, enTetes, rangs, apresTableau, titres } = analyse;
+    const { champs, situationTexte, contenusTexte, materielTexte, enTetes, rangs, apresTableau, titres, estFicheAPC } = analyse;
     let html = '';
 
     if (champs.length) {
@@ -1847,13 +1854,22 @@ function construireHTMLFichePNAPAS(analyse) {
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
     }
 
+    // ❖ Coloration par phase du tableau à 4 colonnes (29/08/2026) : ce
+    // même tableau sert à la fois à la vraie fiche PNAPAS (maths/français
+    // CP-CE2, jamais de section COMPÉTENCE) et à une fiche APC dont l'agent
+    // a spontanément rédigé le déroulement sous forme de tableau plutôt que
+    // de cartes (ex. ESC -- voir CLAUDE.md). On ne colore que le second cas
+    // (estFicheAPC, calculé dans analyserFichePNAPAS depuis la présence
+    // d'une section COMPÉTENCE) -- jamais les vraies fiches PNAPAS, pour ne
+    // pas toucher à un canevas officiel déjà validé tel quel.
     html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
     html += '<div class="fiche-carte fiche-carte-tableau">';
     html += '<table class="fiche-deroulement-table"><thead><tr>';
     enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
     html += '</tr></thead><tbody>';
     rangs.forEach(rang => {
-        html += '<tr>';
+        const classePhase = estFicheAPC ? classerPhaseFichePrimaire(rang[0]) : '';
+        html += classePhase ? `<tr class="${classePhase}">` : '<tr>';
         enTetes.forEach((enTete, i) => {
             const cellule = rang[i] || '';
             // data-libelle porte le nom de la colonne : c'est lui qui
