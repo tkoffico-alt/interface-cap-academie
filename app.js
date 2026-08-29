@@ -1512,6 +1512,25 @@ function analyserFichePrimaire(texteBrut) {
     return { badges, lignesTableau, situationTexte, materielTexte, phases, traceTexte, titres };
 }
 
+// ❖ Coloration douce du déroulement de la Fiche APC Primaire par grande
+//   phase (28/08/2026 -> 29/08/2026, demande de Constant après la
+//   coloration par niveau du Plan de session hebdomadaire) -- volontairement
+//   limitée à construireHTMLFichePrimaire (le canevas APC général, cartes
+//   empilées) et jamais à .fiche-deroulement-table (le vrai tableau à 4
+//   colonnes, partagé par la carte PNAPAS native et l'évaluation, qui n'a
+//   pas été demandé ici). Classification par le TITRE de la phase, déjà
+//   fiable puisque le prompt impose "PRÉSENTATION", "DÉVELOPPEMENT" et
+//   "ÉVALUATION / RÉINVESTISSEMENT" comme intitulés (section 5 du prompt
+//   Forge Primaire) -- un titre non reconnu (cas rare) retombe simplement
+//   sur l'apparence neutre déjà existante, sans erreur.
+function classerPhaseFichePrimaire(titre) {
+    const t = (titre || '').toUpperCase();
+    if (/PR[ÉE]SENTATION|ROUTINE|CALCULINE/.test(t)) return 'fiche-phase-presentation';
+    if (/D[ÉE]VELOPPEMENT/.test(t)) return 'fiche-phase-developpement';
+    if (/[ÉE]VALUATION|R[ÉE]INVESTISSEMENT/.test(t)) return 'fiche-phase-evaluation';
+    return '';
+}
+
 function construireHTMLFichePrimaire(analyse) {
     const { badges, lignesTableau, situationTexte, materielTexte, phases, traceTexte, titres } = analyse;
     let html = '';
@@ -1550,7 +1569,8 @@ function construireHTMLFichePrimaire(analyse) {
     if (phases.length) {
         html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
         phases.forEach(p => {
-            html += '<div class="fiche-carte fiche-phase">';
+            const classePhase = classerPhaseFichePrimaire(p.titre);
+            html += `<div class="fiche-carte fiche-phase${classePhase ? ' ' + classePhase : ''}">`;
             html += `<div class="fiche-phase-titre">${echapperHTMLFiche(p.titre)}</div>`;
             html += `<div class="fiche-phase-ligne">${texteVersHtmlLegerFiche(p.contenu)}</div>`;
             html += '</div>';

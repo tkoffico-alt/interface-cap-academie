@@ -1092,6 +1092,40 @@ body.dark-theme .fiche-phase-ligne { border-top-color: rgba(148, 163, 184, 0.16)
     opacity: 0.9;
 }
 
+/* ❖ Coloration douce du déroulement de la Fiche APC Primaire par grande
+   phase (29/08/2026, demande de Constant, même esprit que la coloration par
+   niveau du Plan de session hebdomadaire) -- réutilise volontairement la
+   même palette interne teinte/repère (teal/amber/violet) pour une cohérence
+   visuelle entre les deux cartes, plutôt qu'une nouvelle palette isolée.
+   Limitée à .fiche-phase (canevas APC en cartes empilées) : la carte PNAPAS
+   native et son vrai tableau à 4 colonnes (.fiche-deroulement-table)
+   n'ont volontairement pas été touchés ici. */
+.fiche-phase { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.fiche-phase-presentation {
+    background: rgba(20, 184, 166, 0.06);
+    border-left: 3px solid #14B8A6;
+    padding-left: 0.75rem;
+}
+.fiche-phase-presentation .fiche-phase-titre { color: #0F766E; }
+.fiche-phase-developpement {
+    background: rgba(245, 158, 11, 0.06);
+    border-left: 3px solid #F59E0B;
+    padding-left: 0.75rem;
+}
+.fiche-phase-developpement .fiche-phase-titre { color: #B45309; }
+.fiche-phase-evaluation {
+    background: rgba(139, 92, 246, 0.06);
+    border-left: 3px solid #8B5CF6;
+    padding-left: 0.75rem;
+}
+.fiche-phase-evaluation .fiche-phase-titre { color: #6D28D9; }
+body.dark-theme .fiche-phase-presentation { background: rgba(45, 212, 191, 0.08); }
+body.dark-theme .fiche-phase-presentation .fiche-phase-titre { color: #5EEAD4; }
+body.dark-theme .fiche-phase-developpement { background: rgba(251, 191, 36, 0.07); }
+body.dark-theme .fiche-phase-developpement .fiche-phase-titre { color: #FCD34D; }
+body.dark-theme .fiche-phase-evaluation { background: rgba(167, 139, 250, 0.09); }
+body.dark-theme .fiche-phase-evaluation .fiche-phase-titre { color: #C4B5FD; }
+
 .fiche-lecon p {
     margin: 0 0 0.5rem;
     white-space: normal;
