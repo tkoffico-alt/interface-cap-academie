@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carnet de progression — EdukaTchat</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+    :root {
+        --accent: #3B82F6;
+        --accent-douce: rgba(59, 130, 246, 0.10);
+        --vert: #10B981;
+        --amber: #F59E0B;
+        --rouge: #EF4444;
+        --texte: #1F2937;
+        --texte-att: #4B5563;
+        --fond: #F1F5F9;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        background: var(--fond);
+        color: var(--texte);
+        padding: 24px 16px 60px;
+    }
+    .conteneur {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+    .entete {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    .entete h1 {
+        font-size: 1.4em;
+        margin: 0 0 6px 0;
+        color: var(--accent);
+    }
+    .entete p {
+        color: var(--texte-att);
+        font-size: 0.92em;
+        margin: 0;
+    }
+    .carte {
+        background: #FFFFFF;
+        border: 1px solid rgba(203, 213, 225, 0.8);
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 6px 18px -6px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    .ligne-recherche {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    #matricule-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid #CBD5E1;
+        font-size: 1em;
+    }
+    #btn-voir-carnet {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        font-size: 1em;
+        cursor: pointer;
+    }
+    #btn-voir-carnet:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    #message {
+        margin-top: 14px;
+        font-size: 0.9em;
+        min-height: 18px;
+    }
+    #message.erreur { color: var(--rouge); }
+    #message.info { color: var(--texte-att); }
+    .matiere-bloc {
+        margin-bottom: 22px;
+    }
+    .matiere-titre {
+        font-size: 0.95em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--accent);
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid var(--accent-douce);
+    }
+    .notion-rang {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #F1F5F9;
+    }
+    .notion-rang:last-child { border-bottom: none; }
+    .notion-nom {
+        flex: 1;
+        font-size: 0.92em;
+        color: var(--texte);
+    }
+    .notion-detail {
+        font-size: 0.78em;
+        color: var(--texte-att);
+        white-space: nowrap;
+    }
+    .barre-fond {
+        width: 90px;
+        height: 8px;
+        border-radius: 4px;
+        background: #E2E8F0;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .barre-remplie {
+        height: 100%;
+        border-radius: 4px;
+    }
+    .pourcentage {
+        font-size: 0.9em;
+        font-weight: 700;
+        width: 42px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+    #resultats { display: none; }
+    #zone-vide, #zone-erreur { display: none; text-align: center; color: var(--texte-att); padding: 10px 0; }
+    .retour-lien {
+        display: block;
+        text-align: center;
+        margin-top: 18px;
+        color: var(--texte-att);
+        font-size: 0.85em;
+        text-decoration: none;
+    }
+</style>
+</head>
+<body>
+<div class="conteneur">
+    <div class="entete">
+        <h1>📊 Carnet de progression</h1>
+        <p>Entrez le Code d'accès de l'élève (le même que celui utilisé pour ouvrir l'Espace de Préparation) pour consulter sa progression réelle, matière par matière, notion par notion.</p>
+    </div>
+
+    <div class="carte">
+        <div class="ligne-recherche">
+            <input type="text" id="matricule-input" placeholder="Code d'accès, ex : ELV-XXXXX" autocapitalize="characters">
+            <button id="btn-voir-carnet">Voir le carnet</button>
+        </div>
+        <p id="message"></p>
+    </div>
+
+    <div class="carte" id="zone-vide">
+        <p>Aucune donnée de progression pour ce matricule pour l'instant. Le carnet se remplit automatiquement au fil des devoirs corrigés dans l'Espace de Préparation — rien à faire de particulier, ça viendra avec l'usage.</p>
+    </div>
+
+    <div id="resultats"></div>
+
+    <a class="retour-lien" href="index.html">← Retour à EdukaTchat</a>
+</div>
+
+<script>
+const API_BASE = 'https://api.edukatchat.org';
+
+const input = document.getElementById('matricule-input');
+const bouton = document.getElementById('btn-voir-carnet');
+const message = document.getElementById('message');
+const zoneVide = document.getElementById('zone-vide');
+const zoneResultats = document.getElementById('resultats');
+
+function couleurPourcentage(pct) {
+    if (pct >= 75) return getComputedStyle(document.documentElement).getPropertyValue('--vert').trim();
+    if (pct >= 50) return getComputedStyle(document.documentElement).getPropertyValue('--amber').trim();
+    return getComputedStyle(document.documentElement).getPropertyValue('--rouge').trim();
+}
+
+function construireRendu(carnet) {
+    zoneResultats.innerHTML = '';
+    const matieres = Object.keys(carnet);
+    if (matieres.length === 0) {
+        zoneVide.style.display = 'block';
+        zoneResultats.style.display = 'none';
+        return;
+    }
+    zoneVide.style.display = 'none';
+
+    matieres.forEach(matiere => {
+        const bloc = document.createElement('div');
+        bloc.className = 'carte matiere-bloc';
+
+        const titre = document.createElement('div');
+        titre.className = 'matiere-titre';
+        titre.textContent = matiere;
+        bloc.appendChild(titre);
+
+        const notions = carnet[matiere];
+        Object.keys(notions).forEach(notion => {
+            const stats = notions[notion];
+            const rang = document.createElement('div');
+            rang.className = 'notion-rang';
+
+            const nom = document.createElement('div');
+            nom.className = 'notion-nom';
+            nom.textContent = notion;
+
+            const detail = document.createElement('div');
+            detail.className = 'notion-detail';
+            detail.textContent = `${stats.reussies}/${stats.total}`;
+
+            const barreFond = document.createElement('div');
+            barreFond.className = 'barre-fond';
+            const barreRemplie = document.createElement('div');
+            barreRemplie.className = 'barre-remplie';
+            barreRemplie.style.width = stats.pourcentage + '%';
+            barreRemplie.style.background = couleurPourcentage(stats.pourcentage);
+            barreFond.appendChild(barreRemplie);
+
+            const pourcentage = document.createElement('div');
+            pourcentage.className = 'pourcentage';
+            pourcentage.textContent = stats.pourcentage + '%';
+            pourcentage.style.color = couleurPourcentage(stats.pourcentage);
+
+            rang.appendChild(nom);
+            rang.appendChild(detail);
+            rang.appendChild(barreFond);
+            rang.appendChild(pourcentage);
+            bloc.appendChild(rang);
+        });
+
+        zoneResultats.appendChild(bloc);
+    });
+    zoneResultats.style.display = 'block';
+}
+
+async function chargerCarnet() {
+    const matricule = input.value.trim();
+    message.className = '';
+    message.textContent = '';
+    zoneVide.style.display = 'none';
+    zoneResultats.style.display = 'none';
+    zoneResultats.innerHTML = '';
+
+    if (!matricule) {
+        message.className = 'erreur';
+        message.textContent = "Entrez un Code d'accès.";
+        return;
+    }
+
+    bouton.disabled = true;
+    message.className = 'info';
+    message.textContent = 'Chargement...';
+
+    try {
+        const reponse = await fetch(`${API_BASE}/api/suivi/carnet`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule })
+        });
+        const donnees = await reponse.json();
+
+        if (donnees.status !== 'success') {
+            message.className = 'erreur';
+            message.textContent = donnees.message || "Code d'accès introuvable ou abonnement inactif.";
+            bouton.disabled = false;
+            return;
+        }
+
+        message.textContent = '';
+        construireRendu(donnees.carnet || {});
+    } catch (erreur) {
+        message.className = 'erreur';
+        message.textContent = 'Impossible de contacter le serveur pour le moment. Réessayez dans un instant.';
+    } finally {
+        bouton.disabled = false;
+    }
+}
+
+bouton.addEventListener('click', chargerCarnet);
+input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') chargerCarnet();
+});
+</script>
+</body>
+</html>
