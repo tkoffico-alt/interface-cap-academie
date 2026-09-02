@@ -3168,11 +3168,21 @@ function triggerVisionUpsell(chatHistoryId) {
 // ❖ Un seul input file caché, réutilisé par tous les outils.
 let inputFichierImageCache = null;
 
+// ❖ Formats acceptés par le trombone (01/09/2026) : étendu au-delà des
+// photos aux documents (PDF, Word, TXT, CSV, Excel) -- voir
+// gateway/main.py, type_fichier_dify, qui reste la source de vérité côté
+// serveur (ce simple attribut "accept" ne fait que présélectionner les
+// fichiers dans le sélecteur du navigateur, il n'empêche pas d'en choisir
+// un autre via "Tous les fichiers"). L'attribut "capture" (ouverture
+// directe de l'appareil photo) reste sans effet sur les documents -- les
+// navigateurs l'ignorent silencieusement en dehors des images/vidéos.
+const EXTENSIONS_FICHIER_ACCEPTEES = 'image/*,.pdf,.doc,.docx,.txt,.md,.csv,.xls,.xlsx';
+
 function obtenirInputFichierImage() {
     if (!inputFichierImageCache) {
         inputFichierImageCache = document.createElement('input');
         inputFichierImageCache.type = 'file';
-        inputFichierImageCache.accept = 'image/*';
+        inputFichierImageCache.accept = EXTENSIONS_FICHIER_ACCEPTEES;
         inputFichierImageCache.capture = 'environment';
         inputFichierImageCache.style.display = 'none';
         document.body.appendChild(inputFichierImageCache);
@@ -3180,8 +3190,9 @@ function obtenirInputFichierImage() {
     return inputFichierImageCache;
 }
 
-// ❖ fichiersEnAttente[chatHistoryId] = { id: <upload_file_id Dify>, nom }
-// -- vidé après l'envoi du message suivant, ou par annulation manuelle.
+// ❖ fichiersEnAttente[chatHistoryId] = { id: <upload_file_id Dify>, nom,
+// type: <"image"|"document", voir type_fichier_dify côté serveur> } --
+// vidé après l'envoi du message suivant, ou par annulation manuelle.
 const fichiersEnAttente = {};
 
 function declencherJoindreImage(chatHistoryId, contexte) {
@@ -3211,7 +3222,7 @@ async function televerserImageChat(chatHistoryId, contexte, sceau, fichier) {
 
     const bulleEnvoi = document.createElement('div');
     bulleEnvoi.className = 'message bot-message';
-    bulleEnvoi.innerHTML = `<div style="font-size: 0.9em;">📎 Envoi de l'image en cours...</div>`;
+    bulleEnvoi.innerHTML = `<div style="font-size: 0.9em;">📎 Envoi du fichier en cours...</div>`;
     chatHistory.appendChild(bulleEnvoi);
     scrollToBottom(chatHistoryId);
 
@@ -3230,10 +3241,16 @@ async function televerserImageChat(chatHistoryId, contexte, sceau, fichier) {
         bulleEnvoi.remove();
 
         if (data.success) {
-            fichiersEnAttente[chatHistoryId] = { id: data.id, nom: fichier.name };
+            // ❖ data.type ("image" ou "document", voir type_fichier_dify côté
+            // serveur) est conservé ici pour être retransmis tel quel dans
+            // fichier_type au moment de l'envoi du message (voir sendSasMessage
+            // / sendTeacherMessage) -- c'est le serveur qui a déterminé le type
+            // au moment du téléversement, le frontend se contente de le
+            // reporter plutôt que de deviner à partir de l'extension.
+            fichiersEnAttente[chatHistoryId] = { id: data.id, nom: fichier.name, type: data.type || 'image' };
             const bulleConfirmation = document.createElement('div');
             bulleConfirmation.className = 'message bot-message';
-            bulleConfirmation.innerHTML = `<div style="font-size: 0.9em;">📎 Image jointe (« ${fichier.name} ») — elle sera envoyée avec ton prochain message. <a href="#" onclick="annulerImageJointe('${chatHistoryId}', this); return false;" style="color:#EF4444;">Annuler</a></div>`;
+            bulleConfirmation.innerHTML = `<div style="font-size: 0.9em;">📎 Fichier joint (« ${fichier.name} ») — il sera envoyé avec ton prochain message. <a href="#" onclick="annulerImageJointe('${chatHistoryId}', this); return false;" style="color:#EF4444;">Annuler</a></div>`;
             chatHistory.appendChild(bulleConfirmation);
             scrollToBottom(chatHistoryId);
         } else if (data.premium_requis) {
@@ -3241,7 +3258,7 @@ async function televerserImageChat(chatHistoryId, contexte, sceau, fichier) {
         } else {
             const bulleErreur = document.createElement('div');
             bulleErreur.className = 'message bot-message';
-            bulleErreur.textContent = data.message || "L'envoi de l'image a échoué. Réessaie dans un instant.";
+            bulleErreur.textContent = data.message || "L'envoi du fichier a échoué. Réessaie dans un instant.";
             chatHistory.appendChild(bulleErreur);
             scrollToBottom(chatHistoryId);
         }
@@ -3249,7 +3266,7 @@ async function televerserImageChat(chatHistoryId, contexte, sceau, fichier) {
         bulleEnvoi.remove();
         const bulleErreur = document.createElement('div');
         bulleErreur.className = 'message bot-message';
-        bulleErreur.textContent = "L'envoi de l'image a échoué. Vérifie ta connexion et réessaie.";
+        bulleErreur.textContent = "L'envoi du fichier a échoué. Vérifie ta connexion et réessaie.";
         chatHistory.appendChild(bulleErreur);
         scrollToBottom(chatHistoryId);
     }
@@ -3616,7 +3633,8 @@ async function sendSasMessage() {
                 classe: classeActive,
                 methode_travail: methodeTravailActive,
                 gestion_stress: gestionStressActive,
-                fichier_id: (imageJointeSas && imageJointeSas.id) || ""
+                fichier_id: (imageJointeSas && imageJointeSas.id) || "",
+                fichier_type: (imageJointeSas && imageJointeSas.type) || "image"
             })
         });
         // ❖ Correction (27/08/2026) : l'image jointe n'est plus effacée
@@ -3845,7 +3863,8 @@ async function sendTeacherMessage(outil) {
                 outil: outil,
                 matricule: sceau,
                 device_id: obtenirDeviceId(),
-                fichier_id: (imageJointeTeacher && imageJointeTeacher.id) || ""
+                fichier_id: (imageJointeTeacher && imageJointeTeacher.id) || "",
+                fichier_type: (imageJointeTeacher && imageJointeTeacher.type) || "image"
             })
         });
         // ❖ Voir la note équivalente dans sendSasMessage : l'image jointe
