@@ -994,14 +994,58 @@ function echapperHTMLFiche(s) {
     return (s || "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// ❖ Préfixe des URLs du catalogue d'illustrations EdukaTchat (voir
+// ILLUSTRATIONS_BASE_URL côté gateway/main.py). Sert de garde-fou : une
+// image markdown ![alt](url) n'est convertie en vraie balise <img> que si
+// son URL pointe vers ce catalogue connu -- jamais une URL arbitraire que
+// l'IA aurait pu inventer (même principe anti-hallucination que
+// illustrations_disponibles_pour_agent côté serveur). Une URL non reconnue
+// reste simplement du texte échappé, inerte -- jamais une image cassée.
+const PREFIXE_URL_ILLUSTRATIONS_SURES = 'https://edukatchat.org/images/illustrations/';
+
+// Extrait les images markdown ![alt](url) d'un bloc de texte AVANT
+// l'échappement HTML (echapperHTMLFiche échapperait sinon les crochets/
+// parenthèses de façon à casser la syntaxe, et de toute façon on ne veut
+// jamais afficher ce motif tel quel). Remplace chaque image reconnue par
+// un jeton temporaire (caractère de contrôle improbable en collision avec
+// du texte réel) et retourne la liste à réinjecter après coup, une fois le
+// HTML des paragraphes/listes construit.
+function extraireImagesFicheSures(bloc) {
+    const images = [];
+    const texte = (bloc || '').replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, (motif, alt, url) => {
+        if (!url.startsWith(PREFIXE_URL_ILLUSTRATIONS_SURES)) {
+            return motif;
+        }
+        const jeton = ` IMG${images.length} `;
+        images.push({ alt, url });
+        return jeton;
+    });
+    return { texte, images };
+}
+
+function reinjecterImagesFiche(html, images) {
+    let resultat = html;
+    images.forEach((img, i) => {
+        const jeton = ` IMG${i} `;
+        const altEchappe = echapperHTMLFiche(img.alt).replace(/"/g, '&quot;');
+        resultat = resultat.split(jeton).join(`<img src="${img.url}" alt="${altEchappe}">`);
+    });
+    return resultat;
+}
+
 // Conversion très légère (paragraphes/listes) sans passer par marked.parse
 // en entier -- les astérisques de gras résiduels sont déjà neutralisés en
 // amont par analyserFicheLecon(), il ne reste ici qu'à filtrer les lignes
 // purement séparatrices ("---", etc., voir estLigneSeparatriceFiche) et à
-// reconstituer paragraphes/listes.
+// reconstituer paragraphes/listes. Les images markdown du catalogue connu
+// (voir extraireImagesFicheSures) traversent cette conversion à l'abri
+// derrière un jeton, pour ressortir en vraies balises <img> à la fin --
+// c'est ce qui permet à un enseignant de coller le lien copié depuis la
+// Bibliothèque d'illustrations directement dans une fiche générée.
 function texteVersHtmlLegerFiche(bloc) {
     if (!bloc) return '';
-    const echappe = echapperHTMLFiche(bloc);
+    const { texte: blocProtege, images } = extraireImagesFicheSures(bloc);
+    const echappe = echapperHTMLFiche(blocProtege);
     const paragraphes = echappe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
 
     // ❖ Le modèle produit souvent des listes "aérées" : une puce isolée
@@ -1026,13 +1070,15 @@ function texteVersHtmlLegerFiche(bloc) {
         }
     });
 
-    return blocs.map(b => {
+    const html = blocs.map(b => {
         const toutesEnListe = b.estListe || (b.lignes.length > 1 && b.lignes.every(l => /^[-•]\s+/.test(l)));
         if (toutesEnListe) {
             return '<ul>' + b.lignes.map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('') + '</ul>';
         }
         return `<p>${b.lignes.join('<br>')}</p>`;
     }).filter(Boolean).join('');
+
+    return images.length ? reinjecterImagesFiche(html, images) : html;
 }
 
 // Sépare un segment de texte (contenu entre la fin d'une "TRACE ÉCRITE
