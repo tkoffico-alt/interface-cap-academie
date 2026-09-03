@@ -206,13 +206,24 @@ body.dark-theme .pole-title::before, body.dark-theme .pole-title::after {
     margin: 0 auto;
 }
 
-/* Grilles Spécialisée et Accompagnement (3 colonnes) */
+/* Grilles Spécialisée et Accompagnement (3 colonnes de base, désormais 4 avec
+   l'Atelier de l'Élan) -- en flexbox plutôt qu'en grid à colonnes fixes : avec
+   un nombre de cartes qui ne divise pas exactement le nombre de colonnes (4
+   cartes / 3 colonnes), un grid figé isole la carte en trop seule à gauche
+   d'une rangée, avec un grand vide à sa droite. Le flex-wrap + justify-content
+   centre automatiquement toute rangée incomplète, quel que soit le nombre de
+   cartes à l'avenir. */
 .grid-trois-piliers {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 1.5rem;
     max-width: 1100px;
     margin: 0 auto;
+}
+.grid-trois-piliers > .door-card {
+    flex: 1 1 280px;
+    max-width: 350px;
 }
 
 /* Harmonisation visuelle des nouvelles cartes -- badges teintés (fond
@@ -237,14 +248,19 @@ body.dark-theme .door-card.boussole:hover { box-shadow: 0 15px 30px -5px rgba(0,
 body.dark-theme .door-card.elan:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 63, 94, 0.4); }
 
 @media (max-width: 900px) {
-    .grid-trois-piliers {
-        grid-template-columns: repeat(2, minmax(280px, 1fr));
+    .grid-trois-piliers > .door-card {
+        flex-basis: calc(50% - 0.75rem);
+        max-width: calc(50% - 0.75rem);
     }
 }
 
 @media (max-width: 768px) {
-    .grid-fondamental, .grid-trois-piliers {
+    .grid-fondamental {
         grid-template-columns: 1fr;
+    }
+    .grid-trois-piliers > .door-card {
+        flex-basis: 100%;
+        max-width: 100%;
     }
 }
 
