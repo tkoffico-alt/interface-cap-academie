@@ -232,6 +232,10 @@ body.dark-theme .door-card.sciences:hover { box-shadow: 0 15px 30px -5px rgba(0,
 .door-card.boussole:hover { border-color: #F59E0B; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(245, 158, 11, 0.4); }
 body.dark-theme .door-card.boussole:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.4); }
 
+.door-card.elan .icon-wrapper { background-color: rgba(244, 63, 94, 0.1); color: #FB7185; }
+.door-card.elan:hover { border-color: #F43F5E; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(244, 63, 94, 0.4); }
+body.dark-theme .door-card.elan:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 63, 94, 0.4); }
+
 @media (max-width: 900px) {
     .grid-trois-piliers {
         grid-template-columns: repeat(2, minmax(280px, 1fr));

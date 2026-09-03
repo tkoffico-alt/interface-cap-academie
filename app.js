@@ -720,6 +720,8 @@ function naviguerVers(destination) {
         ouvrirPhilo();
     } else if (destination === 'sciences') {
         ouvrirSciences();
+    } else if (destination === 'elan') {
+        ouvrirElan();
     } else if (destination === 'boussole') {
         ouvrirBoussole();
     } else if (destination === 'boussole-univ') {
@@ -4512,6 +4514,14 @@ function ouvrirSciences() { document.getElementById('sciences-modal').classList.
 function fermerSciences() { document.getElementById('sciences-modal').classList.remove('active'); }
 function ouvrirBoussoleUniv() { document.getElementById('univ-modal').classList.add('active'); }
 function fermerBoussoleUniv() { document.getElementById('univ-modal').classList.remove('active'); }
+
+// L'Atelier de l'Élan n'a volontairement aucun formulaire préalable (contrairement à
+// Orateur/Philo/Sciences) : demander "sujet" + "cadre" avant de pouvoir parler ajouterait de la
+// friction à un outil pensé pour être accessible sans détour, y compris à un élève qui a juste
+// besoin de souffler.
+function ouvrirElan() {
+    preparerArene('elan', "Salut&nbsp;! Je suis l'Atelier de l'Élan — un espace pour trouver ta méthode, te remotiver après un coup dur, ou fixer tes objectifs. Qu'est-ce qui t'amène aujourd'hui&nbsp;?", {});
+}
 
 // =======================================================================
 // ❖ LA NOUVELLE ARÈNE UNIVERSELLE (ATELIERS & BOUSSOLE) ❖
