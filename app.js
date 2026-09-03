@@ -3071,6 +3071,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initMascotte();
     restoreChatHistories();
+    // ❖ Rattrape une éventuelle session Sas laissée ouverte par un appareil
+    // qui n'a jamais réussi à envoyer sa sentinelle de clôture normale
+    // (voir verifierRattrapageClotureSas, définie plus bas dans ce fichier).
+    if (typeof verifierRattrapageClotureSas === 'function') {
+        verifierRattrapageClotureSas();
+    }
 });
 
 // =======================================================================
@@ -3352,6 +3358,110 @@ function reinitialiserMinuteurInactiviteSas() {
     }, DELAI_INACTIVITE_CLOTURE_MS);
 }
 
+// ❖ RATTRAPAGE DE CLÔTURE PAR HORLOGE PERSISTÉE (ajouté le 03/09/2026)
+//
+// Incident réel : une session de 21 minutes (14 messages, matricule
+// ELV-IV1JA) n'a jamais été clôturée -- ni bilan, ni ligne dans
+// Journal_Sessions -- alors que les trois déclencheurs ci-dessus existent
+// déjà (fermeture d'onglet, mise en arrière-plan, inactivité). Diagnostic
+// confirmé par les journaux du serveur : la sentinelle de clôture n'a
+// JAMAIS atteint le serveur, dans aucune des heures qui ont suivi. Cause
+// probable : ces trois déclencheurs dépendent tous d'un minuteur
+// JavaScript programmé pendant que l'onglet est actif -- sur mobile en
+// particulier, le système peut suspendre l'exécution d'un onglet mis en
+// arrière-plan avant que ce minuteur n'ait la moindre chance de se
+// déclencher, surtout après une mise en veille prolongée.
+//
+// Le correctif : au lieu de compter sur un minuteur qui doit rester vivant
+// pendant l'absence de l'élève, on enregistre l'heure du dernier message
+// dans localStorage (qui survit, lui, à la mise en veille) à chaque
+// échange réussi. Au prochain réveil de l'application -- rechargement de
+// page ou retour au premier plan --, on compare l'heure actuelle à cette
+// dernière heure connue : si l'écart dépasse le délai d'inactivité, on
+// envoie la sentinelle de clôture à ce moment-là, rétroactivement, pour la
+// session laissée en suspens. Cela ne dépend plus que d'un calcul fait une
+// fois que le JavaScript tourne à nouveau, ce qui est garanti dès que
+// l'élève rouvre l'application -- contrairement à un minuteur en
+// arrière-plan. Les trois déclencheurs existants restent en place comme
+// premier filet, plus rapide quand ils fonctionnent ; celui-ci n'est qu'un
+// filet de secours qui rattrape les cas où ils ont silencieusement échoué.
+const CLE_DERNIERE_ACTIVITE_SAS = 'eduka_sas_derniere_activite';
+
+function enregistrerActiviteSasPourRattrapage() {
+    // ⚠️ Ne jamais référencer une variable "sceau" ici : contrairement à
+    // avatarActif/classeActive/etc. (globales, déclarées en tête de
+    // fichier), "sceau" est systématiquement une const LOCALE à chaque
+    // fonction qui la lit depuis localStorage -- cette fonction, définie au
+    // niveau global, ne verrait aucune de ces constantes locales et lèverait
+    // une ReferenceError silencieusement avalée par le catch ci-dessous,
+    // rendant tout le mécanisme inopérant. On relit donc directement
+    // localStorage, comme le fait déjà declencherClotureAutomatiqueSas.
+    try {
+        localStorage.setItem(CLE_DERNIERE_ACTIVITE_SAS, JSON.stringify({
+            timestamp: Date.now(),
+            conversation_id: sasConversationIds[avatarActif] || "",
+            matricule: localStorage.getItem('eduka_sceau') || "",
+            avatar: avatarActif,
+            device_id: (typeof obtenirDeviceId === 'function') ? obtenirDeviceId() : "",
+            classe: classeActive,
+            methode_travail: (typeof methodeTravailActive !== 'undefined') ? methodeTravailActive : "",
+            gestion_stress: (typeof gestionStressActive !== 'undefined') ? gestionStressActive : ""
+        }));
+    } catch (e) {
+        // localStorage indisponible (navigation privée très restrictive, quota
+        // plein...) : tant pis, les trois déclencheurs existants restent actifs.
+    }
+}
+
+function effacerActiviteSasRattrapage() {
+    try { localStorage.removeItem(CLE_DERNIERE_ACTIVITE_SAS); } catch (e) {}
+}
+
+function verifierRattrapageClotureSas() {
+    // À exécuter tôt (chargement de page, retour au premier plan) : rattrape
+    // une session laissée ouverte par un appareil qui n'a jamais réussi à
+    // envoyer la sentinelle de clôture normale (voir le commentaire ci-dessus).
+    let etat;
+    try {
+        const brut = localStorage.getItem(CLE_DERNIERE_ACTIVITE_SAS);
+        if (!brut) return;
+        etat = JSON.parse(brut);
+    } catch (e) {
+        return;
+    }
+    if (!etat || !etat.timestamp || !etat.matricule) {
+        effacerActiviteSasRattrapage();
+        return;
+    }
+    if (Date.now() - etat.timestamp < DELAI_INACTIVITE_CLOTURE_MS) {
+        return; // encore dans la fenêtre normale, rien à rattraper
+    }
+
+    // Effacé AVANT l'envoi, pour ne jamais renvoyer deux fois la même
+    // clôture en cas d'appels concurrents (chargement de page + visibilitychange).
+    effacerActiviteSasRattrapage();
+
+    try {
+        const payload = JSON.stringify({
+            query: SENTINEL_FIN_SESSION_SAS,
+            conversation_id: etat.conversation_id || "",
+            matricule: etat.matricule,
+            avatar: etat.avatar || "general",
+            device_id: etat.device_id || "",
+            classe: etat.classe || "",
+            methode_travail: etat.methode_travail || "",
+            gestion_stress: etat.gestion_stress || ""
+        });
+        fetch('https://api.edukatchat.org/api/sas/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload
+        }).catch(() => {});
+    } catch (e) {
+        console.warn("Rattrapage de clôture impossible :", e);
+    }
+}
+
 function declencherClotureAutomatiqueSas(raison) {
     if (!sasSessionOuverte || sasClotureDejaEnvoyee) return;
     const sceau = localStorage.getItem('eduka_sceau') || "";
@@ -3359,6 +3469,7 @@ function declencherClotureAutomatiqueSas(raison) {
 
     sasClotureDejaEnvoyee = true;
     if (minuteurInactiviteSas) clearTimeout(minuteurInactiviteSas);
+    effacerActiviteSasRattrapage(); // cette clôture "normale" rend le rattrapage inutile
 
     try {
         const payload = JSON.stringify({
@@ -3408,6 +3519,12 @@ document.addEventListener('visibilitychange', () => {
             clearTimeout(minuteurGraceArrierePlan);
             minuteurGraceArrierePlan = null;
         }
+        // ❖ Retour au premier plan : si la mise en arrière-plan a duré assez
+        // longtemps pour dépasser le délai d'inactivité sans qu'aucun des
+        // déclencheurs habituels n'ait réussi à clôturer la session (le cas
+        // qui a motivé ce mécanisme, voir verifierRattrapageClotureSas),
+        // on la rattrape ici plutôt que d'attendre un futur rechargement.
+        verifierRattrapageClotureSas();
     }
 });
 
@@ -3707,6 +3824,7 @@ async function sendSasMessage() {
         sasSessionOuverte = true;
         sasClotureDejaEnvoyee = false;
         reinitialiserMinuteurInactiviteSas();
+        enregistrerActiviteSasPourRattrapage();
 
         const contentType = response.headers.get("content-type");
 
