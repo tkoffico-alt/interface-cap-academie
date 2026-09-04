@@ -4638,7 +4638,7 @@ function fermerBoussoleUniv() { document.getElementById('univ-modal').classList.
 // friction à un outil pensé pour être accessible sans détour, y compris à un élève qui a juste
 // besoin de souffler.
 function ouvrirElan() {
-    preparerArene('elan', "Salut&nbsp;! Je suis l'Atelier de l'Élan — un espace pour trouver ta méthode, te remotiver après un coup dur, ou fixer tes objectifs. Qu'est-ce qui t'amène aujourd'hui&nbsp;?", {});
+    preparerArene('elan', "Salut&nbsp;! Je suis l'Atelier de l'Élan — un espace pour trouver ta méthode, te remotiver après un coup dur, ou fixer tes objectifs. Qu'est-ce qui t'amène aujourd'hui&nbsp;?", {}, true);
 }
 
 // =======================================================================
@@ -4648,7 +4648,23 @@ let activeAtelier = "";
 let activeAtelierInputs = {};
 let areneConversationId = "";
 
-function preparerArene(nomAtelier, messageBienvenue, inputs) {
+// ❖ OUVERTURE VIVANTE DES ATELIERS (ajouté le 03/09/2026) ❖
+//
+// Jusqu'ici, preparerArene() affichait un texte d'accueil figé, codé en
+// dur côté client (jamais généré par l'IA) -- l'élève ne recevait donc un
+// vrai message de l'agent qu'après avoir lui-même écrit quelque chose.
+// Constant a demandé de rendre cette ouverture réellement vivante : dès
+// l'entrée dans un Atelier, un vrai premier appel est envoyé à l'agent
+// (silencieusement, sans bulle "élève" visible, l'élève n'a rien tapé),
+// pour qu'il génère lui-même son message d'accueil -- exactement ce que
+// prévoit déjà la section "PREMIER CONTACT" de chaque prompt d'Atelier,
+// jusqu'ici jamais réellement déclenchée. Chaque prompt d'Atelier doit
+// reconnaître ce texte sentinelle et l'interpréter comme un déclencheur
+// d'accueil, jamais comme une vraie question à traiter littéralement --
+// même principe que SENTINEL_FIN_SESSION_SAS côté Espace de Préparation.
+const SENTINEL_OUVERTURE_ARENE = "[DEBUT_DE_SESSION_AUTOMATIQUE]";
+
+function preparerArene(nomAtelier, messageBienvenue, inputs, ouvertureVivante) {
     activeAtelier = nomAtelier;
     activeAtelierInputs = inputs;
     areneConversationId = "";
@@ -4661,9 +4677,23 @@ function preparerArene(nomAtelier, messageBienvenue, inputs) {
     document.getElementById('container-arene-custom').classList.add('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
 
-    // Purifier l'historique
     const chatHistory = document.getElementById('arene-chat-history');
-    chatHistory.innerHTML = `<div class="message system-message">${messageBienvenue}</div>`;
+
+    if (ouvertureVivante) {
+        // ❖ Ouverture vivante : l'historique part vide, un vrai appel à
+        // l'agent (silencieux) va immédiatement produire le message
+        // d'accueil réel -- voir SENTINEL_OUVERTURE_ARENE ci-dessus.
+        // messageBienvenue n'est plus affiché directement : sendAreneMessage
+        // gère déjà son propre repli en cas d'échec réseau ("Le lien a été
+        // rompu..."), pas besoin d'un second filet ici.
+        chatHistory.innerHTML = '';
+        sendAreneMessage(SENTINEL_OUVERTURE_ARENE, { silencieux: true });
+    } else {
+        // Comportement historique, inchangé (utilisé par la Boussole
+        // Universitaire/Conseiller, qui a déjà son propre déclenchement
+        // vivant via un second message auto-envoyé juste après cet appel).
+        chatHistory.innerHTML = `<div class="message system-message">${messageBienvenue}</div>`;
+    }
 }
 
 function invoquerJury() {
@@ -4671,7 +4701,7 @@ function invoquerJury() {
     const cadre = document.getElementById('orateur-cadre').value;
     if (!sujet || !cadre) { alert("Le jury exige de préciser l'œuvre et le cadre."); return; }
     fermerAtelier();
-    preparerArene('orateur', `Le Jury est prêt à vous écouter sur : <strong>${sujet}</strong> (${cadre}).`, { sujet_etudie: sujet, cadre_epreuve: cadre });
+    preparerArene('orateur', `Le Jury est prêt à vous écouter sur : <strong>${sujet}</strong> (${cadre}).`, { sujet_etudie: sujet, cadre_epreuve: cadre }, true);
 }
 
 function invoquerMaitrePhilo() {
@@ -4679,7 +4709,7 @@ function invoquerMaitrePhilo() {
     const cadre = document.getElementById('philo-cadre').value;
     if (!sujet || !cadre) { alert("Le Maître exige un sujet et un cadre de réflexion."); return; }
     fermerPhilo();
-    preparerArene('philo', `L'Espace de réflexion est ouvert. Thème : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre });
+    preparerArene('philo', `L'Espace de réflexion est ouvert. Thème : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre }, true);
 }
 
 function invoquerLaboratoire() {
@@ -4687,7 +4717,7 @@ function invoquerLaboratoire() {
     const cadre = document.getElementById('sciences-cadre').value;
     if (!sujet || !cadre) { alert("Les protocoles exigent un sujet et une méthode."); return; }
     fermerSciences();
-    preparerArene('sciences', `Le Laboratoire est actif. Protocole : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre });
+    preparerArene('sciences', `Le Laboratoire est actif. Protocole : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre }, true);
 }
 
 function invoquerConseiller() {
@@ -4740,10 +4770,13 @@ function handleAreneKeyPress(event) {
     if (event.key === 'Enter') sendAreneMessage();
 }
 
-async function sendAreneMessage() {
+async function sendAreneMessage(messageForce, optionsEnvoi) {
+    optionsEnvoi = optionsEnvoi || {};
+    const silencieux = optionsEnvoi.silencieux === true;
+
     const inputField = document.getElementById('arene-user-input');
     const button = inputField.nextElementSibling;
-    const message = inputField.value.trim();
+    const message = (typeof messageForce === 'string' && messageForce) ? messageForce : inputField.value.trim();
     if (!message) return;
 
     inputField.disabled = true;
@@ -4751,14 +4784,19 @@ async function sendAreneMessage() {
     button.style.opacity = '0.5';
 
     const chatHistory = document.getElementById('arene-chat-history');
-    const userMsgDiv = document.createElement('div');
-    userMsgDiv.className = 'message user-message';
-    userMsgDiv.textContent = message;
-    userMsgDiv.appendChild(creerBoutonReutiliser(message, 'arene-user-input'));
-    chatHistory.appendChild(userMsgDiv);
 
-    inputField.value = '';
-    scrollToBottom('arene-chat-history');
+    // ❖ Mode silencieux (ouverture vivante) : aucune bulle "élève" affichée
+    // -- l'élève n'a rien tapé, ce serait mentir sur qui a "dit" quoi.
+    // Seule la réponse de l'agent (traitée plus bas, inchangé) apparaîtra.
+    if (!silencieux) {
+        const userMsgDiv = document.createElement('div');
+        userMsgDiv.className = 'message user-message';
+        userMsgDiv.textContent = message;
+        userMsgDiv.appendChild(creerBoutonReutiliser(message, 'arene-user-input'));
+        chatHistory.appendChild(userMsgDiv);
+        inputField.value = '';
+        scrollToBottom('arene-chat-history');
+    }
 
     const botLoadingDiv = document.createElement('div');
     botLoadingDiv.className = 'message bot-message apparition-fluide';
