@@ -206,13 +206,15 @@ body.dark-theme .pole-title::before, body.dark-theme .pole-title::after {
     margin: 0 auto;
 }
 
-/* Grilles Spécialisée et Accompagnement (3 colonnes de base, désormais 4 avec
-   l'Atelier de l'Élan) -- en flexbox plutôt qu'en grid à colonnes fixes : avec
-   un nombre de cartes qui ne divise pas exactement le nombre de colonnes (4
-   cartes / 3 colonnes), un grid figé isole la carte en trop seule à gauche
-   d'une rangée, avec un grand vide à sa droite. Le flex-wrap + justify-content
-   centre automatiquement toute rangée incomplète, quel que soit le nombre de
-   cartes à l'avenir. */
+/* Grille des Ateliers de Maîtrise (4 cartes depuis l'ajout de l'Atelier de
+   l'Élan) -- toujours en flexbox plutôt qu'en grid à colonnes fixes (le
+   flex-wrap + justify-content centre automatiquement toute rangée incomplète,
+   utile si le nombre de cartes redevient impair à l'avenir), mais la base
+   (flex-basis 400px / max-width 480px ci-dessous) tient désormais toujours
+   exactement 2 cartes par ligne dans ce conteneur de 1100px -- demandé par
+   Constant le 04/09/2026 pour une disposition 2x2 symétrique, les 3 premières
+   cartes ne remplissant plus toute la largeur avant de renvoyer la 4e seule
+   sur sa propre ligne. */
 .grid-trois-piliers {
     display: flex;
     flex-wrap: wrap;
@@ -222,8 +224,8 @@ body.dark-theme .pole-title::before, body.dark-theme .pole-title::after {
     margin: 0 auto;
 }
 .grid-trois-piliers > .door-card {
-    flex: 1 1 280px;
-    max-width: 350px;
+    flex: 1 1 400px;
+    max-width: 480px;
 }
 
 /* Harmonisation visuelle des nouvelles cartes -- badges teintés (fond
@@ -246,13 +248,6 @@ body.dark-theme .door-card.boussole:hover { box-shadow: 0 15px 30px -5px rgba(0,
 .door-card.elan .icon-wrapper { background-color: rgba(244, 63, 94, 0.1); color: #FB7185; }
 .door-card.elan:hover { border-color: #F43F5E; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(244, 63, 94, 0.4); }
 body.dark-theme .door-card.elan:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 63, 94, 0.4); }
-
-@media (max-width: 900px) {
-    .grid-trois-piliers > .door-card {
-        flex-basis: calc(50% - 0.75rem);
-        max-width: calc(50% - 0.75rem);
-    }
-}
 
 @media (max-width: 768px) {
     .grid-fondamental {
