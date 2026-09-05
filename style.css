@@ -265,7 +265,25 @@ body.dark-theme .door-card.elan:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 
     justify-content: space-between;
     align-items: center;
     text-align: center;
-    height: 100%;
+    /* PAS de height:100% ici (retiré le 05/09/2026) : une carte flex/grid dont le
+       conteneur parent a une hauteur indéfinie (auto) résout ce 100% comme "non-auto"
+       au sens strict du spec CSS, ce qui désactive le stretch par défaut
+       (align-items: stretch/normal) de TOUS les conteneurs qui utilisent .door-card
+       (.grid-fondamental et la grille Encadrement/Orientation en CSS Grid,
+       .grid-trois-piliers en flexbox) -- chaque carte revient alors à sa hauteur
+       naturelle (hug content) au lieu de s'aligner sur la plus haute carte de sa
+       ligne. Invisible tant que les cartes d'une même ligne ont un texte de longueur
+       comparable, mais c'est exactement ce qui causait le bouton "Entrer dans
+       l'Atelier" de la carte Élan à apparaître décalé vers le bas par rapport à la
+       carte Sciences sur la même ligne (signalé par Constant le 04/09/2026) : le
+       paragraphe de l'Élan est plus long (3 lignes contre 2), donc sa carte restait
+       plus haute (358px) que celle de Sciences (336px) au lieu de s'étirer à la même
+       hauteur. Confirmé par mesure DOM réelle sur edukatchat.org (getBoundingClientRect)
+       avant et après retrait de cette ligne -- les deux cartes passent bien de hauteurs
+       différentes à 358px chacune, boutons parfaitement alignés, aucune régression
+       observée sur .grid-fondamental (Sas/Élève) ni sur la grille Encadrement/
+       Orientation (Enseignant/Boussole/Boussole Univ/Parents), déjà à hauteur égale
+       et inchangée par ce retrait. */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
