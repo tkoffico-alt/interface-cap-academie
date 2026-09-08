@@ -3883,6 +3883,16 @@ async function sendSasMessage() {
                                 sasConversationIds[avatarActif] = dataObj.conversation_id;
                                 imageEnvoyeeAvecSucces = true;
                             }
+                            // ❖ Rejet PERMANENT du fichier joint signalé par
+                            // le serveur (voir murmure_systeme côté main.py) :
+                            // on le retire tout de suite, sinon il resterait
+                            // dans fichiersEnAttente et se retransmettrait à
+                            // chaque message suivant -- bug réel du
+                            // 08/09/2026 (l'erreur persistait même sur un
+                            // message sans rapport comme "salut").
+                            if (dataObj.fichier_rejete) {
+                                delete fichiersEnAttente['sas-chat-history'];
+                            }
                         } catch(e) {
                             console.warn("L'équilibre se rétablit : un fragment de conscience a été réassemblé.");
                         }
@@ -4093,6 +4103,10 @@ async function sendTeacherMessage(outil) {
                             if (dataObj.conversation_id) {
                                 teacherConversationIds[outil] = dataObj.conversation_id;
                                 imageEnvoyeeAvecSucces = true;
+                            }
+                            // ❖ Voir la note équivalente dans sendSasMessage.
+                            if (dataObj.fichier_rejete) {
+                                delete fichiersEnAttente[`${outil}-chat-history`];
                             }
                         } catch(e) {
                             console.warn("L'équilibre se rétablit : un fragment de conscience a été réassemblé.");
