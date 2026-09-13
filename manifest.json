@@ -1,7 +1,7 @@
 {
   "name": "EdukaTchat",
   "short_name": "EdukaTchat",
-  "description": "La Plateforme Numérique de l'Enseignement Ivoirien",
+  "description": "Le seul répétiteur qui suit ton cahier de texte",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
