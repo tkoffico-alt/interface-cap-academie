@@ -897,7 +897,16 @@ function trouverOccurrencesFiche(texte) {
         // exige seulement que la ligne COMMENCE par le libellé recherché ;
         // tout ce qui suit sur cette même ligne est absorbé dans la
         // légende affichée plutôt que de faire échouer la détection.
-        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        // ❖ Numérotation ("1. EN-TÊTE ADMINISTRATIF :") observée le
+        // 19/09/2026 sur une fiche Forge secondaire (3e Maths, racines
+        // carrées) -- ce préfixe n'était pas toléré ici (seul un bullet
+        // -•#*> l'était), contrairement au parseur primaire (voir
+        // trouverOccurrencesFichePrimaire) qui accepte déjà "\d+[.)]\s*".
+        // aHeader ET aDeroulement échouaient tous deux (les deux grandes
+        // sections numérotées "1." et "4."), faisant retomber toute la
+        // fiche sur l'affichage brut générique (pas de carte colorée).
+        // Alignée ici sur le même motif que le parseur primaire.
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
         let m;
         while ((m = re.exec(texte)) !== null) {
             occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
