@@ -2613,6 +2613,14 @@ function construireRenduFichePrimaire(source) {
 const ALTERNATIVES_SECTION_EVALUATION = {
     partieA: ["PARTIE A(?:\\s*\\([^)]*\\))?", "PART A(?:\\s*\\([^)]*\\))?", "PARTE A(?:\\s*\\([^)]*\\))?", "TEIL A(?:\\s*\\([^)]*\\))?"],
     partieB: ["PARTIE B(?:\\s*\\([^)]*\\))?", "PART B(?:\\s*\\([^)]*\\))?", "PARTE B(?:\\s*\\([^)]*\\))?", "TEIL B(?:\\s*\\([^)]*\\))?"],
+    // ❖ Second canevas valide, propre à l'EDHC (voir PROMPT_COMPLET_
+    // Atelier_Evaluations.md, "RÈGLE POUR L'EDHC") : pas de PARTIE A/B, mais
+    // une SITUATION D'ÉVALUATION unique suivie de QUESTIONS/CONSIGNES --
+    // sans ces deux entrées, le 24/09/2026 a montré qu'une évaluation EDHC
+    // correcte tombait dans le repli texte brut (aPartieA/aPartieB jamais
+    // vrais), perdant tout l'habillage visuel malgré un contenu conforme.
+    situation: ["SITUATION D['’]?[ÉE]VALUATION(?:\\s*\\([^)]*\\))?"],
+    questions: ["QUESTIONS\\s*/\\s*CONSIGNES(?:\\s*\\([^)]*\\))?", "QUESTIONS\\s+ET\\s+CONSIGNES(?:\\s*\\([^)]*\\))?"],
     corrige: ["CORRIG[ÉE]", "ANSWER KEY", "SOLUCIONARIO", "L[ÖO]SUNGEN"]
 };
 
@@ -2673,7 +2681,12 @@ function analyserEvaluation(texteBrut) {
     const occurrences = trouverOccurrencesEvaluation(texte);
     const aPartieA = occurrences.some(o => o.type === 'partieA');
     const aPartieB = occurrences.some(o => o.type === 'partieB');
-    if (!aPartieA || !aPartieB) return null;
+    const aSituation = occurrences.some(o => o.type === 'situation');
+    const aQuestions = occurrences.some(o => o.type === 'questions');
+    // ❖ Deux canevas valides désormais : PARTIE A/PARTIE B (générique), ou
+    // SITUATION D'ÉVALUATION/QUESTIONS-CONSIGNES (EDHC) -- voir le
+    // commentaire sur ALTERNATIVES_SECTION_EVALUATION ci-dessus.
+    if (!(aPartieA && aPartieB) && !(aSituation && aQuestions)) return null;
 
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
@@ -2700,11 +2713,15 @@ function analyserEvaluation(texteBrut) {
 
     const occPartieA = occurrences.find(o => o.type === 'partieA');
     const occPartieB = occurrences.find(o => o.type === 'partieB');
+    const occSituation = occurrences.find(o => o.type === 'situation');
+    const occQuestions = occurrences.find(o => o.type === 'questions');
     const occBareme = occurrences.find(o => o.type === 'bareme');
     const occCorrige = occurrences.find(o => o.type === 'corrige');
 
-    const partieATexte = contenuApres(occPartieA);
-    const partieBTexte = contenuApres(occPartieB);
+    const partieATexte = occPartieA ? contenuApres(occPartieA) : '';
+    const partieBTexte = occPartieB ? contenuApres(occPartieB) : '';
+    const situationTexte = occSituation ? contenuApres(occSituation) : '';
+    const questionsTexte = occQuestions ? contenuApres(occQuestions) : '';
     const baremeTexte = occBareme ? contenuApres(occBareme).split('\n')[0].trim() : '';
     // ❖ Le CORRIGÉ est toujours la toute dernière partie du document (règle
     // explicite du prompt) et reprend souvent ses propres sous-titres
@@ -2714,25 +2731,32 @@ function analyserEvaluation(texteBrut) {
     // couperait le corrigé après seulement quelques mots).
     const corrigeTexte = occCorrige ? texte.slice(occCorrige.end).trim() : '';
 
-    return { preambuleTexte, partieATexte, partieBTexte, baremeTexte, corrigeTexte, titres };
+    return { preambuleTexte, partieATexte, partieBTexte, situationTexte, questionsTexte, baremeTexte, corrigeTexte, titres };
 }
 
 function construireHTMLEvaluation(analyse, classeAccent) {
-    const { preambuleTexte, partieATexte, partieBTexte, baremeTexte, corrigeTexte, titres } = analyse;
+    const { preambuleTexte, partieATexte, partieBTexte, situationTexte, questionsTexte, baremeTexte, corrigeTexte, titres } = analyse;
     let html = '';
 
     if (preambuleTexte) {
         html += `<div class="fiche-preambule">${texteVersHtmlLegerFiche(preambuleTexte)}</div>`;
     }
 
+    // ❖ Canevas générique (PARTIE A/B) ou canevas EDHC (SITUATION D'ÉVALUATION
+    // / QUESTIONS-CONSIGNES) -- un seul des deux est présent selon la
+    // matière, voir analyserEvaluation().
     if (partieATexte) {
         html += `<div class="fiche-section-titre">📄 ${echapperHTMLFiche(titres.partieA || '')}</div>`;
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieATexte)}</div>`;
+    } else if (situationTexte) {
+        html += `<div class="fiche-section-titre">📄 ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
     }
 
-    if (partieBTexte || baremeTexte) {
-        html += `<div class="fiche-section-titre">🧩 ${echapperHTMLFiche(titres.partieB || '')}</div>`;
-        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieBTexte)}</div>`;
+    if (partieBTexte || questionsTexte || baremeTexte) {
+        const titreSecondaire = titres.partieB || titres.questions || '';
+        html += `<div class="fiche-section-titre">🧩 ${echapperHTMLFiche(titreSecondaire)}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieBTexte || questionsTexte)}</div>`;
         if (baremeTexte) {
             html += `<div class="fiche-bloc-entete"><span class="fiche-badge fiche-badge-competence">${echapperHTMLFiche(titres.bareme || 'BARÈME TOTAL')} : ${echapperHTMLFiche(baremeTexte)}</span></div>`;
         }
