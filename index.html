@@ -18,6 +18,12 @@
     <meta name="apple-mobile-web-app-title" content="EdukaTchat">
 
     <link rel="stylesheet" href="style.css">
+    <!-- ❖ KaTeX -- rendu des formules mathématiques/scientifiques (LaTeX)
+         que les agents Dify écrivent parfois dans le chat du Sas (voir
+         interface/app.js, extraireEtRendreLatex()). CSS chargé en tête,
+         JS chargé avant app.js (comme marked.js) puisque katex.renderToString
+         est appelé de façon synchrone au moment du rendu d'un message. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <style>
         /* ❖ Correctif barre d'outils du chat : l'ajout du micro (en plus du
            trombone et, dans le Sas, de l'emploi du temps) faisait déborder
@@ -1135,9 +1141,20 @@
     <option value="5e">5ème</option>
     <option value="4e">4ème</option>
     <option value="3e">3ème</option>
-    <option value="2nde">2nde</option>
-    <option value="1ere">1ère</option>
-    <option value="Tle">Terminale</option>
+    <!-- Séries ajoutées le 24/09/2026 : la feuille Google Sheets "Progression" distingue
+         désormais le contenu par série à partir de la 2nde (Maths/SVT/etc. divergent selon
+         A/C/D) -- ces valeurs doivent rester identiques aux libellés "Niveau" écrits dans
+         cette feuille, sinon chapitre_du_jour() ne trouvera plus aucune correspondance. -->
+    <option value="2nde A">2nde A</option>
+    <option value="2nde C">2nde C</option>
+    <option value="1ère A1">1ère A1</option>
+    <option value="1ère A2">1ère A2</option>
+    <option value="1ère C">1ère C</option>
+    <option value="1ère D">1ère D</option>
+    <option value="Tle A1">Tle A1</option>
+    <option value="Tle A2">Tle A2</option>
+    <option value="Tle C">Tle C</option>
+    <option value="Tle D">Tle D</option>
 </select>
                 <label style="font-weight: bold; color: #374151;">Comment as-tu l'habitude de réviser à la maison ?</label>
                 <select id="habitudes-revision" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 20px; background-color: #F3F4F6; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" onchange="verifierFormulaire()">
@@ -1521,6 +1538,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="app.js?v=3.5"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">

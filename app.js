@@ -2893,6 +2893,101 @@ function appliquerTailleIllustrations(element) {
     });
 }
 
+// =======================================================================
+// ❖ RENDU LATEX DANS LE CHAT (KATEX) ❖
+// =======================================================================
+// Bug réel du 25/09/2026 (Sas, avatar Physique-Chimie) : l'agent écrit
+// parfois des formules au format LaTeX ("\vec{i}", "$x^2$") sans qu'aucun
+// moteur ne les affiche -- elles apparaissaient telles quelles, backslashs
+// et accolades compris. Même principe que extraireImagesFicheSures/
+// reinjecterImagesFiche (fiches Forge) : on extrait les segments LaTeX
+// AVANT marked.parse -- sinon Markdown/CommonMark mange le backslash des
+// délimiteurs "\(" "\)" (les parenthèses font partie des caractères
+// échappables CommonMark) -- on les remplace par un jeton inerte pour
+// Markdown, puis on les réinjecte en HTML déjà rendu par KaTeX après coup.
+//
+// Deux familles de motifs reconnues :
+// 1. Délimiteurs explicites -- $$...$$ / \[...\] (bloc, formule seule sur
+//    sa ligne) et $...$ / \(...\) (en ligne, insérée dans une phrase).
+// 2. Filet de sécurité : une commande LaTeX connue (ex. "\vec{i}") écrite
+//    SANS AUCUN délimiteur -- le vrai défaut observé le 25/09/2026. Liste
+//    volontairement limitée aux commandes utiles au programme ivoirien
+//    (vecteurs, fractions, racines, lettres grecques, comparateurs) --
+//    jamais une liste LaTeX exhaustive, pour ne jamais confondre un texte
+//    normal (un backslash n'apparaît quasiment jamais dans une phrase
+//    française) avec une formule.
+const LATEX_COMMANDES_CONNUES = [
+    'vec', 'overrightarrow', 'hat', 'widehat', 'bar', 'overline', 'dot', 'ddot',
+    'frac', 'dfrac', 'tfrac', 'sqrt',
+    'sum', 'int', 'iint', 'prod', 'lim', 'infty', 'partial', 'nabla',
+    'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'theta', 'lambda', 'mu',
+    'pi', 'sigma', 'phi', 'omega',
+    'Delta', 'Sigma', 'Omega', 'Gamma', 'Lambda', 'Phi', 'Psi',
+    'times', 'div', 'cdot', 'pm', 'mp',
+    'leq', 'geq', 'neq', 'approx', 'equiv',
+    'rightarrow', 'Rightarrow', 'leftrightarrow', 'forall', 'exists', 'in', 'subset'
+];
+const RE_LATEX_COMMANDE_BRUTE = new RegExp(
+    '\\\\(?:' + LATEX_COMMANDES_CONNUES.join('|') + ')(?:\\{[^{}]*\\}(?:\\{[^{}]*\\})?)?',
+    'g'
+);
+
+function extraireEtRendreLatex(texte) {
+    const jetons = [];
+    let compteur = 0;
+
+    function extraireMotif(source, regex, display) {
+        return source.replace(regex, (motifEntier, expression) => {
+            const jeton = `@@LATEX${compteur}@@`;
+            jetons.push({ jeton, expression, display });
+            compteur++;
+            return jeton;
+        });
+    }
+
+    let resultat = texte;
+    // ❖ Ordre important : les blocs $$...$$ d'abord (sinon les "$" internes
+    // seraient consommés deux par deux comme de l'inline avant d'atteindre
+    // le bloc), puis \[...\], puis l'inline $...$ et \(...\).
+    resultat = extraireMotif(resultat, /\$\$([\s\S]+?)\$\$/g, true);
+    resultat = extraireMotif(resultat, /\\\[([\s\S]+?)\\\]/g, true);
+    resultat = extraireMotif(resultat, /\$([^$\n]+?)\$/g, false);
+    resultat = extraireMotif(resultat, /\\\(([^)]+?)\\\)/g, false);
+    // ❖ Filet de sécurité : une commande connue écrite sans délimiteur du
+    // tout -- chaque occurrence devient sa propre petite formule en ligne.
+    resultat = resultat.replace(RE_LATEX_COMMANDE_BRUTE, (motifEntier) => {
+        const jeton = `@@LATEX${compteur}@@`;
+        jetons.push({ jeton, expression: motifEntier, display: false });
+        compteur++;
+        return jeton;
+    });
+
+    return { texte: resultat, jetons };
+}
+
+function reinjecterLatex(html, jetons) {
+    if (!jetons.length) return html;
+    const katexDisponible = (typeof katex !== 'undefined');
+    let resultat = html;
+    jetons.forEach(({ jeton, expression, display }) => {
+        let rendu;
+        if (katexDisponible) {
+            try {
+                rendu = katex.renderToString(expression, { throwOnError: false, displayMode: display });
+            } catch (e) {
+                rendu = echapperHTMLFiche(expression);
+            }
+        } else {
+            // ❖ KaTeX pas encore chargé (ou échec du CDN) : on ne perd
+            // jamais le contenu -- on restitue la formule délimitée telle
+            // quelle plutôt qu'un jeton "@@LATEX0@@" incompréhensible.
+            rendu = echapperHTMLFiche(display ? `$$${expression}$$` : `$${expression}$`);
+        }
+        resultat = resultat.split(jeton).join(rendu);
+    });
+    return resultat;
+}
+
 // ❖ RESTITUTION DU FLUX — style « professionnel » (ChatGPT/Claude/Gemini) ❖
 // Ancien comportement : chaque fragment reçu rejouait le fondu CSS sur TOUT
 // le texte déjà affiché (remove/reflow/add à chaque appel), ce qui provoquait
@@ -2921,7 +3016,17 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
     }
 
     if (html === null) {
-        html = marked.parse(source);
+        // ❖ Extraction/réinjection LaTeX (KaTeX) -- voir extraireEtRendreLatex
+        // ci-dessus. Fait AVANT marked.parse, sinon Markdown mangerait les
+        // délimiteurs "\(" "\)". Ne concerne que ce chemin de rendu standard
+        // (Sas, Cabinet, Ateliers...) -- les fiches Forge/Forge Primaire/
+        // Atelier des Évaluations passent par leur propre convertisseur
+        // (texteVersHtmlLegerFiche), jamais par marked.parse, et leur prompt
+        // interdit déjà le LaTeX (dictionnaire mathématique en exposants
+        // réels) -- rien à changer côté fiche.
+        const { texte: sourceSansLatex, jetons: jetonsLatex } = extraireEtRendreLatex(source);
+        html = marked.parse(sourceSansLatex);
+        if (jetonsLatex.length) html = reinjecterLatex(html, jetonsLatex);
         if (attenuerSignature) {
             html = html
                 .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')

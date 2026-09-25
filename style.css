@@ -723,6 +723,21 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
     margin-right: auto;
 }
 
+/* ❖ Formules KaTeX (voir extraireEtRendreLatex()/reinjecterLatex() dans
+   app.js) -- rendu des délimiteurs LaTeX écrits par l'agent (Sas). Une
+   formule "display" (bloc $$...$$) peut dépasser la largeur de la bulle
+   sur un petit écran mobile -- défilement horizontal plutôt qu'un
+   débordement qui casserait la mise en page. */
+.message .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0.6rem 0;
+    padding-bottom: 0.2rem;
+}
+.message .katex {
+    font-size: 1.05em;
+}
+
 .user-message {
     align-self: flex-end;
     background-color: #3B82F6;
