@@ -843,6 +843,31 @@ body.dark-theme .fiche-liste-simple > div { border-top-color: rgba(148, 163, 184
     padding-bottom: 0;
 }
 
+/* ❖ Plan pour le cahier de texte (Forge secondaire, 25/09/2026) -- un
+   résumé A./a./b. destiné à être copié tel quel dans le cahier de texte
+   physique de la classe. <pre> pour préserver l'indentation des sous-
+   points (perdue si on repassait par texteVersHtmlLegerFiche), bouton
+   Copier ciblé juste en dessous plutôt que le "Copier pour Word" général
+   (qui copierait toute la fiche, pas seulement ce résumé). */
+.fiche-plan-cahier-texte {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.fiche-plan-cahier-texte-contenu {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #1F2937;
+}
+body.dark-theme .fiche-plan-cahier-texte-contenu { color: #E2E8F0; }
+.fiche-plan-cahier-texte-bouton {
+    align-self: flex-start;
+}
+
 /* ❖ Le déroulement du canevas PNAPAS natif : un vrai tableau à quatre
    colonnes, tel qu'il figure dans les fiches modèles officielles. */
 .fiche-carte-tableau {

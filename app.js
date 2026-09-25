@@ -861,7 +861,14 @@ const ALTERNATIVES_SECTION_FICHE = {
         "LESSON PROCEDURE",
         "DESARROLLO DE LA CLASE",
         "UNTERRICHTSABLAUF"
-    ]
+    ],
+    // ❖ Section ajoutée le 25/09/2026 (Forge secondaire uniquement) : un
+    // résumé compact A./a./b./c. au format habituellement utilisé pour
+    // remplir le cahier de texte physique de la classe -- voir
+    // PROMPT_COMPLET_Forge.md, section 5. Toujours en français, même pour
+    // une fiche en langue vivante (consigne explicite du prompt) : un seul
+    // libellé à reconnaître, pas de variantes traduites à ajouter ici.
+    planCahierTexte: ["PLAN POUR LE CAHIER DE TEXTE"]
 };
 
 // ❖ Libellés de PHASE : d'après la structure exigée par le prompt
@@ -1217,9 +1224,14 @@ function analyserFicheLecon(texteBrut) {
     // --- Déroulement : repérage des triples prof/classe/trace, dans
     // l'ordre, sans supposer un nombre fixe de phases (le bouton "Ajouter
     // des activités" peut en générer davantage). Le déroulement est
-    // toujours la dernière grande section du document.
+    // normalement la dernière grande section du document -- SAUF si la
+    // fiche se termine par un "PLAN POUR LE CAHIER DE TEXTE" (Forge
+    // secondaire, voir plus haut) : sans cette borne, le contenu de ce
+    // plan se ferait avaler dans la dernière TRACE ÉCRITE VALIDÉE au lieu
+    // d'être reconnu comme sa propre section.
+    const occPlanCahierTexte = occurrences.find(o => o.type === 'planCahierTexte');
     const deroulementDebut = occDeroulement.end;
-    const deroulementFin = texte.length;
+    const deroulementFin = occPlanCahierTexte ? occPlanCahierTexte.start : texte.length;
     const marqueursPhase = occurrences.filter(o =>
         ['prof', 'classe', 'trace'].includes(o.type) && o.start >= deroulementDebut && o.start < deroulementFin
     );
@@ -1259,11 +1271,16 @@ function analyserFicheLecon(texteBrut) {
 
     if (!phases.length) return null;
 
-    return { badges, lignesTableau, situationTexte, phases, titres };
+    // --- Plan pour le cahier de texte (Forge secondaire uniquement,
+    // absent des fiches Forge Primaire/PNAPAS -- occPlanCahierTexte reste
+    // alors undefined et ce champ vide, sans aucun effet sur le reste).
+    const planCahierTexte = occPlanCahierTexte ? contenuApres(occPlanCahierTexte) : '';
+
+    return { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte };
 }
 
 function construireHTMLFiche(analyse, classeAccent) {
-    const { badges, lignesTableau, situationTexte, phases, titres } = analyse;
+    const { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte } = analyse;
     let html = '';
 
     if (badges.length) {
@@ -1304,7 +1321,39 @@ function construireHTMLFiche(analyse, classeAccent) {
         });
     }
 
+    // ❖ Plan pour le cahier de texte (Forge secondaire uniquement, voir
+    // PROMPT_COMPLET_Forge.md section 5) -- rendu en <pre> brut plutôt que
+    // via texteVersHtmlLegerFiche : l'indentation des lignes "a./b./c."
+    // fait partie du format attendu par l'enseignant au moment du copier-
+    // coller, elle ne doit pas être aplatie en simples paragraphes HTML.
+    if (planCahierTexte) {
+        html += `<div class="fiche-section-titre">📓 Plan pour le cahier de texte</div>`;
+        html += '<div class="fiche-carte fiche-plan-cahier-texte">';
+        html += `<pre class="fiche-plan-cahier-texte-contenu">${echapperHTMLFiche(planCahierTexte)}</pre>`;
+        html += `<button class="btn-action-doc fiche-plan-cahier-texte-bouton" type="button" onclick="copierPlanCahierTexte(this)" title="Copier le plan pour le cahier de texte" aria-label="Copier le plan pour le cahier de texte">📋 Copier</button>`;
+        html += '</div>';
+    }
+
     return `<div class="fiche-lecon${classeAccent || ''}">${html}</div>`;
+}
+
+// ❖ Copie ciblée du seul "Plan pour le cahier de texte" (pas toute la
+// fiche, contrairement à copierTexte/"Copier pour Word") -- même principe
+// que copierFormule (bibliothèque de fiches-formules) : lecture directe du
+// texte affiché au clic, écriture presse-papiers en texte brut, petit
+// retour visuel sur le bouton lui-même sans dépendre d'animerBoutonCopie
+// (dont le texte "Document et Sceau copiés !" ne conviendrait pas ici).
+function copierPlanCahierTexte(bouton) {
+    const carte = bouton.closest('.fiche-plan-cahier-texte');
+    const pre = carte ? carte.querySelector('.fiche-plan-cahier-texte-contenu') : null;
+    const texte = pre ? pre.innerText : '';
+    navigator.clipboard.writeText(texte).then(() => {
+        const original = bouton.innerHTML;
+        bouton.innerHTML = '✅ Copié !';
+        setTimeout(() => { bouton.innerHTML = original; }, 2000);
+    }).catch(() => {
+        bouton.innerHTML = '⚠️ Échec de la copie';
+    });
 }
 
 // Point d'entrée : tente le rendu enrichi, ou renvoie null pour laisser
