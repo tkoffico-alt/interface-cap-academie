@@ -110,6 +110,12 @@
         font-size: 0.92em;
         color: var(--texte);
     }
+    .notion-derniere-maj {
+        font-size: 0.72em;
+        color: var(--texte-att);
+        font-weight: 400;
+        margin-top: 2px;
+    }
     .notion-detail {
         font-size: 0.78em;
         color: var(--texte-att);
@@ -213,6 +219,19 @@ function construireRendu(carnet) {
             const nom = document.createElement('div');
             nom.className = 'notion-nom';
             nom.textContent = notion;
+
+            // ❖ Date de dernière mise à jour (26/09/2026) : sous le nom de la
+            // notion (pas un 5e élément dans la ligne, pour ne pas surcharger
+            // la rangée) -- permet de voir si le carnet vient d'être
+            // actualisé sans comparer deux captures d'écran à la main.
+            if (stats.derniere_evaluation) {
+                const datePart = stats.derniere_evaluation.split(' ')[0]; // "AAAA-MM-JJ"
+                const [annee, mois, jour] = datePart.split('-');
+                const derniereMaj = document.createElement('div');
+                derniereMaj.className = 'notion-derniere-maj';
+                derniereMaj.textContent = `Mis à jour le ${jour}/${mois}/${annee}`;
+                nom.appendChild(derniereMaj);
+            }
 
             const detail = document.createElement('div');
             detail.className = 'notion-detail';
