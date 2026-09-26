@@ -2988,6 +2988,67 @@ function reinjecterLatex(html, jetons) {
     return resultat;
 }
 
+// =======================================================================
+// ❖ RENDU D'UNE PORTÉE MUSICALE DANS LE CHAT (ABCJS) ❖
+// =======================================================================
+// Bug réel du 26/09/2026 (Sas, avatar Éducation Musicale) : l'agent a tenté
+// de représenter une portée avec des tirets/barres verticales en texte brut
+// ("---|---|---|---|---" avec des noms de notes placés au hasard sur les
+// lignes) -- illisible, une portée ne se représente pas en ASCII. Même
+// principe que extraireEtRendreLatex/reinjecterLatex ci-dessus : on extrait
+// AVANT marked.parse (sinon le bloc ```abc serait transformé en <pre><code>
+// générique par marked.parse, puis habillé en carte "Devoir" par
+// habillerBlocsDevoirs -- ce n'est pas un devoir, c'est une portée), on
+// remplace par un jeton inerte, puis on réinjecte le rendu SVG d'abcjs
+// après coup.
+//
+// Syntaxe attendue du prompt : un bloc ```abc ... ``` contenant de la
+// notation ABC standard (ex. "K:C" puis "C D E F | G A B c"). C'est un
+// format texte compact que le modèle connaît déjà (pas une syntaxe inventée
+// pour ce projet), contrairement à une portée dessinée à la main.
+function extraireEtRendreABC(texte) {
+    const jetons = [];
+    let compteur = 0;
+    const resultat = texte.replace(/```abc\s*\n([\s\S]*?)```/g, (motifEntier, source) => {
+        const jeton = `@@ABC${compteur}@@`;
+        jetons.push({ jeton, source: source.trim() });
+        compteur++;
+        return jeton;
+    });
+    return { texte: resultat, jetons };
+}
+
+function reinjecterABC(html, jetons) {
+    if (!jetons.length) return html;
+    const abcjsDisponible = (typeof ABCJS !== 'undefined' && typeof ABCJS.renderAbc === 'function');
+    let resultat = html;
+    jetons.forEach(({ jeton, source }) => {
+        let rendu;
+        if (abcjsDisponible) {
+            try {
+                // ❖ Rendu dans un conteneur détaché (jamais ajouté au DOM) :
+                // abcjs manipule directement l'élément qu'on lui donne, pas
+                // besoin qu'il soit déjà attaché à la page pour produire le
+                // SVG -- on récupère ensuite son HTML tel quel.
+                const conteneur = document.createElement('div');
+                ABCJS.renderAbc(conteneur, source, { responsive: 'resize' });
+                rendu = `<div class="partition-musicale">${conteneur.innerHTML}</div>`;
+            } catch (e) {
+                // ❖ Notation ABC invalide (erreur de syntaxe de l'agent) :
+                // on ne perd jamais le contenu, on l'affiche en texte brut
+                // plutôt qu'un jeton "@@ABC0@@" incompréhensible.
+                rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
+            }
+        } else {
+            // ❖ abcjs pas encore chargé (ou échec du CDN) : même filet de
+            // sécurité que reinjecterLatex.
+            rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
+        }
+        resultat = resultat.split(jeton).join(rendu);
+    });
+    return resultat;
+}
+
 // ❖ RESTITUTION DU FLUX — style « professionnel » (ChatGPT/Claude/Gemini) ❖
 // Ancien comportement : chaque fragment reçu rejouait le fondu CSS sur TOUT
 // le texte déjà affiché (remove/reflow/add à chaque appel), ce qui provoquait
@@ -3024,9 +3085,17 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
         // (texteVersHtmlLegerFiche), jamais par marked.parse, et leur prompt
         // interdit déjà le LaTeX (dictionnaire mathématique en exposants
         // réels) -- rien à changer côté fiche.
-        const { texte: sourceSansLatex, jetons: jetonsLatex } = extraireEtRendreLatex(source);
+        // ❖ Extraction/réinjection ABC (portée musicale) -- voir
+        // extraireEtRendreABC ci-dessus. Faite AVANT le LaTeX et AVANT
+        // marked.parse, pour la même raison que le LaTeX : un bloc ```abc
+        // laissé tel quel serait transformé en <pre><code> générique par
+        // marked.parse puis habillé en carte "Devoir", ce qui n'a aucun
+        // rapport avec son contenu réel.
+        const { texte: sourceSansABC, jetons: jetonsABC } = extraireEtRendreABC(source);
+        const { texte: sourceSansLatex, jetons: jetonsLatex } = extraireEtRendreLatex(sourceSansABC);
         html = marked.parse(sourceSansLatex);
         if (jetonsLatex.length) html = reinjecterLatex(html, jetonsLatex);
+        if (jetonsABC.length) html = reinjecterABC(html, jetonsABC);
         if (attenuerSignature) {
             html = html
                 .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')

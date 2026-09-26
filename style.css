@@ -738,6 +738,29 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
     font-size: 1.05em;
 }
 
+/* ❖ Portée musicale (abcjs, voir extraireEtRendreABC/reinjecterABC dans
+   app.js) -- rendu SVG d'un bloc ```abc écrit par l'agent (Sas, Éducation
+   Musicale). Même raison que .katex-display : le SVG produit par abcjs a
+   une largeur fixe qui peut dépasser la bulle sur mobile -- défilement
+   horizontal plutôt qu'un débordement. */
+.message .partition-musicale {
+    overflow-x: auto;
+    margin: 0.6rem 0;
+    padding: 0.4rem 0;
+    background: #ffffff;
+    border-radius: 8px;
+}
+body.dark-theme .message .partition-musicale {
+    background: #f1f5f9; /* la portée SVG d'abcjs dessine en noir sur fond
+                             transparent -- un fond clair reste nécessaire
+                             même en thème sombre pour rester lisible. */
+}
+.message .partition-musicale-erreur {
+    white-space: pre-wrap;
+    font-size: 0.85em;
+    opacity: 0.75;
+}
+
 .user-message {
     align-self: flex-end;
     background-color: #3B82F6;
