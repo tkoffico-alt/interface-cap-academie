@@ -750,6 +750,25 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
     background: #ffffff;
     border-radius: 8px;
 }
+/* ❖ Bug réel persistant le 26/09/2026 malgré le rattachement au DOM
+   (voir app.js, reinjecterABC) : le SVG produit par abcjs peut dessiner
+   une partie de son contenu (portée, notes) à une coordonnée y négative
+   par rapport à son propre viewBox -- avec l'overflow par défaut
+   (visible), ce contenu déborde visuellement AU-DESSUS de la boîte du
+   SVG, dans l'espace occupé par le texte qui précède, quel que soit le
+   margin-top posé sur le conteneur englobant (qui ne déplace que la
+   boîte déclarée, pas ce qui en déborde). Corrigé en forçant une marge
+   sur le <svg> lui-même (pas seulement son conteneur) : un margin
+   s'applique à tout l'élément rendu, y compris ce qui en déborde par
+   overflow -- donc le contenu qui dépasse vers le haut est repoussé
+   avec le reste, loin du texte précédent. !important nécessaire car
+   abcjs pose parfois un style inline direct sur le <svg> généré. */
+.message .partition-musicale svg {
+    display: block;
+    margin-top: 1.4rem !important;
+    margin-bottom: 0.6rem !important;
+    overflow: visible;
+}
 body.dark-theme .message .partition-musicale {
     background: #f1f5f9; /* la portée SVG d'abcjs dessine en noir sur fond
                              transparent -- un fond clair reste nécessaire
