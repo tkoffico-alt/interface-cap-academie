@@ -3047,8 +3047,27 @@ function reinjecterABC(html, jetons) {
                     .split('\n')
                     .filter(ligne => !/^[TCO]:/.test(ligne.trim()))
                     .join('\n');
+                //
+                // ❖ Second bug réel observé le 26/09/2026, APRÈS déploiement du
+                // filtre T:/C:/O: ci-dessus (confirmé par capture prise après
+                // déploiement réel, pas avant) : la portée rendue chevauche
+                // désormais le TEXTE DE PROSE qui la précède (le dernier mot du
+                // paragraphe de l'agent se retrouve visuellement mêlé aux
+                // premières notes). Cause probable : abcjs calcule sa boîte
+                // englobante ("responsive: resize") en réservant normalement un
+                // peu d'espace en haut pour un éventuel titre -- en retirant la
+                // ligne T: juste au-dessus, ce calcul de marge haute devient trop
+                // serré (voire négatif), ce qui décale la portée vers le haut au
+                // lieu de simplement supprimer le titre. Corrigé en réservant
+                // explicitement un espace haut/bas fixe via les paramètres de
+                // mise en forme d'abcjs (paddingtop/paddingbottom), plutôt que de
+                // laisser abcjs deviner cet espace à partir d'un titre absent.
                 const conteneur = document.createElement('div');
-                ABCJS.renderAbc(conteneur, sourceSansEnTetesRedondants, { responsive: 'resize' });
+                ABCJS.renderAbc(conteneur, sourceSansEnTetesRedondants, {
+                    responsive: 'resize',
+                    paddingtop: 15,
+                    paddingbottom: 15
+                });
                 rendu = `<div class="partition-musicale">${conteneur.innerHTML}</div>`;
             } catch (e) {
                 // ❖ Notation ABC invalide (erreur de syntaxe de l'agent) :
