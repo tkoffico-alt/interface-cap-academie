@@ -765,7 +765,7 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
    abcjs pose parfois un style inline direct sur le <svg> généré. */
 .message .partition-musicale svg {
     display: block;
-    margin-top: 1.4rem !important;
+    margin-top: 2.2rem !important;
     margin-bottom: 0.6rem !important;
     overflow: visible;
 }
