@@ -3026,11 +3026,6 @@ function reinjecterABC(html, jetons) {
         let rendu;
         if (abcjsDisponible) {
             try {
-                // ❖ Rendu dans un conteneur détaché (jamais ajouté au DOM) :
-                // abcjs manipule directement l'élément qu'on lui donne, pas
-                // besoin qu'il soit déjà attaché à la page pour produire le
-                // SVG -- on récupère ensuite son HTML tel quel.
-                //
                 // ❖ Bug réel observé le 26/09/2026 : quand la source ABC
                 // contient une ligne "T:<titre>", abcjs dessine ce titre EN
                 // SURIMPRESSION de la portée elle-même (chevauchement visuel
@@ -3048,27 +3043,42 @@ function reinjecterABC(html, jetons) {
                     .filter(ligne => !/^[TCO]:/.test(ligne.trim()))
                     .join('\n');
                 //
-                // ❖ Second bug réel observé le 26/09/2026, APRÈS déploiement du
-                // filtre T:/C:/O: ci-dessus (confirmé par capture prise après
-                // déploiement réel, pas avant) : la portée rendue chevauche
-                // désormais le TEXTE DE PROSE qui la précède (le dernier mot du
-                // paragraphe de l'agent se retrouve visuellement mêlé aux
-                // premières notes). Cause probable : abcjs calcule sa boîte
-                // englobante ("responsive: resize") en réservant normalement un
-                // peu d'espace en haut pour un éventuel titre -- en retirant la
-                // ligne T: juste au-dessus, ce calcul de marge haute devient trop
-                // serré (voire négatif), ce qui décale la portée vers le haut au
-                // lieu de simplement supprimer le titre. Corrigé en réservant
-                // explicitement un espace haut/bas fixe via les paramètres de
-                // mise en forme d'abcjs (paddingtop/paddingbottom), plutôt que de
-                // laisser abcjs deviner cet espace à partir d'un titre absent.
+                // ❖ Second bug réel observé le 26/09/2026 (persistant malgré
+                // paddingtop/paddingbottom -- confirmé par Constant sur deux
+                // navigateurs différents en navigation privée : chevauchement
+                // présent sur l'un, absent sur l'autre). Cause réelle trouvée
+                // en relisant ce code : le conteneur était jusqu'ici créé SANS
+                // JAMAIS être attaché au DOM ("conteneur détaché"), alors que
+                // l'option "responsive: 'resize'" demande à abcjs de MESURER
+                // la largeur réelle de ce conteneur (clientWidth) pour décider
+                // comment mettre en page/à l'échelle la portée. Un élément
+                // jamais inséré dans la page a une largeur indéfinie (souvent
+                // 0), et le comportement d'abcjs face à cette largeur nulle
+                // n'est pas garanti identique d'un moteur de rendu à l'autre --
+                // explique précisément l'incohérence observée entre deux
+                // navigateurs avec le MÊME code. Corrigé en attachant
+                // réellement le conteneur à la page (hors-écran, invisible,
+                // avec une largeur de référence fixe) avant d'appeler
+                // renderAbc, puis en le retirant juste après avoir récupéré
+                // son HTML -- abcjs mesure alors toujours la même largeur
+                // réelle, quel que soit le navigateur.
                 const conteneur = document.createElement('div');
-                ABCJS.renderAbc(conteneur, sourceSansEnTetesRedondants, {
-                    responsive: 'resize',
-                    paddingtop: 15,
-                    paddingbottom: 15
-                });
-                rendu = `<div class="partition-musicale">${conteneur.innerHTML}</div>`;
+                conteneur.style.position = 'absolute';
+                conteneur.style.visibility = 'hidden';
+                conteneur.style.left = '-9999px';
+                conteneur.style.top = '0';
+                conteneur.style.width = '600px';
+                document.body.appendChild(conteneur);
+                try {
+                    ABCJS.renderAbc(conteneur, sourceSansEnTetesRedondants, {
+                        responsive: 'resize',
+                        paddingtop: 15,
+                        paddingbottom: 15
+                    });
+                    rendu = `<div class="partition-musicale">${conteneur.innerHTML}</div>`;
+                } finally {
+                    document.body.removeChild(conteneur);
+                }
             } catch (e) {
                 // ❖ Notation ABC invalide (erreur de syntaxe de l'agent) :
                 // on ne perd jamais le contenu, on l'affiche en texte brut
