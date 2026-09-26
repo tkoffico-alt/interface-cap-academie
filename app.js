@@ -3030,8 +3030,25 @@ function reinjecterABC(html, jetons) {
                 // abcjs manipule directement l'élément qu'on lui donne, pas
                 // besoin qu'il soit déjà attaché à la page pour produire le
                 // SVG -- on récupère ensuite son HTML tel quel.
+                //
+                // ❖ Bug réel observé le 26/09/2026 : quand la source ABC
+                // contient une ligne "T:<titre>", abcjs dessine ce titre EN
+                // SURIMPRESSION de la portée elle-même (chevauchement visuel
+                // confirmé par capture -- le calcul de hauteur du SVG en mode
+                // "responsive: resize" ne réserve pas toujours correctement
+                // l'espace du titre). Le titre est de toute façon déjà
+                // redondant : le modèle l'annonce toujours en prose juste
+                // avant le bloc ```abc```. On retire donc toute ligne T: (et
+                // les champs d'en-tête C:/O: d'auteur/origine, jamais
+                // pertinents ici) avant de rendre, sans jamais y toucher pour
+                // le texte affiché en cas d'échec (repli fidèle à la source
+                // réelle envoyée par l'agent).
+                const sourceSansEnTetesRedondants = source
+                    .split('\n')
+                    .filter(ligne => !/^[TCO]:/.test(ligne.trim()))
+                    .join('\n');
                 const conteneur = document.createElement('div');
-                ABCJS.renderAbc(conteneur, source, { responsive: 'resize' });
+                ABCJS.renderAbc(conteneur, sourceSansEnTetesRedondants, { responsive: 'resize' });
                 rendu = `<div class="partition-musicale">${conteneur.innerHTML}</div>`;
             } catch (e) {
                 // ❖ Notation ABC invalide (erreur de syntaxe de l'agent) :
