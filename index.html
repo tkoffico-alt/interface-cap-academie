@@ -1344,22 +1344,38 @@
                 </button>
             </div>
 
+            <!-- ❖ Regroupement Professeur/Instituteur (27/09/2026) : les 5 onglets
+                 restent un seul mécanisme (switchTeacherTool), mais sont désormais
+                 répartis en 2 blocs visuellement distincts avec un intitulé de
+                 groupe et un séparateur -- ne change rien à l'accès (toujours un
+                 seul Sceau ENS-, voir CLAUDE.md), seulement à la présentation. -->
             <div id="teacher-tabs-container" class="teacher-navigation">
-                <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')">
-                    ❖ L'Atelier des Évaluations
-                </button>
-                <button id="tab-forge" class="tab-btn" onclick="switchTeacherTool('forge')">
-                    ✦ La Forge des Leçons
-                </button>
-                <button id="tab-cabinet" class="tab-btn" onclick="switchTeacherTool('cabinet')">
-                    ⚜ Le Cabinet d'Étude
-                </button>
-                <button id="tab-forge_primaire" class="tab-btn" onclick="switchTeacherTool('forge_primaire')">
-                    🌱 La Forge (Primaire)
-                </button>
-                <button id="tab-cabinet_primaire" class="tab-btn" onclick="switchTeacherTool('cabinet_primaire')">
-                    🌱 Le Cabinet (Primaire)
-                </button>
+                <div class="teacher-tabs-groupe">
+                    <span class="teacher-tabs-groupe-label">Professeur</span>
+                    <div class="teacher-tabs-groupe-boutons">
+                        <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')">
+                            ❖ L'Atelier des Évaluations
+                        </button>
+                        <button id="tab-forge" class="tab-btn" onclick="switchTeacherTool('forge')">
+                            ✦ La Forge des Leçons
+                        </button>
+                        <button id="tab-cabinet" class="tab-btn" onclick="switchTeacherTool('cabinet')">
+                            ⚜ Le Cabinet d'Étude
+                        </button>
+                    </div>
+                </div>
+                <div class="teacher-tabs-separateur" aria-hidden="true"></div>
+                <div class="teacher-tabs-groupe">
+                    <span class="teacher-tabs-groupe-label teacher-tabs-groupe-label-vert">Instituteur</span>
+                    <div class="teacher-tabs-groupe-boutons">
+                        <button id="tab-forge_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('forge_primaire')">
+                            🌱 La Forge (Primaire)
+                        </button>
+                        <button id="tab-cabinet_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('cabinet_primaire')">
+                            🌱 Le Cabinet (Primaire)
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
