@@ -170,10 +170,68 @@ function entrerDansEspaceEnseignant() {
 
     document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
     document.getElementById('container-sas-custom').classList.remove('active');
-    document.getElementById('teacher-tabs-container').style.display = 'flex';
+    // ❖ 27/09/2026 : plus d'entrée directe sur "atelier" -- l'enseignant
+    // choisit d'abord sa catégorie (Professeur secondaire / Instituteur
+    // primaire) via un vrai écran de sélection, voir
+    // choisirCategorieEnseignant() ci-dessous. Les onglets restent masqués
+    // et aucun outil n'est actif jusqu'à ce choix.
+    ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].forEach((id) => {
+        const conteneur = document.getElementById(`container-${id}-custom`);
+        if (conteneur) conteneur.classList.remove('active');
+    });
+    document.getElementById('teacher-tabs-container').style.display = 'none';
     const btnMatieresEnseignant = document.getElementById('btn-matieres');
     if (btnMatieresEnseignant) btnMatieresEnseignant.style.display = 'none';
-    switchTeacherTool('atelier');
+    document.getElementById('teacher-categorie-chooser').style.display = 'flex';
+}
+
+// ❖ SÉLECTION DE CATÉGORIE (PROFESSEUR / INSTITUTEUR) -- ESPACE ENSEIGNANT
+// (27/09/2026) : voir CLAUDE.md, section "Séparation Professeur/Instituteur".
+// Ne change RIEN à l'accès (toujours un seul Sceau ENS- et un seul tarif,
+// voir CLAUDE.md) -- seulement à la présentation : l'enseignant clique sur
+// sa carte, puis ne voit que les onglets de sa catégorie. Le bouton
+// "🔄 Changer de catégorie" (dans la barre d'onglets) permet de revenir sur
+// ce choix sans quitter l'Espace Enseignant.
+function choisirCategorieEnseignant(categorie) {
+    document.getElementById('teacher-categorie-chooser').style.display = 'none';
+    document.getElementById('teacher-tabs-container').style.display = 'flex';
+
+    const groupeProfesseur = document.getElementById('teacher-tabs-groupe-professeur');
+    const groupeInstituteur = document.getElementById('teacher-tabs-groupe-instituteur');
+    const separateur = document.getElementById('teacher-tabs-separateur');
+    // Le séparateur ne sert qu'à distinguer visuellement les 2 groupes
+    // quand ils sont affichés ensemble -- une seule catégorie visible à la
+    // fois ici, donc toujours masqué après un choix.
+    if (separateur) separateur.style.display = 'none';
+
+    if (categorie === 'instituteur') {
+        if (groupeProfesseur) groupeProfesseur.style.display = 'none';
+        if (groupeInstituteur) groupeInstituteur.style.display = 'flex';
+        switchTeacherTool('forge_primaire');
+    } else {
+        if (groupeInstituteur) groupeInstituteur.style.display = 'none';
+        if (groupeProfesseur) groupeProfesseur.style.display = 'flex';
+        switchTeacherTool('atelier');
+    }
+}
+
+// ❖ Filet de sécurité (27/09/2026) : appelé depuis les 3 autres endroits qui
+// quittent l'Espace Enseignant (changement de matière Sas/Académie, retour à
+// l'accueil, ouverture d'un Atelier) pour ne jamais laisser l'écran de
+// sélection Professeur/Instituteur visible en arrière-plan après un départ
+// de cet espace -- sans effet si le chooser n'était pas affiché.
+function masquerChooserCategorieEnseignant() {
+    const chooser = document.getElementById('teacher-categorie-chooser');
+    if (chooser) chooser.style.display = 'none';
+}
+
+function retourChoixCategorieEnseignant() {
+    document.getElementById('teacher-tabs-container').style.display = 'none';
+    ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].forEach((id) => {
+        const conteneur = document.getElementById(`container-${id}-custom`);
+        if (conteneur) conteneur.classList.remove('active');
+    });
+    document.getElementById('teacher-categorie-chooser').style.display = 'flex';
 }
 
 // =======================================================================
@@ -535,6 +593,7 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
     document.getElementById('container-forge-custom').classList.remove('active');
     document.getElementById('container-cabinet-custom').classList.remove('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
+    masquerChooserCategorieEnseignant();
 
     // ❖ Le bouton "Changer de matière" ne concerne que l'Académie Premium
     // ("eleve") -- pas l'Espace de Préparation freemium ("sas"), pour
@@ -718,6 +777,7 @@ function goHome() {
     document.getElementById('container-forge-custom').classList.remove('active');
     document.getElementById('container-cabinet-custom').classList.remove('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
+    masquerChooserCategorieEnseignant();
     const btnMatieresAccueil = document.getElementById('btn-matieres');
     if (btnMatieresAccueil) btnMatieresAccueil.style.display = 'none';
 }
@@ -5036,6 +5096,7 @@ function preparerArene(nomAtelier, messageBienvenue, inputs, ouvertureVivante) {
     document.querySelectorAll('.custom-chat-container').forEach(c => c.classList.remove('active'));
     document.getElementById('container-arene-custom').classList.add('active');
     document.getElementById('teacher-tabs-container').style.display = 'none';
+    masquerChooserCategorieEnseignant();
 
     const chatHistory = document.getElementById('arene-chat-history');
 

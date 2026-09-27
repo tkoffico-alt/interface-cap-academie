@@ -1350,7 +1350,13 @@
                  groupe et un séparateur -- ne change rien à l'accès (toujours un
                  seul Sceau ENS-, voir CLAUDE.md), seulement à la présentation. -->
             <div id="teacher-tabs-container" class="teacher-navigation">
-                <div class="teacher-tabs-groupe">
+                <!-- ❖ 27/09/2026 : ne montre plus que le groupe de la
+                     catégorie choisie (voir choisirCategorieEnseignant) --
+                     ce bouton permet de revenir à l'écran de sélection. -->
+                <button class="btn-changer-categorie-enseignant" onclick="retourChoixCategorieEnseignant()" title="Changer de catégorie (Professeur / Instituteur)">
+                    🔄 Changer de catégorie
+                </button>
+                <div id="teacher-tabs-groupe-professeur" class="teacher-tabs-groupe">
                     <span class="teacher-tabs-groupe-label">Professeur</span>
                     <div class="teacher-tabs-groupe-boutons">
                         <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')">
@@ -1364,8 +1370,8 @@
                         </button>
                     </div>
                 </div>
-                <div class="teacher-tabs-separateur" aria-hidden="true"></div>
-                <div class="teacher-tabs-groupe">
+                <div id="teacher-tabs-separateur" class="teacher-tabs-separateur" aria-hidden="true"></div>
+                <div id="teacher-tabs-groupe-instituteur" class="teacher-tabs-groupe">
                     <span class="teacher-tabs-groupe-label teacher-tabs-groupe-label-vert">Instituteur</span>
                     <div class="teacher-tabs-groupe-boutons">
                         <button id="tab-forge_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('forge_primaire')">
@@ -1380,6 +1386,30 @@
         </div>
 
         <div class="iframe-container">
+            <!-- ❖ Écran de sélection Professeur/Instituteur (27/09/2026) :
+                 affiché seul, sans le moindre onglet visible, à l'entrée de
+                 l'Espace Enseignant -- voir entrerDansEspaceEnseignant() et
+                 choisirCategorieEnseignant() dans app.js. Masqué par défaut ;
+                 sans rapport avec les autres espaces (sas/eleve), qui
+                 partagent ce même conteneur .iframe-container. -->
+            <div id="teacher-categorie-chooser" class="categorie-chooser-grid" style="display: none;">
+                <div class="glass-card door-card categorie-card categorie-card-bleu" onclick="choisirCategorieEnseignant('professeur')">
+                    <div class="icon-wrapper">🎓</div>
+                    <h3>Professeur</h3>
+                    <p>Secondaire — L'Atelier des Évaluations, La Forge des Leçons, Le Cabinet d'Étude.</p>
+                    <div class="card-action-area">
+                        <button class="btn-entrer" style="background-color: #3B82F6; color: white; border: none;">Entrer</button>
+                    </div>
+                </div>
+                <div class="glass-card door-card categorie-card categorie-card-vert" onclick="choisirCategorieEnseignant('instituteur')">
+                    <div class="icon-wrapper">🌱</div>
+                    <h3>Instituteur</h3>
+                    <p>Primaire — La Forge (Primaire) et Le Cabinet (Primaire).</p>
+                    <div class="card-action-area">
+                        <button class="btn-entrer" style="background-color: #10B981; color: white; border: none;">Entrer</button>
+                    </div>
+                </div>
+            </div>
             <!-- Sas -->
             <div id="container-sas-custom" class="custom-chat-container">
                 <div id="banniere-matiere" class="banniere-matiere">

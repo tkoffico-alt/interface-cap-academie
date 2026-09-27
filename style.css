@@ -563,6 +563,45 @@ body.dark-theme .teacher-tabs-groupe-label-vert { color: #34D399; }
 }
 body.dark-theme .teacher-tabs-separateur { background-color: #334155; }
 
+/* ❖ Bouton "Changer de catégorie" (27/09/2026) : ramène l'enseignant à
+   l'écran de sélection Professeur/Instituteur -- discret, jamais habillé
+   comme un vrai onglet d'outil, pour ne pas être confondu avec eux. */
+.btn-changer-categorie-enseignant {
+    background: none;
+    border: 1px solid #E2E8F0;
+    border-radius: 999px;
+    color: #64748B;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.btn-changer-categorie-enseignant:hover { background-color: #F1F5F9; }
+body.dark-theme .btn-changer-categorie-enseignant { border-color: #334155; color: #94A3B8; }
+body.dark-theme .btn-changer-categorie-enseignant:hover { background-color: #1E293B; }
+
+/* ❖ Écran de sélection Professeur/Instituteur (27/09/2026), voir
+   #teacher-categorie-chooser dans index.html -- réutilise le motif visuel
+   .door-card déjà en place sur la page d'accueil, dans un conteneur qui
+   occupe tout l'espace de .iframe-container (comme un container-chat) au
+   lieu d'une grille de la page d'accueil. */
+.categorie-chooser-grid {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem;
+}
+.categorie-card {
+    cursor: pointer;
+    flex: 1 1 280px;
+    max-width: 340px;
+}
+.categorie-card-bleu .icon-wrapper { background-color: rgba(59, 130, 246, 0.12); }
+.categorie-card-vert .icon-wrapper { background-color: rgba(16, 185, 129, 0.12); }
+
 .tab-btn {
     background-color: transparent;
     color: #64748B;
