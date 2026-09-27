@@ -1190,6 +1190,11 @@
         </div>
     </div>
     <!-- 3ter. MODALE ESPACE PARENTS (CHOIX DE L'EMPLOI DU TEMPS) -->
+    <!-- ❖ Parcours en 3 étapes qui se remplacent (25/09/2026) : le lien Carnet
+         reste hors parcours (rien à voir avec l'abonnement) ; la partie
+         "S'abonner" est découpée en WhatsApp → choix de méthode → formulaire
+         de la méthode choisie, un seul modal, contenu JS-swappé (voir
+         parentAboEtape() dans app.js) — voir CLAUDE.md pour le contexte. -->
     <div id="parents-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 620px; max-height: 90vh; overflow-y: auto;">
             <button class="modal-close" onclick="fermerParentsModal()">×</button>
@@ -1200,22 +1205,40 @@
 
             <div style="border-top: 1px dashed rgba(107, 114, 128, 0.3); margin: 0 0 18px 0;"></div>
 
-            <h4 style="text-align: center; margin: 0 0 6px 0; color: #1F2937;">📝 S'abonner : le parcours en 2 étapes</h4>
-            <p style="text-align: center; color: #4B5563; margin-bottom: 20px; font-size: 0.9em;">Deux façons d'organiser l'emploi du temps de révision de votre enfant. Choisissez celle qui convient le mieux à votre situation, puis abonnez-vous pour l'activer.</p>
+            <h4 style="text-align: center; margin: 0 0 4px 0; color: #1F2937;">📝 S'abonner : le parcours en 3 étapes</h4>
+            <p id="parent-abo-indicateur" class="indicateur-etape-abo">ÉTAPE 1 / 3</p>
 
-            <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 20px; text-align: center;">
-                <p style="margin: 0 0 8px 0; font-size: 0.85em; color: #1E3A8A;"><strong>Étape 1 (recommandée) :</strong> dites-nous bonjour sur WhatsApp avant de payer — votre code d'accès pourra alors vous être transmis instantanément sur ce même canal, dès l'abonnement validé.</p>
-                <a href="https://wa.me/2250142674315?text=Bonjour" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 6px; font-weight: bold; font-size: 0.85em; text-decoration: none;">💬 Dire bonjour sur WhatsApp</a>
+            <div id="parent-abo-etape-1" class="abo-etape">
+                <p style="text-align: center; color: #4B5563; margin-bottom: 16px; font-size: 0.9em;">Dites-nous bonjour sur WhatsApp avant de payer — votre code d'accès pourra alors vous être transmis instantanément sur ce même canal, dès l'abonnement validé.</p>
+                <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 18px; text-align: center;">
+                    <a href="https://wa.me/2250142674315?text=Bonjour" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 6px; font-weight: bold; font-size: 0.85em; text-decoration: none;">💬 Dire bonjour sur WhatsApp</a>
+                </div>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; width: 100%;" onclick="parentAboEtape(2)">C'est fait, continuer →</button>
             </div>
 
-            <p style="text-align: center; color: #4B5563; margin-bottom: 12px; font-size: 0.85em; font-weight: bold;">Étape 2 : Choisissez votre méthode</p>
+            <div id="parent-abo-etape-2" class="abo-etape" style="display: none;">
+                <p style="text-align: center; color: #4B5563; margin-bottom: 18px; font-size: 0.9em;">Choisissez la méthode qui organise le mieux l'emploi du temps de révision de votre enfant.</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 16px;">
+                    <button type="button" class="carte-methode-abo" onclick="parentAboEtape('progression')">
+                        <span class="badge-recommande-abo">✅ Recommandé</span>
+                        <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
+                        <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression</h4>
+                        <p style="font-size: 0.85em; color: #4B5563; margin: 0;">Pour un <strong>suivi au quotidien</strong> pendant toute l'année scolaire. Envoyez la photo de l'emploi du temps de votre enfant.</p>
+                    </button>
+                    <button type="button" class="carte-methode-abo" onclick="parentAboEtape('tally')">
+                        <div style="font-size: 1.8em; margin-bottom: 8px;">🔄</div>
+                        <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Tally</h4>
+                        <p style="font-size: 0.85em; color: #4B5563; margin: 0;">Idéal pour un <strong>programme de cours de vacances</strong>. Vous choisissez vous-même les créneaux via un formulaire.</p>
+                    </button>
+                </div>
+                <button class="btn-retour-etape-abo" onclick="parentAboEtape(1)">← Retour</button>
+            </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
-                <!-- EDT Progression -->
+            <div id="parent-abo-etape-progression" class="abo-etape" style="display: none;">
                 <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
                     <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
-                    <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression</h4>
-                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Recommandé pour un <strong>suivi au quotidien</strong>. Envoyez directement la photo de l'emploi du temps de votre enfant : elle sera prête dès l'activation de votre abonnement.</p>
+                    <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression <span style="font-size: 0.65em; font-weight: normal; color: #10B981;">✅ Recommandé</span></h4>
+                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Envoyez directement la photo de l'emploi du temps de votre enfant : elle sera prête dès l'activation de votre abonnement.</p>
 
                     <div style="background: #FEF2F2; border: 2px solid #EF4444; border-radius: 8px; padding: 10px; margin-bottom: 12px; text-align: left;">
                         <p style="margin: 0; font-size: 0.8em; color: #991B1B; font-weight: bold; line-height: 1.4;">🚨 IMPORTANT : utilisez EXACTEMENT le même numéro WhatsApp ici et à l'étape de paiement Paystack juste après. Un numéro différent empêchera le rattachement automatique de l'emploi du temps au compte (le paiement, lui, aboutira normalement).</p>
@@ -1225,33 +1248,48 @@
                     <input type="text" id="pre-abo-nom-eleve" placeholder="Nom et prénoms de l'élève" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
                     <input type="file" id="pre-abo-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 10px; font-size: 0.8em;">
                     <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Envoyer la photo et payer</button>
-                    <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0; min-height: 16px;"></p>
+                    <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0 0 10px 0; min-height: 16px;"></p>
                 </div>
-                <!-- EDT Tally -->
+                <button class="btn-retour-etape-abo" onclick="parentAboEtape(2)">← Retour</button>
+            </div>
+
+            <div id="parent-abo-etape-tally" class="abo-etape" style="display: none;">
                 <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
                     <div style="font-size: 1.8em; margin-bottom: 8px;">🔄</div>
                     <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Tally</h4>
-                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Idéal pour un <strong>programme de cours de vacances</strong>. Vous choisissez vous-même les créneaux de révision souhaités via un formulaire.</p>
+                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Vous choisissez vous-même les créneaux de révision souhaités via un formulaire.</p>
                     <a href="https://tally.so/r/ODE4rA" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; margin-bottom: 8px; text-decoration: none;">Définir mes créneaux</a>
                     <a href="https://tally.so/r/lb5WjX" target="_blank" style="font-size: 0.8em; color: #3B82F6; font-weight: bold; text-decoration: none;">🔄 Modifier un emploi du temps existant</a>
                 </div>
+                <button class="btn-retour-etape-abo" style="margin-top: 14px;" onclick="parentAboEtape(2)">← Retour</button>
             </div>
         </div>
     </div>
     <!-- 3quater. MODALE ABONNEMENT ESPACE ENSEIGNANT -->
+    <!-- ❖ Parcours en 2 étapes qui se remplacent (25/09/2026) : un seul modal,
+         contenu JS-swappé (voir enseignantAboEtape() dans app.js) plutôt que
+         les 2 étapes empilées d'un coup sur le même écran — l'ancienne mise
+         en page mélangeait WhatsApp + formulaire Tally, ce qui perdait
+         l'utilisateur (voir CLAUDE.md, section dédiée). -->
     <div id="enseignant-abo-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 460px; max-height: 90vh; overflow-y: auto; text-align: center;">
             <button class="modal-close" onclick="fermerEnseignantAboModal()">×</button>
-            <h3 style="margin-bottom: 10px;">🔮 Abonnement Espace Enseignant</h3>
-            <p style="margin-bottom: 20px; color: #4B5563; font-size: 0.9em;">Un dernier pas avant de rejoindre le Cabinet.</p>
+            <h3 style="margin-bottom: 4px;">🔮 Abonnement Espace Enseignant</h3>
+            <p id="enseignant-abo-indicateur" class="indicateur-etape-abo">ÉTAPE 1 / 2</p>
 
-            <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 20px; text-align: center;">
-                <p style="margin: 0 0 8px 0; font-size: 0.85em; color: #1E3A8A;"><strong>Étape 1 (recommandée) :</strong> dites-nous bonjour sur WhatsApp avant de payer — votre code d'accès pourra alors vous être transmis instantanément sur ce même canal, dès l'abonnement validé.</p>
-                <a href="https://wa.me/2250142674315?text=Bonjour" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 6px; font-weight: bold; font-size: 0.85em; text-decoration: none;">💬 Dire bonjour sur WhatsApp</a>
+            <div id="enseignant-abo-etape-1" class="abo-etape">
+                <p style="margin-bottom: 16px; color: #4B5563; font-size: 0.9em;">Dites-nous bonjour sur WhatsApp avant de payer — votre code d'accès pourra alors vous être transmis instantanément sur ce même canal, dès l'abonnement validé.</p>
+                <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 18px;">
+                    <a href="https://wa.me/2250142674315?text=Bonjour" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 6px; font-weight: bold; font-size: 0.85em; text-decoration: none;">💬 Dire bonjour sur WhatsApp</a>
+                </div>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; width: 100%;" onclick="enseignantAboEtape(2)">C'est fait, continuer →</button>
             </div>
 
-            <p style="text-align: center; color: #4B5563; margin-bottom: 12px; font-size: 0.85em; font-weight: bold;">Étape 2 : Finalisez votre abonnement</p>
-            <a href="https://tally.so/r/RGgdb4" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #8B5CF6; color: white; border: none; display: block; text-decoration: none;">Accéder au formulaire d'abonnement</a>
+            <div id="enseignant-abo-etape-2" class="abo-etape" style="display: none;">
+                <p style="margin-bottom: 16px; color: #4B5563; font-size: 0.9em;">Un dernier pas avant de rejoindre le Cabinet.</p>
+                <a href="https://tally.so/r/RGgdb4" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #8B5CF6; color: white; border: none; display: block; text-decoration: none; margin-bottom: 14px;">Accéder au formulaire d'abonnement</a>
+                <button class="btn-retour-etape-abo" onclick="enseignantAboEtape(1)">← Retour</button>
+            </div>
         </div>
     </div>
 

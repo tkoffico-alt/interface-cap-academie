@@ -1573,6 +1573,66 @@ body.dark-theme .btn-action-doc { color: #60A5FA; }
 }
 body.dark-theme .btn-action-doc:hover { color: #F8FAFC; }
 
+/* --- PARCOURS EN ÉTAPES DES MODALES D'ABONNEMENT (25/09/2026) ---
+   Un seul modal par public (Enseignant/Parents), dont le contenu est
+   remplacé par JS (voir enseignantAboEtape()/parentAboEtape() dans app.js)
+   plutôt que d'empiler toutes les étapes sur un même écran. */
+.indicateur-etape-abo {
+    text-align: center;
+    color: #9CA3AF;
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin: 0 0 16px 0;
+}
+body.dark-theme .indicateur-etape-abo { color: #6B7280; }
+
+.btn-retour-etape-abo {
+    background: none;
+    border: none;
+    color: #6B7280;
+    font-size: 0.8em;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px 0;
+}
+body.dark-theme .btn-retour-etape-abo { color: #94A3B8; }
+
+/* Cartes de choix de méthode (étape 2 du parcours Parents) : boutons plutôt
+   que <div>, pour rester accessibles au clavier comme le reste des CTA. */
+.carte-methode-abo {
+    position: relative;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.carte-methode-abo:hover {
+    transform: translateY(-2px);
+    border-color: #3B82F6;
+}
+body.dark-theme .carte-methode-abo {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(148, 163, 184, 0.25);
+}
+body.dark-theme .carte-methode-abo:hover { border-color: #60A5FA; }
+
+.badge-recommande-abo {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    background-color: #10B981;
+    color: white;
+    font-size: 0.68em;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+}
+
 /* --- LA PRONONCIATION À LA DEMANDE, DIRECTEMENT SUR LA PHRASE CONCERNÉE ---
    Plutôt qu'un unique bouton en bas du message (qui lisait tout, y compris
    les explications en français), un petit haut-parleur s'insère juste après

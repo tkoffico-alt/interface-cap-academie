@@ -276,6 +276,7 @@ function fermerPlanningModal() {
 // ❖ L'ESPACE PARENTS (CHOIX EDT TALLY / EDT PROGRESSION) ❖
 // =======================================================================
 function ouvrirParentsModal() {
+    parentAboEtape(1); // ❖ toujours repartir de l'étape 1 à l'ouverture
     document.getElementById('parents-modal').classList.add('active');
 }
 
@@ -284,11 +285,54 @@ function fermerParentsModal() {
 }
 
 function ouvrirEnseignantAboModal() {
+    enseignantAboEtape(1); // ❖ toujours repartir de l'étape 1 à l'ouverture
     document.getElementById('enseignant-abo-modal').classList.add('active');
 }
 
 function fermerEnseignantAboModal() {
     document.getElementById('enseignant-abo-modal').classList.remove('active');
+}
+
+// ❖ NAVIGATION PAR ÉTAPES DES MODALES D'ABONNEMENT (25/09/2026) ❖
+// Un seul modal par public, contenu remplacé par JS plutôt que d'empiler
+// toutes les étapes sur le même écran (l'ancienne mise en page mélangeait
+// WhatsApp + formulaire(s) d'un coup, ce qui perdait l'utilisateur — voir
+// CLAUDE.md, section dédiée). Petit helper générique partagé par les deux
+// modales : masque tous les blocs .abo-etape sauf celui visé, met à jour
+// l'indicateur "ÉTAPE X / Y".
+function afficherEtapeAbo(idsEtapes, idCible, texteIndicateur, idIndicateur) {
+    idsEtapes.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (id === idCible) ? '' : 'none';
+    });
+    const indicateur = document.getElementById(idIndicateur);
+    if (indicateur) indicateur.textContent = texteIndicateur;
+}
+
+function enseignantAboEtape(etape) {
+    const IDS = ['enseignant-abo-etape-1', 'enseignant-abo-etape-2'];
+    const cible = etape === 2 ? 'enseignant-abo-etape-2' : 'enseignant-abo-etape-1';
+    afficherEtapeAbo(IDS, cible, `ÉTAPE ${etape === 2 ? 2 : 1} / 2`, 'enseignant-abo-indicateur');
+}
+
+// ❖ Le fork parent (étape 2) mène vers l'une de deux étapes 3 distinctes
+// (progression/tally) plutôt qu'un simple numéro — même mécanique, cible
+// nommée directement par la méthode choisie.
+function parentAboEtape(etape) {
+    const IDS = ['parent-abo-etape-1', 'parent-abo-etape-2', 'parent-abo-etape-progression', 'parent-abo-etape-tally'];
+    let cible = 'parent-abo-etape-1';
+    let texte = 'ÉTAPE 1 / 3';
+    if (etape === 2) {
+        cible = 'parent-abo-etape-2';
+        texte = 'ÉTAPE 2 / 3';
+    } else if (etape === 'progression') {
+        cible = 'parent-abo-etape-progression';
+        texte = 'ÉTAPE 3 / 3';
+    } else if (etape === 'tally') {
+        cible = 'parent-abo-etape-tally';
+        texte = 'ÉTAPE 3 / 3';
+    }
+    afficherEtapeAbo(IDS, cible, texte, 'parent-abo-indicateur');
 }
 
 // ❖ EDT Progression, avant abonnement : la photo de l'emploi du temps est
