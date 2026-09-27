@@ -521,29 +521,42 @@ body.dark-theme .btn-fullscreen { color: #60A5FA; }
 
 .teacher-navigation {
     display: none;
-    gap: 0.75rem;
+    gap: 0.5rem;
     margin-left: auto;
     align-items: center;
+    /* ❖ Révisé le 27/09/2026 (retour Constant : rangée trop chargée, débordante
+       sur mobile) -- une seule ligne qui défile horizontalement plutôt que de
+       s'empiler sur plusieurs rangées quand l'espace manque. */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    max-width: 100%;
+    padding-bottom: 2px;
 }
 
 /* ❖ Regroupement Professeur/Instituteur (27/09/2026) : chaque groupe porte
    son propre petit intitulé au-dessus de ses boutons, séparé de l'autre par
    .teacher-tabs-separateur -- rend visible d'un coup d'œil que les 5 outils
-   ne forment pas une seule liste plate, mais bien deux publics distincts. */
+   ne forment pas une seule liste plate, mais bien deux publics distincts.
+   Intitulé volontairement discret (masqué sur mobile, voir media query) :
+   un seul groupe est jamais affiché à la fois, la couleur des onglets suffit
+   déjà à distinguer Professeur (violet) d'Instituteur (vert). */
 .teacher-tabs-groupe {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.15rem;
+    gap: 0.1rem;
+    flex-shrink: 0;
 }
 
 .teacher-tabs-groupe-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: #9333EA;
-    opacity: 0.75;
+    opacity: 0.6;
 }
 body.dark-theme .teacher-tabs-groupe-label { color: #C084FC; }
 
@@ -552,29 +565,34 @@ body.dark-theme .teacher-tabs-groupe-label-vert { color: #34D399; }
 
 .teacher-tabs-groupe-boutons {
     display: flex;
-    gap: 0.35rem;
+    gap: 0.3rem;
+    flex-wrap: nowrap;
 }
 
 .teacher-tabs-separateur {
     width: 1px;
-    height: 28px;
+    height: 24px;
     background-color: #E2E8F0;
     align-self: center;
+    flex-shrink: 0;
 }
 body.dark-theme .teacher-tabs-separateur { background-color: #334155; }
 
-/* ❖ Bouton "Changer de catégorie" (27/09/2026) : ramène l'enseignant à
-   l'écran de sélection Professeur/Instituteur -- discret, jamais habillé
-   comme un vrai onglet d'outil, pour ne pas être confondu avec eux. */
+/* ❖ Bouton "Changer de catégorie" (27/09/2026, révisé le même jour) : ramène
+   l'enseignant à l'écran de sélection Professeur/Instituteur -- discret,
+   jamais habillé comme un vrai onglet d'outil. Passé en icône compacte avec
+   infobulle (le libellé complet prenait trop de place sur une rangée déjà
+   pleine) ; le mot "Catégorie" ne reste visible que si la place le permet. */
 .btn-changer-categorie-enseignant {
     background: none;
     border: 1px solid #E2E8F0;
     border-radius: 999px;
     color: #64748B;
     font-size: 0.75rem;
-    padding: 0.3rem 0.7rem;
+    padding: 0.3rem 0.55rem;
     cursor: pointer;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 .btn-changer-categorie-enseignant:hover { background-color: #F1F5F9; }
 body.dark-theme .btn-changer-categorie-enseignant { border-color: #334155; color: #94A3B8; }
@@ -606,12 +624,14 @@ body.dark-theme .btn-changer-categorie-enseignant:hover { background-color: #1E2
     background-color: transparent;
     color: #64748B;
     border: none;
-    padding: 0.5rem 1.25rem;
+    padding: 0.5rem 1rem;
     border-radius: 6px;
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 body.dark-theme .tab-btn { color: #64748B; }
 
@@ -678,9 +698,19 @@ iframe.active {
 }
 @media (max-width: 768px) {
     .toolbar { flex-direction: column; gap: 1rem; align-items: stretch; }
-    .teacher-navigation { margin-left: 0; justify-content: center; flex-wrap: wrap; row-gap: 0.6rem; }
-    .teacher-tabs-separateur { width: 100%; height: 1px; align-self: stretch; }
-    .teacher-tabs-groupe-boutons { flex-wrap: wrap; justify-content: center; }
+    /* ❖ Révisé le 27/09/2026 (retour Constant : rangée débordante/tronquée
+       sur mobile, capture à l'appui) -- abandon du flex-wrap (qui empilait
+       la barre sur 3-4 lignes et écrasait la conversation en dessous) au
+       profit d'une seule ligne compacte qui défile horizontalement d'un
+       doigt, comme le fait déjà .grille-boutons-suggeres ailleurs dans
+       cette app. Le libellé de groupe (Professeur/Instituteur) est masqué
+       ici : sur un écran étroit, la couleur des onglets suffit à distinguer
+       les deux publics sans consommer une ligne de texte supplémentaire. */
+    .teacher-navigation { margin-left: 0; justify-content: flex-start; }
+    .teacher-tabs-groupe-label { display: none; }
+    .teacher-tabs-separateur { height: 20px; }
+    .tab-btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+    .btn-changer-categorie-texte { display: none; }
     .btn-fullscreen { margin-left: 0; justify-content: center; }
 }
 

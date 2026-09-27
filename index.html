@@ -1350,23 +1350,27 @@
                  groupe et un séparateur -- ne change rien à l'accès (toujours un
                  seul Sceau ENS-, voir CLAUDE.md), seulement à la présentation. -->
             <div id="teacher-tabs-container" class="teacher-navigation">
-                <!-- ❖ 27/09/2026 : ne montre plus que le groupe de la
-                     catégorie choisie (voir choisirCategorieEnseignant) --
-                     ce bouton permet de revenir à l'écran de sélection. -->
+                <!-- ❖ 27/09/2026, révisé le même jour (retour Constant : présentation
+                     trop chargée/débordante sur mobile) : le bouton de retour passe en
+                     icône seule avec infobulle (le texte prenait trop de place sur une
+                     ligne déjà pleine), l'intitulé de groupe visible est retiré (redondant
+                     -- un seul groupe est jamais affiché à la fois, cf. choisirCategorieEnseignant)
+                     et les libellés des onglets sont raccourcis. La rangée entière défile
+                     désormais horizontalement au lieu de s'empiler sur plusieurs lignes. -->
                 <button class="btn-changer-categorie-enseignant" onclick="retourChoixCategorieEnseignant()" title="Changer de catégorie (Professeur / Instituteur)">
-                    🔄 Changer de catégorie
+                    🔄<span class="btn-changer-categorie-texte">&nbsp;Catégorie</span>
                 </button>
                 <div id="teacher-tabs-groupe-professeur" class="teacher-tabs-groupe">
                     <span class="teacher-tabs-groupe-label">Professeur</span>
                     <div class="teacher-tabs-groupe-boutons">
-                        <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')">
-                            ❖ L'Atelier des Évaluations
+                        <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')" title="L'Atelier des Évaluations">
+                            ❖ Évaluations
                         </button>
-                        <button id="tab-forge" class="tab-btn" onclick="switchTeacherTool('forge')">
-                            ✦ La Forge des Leçons
+                        <button id="tab-forge" class="tab-btn" onclick="switchTeacherTool('forge')" title="La Forge des Leçons">
+                            ✦ Forge
                         </button>
-                        <button id="tab-cabinet" class="tab-btn" onclick="switchTeacherTool('cabinet')">
-                            ⚜ Le Cabinet d'Étude
+                        <button id="tab-cabinet" class="tab-btn" onclick="switchTeacherTool('cabinet')" title="Le Cabinet d'Étude">
+                            ⚜ Cabinet
                         </button>
                     </div>
                 </div>
@@ -1374,11 +1378,11 @@
                 <div id="teacher-tabs-groupe-instituteur" class="teacher-tabs-groupe">
                     <span class="teacher-tabs-groupe-label teacher-tabs-groupe-label-vert">Instituteur</span>
                     <div class="teacher-tabs-groupe-boutons">
-                        <button id="tab-forge_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('forge_primaire')">
-                            🌱 La Forge (Primaire)
+                        <button id="tab-forge_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('forge_primaire')" title="La Forge des Leçons (Primaire)">
+                            🌱 Forge
                         </button>
-                        <button id="tab-cabinet_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('cabinet_primaire')">
-                            🌱 Le Cabinet (Primaire)
+                        <button id="tab-cabinet_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('cabinet_primaire')" title="Le Cabinet d'Étude (Primaire)">
+                            🌱 Cabinet
                         </button>
                     </div>
                 </div>
