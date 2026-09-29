@@ -857,17 +857,26 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
 }
 
 /* ❖ Portée musicale (abcjs, voir extraireEtRendreABC/reinjecterABC dans
-   app.js) -- rendu SVG d'un bloc ```abc écrit par l'agent (Sas, Éducation
-   Musicale). Même raison que .katex-display : le SVG produit par abcjs a
-   une largeur fixe qui peut dépasser la bulle sur mobile -- défilement
-   horizontal plutôt qu'un débordement. */
-.message .partition-musicale {
+   app.js) -- rendu SVG d'un bloc ```abc écrit par l'agent. Utilisé à la
+   fois dans le chat Sas (bulles .message) ET dans les fiches/évaluations
+   de la Forge et de l'Atelier des Évaluations (cartes .fiche-carte, sans
+   ancêtre .message) -- voir texteVersHtmlLegerFiche. Même raison que
+   .katex-display : le SVG produit par abcjs a une largeur fixe qui peut
+   dépasser son conteneur sur mobile -- défilement horizontal plutôt
+   qu'un débordement. */
+.partition-musicale {
     overflow-x: auto;
     margin: 0.6rem 0;
     padding: 0.4rem 0;
     background: #ffffff;
     border-radius: 8px;
 }
+/* ⚠️ Bug réel trouvé le 29/09/2026 : ces règles n'étaient scopées que
+   sous .message (le SVG chevauchait le texte précédent dans les fiches
+   Forge/Atelier des Évaluations -- portée superposée à l'objectif ou
+   aux badges d'en-tête, car ces cartes ne sont jamais enveloppées dans
+   .message). Corrigé en retirant le préfixe .message : ces règles
+   s'appliquent désormais partout où .partition-musicale apparaît. */
 /* ❖ Bug réel persistant le 26/09/2026 malgré le rattachement au DOM
    (voir app.js, reinjecterABC) : le SVG produit par abcjs peut dessiner
    une partie de son contenu (portée, notes) à une coordonnée y négative
@@ -881,18 +890,18 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
    overflow -- donc le contenu qui dépasse vers le haut est repoussé
    avec le reste, loin du texte précédent. !important nécessaire car
    abcjs pose parfois un style inline direct sur le <svg> généré. */
-.message .partition-musicale svg {
+.partition-musicale svg {
     display: block;
     margin-top: 2.2rem !important;
     margin-bottom: 0.6rem !important;
     overflow: visible;
 }
-body.dark-theme .message .partition-musicale {
+body.dark-theme .partition-musicale {
     background: #f1f5f9; /* la portée SVG d'abcjs dessine en noir sur fond
                              transparent -- un fond clair reste nécessaire
                              même en thème sombre pour rester lisible. */
 }
-.message .partition-musicale-erreur {
+.partition-musicale-erreur {
     white-space: pre-wrap;
     font-size: 0.85em;
     opacity: 0.75;
