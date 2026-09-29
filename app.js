@@ -1164,9 +1164,26 @@ function reinjecterImagesFiche(html, images) {
 // derrière un jeton, pour ressortir en vraies balises <img> à la fin --
 // c'est ce qui permet à un enseignant de coller le lien copié depuis la
 // Bibliothèque d'illustrations directement dans une fiche générée.
+//
+// ❖ Bug réel trouvé le 29/09/2026 : les portées musicales (blocs ```abc)
+// ne s'affichaient JAMAIS dans les fiches Forge/Forge Primaire ni dans les
+// évaluations de l'Atelier des Évaluations -- même quand le modèle avait
+// bien produit un bloc ```abc syntaxiquement correct (confirmé par deux
+// exports PDF, le rythme et la mélodie étaient désormais bien encodés
+// depuis les correctifs de prompt du 29/09/2026), il s'affichait tel quel,
+// en texte brut. Cause : extraireEtRendreABC/reinjecterABC (voir plus bas
+// dans ce fichier) n'avaient été câblés que dans le chemin de rendu du Sas/
+// Cabinet/Ateliers de Maîtrise (afficherReponseAvecFondu, via marked.parse)
+// -- jamais dans ce convertisseur léger, qui est un pipeline ENTIÈREMENT
+// SÉPARÉ utilisé par la Forge/Forge Primaire/Atelier des Évaluations. Même
+// principe déjà appliqué aux images (voir extraireImagesFicheSures juste
+// au-dessus) : extraction AVANT l'échappement HTML/la construction des
+// paragraphes (sinon la syntaxe ```abc serait détruite ou éclatée en
+// plusieurs paragraphes), réinjection du SVG rendu par abcjs après coup.
 function texteVersHtmlLegerFiche(bloc) {
     if (!bloc) return '';
-    const { texte: blocProtege, images } = extraireImagesFicheSures(bloc);
+    const { texte: sansABC, jetons: jetonsABC } = extraireEtRendreABC(bloc);
+    const { texte: blocProtege, images } = extraireImagesFicheSures(sansABC);
     const echappe = echapperHTMLFiche(blocProtege);
     const paragraphes = echappe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
 
@@ -1200,7 +1217,8 @@ function texteVersHtmlLegerFiche(bloc) {
         return `<p>${b.lignes.join('<br>')}</p>`;
     }).filter(Boolean).join('');
 
-    return images.length ? reinjecterImagesFiche(html, images) : html;
+    const htmlAvecImages = images.length ? reinjecterImagesFiche(html, images) : html;
+    return jetonsABC.length ? reinjecterABC(htmlAvecImages, jetonsABC) : htmlAvecImages;
 }
 
 // Sépare un segment de texte (contenu entre la fin d'une "TRACE ÉCRITE
