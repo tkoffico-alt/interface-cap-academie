@@ -1280,6 +1280,64 @@ function reordonnerPorteesAbcHorsSectionFiche(texte) {
         : resultat + ajout;
 }
 
+// ❖ Filet mécanique (30/09/2026) : une mélodie nommée en toutes lettres
+// (ex. "Sol-La-Sol") laissée en pure prose, sans le bloc ```abc``` que le
+// prompt exige pourtant explicitement -- défaut réel constaté à 3
+// reprises malgré 2 citations déjà présentes dans le prompt ("UNE MÉLODIE
+// NOMMÉE... EXIGE ELLE AUSSI UN BLOC ```abc" et "CHAQUE PHRASE
+// MÉLODIQUE... A BESOIN DE SON PROPRE BLOC"). Plutôt qu'une 4e
+// reformulation de la même consigne, cette fonction traduit elle-même la
+// séquence de notes françaises en notation ABC (Do=C, Ré=D, Mi=E, Fa=F,
+// Sol=G, La=A, Si=B, correspondance directe et sans ambiguïté) et insère
+// le bloc juste après -- contrairement à "Nombres premiers" (contenu
+// manquant, jamais rien à convertir), le contenu à représenter existe
+// déjà dans le texte généré ici : une conversion mécanique est donc
+// réellement possible.
+const NOTE_FR_VERS_ABC = { do: 'C', re: 'D', mi: 'E', fa: 'F', sol: 'G', la: 'A', si: 'B' };
+const MOTIF_NOTE_FR = '(?:Do|R[ée]|Mi|Fa|Sol|La|Si)';
+function genererAbcPourMelodiesNommeesFiche(texte) {
+    const reSequence = new RegExp(`\\b${MOTIF_NOTE_FR}(?:\\s*-\\s*${MOTIF_NOTE_FR})+\\b`, 'gi');
+    const sequences = [];
+    let m;
+    while ((m = reSequence.exec(texte)) !== null) {
+        sequences.push({ texteMatch: m[0], debut: m.index, fin: m.index + m[0].length });
+    }
+    if (!sequences.length) return texte;
+
+    // Une séquence déjà proche (fenêtre large, la mise en page variant
+    // selon l'endroit choisi par l'agent) d'un bloc ```abc``` existant est
+    // considérée comme déjà représentée -- on n'en ajoute jamais un
+    // second, quitte à laisser passer un cas où le bloc voisin représente
+    // en réalité autre chose.
+    const FENETRE = 400;
+    const blocsExistants = [];
+    const reAbc = /```abc\s*\n[\s\S]*?```/g;
+    let mb;
+    while ((mb = reAbc.exec(texte)) !== null) {
+        blocsExistants.push({ debut: mb.index, fin: mb.index + mb[0].length });
+    }
+    function dejaRepresentee(seq) {
+        return blocsExistants.some(b => (seq.debut - b.fin) < FENETRE && (b.debut - seq.fin) < FENETRE);
+    }
+
+    // Insertion de la fin vers le début : ne décale jamais les index déjà
+    // calculés des séquences précédentes dans la même passe.
+    let resultat = texte;
+    for (let i = sequences.length - 1; i >= 0; i--) {
+        const seq = sequences[i];
+        if (dejaRepresentee(seq)) continue;
+        const notes = seq.texteMatch.split('-').map(n => n.trim());
+        const notesAbc = notes.map(n => {
+            const cle = n.toLowerCase().replace(/[éè]/g, 'e');
+            return NOTE_FR_VERS_ABC[cle] || '';
+        });
+        if (notesAbc.some(n => !n)) continue; // sécurité : jamais de note non reconnue
+        const blocAbc = '\n```abc\nL:1/4\nK:C\n' + notesAbc.join(' ') + ' |\n```\n';
+        resultat = resultat.slice(0, seq.fin) + blocAbc + resultat.slice(seq.fin);
+    }
+    return resultat;
+}
+
 function analyserFicheLecon(texteBrut) {
     // ❖ Le prompt de la Forge n'interdit pas explicitement le Markdown
     // (contrairement à celui de l'Atelier des Évaluations) : le modèle
@@ -1302,6 +1360,11 @@ function analyserFicheLecon(texteBrut) {
         .replace(/^#+\s*/gm, '')
         .trim();
     if (!texte) return null;
+    // ❖ Filet mécanique mélodies nommées (voir la fonction juste au-
+    // dessus) -- appliqué AVANT le repositionnement des portées, pour que
+    // ce dernier voie déjà les blocs ```abc``` nouvellement générés et les
+    // replace si besoin comme n'importe quel autre bloc.
+    texte = genererAbcPourMelodiesNommeesFiche(texte);
     // ❖ Filet de sécurité portées ABC hors-section (voir la fonction
     // juste au-dessus) -- doit s'appliquer AVANT trouverOccurrencesFiche,
     // pour que le découpage en sections voie déjà le texte corrigé.
