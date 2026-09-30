@@ -866,6 +866,7 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
    qu'un débordement. */
 .partition-musicale {
     overflow-x: auto;
+    overflow-y: hidden;
     margin: 0.6rem 0;
     padding: 0.4rem 0;
     background: #ffffff;
@@ -877,24 +878,36 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
    aux badges d'en-tête, car ces cartes ne sont jamais enveloppées dans
    .message). Corrigé en retirant le préfixe .message : ces règles
    s'appliquent désormais partout où .partition-musicale apparaît. */
-/* ❖ Bug réel persistant le 26/09/2026 malgré le rattachement au DOM
-   (voir app.js, reinjecterABC) : le SVG produit par abcjs peut dessiner
-   une partie de son contenu (portée, notes) à une coordonnée y négative
-   par rapport à son propre viewBox -- avec l'overflow par défaut
-   (visible), ce contenu déborde visuellement AU-DESSUS de la boîte du
-   SVG, dans l'espace occupé par le texte qui précède, quel que soit le
-   margin-top posé sur le conteneur englobant (qui ne déplace que la
-   boîte déclarée, pas ce qui en déborde). Corrigé en forçant une marge
-   sur le <svg> lui-même (pas seulement son conteneur) : un margin
-   s'applique à tout l'élément rendu, y compris ce qui en déborde par
-   overflow -- donc le contenu qui dépasse vers le haut est repoussé
-   avec le reste, loin du texte précédent. !important nécessaire car
-   abcjs pose parfois un style inline direct sur le <svg> généré. */
+/* ⚠️ Bug réel plus grave trouvé le 30/09/2026 -- révélé PAR le correctif
+   ci-dessus : une fois ces règles appliquées aux cartes de fiche/évaluation
+   (qui n'ont pas le même confinement que les bulles .message), le
+   `overflow: visible` posé sur le <svg> (voir historique ci-dessous) a
+   laissé le débordement négatif d'abcjs remonter librement dans le flux du
+   document -- une seule portée pouvait alors s'afficher visuellement à
+   l'intérieur des badges de l'EN-TÊTE ADMINISTRATIF ou juste après le titre
+   PARTIE A, plusieurs sections avant sa vraie position dans le texte
+   (confirmé par Constant : "une seule portée apparaissant au mauvais
+   endroit"). `overflow: visible` avait été ajouté le 26/09/2026 pour laisser
+   ce débordement RESTER VISIBLE plutôt que d'être rogné -- mais dans ce
+   contexte (carte de fiche, sans .message pour le contenir), laisser le
+   débordement visible est pire que le rogner : un fragment de portée
+   manquant est un défaut mineur, une portée entière déplacée dans une
+   section sans rapport est une vraie casse de mise en page. Corrigé en deux
+   points : (1) le SVG repasse en `overflow: hidden` (comportement par défaut
+   d'un élément <svg>, annulant l'ajout du 26/09/2026) -- tout débordement
+   négatif est désormais rogné DANS le SVG lui-même, invisible, plutôt que de
+   fuir vers le haut de la page ; (2) `.partition-musicale` reçoit en plus un
+   `overflow-y: hidden` explicite (au lieu de dépendre de la règle CSS
+   d'interdépendance overflow-x/overflow-y, qui force normalement l'axe
+   resté "visible" à "auto" quand l'autre est "auto", mais dont la fiabilité
+   entre navigateurs n'a pas pu être vérifiée dans ce bac à sable) -- double
+   filet plutôt qu'un seul mécanisme dont on ne peut pas garantir qu'il
+   suffit seul. */
 .partition-musicale svg {
     display: block;
     margin-top: 2.2rem !important;
     margin-bottom: 0.6rem !important;
-    overflow: visible;
+    overflow: hidden;
 }
 body.dark-theme .partition-musicale {
     background: #f1f5f9; /* la portée SVG d'abcjs dessine en noir sur fond
