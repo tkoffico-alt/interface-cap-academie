@@ -1238,6 +1238,48 @@ function separerTraceEtTitreSuivant(segment) {
     return { trace: paragraphes.join('\n\n'), titreSuivant: '' };
 }
 
+// ❖ Filet de sécurité, ajouté le 30/09/2026 (Forge secondaire uniquement --
+// voir le chantier Musique dans CLAUDE.md). Le modèle place parfois un bloc
+// ```abc``` (portée musicale) AVANT la section TABLEAU DES HABILETÉS ET
+// CONTENUS -- typiquement dans l'EN-TÊTE ADMINISTRATIF ou dans les toutes
+// premières lignes de la SITUATION D'APPRENTISSAGE. Rendu à cet endroit, le
+// SVG de la portée s'affiche collé aux badges de l'en-tête (chevauchement
+// confirmé par capture le 30/09/2026, MALGRÉ le correctif CSS overflow:
+// hidden du même jour -- ce n'était donc pas seulement un problème
+// d'affichage, mais un problème de PLACEMENT du contenu par le modèle, que
+// le CSS seul ne pouvait pas corriger). Après plusieurs correctifs de
+// prompt sans effet sur ce type de défaut (voir "limite acceptée"), ce
+// filet MÉCANIQUE déplace tout bloc ```abc``` trouvé avant le début du
+// TABLEAU DES HABILÉTÉS vers la fin du document généré (juste avant PLAN
+// POUR LE CAHIER DE TEXTE s'il existe, sinon tout à la fin, dans la Trace
+// écrite) -- la portée reste donc TOUJOURS visible pour l'enseignant,
+// simplement déplacée à un endroit où elle ne peut plus chevaucher l'en-
+// tête. Un bloc déjà bien placé (après le Tableau) n'est jamais touché.
+function reordonnerPorteesAbcHorsSectionFiche(texte) {
+    const reTableau = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${ALTERNATIVES_SECTION_FICHE.tableau.join('|')})`, 'im');
+    const mTableau = reTableau.exec(texte);
+    if (!mTableau) return texte; // pas de repère sûr -> on ne touche à rien
+
+    const borne = mTableau.index;
+    const reABC = /```abc\s*\n[\s\S]*?```/g;
+    const blocsADeplacer = [];
+    let resultat = texte.replace(reABC, (motifEntier, offset) => {
+        if (offset < borne) {
+            blocsADeplacer.push(motifEntier.trim());
+            return ''; // retiré de sa position d'origine, fautive
+        }
+        return motifEntier; // déjà bien placé (après le Tableau) : inchangé
+    });
+    if (!blocsADeplacer.length) return texte;
+
+    const reCahierTexte = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${ALTERNATIVES_SECTION_FICHE.planCahierTexte.join('|')})`, 'im');
+    const mCahierTexte = reCahierTexte.exec(resultat);
+    const ajout = '\n\n' + blocsADeplacer.join('\n\n') + '\n\n';
+    return mCahierTexte
+        ? resultat.slice(0, mCahierTexte.index) + ajout + resultat.slice(mCahierTexte.index)
+        : resultat + ajout;
+}
+
 function analyserFicheLecon(texteBrut) {
     // ❖ Le prompt de la Forge n'interdit pas explicitement le Markdown
     // (contrairement à celui de l'Atelier des Évaluations) : le modèle
@@ -1247,7 +1289,7 @@ function analyserFicheLecon(texteBrut) {
     // échouer entièrement (repli silencieux vers l'affichage brut). On
     // neutralise donc toute étoile avant l'analyse -- la fiche ne contient
     // jamais de vrai Markdown à préserver, cette perte est sans risque.
-    const texte = (texteBrut || '')
+    let texte = (texteBrut || '')
         .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
         .replace(/\*/g, '')
         // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
@@ -1260,6 +1302,10 @@ function analyserFicheLecon(texteBrut) {
         .replace(/^#+\s*/gm, '')
         .trim();
     if (!texte) return null;
+    // ❖ Filet de sécurité portées ABC hors-section (voir la fonction
+    // juste au-dessus) -- doit s'appliquer AVANT trouverOccurrencesFiche,
+    // pour que le découpage en sections voie déjà le texte corrigé.
+    texte = reordonnerPorteesAbcHorsSectionFiche(texte);
 
     const occurrences = trouverOccurrencesFiche(texte);
     const aHeader = occurrences.some(o => o.type === 'header');
