@@ -871,6 +871,30 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
     padding: 0.4rem 0;
     background: #ffffff;
     border-radius: 8px;
+    /* ⚠️ VRAIE CAUSE RACINE trouvée le 30/09/2026, en reproduisant le bug en
+       direct sur edukatchat.org (harnais navigateur : appel réel de
+       analyserFicheLecon()/construireHTMLFiche() avec un vrai bloc ```abc,
+       injection du HTML dans le DOM réel, inspection de getComputedStyle) --
+       après plusieurs correctifs successifs qui n'avaient traité que des
+       symptômes (overflow, margin-top, voir historique ci-dessous) sans
+       jamais confirmer la vraie cause : abcjs pose lui-même `position:
+       absolute; top:0` sur le <svg> racine qu'il génère (comportement propre
+       à la librairie, indépendant de `responsive`). Un élément en position
+       absolute se positionne par rapport à son plus proche ancêtre POSITIONNÉ
+       (position non-static) -- or AUCUN ancêtre de .partition-musicale
+       (.fiche-phase-ligne, .fiche-carte, .fiche-lecon...) n'est positionné,
+       donc le SVG remontait jusqu'au containing block initial (la racine du
+       document/du conteneur défilable), s'affichant TOUJOURS en haut à
+       gauche -- exactement le symptôme observé (portée superposée à
+       l'EN-TÊTE ADMINISTRATIF), quel que soit l'endroit réel du texte où le
+       modèle avait écrit le bloc ```abc. Confirmé par une mesure directe :
+       sans ce correctif, `getBoundingClientRect()` du <svg> donnait un `top`
+       très négatif (hors de son propre conteneur) ; avec `position:
+       relative` posé ICI, le <svg> s'ancre correctement à l'intérieur de
+       .partition-musicale, exactement où il doit apparaître. Un ancêtre
+       positionné le plus proche possible du <svg> est le correctif direct --
+       pas un correctif de repli comme les précédents. */
+    position: relative;
 }
 /* ⚠️ Bug réel trouvé le 29/09/2026 : ces règles n'étaient scopées que
    sous .message (le SVG chevauchait le texte précédent dans les fiches
