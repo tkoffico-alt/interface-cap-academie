@@ -867,6 +867,32 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
 .partition-musicale {
     overflow-x: auto;
     overflow-y: hidden;
+    min-height: 150px;
+    /* ⚠️ VRAIE CAUSE RACINE D'UN SECOND BUG trouvée le 30/09/2026, plus tard
+       le même jour que le correctif position:relative ci-dessous, en
+       reproduisant en direct sur edukatchat.org l'exacte capture partagée par
+       Constant (TRACE ÉCRITE VALIDÉE totalement VIDE, alors que le texte brut
+       Dify contenait un bloc ```abc parfaitement formé -- confirmé via les
+       Journaux Dify Studio) : le <svg> généré par abcjs porte lui-même
+       `position: absolute` (voir plus bas) -- un élément en position absolue
+       ne contribue JAMAIS à la hauteur "auto" de son conteneur, même une fois
+       ce conteneur rendu POSITIONNÉ (position: relative) pour l'ancrer
+       correctement. Sans aucun autre contenu, `.partition-musicale` se
+       retrouvait donc réduite à la hauteur de son seul `padding` (0.4rem ×
+       2 = 12.8px, confirmé par mesure directe `getBoundingClientRect()`) --
+       et `overflow-y: hidden` (posé plus haut le même jour, voir plus bas)
+       rognait alors tout le <svg> réellement dessiné (≈74-98px de haut) sauf
+       ces 12.8 premiers pixels, une simple tranche de marge sans note
+       visible : une "boîte vide" à l'écran, alors que le HTML généré
+       contenait bel et bien un <svg> complet et valide (confirmé par
+       `analyserFicheLecon()` + `texteVersHtmlLegerFiche()` appelés
+       directement, en isolation, sur le vrai texte réel -- les deux
+       renvoyaient un SVG correct, la perte n'avait lieu qu'à l'affichage).
+       `min-height` fixe (au lieu de laisser le conteneur se réduire à son
+       seul padding) donne au <svg> assez d'espace réel pour ne plus être
+       rogné par `overflow-y: hidden`, sans avoir à toucher ce filet déjà en
+       place -- vérifié par mesure directe (`svgFullyContained: true`) avant
+       toute livraison. */
     margin: 0.6rem 0;
     padding: 0.4rem 0;
     background: #ffffff;
