@@ -2110,8 +2110,12 @@ function analyserFichePNAPAS(texteBrut) {
             // ("Séance : Séance 1 : Lecture de…"), ce qui donne un badge
             // bègue. On retire la répétition en gardant le numéro, qui lui
             // porte une information : "Séance : 1 — Lecture de…".
+            // ❖ Numéro au format « 1/4 » accepté (03/10/2026) : les séances de
+            // français PNAPAS se numérotent ainsi (« Séance 1/4 : Lecture-
+            // prononciation ») ; seul le « 1 » était capturé, d'où un badge
+            // « Séance : 1 — /4 — Lecture-prononciation ».
             const motifRepetition = new RegExp(
-                '^' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*(\\d+)?\\s*[:.\\-—]?\\s*', 'i');
+                '^' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*(\\d+(?:\\s*\\/\\s*\\d+)?)?\\s*[:.\\-—]?\\s*', 'i');
             valeur = valeur.replace(motifRepetition, (m, num) => (num ? num + ' — ' : ''));
             champs.push({ label, valeur: nettoyerValeurChampCreuseFiche(valeur.trim() || l2.slice(sepIdx + 1).trim()) });
         } else {
