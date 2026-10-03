@@ -2191,14 +2191,40 @@ function titresDe(occurrences, type) {
 // retombe régulièrement sur le titre par défaut malgré des consignes
 // répétées (trois échecs mesurés). On l'impose donc ici, où le résultat est
 // déterministe, plutôt que de continuer à le demander au modèle.
+// ❖ Étendu le 03/10/2026 aux MATHÉMATIQUES CE2 : l'annexe officielle de
+// juillet 2026 (fiche pratique maths CE2) titre elle aussi cette rubrique
+// « CONTENUS », en phrases verbales -- ce n'était pas une exception propre
+// au français. Au CP et au CE1, le tableau des habiletés et contenus reste.
 function titreContenusFichePNAPAS(champs, titreParDefaut) {
     const valeurDe = motifLabel => {
         const champ = (champs || []).find(c => motifLabel.test(c.label || ''));
         return champ ? (champ.valeur || '') : '';
     };
     const estCE2 = /\bCE\s*2\b/i.test(valeurDe(/classe/i));
-    const estFrancais = /fran[çc]ais/i.test(valeurDe(/mati[èe]re/i));
-    return (estCE2 && estFrancais) ? 'CONTENUS' : titreParDefaut;
+    const matiere = valeurDe(/mati[èe]re/i);
+    const estMatierePNAPAS = /fran[çc]ais|math[ée]matiques/i.test(matiere);
+    return (estCE2 && estMatierePNAPAS) ? 'CONTENUS' : titreParDefaut;
+}
+
+// ❖ Sections « bonus EdukaTchat » (03/10/2026) : la fiche pratique officielle
+// PNAPAS ne comporte ni situation d'apprentissage rédigée, ni matériel
+// détaillé, ni trace écrite -- EdukaTchat les ajoute en complément, et
+// Constant a choisi de les garder en les signalant comme telles, pour que
+// l'instituteur sache qu'il peut les retirer sans s'écarter du canevas
+// officiel. Sur une fiche APC rendue par ce même tableau (estFicheAPC),
+// ces sections sont officielles : aucune mention dans ce cas.
+function titreSectionBonusFichePNAPAS(titre, estFicheAPC) {
+    const t = echapperHTMLFiche(titre || '');
+    return estFicheAPC ? t : `${t} <span class="fiche-mention-bonus">Bonus EdukaTchat</span>`;
+}
+
+// ❖ En lecture, la fiche officielle déroule « Je fais / Nous faisons / Tu
+// fais » à l'intérieur de chaque étape (03/10/2026) : on met ces trois
+// repères en évidence en tête de ligne dans les cellules du tableau. Le
+// texte est déjà échappé à ce stade -- aucune balise venant du modèle.
+function marquerMomentsLectureFiche(html) {
+    return html.replace(/(^|<p>|<br>|<li>)\s*(Je fais|Nous faisons|Tu fais)\s*:/g,
+        '$1<strong class="fiche-moment-lecture">$2 :</strong>');
 }
 
 function construireHTMLFichePNAPAS(analyse) {
@@ -2217,7 +2243,7 @@ function construireHTMLFichePNAPAS(analyse) {
     }
 
     if (situationTexte) {
-        html += `<div class="fiche-section-titre">💡 ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-section-titre">💡 ${titreSectionBonusFichePNAPAS(titres.situation, estFicheAPC)}</div>`;
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
     }
 
@@ -2228,7 +2254,7 @@ function construireHTMLFichePNAPAS(analyse) {
     }
 
     if (materielTexte) {
-        html += `<div class="fiche-section-titre">🧰 ${echapperHTMLFiche(titres.materiel || '')}</div>`;
+        html += `<div class="fiche-section-titre">🧰 ${titreSectionBonusFichePNAPAS(titres.materiel, estFicheAPC)}</div>`;
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
     }
 
@@ -2256,7 +2282,7 @@ function construireHTMLFichePNAPAS(analyse) {
             // data-libelle porte le nom de la colonne : c'est lui qui
             // s'affiche en étiquette quand le tableau se replie en cartes
             // sur les petits écrans (voir style.css).
-            html += `<td data-libelle="${echapperHTMLFiche(enTete)}">${texteVersHtmlLegerFiche(cellule)}</td>`;
+            html += `<td data-libelle="${echapperHTMLFiche(enTete)}">${marquerMomentsLectureFiche(texteVersHtmlLegerFiche(cellule))}</td>`;
         });
         html += '</tr>';
     });
@@ -2269,7 +2295,7 @@ function construireHTMLFichePNAPAS(analyse) {
         const motifTrace = /^\s*(TRACE\s+[ÉE]CRITE)\s*:?\s*\n?/i;
         const correspondance = apresTableau.match(motifTrace);
         if (correspondance) {
-            html += `<div class="fiche-section-titre">✍️ ${echapperHTMLFiche(correspondance[1])}</div>`;
+            html += `<div class="fiche-section-titre">✍️ ${titreSectionBonusFichePNAPAS(correspondance[1], estFicheAPC)}</div>`;
             html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(apresTableau.slice(correspondance[0].length).trim())}</div>`;
         } else {
             html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(apresTableau)}</div>`;

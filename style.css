@@ -1024,6 +1024,33 @@ body.dark-theme .bot-message {
     text-transform: uppercase;
 }
 
+/* ❖ Mention « Bonus EdukaTchat » (03/10/2026) : situation d'apprentissage,
+   matériel et trace écrite ne figurent pas dans la fiche pratique officielle
+   PNAPAS ; l'instituteur doit voir d'un coup d'œil qu'il peut les retirer.
+   Pastille discrète, sans majuscules, pour ne pas concurrencer le titre.
+   Les variables --fiche-accent* valent pour les deux thèmes : pas de
+   variante body.dark-theme nécessaire. */
+.fiche-mention-bonus {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    border: 1px dashed var(--fiche-accent);
+    background: var(--fiche-accent-douce);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+/* ❖ Repères Je fais / Nous faisons / Tu fais dans les cellules du
+   déroulement (lecture PNAPAS, 03/10/2026). */
+.fiche-moment-lecture {
+    color: var(--fiche-accent);
+    font-weight: 700;
+}
+
 .fiche-bloc-entete {
     display: flex;
     flex-wrap: wrap;
