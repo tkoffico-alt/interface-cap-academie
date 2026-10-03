@@ -2296,7 +2296,12 @@ function construireHTMLFichePNAPAS(analyse) {
         // ❖ La trace écrite est la seule section qui suivait le tableau sans
         // titre : elle s'affichait en carte nue au milieu de sections toutes
         // coiffées d'un intitulé. On la détecte pour lui rendre le sien.
-        const motifTrace = /^\s*(TRACE\s+[ÉE]CRITE)\s*:?\s*\n?/i;
+        // ❖ Tolère aussi (03/10/2026) une ou plusieurs lignes de séparation
+        // (« --- ») avant le titre, une numérotation (« 6. ») ou un émoji :
+        // observé sur deux fiches maths CE2/CP1 où le titre, précédé d'un
+        // « --- », n'était plus reconnu et s'affichait en texte nu dans la
+        // carte, sans son intitulé ni sa pastille « Bonus EdukaTchat ».
+        const motifTrace = /^\s*(?:[-—–_*=]{3,}\s*\n\s*)*(?:\d+[.)]\s*)?(?:[^\p{L}\p{N}\s]+\s*)?(TRACE\s+[ÉE]CRITE)\s*:?\s*\n?/iu;
         const correspondance = apresTableau.match(motifTrace);
         if (correspondance) {
             html += `<div class="fiche-section-titre">✍️ ${titreSectionBonusFichePNAPAS(correspondance[1], estFicheAPC)}</div>`;
