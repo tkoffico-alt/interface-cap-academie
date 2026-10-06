@@ -1370,7 +1370,14 @@ function analyserFicheLecon(texteBrut) {
     // pour que le découpage en sections voie déjà le texte corrigé.
     texte = reordonnerPorteesAbcHorsSectionFiche(texte);
 
-    const occurrences = trouverOccurrencesFiche(texte);
+    let occurrences = trouverOccurrencesFiche(texte);
+    // ❖ Le plan pour le cahier de texte est la DERNIÈRE section : toute
+    // occurrence reconnue après son titre appartient au plan lui-même, pas à
+    // la fiche (06/10/2026 : les lignes "Situation d'apprentissage" et
+    // "Situation d'évaluation" du plan hiérarchique étaient prises pour de
+    // vraies sections et coupaient le plan après "A. <titre>").
+    const idxPlanCahier = occurrences.findIndex(o => o.type === 'planCahierTexte');
+    if (idxPlanCahier >= 0) occurrences = occurrences.slice(0, idxPlanCahier + 1);
     const aHeader = occurrences.some(o => o.type === 'header');
     const aDeroulement = occurrences.some(o => o.type === 'deroulement');
     if (!aHeader || !aDeroulement) return null;
