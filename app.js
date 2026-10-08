@@ -1235,6 +1235,18 @@ function separerTraceEtTitreSuivant(segment) {
     if (dernier.length <= 80 && !dernier.includes('\n')) {
         return { trace: paragraphes.slice(0, -1).join('\n\n'), titreSuivant: dernier.replace(/^[-•\s]+/, '') };
     }
+    // Bloc final de 2 à 3 lignes courtes (ex: "II. Développement" puis "A. Caractéristiques…") :
+    // deux titres consécutifs, reconnus à un préfixe de numérotation sur la première ligne
+    // et à l'absence de ponctuation de fin de phrase -- fusionnés en un seul titre.
+    const lignes = dernier.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lignes.length >= 2 && lignes.length <= 3
+        && lignes.every(l => l.length <= 80 && !/[.!?;]$/.test(l.replace(/^[IVX]+\.|^[A-Z]\.|^\d+\./, '').trim()))
+        && /^(?:[IVX]+\.|[A-Z]\.|\d+[.)]|[-•])\s*\S/.test(lignes[0])) {
+        return {
+            trace: paragraphes.slice(0, -1).join('\n\n'),
+            titreSuivant: lignes.map(l => l.replace(/^[-•\s]+/, '')).join(' — ')
+        };
+    }
     return { trace: paragraphes.join('\n\n'), titreSuivant: '' };
 }
 
@@ -1564,6 +1576,20 @@ function construireHTMLFiche(analyse, classeAccent) {
     // via texteVersHtmlLegerFiche : l'indentation des lignes "a./b./c."
     // fait partie du format attendu par l'enseignant au moment du copier-
     // coller, elle ne doit pas être aplatie en simples paragraphes HTML.
+    // ❖ Emplacement de la page « Illustrations » (08/10/2026) : vide et
+    // masqué tant que /api/illustrations/pour_fiche n'a rien renvoyé (voir
+    // hydraterIllustrationsFiche). Placé juste avant le plan. Les trois
+    // données d'appariement viennent des badges de l'EN-TÊTE ADMINISTRATIF.
+    if (planCahierTexte) {
+        const trouver = (re) => (badges.find(b => re.test(b.label || '')) || {}).valeur || '';
+        const discipline = trouver(/discipline|mati[eè]re|subject|asignatura|fach/i);
+        const niveauFiche = trouver(/niveau|classe|level|nivel|klasse/i);
+        const titreFiche = trouver(/^\s*(titre|title|t[ií]tulo|titel)/i) || trouver(/th[eè]me|theme|tema/i);
+        if (discipline && niveauFiche && titreFiche) {
+            html += `<div class="fiche-illustrations-slot" hidden data-discipline="${echapperHTMLFiche(discipline)}" data-niveau="${echapperHTMLFiche(niveauFiche)}" data-titre="${echapperHTMLFiche(titreFiche)}"></div>`;
+        }
+    }
+
     if (planCahierTexte) {
         html += `<div class="fiche-section-titre">📓 Plan pour le cahier de texte</div>`;
         html += '<div class="fiche-carte fiche-plan-cahier-texte">';
@@ -3175,6 +3201,41 @@ async function chargerTaillesIllustrations() {
 }
 chargerTaillesIllustrations();
 
+// ❖ Page « Illustrations » des fiches Forge : remplit les emplacements
+// laissés par construireHTMLFiche avec les images du catalogue qui
+// correspondent à la leçon (appariement serveur déterministe). Si rien ne
+// correspond, ou en cas d'erreur, l'emplacement reste masqué.
+const cacheIllustrationsFiche = new Map();
+async function hydraterIllustrationsFiche(element) {
+    const slots = element.querySelectorAll('.fiche-illustrations-slot:not([data-charge])');
+    for (const slot of slots) {
+        slot.dataset.charge = '1';
+        try {
+            const params = new URLSearchParams({
+                discipline: slot.dataset.discipline || '',
+                niveau: slot.dataset.niveau || '',
+                titre: slot.dataset.titre || ''
+            });
+            // Cache par requête : element.innerHTML peut être réécrit
+            // plusieurs fois pendant l'affichage progressif.
+            const cle = params.toString();
+            if (!cacheIllustrationsFiche.has(cle)) {
+                cacheIllustrationsFiche.set(cle, fetch(`https://api.edukatchat.org/api/illustrations/pour_fiche?${cle}`).then(r => r.json()));
+            }
+            const data = await cacheIllustrationsFiche.get(cle);
+            const images = (data.illustrations || []).filter(i => i.url && i.url.startsWith('https://edukatchat.org/images/illustrations/'));
+            if (!images.length) continue;
+            let html = '<div class="fiche-section-titre">🖼️ Illustrations</div><div class="fiche-carte fiche-illustrations">';
+            images.forEach(i => {
+                html += `<figure class="fiche-illustration"><img src="${echapperHTMLFiche(i.url)}" alt="${echapperHTMLFiche(i.legende)}" loading="lazy"><figcaption>${echapperHTMLFiche(i.legende)}</figcaption></figure>`;
+            });
+            html += '</div>';
+            slot.innerHTML = html;
+            slot.hidden = false;
+        } catch (e) { /* silencieux : la fiche reste valable sans illustrations */ }
+    }
+}
+
 function appliquerTailleIllustrations(element) {
     element.querySelectorAll('img').forEach((img) => {
         const taille = tailleIllustrationsParUrl.get(img.getAttribute('src'));
@@ -3458,6 +3519,7 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
     }
     element.innerHTML = html;
     appliquerTailleIllustrations(element);
+    hydraterIllustrationsFiche(element);
     if (!element.dataset.fonduJoue) {
         element.dataset.fonduJoue = "1";
         element.classList.remove('fondu-reponse');

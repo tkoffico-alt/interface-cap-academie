@@ -1142,6 +1142,36 @@ body.dark-theme .fiche-plan-cahier-texte-contenu { color: #E2E8F0; }
     align-self: flex-start;
 }
 
+/* ❖ Page « Illustrations » (08/10/2026) : images du catalogue appariées à la
+   leçon, avec légende, juste avant le plan. Nouvelle page à l'impression. */
+.fiche-illustrations-slot[hidden] { display: none; }
+.fiche-illustrations {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+.fiche-illustration {
+    margin: 0;
+    text-align: center;
+    break-inside: avoid;
+}
+.fiche-illustration img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: #FFFFFF;
+}
+.fiche-illustration figcaption {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #475569;
+}
+body.dark-theme .fiche-illustration figcaption { color: #CBD5E1; }
+@media print {
+    .fiche-illustrations-slot:not([hidden]) { break-before: page; }
+}
+
 /* ❖ Le déroulement du canevas PNAPAS natif : un vrai tableau à quatre
    colonnes, tel qu'il figure dans les fiches modèles officielles. */
 .fiche-carte-tableau {
