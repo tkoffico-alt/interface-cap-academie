@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Essai gratuit enseignant — EdukaTchat</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  /* Page d'essai : réutilise style.css (mêmes cartes/badges que l'Espace Enseignant). */
+  .essai{width:100%;max-width:760px;margin:0 auto;padding:20px 16px 48px}
+  .essai h1{font-size:1.5rem;margin:8px 0 4px}
+  .essai .sous{color:#475569;margin:0 0 18px}
+  .essai .carte{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 6px rgba(0,0,0,.08);margin-bottom:16px;color:#0f172a}
+  .essai label{display:block;font-weight:600;font-size:.9rem;margin:12px 0 4px}
+  .essai input,.essai select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;font-size:1rem;background:#fff;color:#0f172a}
+  .essai .choix{display:flex;gap:10px}
+  .essai .choix label{flex:1;margin:0;font-weight:500;border:1px solid #cbd5e1;border-radius:9px;padding:11px;cursor:pointer;text-align:center}
+  .essai .choix input{width:auto;margin-right:6px}
+  .essai .btn-principal{width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;font-size:1rem;font-weight:700;color:#fff;background:#3B82F6;cursor:pointer}
+  .essai .btn-principal:disabled{opacity:.6;cursor:wait}
+  .essai .barre-actions{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .essai .btn-sec{flex:1;min-width:140px;padding:11px;border:0;border-radius:10px;font-size:.95rem;font-weight:600;color:#fff;background:#64748b;cursor:pointer}
+  .essai .msg{margin-top:12px;color:#b91c1c;font-size:.92rem}
+  .essai .cta{background:#ecfdf5;border:1px solid #10B981}
+  .essai .cta a{display:inline-block;margin-top:8px;padding:11px 16px;border-radius:9px;background:#10B981;color:#fff;font-weight:700;text-decoration:none}
+  .essai .petit{font-size:.8rem;color:#64748b;margin-top:10px}
+  .essai .cache{display:none}
+  #resultat{max-width:100%;padding:0.4rem 0.2rem}
+  @media print{
+    .essai h1,.essai .sous,#formulaire,.essai .barre-actions,#cta{display:none!important}
+    body{background:#fff!important}
+  }
+</style>
+</head>
+<body>
+<div class="essai">
+  <h1>🎁 Essai gratuit — Espace Enseignant</h1>
+  <p class="sous">Générez <strong>une fiche de leçon</strong> et <strong>une évaluation</strong> (un essai de chaque par semaine), conformes aux programmes ivoiriens, avec la mise en forme professionnelle de l'Espace Enseignant.</p>
+
+  <div class="carte" id="formulaire">
+    <label for="nom">Votre nom</label>
+    <input id="nom" autocomplete="name" placeholder="Ex. Mme Koné">
+    <label for="tel">Numéro WhatsApp</label>
+    <input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex. 07 00 00 00 00">
+    <label>Que voulez-vous générer ?</label>
+    <div class="choix">
+      <label><input type="radio" name="type" value="fiche" checked>Fiche de leçon</label>
+      <label><input type="radio" name="type" value="evaluation">Évaluation</label>
+    </div>
+    <label for="discipline">Discipline</label>
+    <select id="discipline">
+      <option>Mathématiques</option><option>Physique-Chimie</option><option>SVT</option>
+      <option>Français</option><option>Histoire-Géographie</option><option>Anglais</option>
+      <option>Espagnol</option><option>Allemand</option><option>Philosophie</option>
+      <option>EDHC</option><option>TICE</option><option>Éducation Musicale</option><option>Arts Plastiques</option>
+    </select>
+    <label for="niveau">Classe</label>
+    <select id="niveau">
+      <option>6ème</option><option>5ème</option><option>4ème</option><option>3ème</option>
+      <option>2nde</option><option>1ère</option><option>Terminale</option>
+    </select>
+    <label for="theme">Thème / titre de la leçon</label>
+    <input id="theme" maxlength="150" placeholder="Ex. Le théorème de Thalès">
+    <button class="btn-principal" id="btn" onclick="generer()">Générer gratuitement</button>
+    <div class="msg" id="erreur"></div>
+    <p class="petit">Essai gratuit : 1 fiche de leçon et 1 évaluation par semaine et par numéro. Votre numéro sert uniquement à vous recontacter au sujet d'EdukaTchat.</p>
+  </div>
+
+  <div class="cache" id="zoneResultat">
+    <div class="barre-actions">
+      <button class="btn-sec" id="copier" onclick="copier()">Copier le texte</button>
+      <button class="btn-sec" onclick="window.print()">Imprimer / PDF</button>
+      <button class="btn-sec" style="background:#3B82F6" onclick="nouvelEssai()">Nouvel essai</button>
+    </div>
+    <div class="message bot-message" id="resultat"></div>
+  </div>
+
+  <div class="carte cta cache" id="cta">
+    <strong>Ce document vous a plu ?</strong><br>
+    Avec l'abonnement, générez autant de fiches, d'évaluations et de plans de cours que nécessaire, avec schémas, cahier de texte et mise en forme complète.
+    <br><a href="https://edukatchat.org">Découvrir l'Espace Enseignant</a>
+  </div>
+</div>
+
+<!-- Mêmes bibliothèques et même moteur de rendu que l'application (fiches, évaluations, KaTeX, portées ABC, illustrations). -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
+<script src="app.js?v=3.5"></script>
+<script>
+const API = 'https://api.edukatchat.org/api/essai_enseignant';
+let texteBrut = '';
+async function generer(){
+  const btn = document.getElementById('btn'), err = document.getElementById('erreur');
+  err.textContent = '';
+  const corps = {
+    nom: document.getElementById('nom').value,
+    telephone: document.getElementById('tel').value,
+    type: document.querySelector('input[name=type]:checked').value,
+    discipline: document.getElementById('discipline').value,
+    niveau: document.getElementById('niveau').value,
+    theme: document.getElementById('theme').value
+  };
+  btn.disabled = true; btn.textContent = 'Génération en cours… (30 à 60 secondes)';
+  try{
+    const r = await fetch(API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(corps)});
+    const d = await r.json();
+    if(d.status === 'success'){
+      texteBrut = d.texte;
+      const zone = document.getElementById('resultat');
+      // Même chemin que l'Espace Enseignant : Forge = fiche stylée, Atelier = évaluation stylée.
+      afficherReponseAvecFondu(zone, d.texte, true, false, d.type === 'fiche' ? 'forge' : 'atelier');
+      document.getElementById('zoneResultat').classList.remove('cache');
+      document.getElementById('cta').classList.remove('cache');
+      document.getElementById('formulaire').classList.add('cache');
+      document.getElementById('zoneResultat').scrollIntoView({behavior:'smooth'});
+    } else {
+      err.textContent = d.message || 'Une erreur est survenue.';
+      if(d.status === 'limite') document.getElementById('cta').classList.remove('cache');
+    }
+  }catch(e){
+    err.textContent = 'Connexion impossible. Vérifiez votre réseau et réessayez.';
+  }
+  btn.disabled = false; btn.textContent = 'Générer gratuitement';
+}
+function nouvelEssai(){
+  document.getElementById('zoneResultat').classList.add('cache');
+  document.getElementById('formulaire').classList.remove('cache');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function copier(){
+  navigator.clipboard.writeText(texteBrut).then(()=>{
+    const b = document.getElementById('copier'); b.textContent = 'Copié ✓';
+    setTimeout(()=>b.textContent='Copier le texte', 2000);
+  });
+}
+</script>
+</body>
+</html>
