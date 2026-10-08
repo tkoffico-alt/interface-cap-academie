@@ -1254,6 +1254,12 @@
                     <input type="text" id="pre-abo-telephone" placeholder="Numéro WhatsApp du parent" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
                     <input type="text" id="pre-abo-nom-eleve" placeholder="Nom et prénoms de l'élève" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
                     <input type="file" id="pre-abo-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 10px; font-size: 0.8em;">
+                    <select id="pre-abo-duree" style="width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                        <option value="mensuel">1 mois — 5 000 FCFA</option>
+                        <option value="trimestriel">3 mois — 13 500 FCFA (−10 %)</option>
+                        <option value="semestriel">6 mois — 25 000 FCFA (−17 %)</option>
+                        <option value="annuel">12 mois — 48 000 FCFA (−20 %)</option>
+                    </select>
                     <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Envoyer la photo et payer</button>
                     <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0 0 10px 0; min-height: 16px;"></p>
                 </div>
@@ -1294,7 +1300,17 @@
 
             <div id="enseignant-abo-etape-2" class="abo-etape" style="display: none;">
                 <p style="margin-bottom: 16px; color: #4B5563; font-size: 0.9em;">Un dernier pas avant de rejoindre le Cabinet.</p>
-                <a href="https://tally.so/r/RGgdb4" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #8B5CF6; color: white; border: none; display: block; text-decoration: none; margin-bottom: 14px;">Accéder au formulaire d'abonnement</a>
+                <input type="text" id="ens-abo-prenom" placeholder="Prénom" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                <input type="text" id="ens-abo-nom" placeholder="Nom" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                <input type="tel" id="ens-abo-telephone" placeholder="Numéro WhatsApp" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                <select id="ens-abo-duree" style="width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <option value="mensuel">1 mois — 3 000 FCFA</option>
+                    <option value="trimestriel">3 mois — 8 000 FCFA (−11 %)</option>
+                    <option value="semestriel">6 mois — 15 000 FCFA (−17 %)</option>
+                    <option value="annuel">12 mois — 29 000 FCFA (−19 %)</option>
+                </select>
+                <button id="btn-ens-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #8B5CF6; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="payerAbonnementEnseignant()">Payer mon abonnement</button>
+                <p id="ens-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0 0 10px 0; min-height: 16px;"></p>
                 <button class="btn-retour-etape-abo" onclick="enseignantAboEtape(1)">← Retour</button>
             </div>
         </div>

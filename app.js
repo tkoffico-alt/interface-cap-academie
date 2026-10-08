@@ -401,6 +401,48 @@ function parentAboEtape(etape) {
 // nouveau Sceau sera généré.
 const LIEN_PAIEMENT_PAYSTACK = "https://paystack.shop/pay/edukatchat-eleves-parents";
 
+// ❖ Caisse EdukaTchat (08/10/2026) : le serveur calcule le montant et appelle
+// Paystack (aucun e-mail demandé) ; on redirige vers l'URL renvoyée.
+async function ouvrirPaiementAbonnement(donnees, feedback) {
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/paiement/initialiser', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(donnees)
+        });
+        const d = await r.json();
+        if (d.status === 'success' && d.url) {
+            window.location.href = d.url;
+            return true;
+        }
+        feedback.textContent = d.message || "Une erreur est survenue.";
+        feedback.style.color = "#F87171";
+    } catch (e) {
+        feedback.textContent = "Le réseau est instable. Réessayez dans un instant.";
+        feedback.style.color = "#F87171";
+    }
+    return false;
+}
+
+async function payerAbonnementEnseignant() {
+    const feedback = document.getElementById('ens-abo-feedback');
+    const bouton = document.getElementById('btn-ens-abonnement');
+    const prenom = document.getElementById('ens-abo-prenom').value.trim();
+    const nom = document.getElementById('ens-abo-nom').value.trim();
+    const telephone = document.getElementById('ens-abo-telephone').value.trim();
+    const duree = document.getElementById('ens-abo-duree').value;
+    if (!prenom || !nom || !telephone) {
+        feedback.textContent = "Prénom, nom et numéro WhatsApp sont requis.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+    bouton.disabled = true;
+    feedback.textContent = "Ouverture du paiement...";
+    feedback.style.color = "#60A5FA";
+    const ok = await ouvrirPaiementAbonnement({ profil: 'enseignant', duree, prenom, nom, telephone }, feedback);
+    if (!ok) bouton.disabled = false;
+}
+
 async function envoyerPhotoPreAbonnement() {
     const telephone = document.getElementById('pre-abo-telephone').value.trim();
     const nomEleve = document.getElementById('pre-abo-nom-eleve').value.trim();
@@ -443,7 +485,11 @@ async function envoyerPhotoPreAbonnement() {
         if (data.status === 'success') {
             feedback.textContent = `✔ ${data.message}`;
             feedback.style.color = "#10B981";
-            setTimeout(() => { window.location.href = LIEN_PAIEMENT_PAYSTACK; }, 1200);
+            feedback.textContent = "✔ Photo reçue. Ouverture du paiement...";
+            const mots = nomEleve.split(/\s+/);
+            const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
+            const ok = await ouvrirPaiementAbonnement({ profil: 'eleve', duree, prenom: mots[0], nom: mots.slice(1).join(' ') || mots[0], telephone }, feedback);
+            if (!ok) bouton.disabled = false;
         } else {
             feedback.textContent = data.message || "Une erreur est survenue.";
             feedback.style.color = (data.status === 'vide') ? "#F59E0B" : "#F87171";
