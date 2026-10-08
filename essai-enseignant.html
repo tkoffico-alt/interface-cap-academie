@@ -36,13 +36,20 @@
 <body>
 <div class="essai">
   <h1>🎁 Essai gratuit — Espace Enseignant</h1>
-  <p class="sous">Générez <strong>une fiche de leçon</strong> et <strong>une évaluation</strong> (un essai de chaque par semaine), conformes aux programmes ivoiriens, avec la mise en forme professionnelle de l'Espace Enseignant.</p>
+  <p class="sous">Professeurs et instituteurs : générez <strong>une fiche de leçon</strong> (et, au secondaire, <strong>une évaluation</strong>) par semaine, conformes aux programmes ivoiriens, avec la mise en forme professionnelle de l'Espace Enseignant.</p>
 
   <div class="carte" id="formulaire">
     <label for="nom">Votre nom</label>
     <input id="nom" autocomplete="name" placeholder="Ex. Mme Koné">
     <label for="tel">Numéro WhatsApp</label>
     <input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex. 07 00 00 00 00">
+    <label>Vous êtes…</label>
+    <div class="choix">
+      <label><input type="radio" name="cat" value="prof" checked onchange="majCategorie()">Professeur (secondaire)</label>
+      <label><input type="radio" name="cat" value="instit" onchange="majCategorie()">Instituteur (primaire)</label>
+    </div>
+
+    <div id="bloc-prof">
     <label>Que voulez-vous générer ?</label>
     <div class="choix">
       <label><input type="radio" name="type" value="fiche" checked>Fiche de leçon</label>
@@ -62,9 +69,29 @@
     </select>
     <label for="theme">Thème / titre de la leçon</label>
     <input id="theme" maxlength="150" placeholder="Ex. Le théorème de Thalès">
+    </div>
+
+    <div id="bloc-instit" class="cache">
+    <label for="p-classe">Classe</label>
+    <select id="p-classe">
+      <option>CP1</option><option>CP2</option><option>CE1</option><option>CE2</option><option>CM1</option><option>CM2</option>
+    </select>
+    <label for="p-matiere">Matière</label>
+    <select id="p-matiere">
+      <option>Mathématiques</option><option>Français</option><option>EDHC</option>
+      <option>Histoire-Géographie</option><option>Sciences</option>
+    </select>
+    <label for="p-theme">Titre de la leçon</label>
+    <input id="p-theme" maxlength="150" placeholder="Ex. Les nombres de 0 à 10 000">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label for="p-semaine">Semaine (facultatif)</label><input id="p-semaine" inputmode="numeric" maxlength="2" placeholder="Ex. 2"></div>
+      <div style="flex:1"><label for="p-jour">Jour (facultatif)</label><input id="p-jour" inputmode="numeric" maxlength="1" placeholder="Ex. 1"></div>
+    </div>
+    <p class="petit">Une fiche de leçon primaire par semaine (canevas PNAPAS pour CP1–CE2, APC pour CM1–CM2).</p>
+    </div>
     <button class="btn-principal" id="btn" onclick="generer()">Générer gratuitement</button>
     <div class="msg" id="erreur"></div>
-    <p class="petit">Essai gratuit : 1 fiche de leçon et 1 évaluation par semaine et par numéro. Votre numéro sert uniquement à vous recontacter au sujet d'EdukaTchat.</p>
+    <p class="petit">Essai gratuit : 1 fiche de leçon et 1 évaluation par semaine et par numéro (professeurs) ; 1 fiche de leçon par semaine (instituteurs). Votre numéro sert uniquement à vous recontacter au sujet d'EdukaTchat.</p>
   </div>
 
   <div class="cache" id="zoneResultat">
@@ -94,7 +121,17 @@ let texteBrut = '';
 async function generer(){
   const btn = document.getElementById('btn'), err = document.getElementById('erreur');
   err.textContent = '';
-  const corps = {
+  const instit = document.querySelector('input[name=cat]:checked').value === 'instit';
+  const corps = instit ? {
+    nom: document.getElementById('nom').value,
+    telephone: document.getElementById('tel').value,
+    type: 'fiche_primaire',
+    discipline: document.getElementById('p-matiere').value,
+    niveau: document.getElementById('p-classe').value,
+    theme: document.getElementById('p-theme').value,
+    semaine: document.getElementById('p-semaine').value,
+    jour: document.getElementById('p-jour').value
+  } : {
     nom: document.getElementById('nom').value,
     telephone: document.getElementById('tel').value,
     type: document.querySelector('input[name=type]:checked').value,
@@ -110,7 +147,7 @@ async function generer(){
       texteBrut = d.texte;
       const zone = document.getElementById('resultat');
       // Même chemin que l'Espace Enseignant : Forge = fiche stylée, Atelier = évaluation stylée.
-      afficherReponseAvecFondu(zone, d.texte, true, false, d.type === 'fiche' ? 'forge' : 'atelier');
+      afficherReponseAvecFondu(zone, d.texte, true, false, d.type === 'fiche' ? 'forge' : (d.type === 'fiche_primaire' ? 'forge_primaire' : 'atelier'));
       document.getElementById('zoneResultat').classList.remove('cache');
       document.getElementById('cta').classList.remove('cache');
       document.getElementById('formulaire').classList.add('cache');
@@ -123,6 +160,11 @@ async function generer(){
     err.textContent = 'Connexion impossible. Vérifiez votre réseau et réessayez.';
   }
   btn.disabled = false; btn.textContent = 'Générer gratuitement';
+}
+function majCategorie(){
+  const instit = document.querySelector('input[name=cat]:checked').value === 'instit';
+  document.getElementById('bloc-prof').classList.toggle('cache', instit);
+  document.getElementById('bloc-instit').classList.toggle('cache', !instit);
 }
 function nouvelEssai(){
   document.getElementById('zoneResultat').classList.add('cache');
