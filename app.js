@@ -5671,8 +5671,8 @@ function afficherResultatsIllustrations(liste) {
         carte.onmouseleave = () => carte.style.boxShadow = 'none';
         carte.title = 'Cliquer pour copier le lien Markdown';
         carte.innerHTML = `
-            <img src="${img.url}" alt="${img.legende || img.fiche}" style="width:100%; height:110px; object-fit:cover; display:block; background:#F3F4F6;">
-            <div style="padding:8px; font-size:0.78em; color:#374151; flex:1;">${(img.legende || img.fiche || '').slice(0, 90)}</div>
+            <img src="${img.url}" alt="${img.legende || img.fiche}" style="width:100%; height:150px; object-fit:contain; display:block; background:#fff;">
+            <div style="padding:8px; font-size:0.78em; color:#374151; flex:1;">${(img.legende || img.fiche || '').slice(0, 140)}</div>
         `;
         carte.onclick = () => copierLienIllustration(img.url, img.legende || img.fiche, carte);
         conteneur.appendChild(carte);
