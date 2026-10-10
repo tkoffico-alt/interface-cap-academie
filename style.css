@@ -2147,7 +2147,9 @@ body.dark-theme .pwa-install-fermer { color: #9CA3AF; }
 .btn-banniere-action:hover { background: rgba(71, 85, 105, 0.08); }
 body.dark-theme .btn-banniere-action { border-color: rgba(148, 163, 184, 0.3); color: #CBD5E1; }
 body.dark-theme .btn-banniere-action:hover { background: rgba(148, 163, 184, 0.12); }
-.hist-sas-boite { position: relative; max-width: 640px; width: 94%; max-height: 85vh; overflow-y: auto; text-align: left; }
+.hist-sas-boite { position: relative; max-width: 640px; width: 94%; max-height: 85vh; overflow-y: auto; text-align: left;
+    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 20px 50px rgba(2, 6, 23, 0.35); }
+body.dark-theme .hist-sas-boite { background: #0F172A; border-color: rgba(148, 163, 184, 0.25); }
 .hist-sas-fermer { position: absolute; top: 0.6rem; right: 0.8rem; background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #64748B; }
 .hist-sas-lien { background: none; border: none; color: #3B82F6; cursor: pointer; padding: 0; margin-bottom: 0.6rem; font-size: 0.9rem; }
 .hist-sas-ligne { display: flex; gap: 0.4rem; align-items: stretch; margin-bottom: 0.5rem; }
