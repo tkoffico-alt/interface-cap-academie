@@ -3514,6 +3514,77 @@ function reinjecterABC(html, jetons) {
     return resultat;
 }
 
+// ❖ QUIZ CLIQUABLES (Sas, 10/10/2026) ❖
+// L'agent peut proposer une question à choix multiples ou vrai/faux sous la
+// forme d'un bloc ```quiz contenant un JSON :
+//   {"question":"...","options":["...","..."],"bonne":1,"explication":"..."}
+// ("bonne" = index de la bonne réponse, à partir de 0). Même principe que
+// les blocs ```abc : extraction AVANT marked.parse (sinon le bloc deviendrait
+// une carte "Devoir"), jeton inerte, réinjection d'un rendu en boutons. La
+// correction est faite entièrement côté navigateur (aucun appel API, aucun
+// coût) ; elle n'alimente PAS le Carnet de progression. Bloc invalide ->
+// repli sur du texte brut, jamais de perte de contenu.
+function extraireEtRendreQuiz(texte) {
+    const jetons = [];
+    let compteur = 0;
+    const resultat = texte.replace(/```quiz\s*\n([\s\S]*?)```/g, (motifEntier, source) => {
+        const jeton = `@@QUIZ${compteur}@@`;
+        jetons.push({ jeton, source: source.trim() });
+        compteur++;
+        return jeton;
+    });
+    return { texte: resultat, jetons };
+}
+
+function reinjecterQuiz(html, jetons) {
+    if (!jetons.length) return html;
+    let resultat = html;
+    jetons.forEach(({ jeton, source }) => {
+        let rendu;
+        try {
+            const q = JSON.parse(source);
+            const options = Array.isArray(q.options) ? q.options.map(String) : [];
+            const bonne = Number(q.bonne);
+            if (!q.question || options.length < 2 || options.length > 6 ||
+                !Number.isInteger(bonne) || bonne < 0 || bonne >= options.length) {
+                throw new Error('quiz invalide');
+            }
+            const lettres = 'ABCDEF';
+            const boutons = options.map((opt, i) =>
+                `<button type="button" class="quiz-option" data-i="${i}" onclick="repondreQuiz(this)"><span class="quiz-lettre">${lettres[i]}</span><span class="quiz-texte">${echapperHTMLFiche(opt)}</span></button>`
+            ).join('');
+            const explication = q.explication ? echapperHTMLFiche(String(q.explication)) : '';
+            rendu = `<div class="quiz-carte" data-bonne="${bonne}"><div class="quiz-etiquette">Quiz</div><div class="quiz-question">${echapperHTMLFiche(String(q.question))}</div><div class="quiz-options">${boutons}</div><div class="quiz-retour" style="display:none"></div><div class="quiz-explication" style="display:none">${explication}</div></div>`;
+        } catch (e) {
+            rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
+        }
+        resultat = resultat.split(jeton).join(rendu);
+    });
+    return resultat;
+}
+
+function repondreQuiz(bouton) {
+    const carte = bouton.closest('.quiz-carte');
+    if (!carte || carte.classList.contains('quiz-repondu')) return;
+    carte.classList.add('quiz-repondu');
+    const choix = Number(bouton.dataset.i);
+    const bonne = Number(carte.dataset.bonne);
+    carte.querySelectorAll('.quiz-option').forEach(b => {
+        b.disabled = true;
+        const i = Number(b.dataset.i);
+        if (i === bonne) b.classList.add('quiz-juste');
+        else if (i === choix) b.classList.add('quiz-faux');
+    });
+    const retour = carte.querySelector('.quiz-retour');
+    retour.textContent = (choix === bonne) ? 'Bravo, bonne réponse !' : 'Pas tout à fait. La bonne réponse est en vert.';
+    retour.classList.add(choix === bonne ? 'quiz-retour-juste' : 'quiz-retour-faux');
+    retour.style.display = 'block';
+    const expl = carte.querySelector('.quiz-explication');
+    if (expl && expl.textContent.trim()) expl.style.display = 'block';
+    const historique = carte.closest('[id$="-chat-history"]');
+    if (historique) saveChatHistory(historique.id.replace('-chat-history', ''));
+}
+
 // ❖ RESTITUTION DU FLUX — style « professionnel » (ChatGPT/Claude/Gemini) ❖
 // Ancien comportement : chaque fragment reçu rejouait le fondu CSS sur TOUT
 // le texte déjà affiché (remove/reflow/add à chaque appel), ce qui provoquait
@@ -3556,11 +3627,13 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
         // laissé tel quel serait transformé en <pre><code> générique par
         // marked.parse puis habillé en carte "Devoir", ce qui n'a aucun
         // rapport avec son contenu réel.
-        const { texte: sourceSansABC, jetons: jetonsABC } = extraireEtRendreABC(source);
+        const { texte: sourceSansQuiz, jetons: jetonsQuiz } = extraireEtRendreQuiz(source);
+        const { texte: sourceSansABC, jetons: jetonsABC } = extraireEtRendreABC(sourceSansQuiz);
         const { texte: sourceSansLatex, jetons: jetonsLatex } = extraireEtRendreLatex(sourceSansABC);
         html = marked.parse(sourceSansLatex);
         if (jetonsLatex.length) html = reinjecterLatex(html, jetonsLatex);
         if (jetonsABC.length) html = reinjecterABC(html, jetonsABC);
+        if (jetonsQuiz.length) html = reinjecterQuiz(html, jetonsQuiz);
         if (attenuerSignature) {
             html = html
                 .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')

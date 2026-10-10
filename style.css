@@ -1827,6 +1827,31 @@ body.dark-theme .btn-action-doc:hover { color: #F8FAFC; }
     cursor: text;
 }
 .bot-message.fiche-en-edition .message-actions { cursor: default; }
+/* Quiz cliquables (Sas) */
+.quiz-carte { margin: 12px 0; padding: 14px; border: 1px solid #BFDBFE; border-left: 4px solid #3B82F6; border-radius: 10px; background: #EFF6FF; }
+.quiz-etiquette { font-size: 0.75em; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; color: #1D4ED8; margin-bottom: 6px; }
+.quiz-question { font-weight: 600; margin-bottom: 10px; color: #1E293B; }
+.quiz-options { display: flex; flex-direction: column; gap: 8px; }
+.quiz-option { display: flex; align-items: center; gap: 10px; text-align: left; padding: 9px 12px; border: 1px solid #93C5FD; border-radius: 8px; background: #FFFFFF; color: #1E293B; cursor: pointer; font: inherit; }
+.quiz-option:hover:not(:disabled) { background: #DBEAFE; }
+.quiz-option:disabled { cursor: default; }
+.quiz-lettre { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #3B82F6; color: #FFFFFF; font-size: 0.8em; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+.quiz-option.quiz-juste { background: #D1FAE5; border-color: #10B981; }
+.quiz-option.quiz-faux { background: #FEE2E2; border-color: #EF4444; }
+.quiz-retour { margin-top: 10px; font-weight: bold; }
+.quiz-retour-juste { color: #047857; }
+.quiz-retour-faux { color: #B91C1C; }
+.quiz-explication { margin-top: 6px; font-size: 0.92em; color: #334155; }
+body.dark-theme .quiz-carte { background: #1E293B; border-color: #334155; border-left-color: #3B82F6; }
+body.dark-theme .quiz-etiquette { color: #93C5FD; }
+body.dark-theme .quiz-question { color: #E2E8F0; }
+body.dark-theme .quiz-option { background: #0F172A; border-color: #475569; color: #E2E8F0; }
+body.dark-theme .quiz-option:hover:not(:disabled) { background: #334155; }
+body.dark-theme .quiz-option.quiz-juste { background: #064E3B; border-color: #10B981; }
+body.dark-theme .quiz-option.quiz-faux { background: #7F1D1D; border-color: #EF4444; }
+body.dark-theme .quiz-retour-juste { color: #6EE7B7; }
+body.dark-theme .quiz-retour-faux { color: #FCA5A5; }
+body.dark-theme .quiz-explication { color: #CBD5E1; }
 .btn-modifier-fiche { flex-shrink: 0; }
 .btn-modifier-fiche.actif {
     background-color: #10B981;
