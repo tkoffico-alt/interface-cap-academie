@@ -3638,6 +3638,144 @@ function saveChatHistory(outil) {
     }
 }
 
+// =======================================================================
+// ❖ HISTORIQUE DES SESSIONS DU SAS (appareil seulement, lecture seule) ❖
+// Une "session" archivée = le fil d'une matière figé au moment où l'élève
+// clique sur "Nouvelle session". Stocké dans localStorage (jamais envoyé au
+// serveur, aucun coût d'API). Consultation en lecture seule : reprendre une
+// ancienne conversation relancerait un contexte long et coûteux, on repart
+// donc d'une session neuve (prompt frais + mémoire de suivi).
+// =======================================================================
+const HIST_SAS_MAX = 15;
+
+function lireHistoriqueSas(avatar) {
+    try { return JSON.parse(localStorage.getItem(`eduka_hist_sas_${avatar}`) || '[]'); }
+    catch (e) { return []; }
+}
+
+function ecrireHistoriqueSas(avatar, liste) {
+    // Quota localStorage (~5 Mo) : en cas de dépassement, on retire
+    // la plus ancienne session jusqu'à ce que l'écriture passe.
+    while (true) {
+        try { localStorage.setItem(`eduka_hist_sas_${avatar}`, JSON.stringify(liste)); return true; }
+        catch (e) {
+            if (liste.length <= 1) return false;
+            liste.pop();
+        }
+    }
+}
+
+function archiverSessionSas(avatar, html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const premier = tmp.querySelector('.user-message');
+    if (!premier) return false; // rien d'échangé : inutile d'archiver
+    let titre = (premier.textContent || '').trim().replace(/\s+/g, ' ');
+    if (titre.length > 70) titre = titre.slice(0, 70) + '…';
+    const liste = lireHistoriqueSas(avatar);
+    liste.unshift({ id: Date.now(), date: new Date().toISOString(), titre: titre || 'Session', html: html });
+    return ecrireHistoriqueSas(avatar, liste.slice(0, HIST_SAS_MAX));
+}
+
+function nouvelleSessionSas() {
+    const chatHistory = document.getElementById('sas-chat-history');
+    if (!chatHistory) return;
+    const aEchange = !!chatHistory.querySelector('.user-message');
+    if (aEchange && !confirm("Terminer cette session et en commencer une nouvelle ?\nLa session actuelle sera classée dans l'Historique.")) return;
+
+    if (aEchange) {
+        declencherClotureAutomatiqueSas('nouvelle_session'); // envoie le rapport avec l'ancien conversation_id
+        archiverSessionSas(avatarActif, chatHistory.innerHTML);
+    }
+    sasConversationIds[avatarActif] = '';
+    sasSessionOuverte = false;
+    sasClotureDejaEnvoyee = false;
+    localStorage.removeItem(`eduka_chat_sas_${avatarActif}`);
+    localStorage.setItem('eduka_conv_sas', JSON.stringify(sasConversationIds));
+
+    chatHistory.innerHTML = '';
+    const w = document.createElement('div');
+    w.className = 'message system-message';
+    w.textContent = "Nouvelle session. Posez votre première question pour commencer.";
+    chatHistory.appendChild(w);
+}
+
+function fermerModaleHistoriqueSas() {
+    const m = document.getElementById('hist-sas-modal');
+    if (m) m.remove();
+}
+
+function ouvrirHistoriqueSas(idOuvert) {
+    fermerModaleHistoriqueSas();
+    const liste = lireHistoriqueSas(avatarActif);
+    const m = document.createElement('div');
+    m.id = 'hist-sas-modal';
+    m.className = 'modal-overlay active';
+    const boite = document.createElement('div');
+    boite.className = 'modal-content hist-sas-boite';
+    m.appendChild(boite);
+    m.addEventListener('click', (e) => { if (e.target === m) fermerModaleHistoriqueSas(); });
+
+    const fermer = document.createElement('button');
+    fermer.type = 'button'; fermer.className = 'hist-sas-fermer'; fermer.textContent = '✕';
+    fermer.onclick = fermerModaleHistoriqueSas;
+    boite.appendChild(fermer);
+
+    const ouverte = idOuvert ? liste.find(x => x.id === idOuvert) : null;
+    if (ouverte) {
+        const retour = document.createElement('button');
+        retour.type = 'button'; retour.className = 'hist-sas-lien'; retour.textContent = '← Retour à la liste';
+        retour.onclick = () => ouvrirHistoriqueSas();
+        boite.appendChild(retour);
+        const h = document.createElement('h3');
+        h.textContent = new Date(ouverte.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+        boite.appendChild(h);
+        const note = document.createElement('p');
+        note.textContent = "Lecture seule. Pour continuer ce sujet, démarrez une nouvelle session et reprenez-le.";
+        boite.appendChild(note);
+        const fil = document.createElement('div');
+        fil.className = 'chat-history hist-sas-fil';
+        fil.innerHTML = ouverte.html;
+        boite.appendChild(fil);
+    } else {
+        const h = document.createElement('h3');
+        h.textContent = `Historique — ${formaterNomMatiere(avatarActif)}`;
+        boite.appendChild(h);
+        if (!liste.length) {
+            const p = document.createElement('p');
+            p.textContent = "Aucune session archivée pour l'instant. Elles apparaissent ici quand vous cliquez sur « Nouvelle session ». L'historique reste sur cet appareil.";
+            boite.appendChild(p);
+        } else {
+            liste.forEach(item => {
+                const ligne = document.createElement('div');
+                ligne.className = 'hist-sas-ligne';
+                const ouvrir = document.createElement('button');
+                ouvrir.type = 'button'; ouvrir.className = 'hist-sas-item';
+                const d = document.createElement('span'); d.className = 'hist-sas-date';
+                d.textContent = new Date(item.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+                const t = document.createElement('span'); t.className = 'hist-sas-titre';
+                t.textContent = item.titre;
+                ouvrir.appendChild(d); ouvrir.appendChild(t);
+                ouvrir.onclick = () => ouvrirHistoriqueSas(item.id);
+                const sup = document.createElement('button');
+                sup.type = 'button'; sup.className = 'hist-sas-suppr'; sup.title = 'Supprimer'; sup.textContent = '🗑';
+                sup.onclick = () => {
+                    if (!confirm('Supprimer définitivement cette session ?')) return;
+                    ecrireHistoriqueSas(avatarActif, lireHistoriqueSas(avatarActif).filter(x => x.id !== item.id));
+                    ouvrirHistoriqueSas();
+                };
+                ligne.appendChild(ouvrir); ligne.appendChild(sup);
+                boite.appendChild(ligne);
+            });
+            const note = document.createElement('p');
+            note.className = 'hist-sas-note';
+            note.textContent = "Sauvegardé sur cet appareil uniquement.";
+            boite.appendChild(note);
+        }
+    }
+    document.body.appendChild(m);
+}
+
 function restoreChatHistories() {
     // ❖ Le Sas n'est plus restauré ici : son historique dépend de l'avatar
     // choisi, connu seulement une fois le portail de matière franchi
