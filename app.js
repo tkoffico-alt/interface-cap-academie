@@ -3670,7 +3670,9 @@ function archiverSessionSas(avatar, html) {
     tmp.innerHTML = html;
     const premier = tmp.querySelector('.user-message');
     if (!premier) return false; // rien d'échangé : inutile d'archiver
-    let titre = (premier.textContent || '').trim().replace(/\s+/g, ' ');
+    const copiePremier = premier.cloneNode(true);
+    copiePremier.querySelectorAll('button, .message-actions, [class*="action"]').forEach(n => n.remove());
+    let titre = (copiePremier.textContent || '').replace(/[↻⟳🔄]/g, '').trim().replace(/\s+/g, ' ');
     if (titre.length > 70) titre = titre.slice(0, 70) + '…';
     const liste = lireHistoriqueSas(avatar);
     liste.unshift({ id: Date.now(), date: new Date().toISOString(), titre: titre || 'Session', html: html });
