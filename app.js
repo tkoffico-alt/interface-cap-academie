@@ -570,16 +570,36 @@ function obtenirProfilEleveSauvegarde() {
     return null;
 }
 
+// Année scolaire ivoirienne (rentrée mi-septembre) : "2026-2027" dès septembre.
+function anneeScolaireCouranteClient() {
+    const d = new Date();
+    const a = d.getFullYear();
+    return d.getMonth() >= 8 ? `${a}-${a + 1}` : `${a - 1}-${a}`;
+}
+
 function entrerDansLeChat(matiereChoisie) {
     disciplineEnAttente = matiereChoisie;
     fermerVestibule();
 
     const profilSauvegarde = obtenirProfilEleveSauvegarde();
-    if (profilSauvegarde) {
+    // ❖ 10/10/2026 : un profil enregistré une année scolaire passée (ou
+    // avant l'ajout de la date) peut porter une classe périmée -- un élève
+    // s'est vu traiter en 6e alors qu'il est en 2nde C. On redemande donc
+    // la classe une fois par année scolaire, champs pré-remplis.
+    if (profilSauvegarde && profilSauvegarde.annee_scolaire === anneeScolaireCouranteClient()) {
         appliquerProfilEtEntrerDansEspace(profilSauvegarde.classe, profilSauvegarde.methode_travail, profilSauvegarde.gestion_stress);
         return;
     }
 
+    if (profilSauvegarde) {
+        const cc = document.getElementById('niveau-classe');
+        const cm = document.getElementById('habitudes-revision');
+        const cs = document.getElementById('gestion-stress');
+        if (cc) cc.value = profilSauvegarde.classe;
+        if (cm) cm.value = profilSauvegarde.methode_travail;
+        if (cs) cs.value = profilSauvegarde.gestion_stress;
+        if (typeof verifierFormulaire === 'function') verifierFormulaire();
+    }
     document.getElementById('profil-modal').classList.add('active');
 }
 
@@ -616,7 +636,8 @@ function validerProfilEtEntrer() {
     localStorage.setItem('eduka_profil_eleve', JSON.stringify({
         classe: classe,
         methode_travail: methode,
-        gestion_stress: stress
+        gestion_stress: stress,
+        annee_scolaire: anneeScolaireCouranteClient()
     }));
 
     appliquerProfilEtEntrerDansEspace(classe, methode, stress);
