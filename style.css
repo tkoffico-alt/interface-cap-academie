@@ -1827,6 +1827,15 @@ body.dark-theme .btn-action-doc:hover { color: #F8FAFC; }
     cursor: text;
 }
 .bot-message.fiche-en-edition .message-actions { cursor: default; }
+.btn-modifier-fiche { flex-shrink: 0; }
+.btn-modifier-fiche.actif {
+    background-color: #10B981;
+    border-color: #10B981;
+    color: #FFFFFF;
+}
+.btn-modifier-fiche.actif:hover { background-color: #059669; color: #FFFFFF; }
+body.dark-theme .btn-modifier-fiche.actif { color: #FFFFFF; }
+body.dark-theme .btn-modifier-fiche.actif:hover { color: #FFFFFF; }
 
 /* --- PARCOURS EN ÉTAPES DES MODALES D'ABONNEMENT (25/09/2026) ---
    Un seul modal par public (Enseignant/Parents), dont le contenu est

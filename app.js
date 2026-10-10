@@ -4990,7 +4990,7 @@ async function sendTeacherMessage(outil) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
             actionsDiv.innerHTML = `
-                <button class="btn-action-doc btn-modifier-fiche" onclick="basculerEditionFiche(this)" title="Modifier le texte avant impression" aria-label="Modifier le texte avant impression">✏️ Modifier</button>
+                <button class="btn-action-doc btn-modifier-fiche" onclick="basculerEditionFiche(this)" title="Modifier le texte avant impression" aria-label="Modifier le texte avant impression"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
                 <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
                 <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
             `;
@@ -5039,12 +5039,18 @@ function basculerEditionFiche(bouton) {
         .forEach(el => el.setAttribute('contenteditable', 'false'));
     if (enCours) {
         message.setAttribute('contenteditable', 'true');
-        bouton.innerHTML = '✅ Terminer';
+        bouton.classList.add('actif');
+        bouton.title = 'Terminer la modification';
+        bouton.setAttribute('aria-label', 'Terminer la modification');
+        bouton.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
         message.focus();
     } else {
         message.removeAttribute('contenteditable');
         message.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-        bouton.innerHTML = '✏️ Modifier';
+        bouton.classList.remove('actif');
+        bouton.title = 'Modifier le texte avant impression';
+        bouton.setAttribute('aria-label', 'Modifier le texte avant impression');
+        bouton.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
         const historique = message.closest('[id$="-chat-history"]');
         if (historique) saveChatHistory(historique.id.replace('-chat-history', ''));
     }
