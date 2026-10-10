@@ -4990,6 +4990,7 @@ async function sendTeacherMessage(outil) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
             actionsDiv.innerHTML = `
+                <button class="btn-action-doc btn-modifier-fiche" onclick="basculerEditionFiche(this)" title="Modifier le texte avant impression" aria-label="Modifier le texte avant impression">✏️ Modifier</button>
                 <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
                 <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
             `;
@@ -5025,11 +5026,36 @@ async function sendTeacherMessage(outil) {
 // racine du site (même dossier que logo-entete.png) sous ce nom exact.
 const urlSceau = "logo-signature-doc.png";
 
+// ❖ ÉDITION D'UNE FICHE AVANT IMPRESSION (outils enseignants) ❖
+// Rend le texte de la carte modifiable sur place (contenteditable). Impression
+// et copie lisent déjà le DOM affiché (clone du message) : elles reprennent donc
+// automatiquement le texte modifié. Les portées (SVG), images et boutons restent
+// non éditables. À la fin de l'édition, le fil est sauvegardé (localStorage).
+function basculerEditionFiche(bouton) {
+    const message = bouton.closest('.bot-message');
+    if (!message) return;
+    const enCours = message.classList.toggle('fiche-en-edition');
+    message.querySelectorAll('.partition-musicale, .message-actions, img, svg, button, .fiche-illustrations-slot')
+        .forEach(el => el.setAttribute('contenteditable', 'false'));
+    if (enCours) {
+        message.setAttribute('contenteditable', 'true');
+        bouton.innerHTML = '✅ Terminer';
+        message.focus();
+    } else {
+        message.removeAttribute('contenteditable');
+        message.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+        bouton.innerHTML = '✏️ Modifier';
+        const historique = message.closest('[id$="-chat-history"]');
+        if (historique) saveChatHistory(historique.id.replace('-chat-history', ''));
+    }
+}
+
 function imprimerDocument(bouton) {
     const documentDiv = bouton.closest('.bot-message');
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
+    clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
 
     const contenuHTML = clone.innerHTML;
 
@@ -5196,6 +5222,7 @@ function copierTexte(bouton) {
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
+    clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
 
     const contenuHTML = clone.innerHTML;
     const texteBrut = clone.innerText;

@@ -1820,6 +1820,14 @@ body.dark-theme .btn-action-doc { color: #60A5FA; }
 }
 body.dark-theme .btn-action-doc:hover { color: #F8FAFC; }
 
+/* --- ÉDITION D'UNE FICHE AVANT IMPRESSION (10/10/2026) --- */
+.bot-message.fiche-en-edition {
+    outline: 2px dashed #F59E0B;
+    outline-offset: 4px;
+    cursor: text;
+}
+.bot-message.fiche-en-edition .message-actions { cursor: default; }
+
 /* --- PARCOURS EN ÉTAPES DES MODALES D'ABONNEMENT (25/09/2026) ---
    Un seul modal par public (Enseignant/Parents), dont le contenu est
    remplacé par JS (voir enseignantAboEtape()/parentAboEtape() dans app.js)
