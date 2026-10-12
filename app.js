@@ -1039,7 +1039,17 @@ const ALTERNATIVES_SECTION_FICHE = {
     // PROMPT_COMPLET_Forge.md, section 5. Toujours en français, même pour
     // une fiche en langue vivante (consigne explicite du prompt) : un seul
     // libellé à reconnaître, pas de variantes traduites à ajouter ici.
-    planCahierTexte: ["PLAN POUR LE CAHIER DE TEXTE"]
+    // 12/10/2026 : en Anglais, le modèle traduit parfois ce titre malgré la
+    // consigne ("PLAN FOR THE CAHIER DE TEXTE", "LESSON PLAN FOR THE
+    // CAHIER DE TEXTE"...) -> variantes tolérées, sinon le plan est avalé
+    // par la dernière TRACE ÉCRITE et la carte « Copier » disparaît.
+    planCahierTexte: [
+        "PLAN POUR LE CAHIER DE TEXTE",
+        "(?:LESSON\\s+)?PLAN\\s+(?:FOR|OF|FOR\\s+THE|OF\\s+THE)\\s+(?:THE\\s+)?(?:CAHIER\\s+DE\\s+TEXTE|TEXTBOOK|LOGBOOK|CLASS\\s+LOGBOOK)",
+        "PLAN\\s+DU\\s+CAHIER\\s+DE\\s+TEXTE",
+        "PLAN\\s+PARA\\s+EL\\s+CAHIER\\s+DE\\s+TEXTE",
+        "PLAN\\s+F[ÜU]R\\s+DAS\\s+CAHIER\\s+DE\\s+TEXTE"
+    ]
 };
 
 // ❖ Libellés de PHASE : d'après la structure exigée par le prompt
