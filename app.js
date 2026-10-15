@@ -26,9 +26,9 @@ let sasPremierEchangeEnAttente = false;
 // switchTeacherTool ci-dessous).
 let outilsDejaAmorces = new Set();
 const MESSAGES_AMORCAGE_ENSEIGNANT = {
-    atelier: "C'est ma première visite dans l'Atelier des Évaluations : présente-moi en quelques lignes ce que tu peux concevoir ici, puis propose-moi un exemple concret pour démarrer.",
-    forge: "C'est ma première visite dans la Forge des Leçons : présente-moi en quelques lignes ce que tu peux produire ici, puis propose-moi un exemple concret pour démarrer.",
-    cabinet: "C'est ma première visite dans le Cabinet d'Étude : présente-moi en quelques lignes comment tu peux m'accompagner ici, puis propose-moi un exemple concret pour démarrer."
+    atelier: "C'est ma première visite dans l'Atelier des Évaluations. Réponds en 3 phrases courtes maximum, sans titre, sans liste et SANS produire d'évaluation d'exemple : dis ce que tu conçois ici, puis ce que je dois taper pour en obtenir une (matière, classe, thème, type d'épreuve).",
+    forge: "C'est ma première visite dans la Forge des Leçons. Réponds en 3 phrases courtes maximum, sans titre, sans liste et SANS produire de fiche d'exemple : dis ce que tu produis ici, puis ce que je dois taper pour obtenir une fiche (matière, classe, titre de la leçon).",
+    cabinet: "C'est ma première visite dans le Cabinet d'Étude. Réponds en 3 phrases courtes maximum, sans titre, sans liste et sans exemple développé : dis comment tu peux m'accompagner ici, puis ce que je peux te demander."
 };
 
 // ❖ LES SUGGESTIONS RAPIDES (Sas/Académie + Espace Enseignant) ❖
@@ -1286,7 +1286,33 @@ function texteVersHtmlLegerFiche(bloc) {
         }
     });
 
+    // ❖ Tableaux Markdown (lignes "| a | b |") : rendus en vraie table HTML
+    // (15/10/2026, évaluation HG « commentaire de document » : le tableau
+    // statistique s'affichait en lignes de pipes brutes). Les lignes de
+    // texte autour du tableau restent des lignes normales.
+    const estLigneTableau = l => /^\|.*\|$/.test(l);
+    const construireTableFiche = rangs => {
+        const cellules = rangs.map(r => r.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()));
+        const entete = '<tr>' + cellules[0].map(c => `<th>${c}</th>`).join('') + '</tr>';
+        const corps = cellules.slice(1).map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+        return `<div class="fiche-table-wrap"><table class="fiche-table-simple"><thead>${entete}</thead><tbody>${corps}</tbody></table></div>`;
+    };
+    const rendreLignesAvecTables = lignes => {
+        const sortie = [];
+        let texteCourant = [];
+        let rangs = [];
+        const viderTexte = () => { if (texteCourant.length) { sortie.push(`<p>${texteCourant.join('<br>')}</p>`); texteCourant = []; } };
+        const viderRangs = () => { if (rangs.length) { sortie.push(rangs.length >= 2 ? construireTableFiche(rangs) : `<p>${rangs.join('<br>')}</p>`); rangs = []; } };
+        lignes.forEach(l => {
+            if (estLigneTableau(l)) { viderTexte(); rangs.push(l); }
+            else { viderRangs(); texteCourant.push(l); }
+        });
+        viderTexte(); viderRangs();
+        return sortie.join('');
+    };
+
     const html = blocs.map(b => {
+        if (!b.estListe && b.lignes.some(estLigneTableau)) return rendreLignesAvecTables(b.lignes);
         const toutesEnListe = b.estListe || (b.lignes.length > 1 && b.lignes.every(l => /^[-•]\s+/.test(l)));
         if (toutesEnListe) {
             return '<ul>' + b.lignes.map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('') + '</ul>';

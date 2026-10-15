@@ -1178,6 +1178,16 @@ body.dark-theme .fiche-illustration figcaption { color: #CBD5E1; }
     padding: 0;
     overflow: hidden;
 }
+/* Tableaux Markdown simples dans les cartes de fiche/évaluation (15/10/2026) */
+.fiche-table-wrap { overflow-x: auto; margin: 0.6rem 0; }
+.fiche-table-simple { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.fiche-table-simple th, .fiche-table-simple td {
+    border: 1px solid rgba(100, 116, 139, 0.35);
+    padding: 0.5rem 0.7rem; text-align: left; vertical-align: top;
+}
+.fiche-table-simple th { background: rgba(59, 130, 246, 0.12); font-weight: 700; }
+.fiche-table-simple tbody tr:nth-child(even) td { background: rgba(100, 116, 139, 0.07); }
+@media print { .fiche-table-simple th, .fiche-table-simple td { border-color: #94a3b8; } .fiche-table-wrap { overflow: visible; } }
 .fiche-deroulement-table {
     width: 100%;
     border-collapse: collapse;
