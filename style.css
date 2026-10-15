@@ -2223,3 +2223,25 @@ body.dark-theme .hist-sas-suppr { color: #E2E8F0; }
 .hist-sas-note { font-size: 0.8rem; color: #64748B; margin-top: 0.8rem; }
 .hist-sas-fil { max-height: 55vh; overflow-y: auto; pointer-events: auto; }
 body.dark-theme .hist-sas-titre { color: #E2E8F0; }
+
+/* ❖ Graphiques SVG générés à partir de données (bloc ```graphique) */
+.graphique-fiche {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    text-align: center;
+    break-inside: avoid;
+}
+.graphique-svg {
+    width: 100%;
+    max-width: 560px;
+    height: auto;
+    display: inline-block;
+}
+body.dark-theme .graphique-fiche {
+    /* fond clair conservé : le SVG dessine en couleurs sombres sur fond blanc */
+    background: #ffffff;
+    border-color: #475569;
+}

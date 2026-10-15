@@ -1259,7 +1259,8 @@ function reinjecterImagesFiche(html, images) {
 // plusieurs paragraphes), réinjection du SVG rendu par abcjs après coup.
 function texteVersHtmlLegerFiche(bloc) {
     if (!bloc) return '';
-    const { texte: sansABC, jetons: jetonsABC } = extraireEtRendreABC(bloc);
+    const { texte: sansGraph, jetons: jetonsGraph } = extraireEtRendreGraphique(bloc);
+    const { texte: sansABC, jetons: jetonsABC } = extraireEtRendreABC(sansGraph);
     const { texte: blocProtege, images } = extraireImagesFicheSures(sansABC);
     const echappe = echapperHTMLFiche(blocProtege);
     const paragraphes = echappe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
@@ -1321,7 +1322,8 @@ function texteVersHtmlLegerFiche(bloc) {
     }).filter(Boolean).join('');
 
     const htmlAvecImages = images.length ? reinjecterImagesFiche(html, images) : html;
-    return jetonsABC.length ? reinjecterABC(htmlAvecImages, jetonsABC) : htmlAvecImages;
+    const htmlAvecABC = jetonsABC.length ? reinjecterABC(htmlAvecImages, jetonsABC) : htmlAvecImages;
+    return jetonsGraph.length ? reinjecterGraphique(htmlAvecABC, jetonsGraph) : htmlAvecABC;
 }
 
 // Sépare un segment de texte (contenu entre la fin d'une "TRACE ÉCRITE
@@ -3561,6 +3563,135 @@ function reinjecterABC(html, jetons) {
 // correction est faite entièrement côté navigateur (aucun appel API, aucun
 // coût) ; elle n'alimente PAS le Carnet de progression. Bloc invalide ->
 // repli sur du texte brut, jamais de perte de contenu.
+// ❖ GRAPHIQUES (15/10/2026) : bloc ```graphique contenant un JSON
+//   {"type":"histogramme|courbe|secteurs|pyramide","titre":"...","unite":"...",
+//    "categories":["..."],"series":[{"nom":"...","valeurs":[..]}]}
+// Rendu en SVG par le navigateur (aucune librairie, aucun appel API). Même
+// principe que ```abc / ```quiz : extraction avant échappement, jeton inerte,
+// réinjection. JSON invalide -> bloc affiché en texte brut. Le modèle ne
+// produit jamais d'image : seulement des données, tracées de façon déterministe.
+function extraireEtRendreGraphique(texte) {
+    const jetons = [];
+    let compteur = 0;
+    const resultat = texte.replace(/```graphique\s*\n([\s\S]*?)```/g, (m, source) => {
+        const jeton = `@@GRAPH${compteur}@@`;
+        jetons.push({ jeton, source: source.trim() });
+        compteur++;
+        return jeton;
+    });
+    return { texte: resultat, jetons };
+}
+
+function svgGraphique(g) {
+    const esc = s => echapperHTMLFiche(String(s));
+    const cats = Array.isArray(g.categories) ? g.categories.map(String) : [];
+    const series = Array.isArray(g.series) ? g.series : [];
+    if (!cats.length || !series.length) throw new Error('graphique invalide');
+    series.forEach(s => {
+        if (!Array.isArray(s.valeurs) || s.valeurs.length !== cats.length ||
+            s.valeurs.some(v => typeof v !== 'number' || !isFinite(v) || v < 0)) throw new Error('valeurs invalides');
+    });
+    const couleurs = ['#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EF4444', '#14B8A6', '#EC4899', '#64748B'];
+    const W = 560, H = 340;
+    const unite = g.unite ? ' (' + esc(g.unite) + ')' : '';
+    let corps = '';
+    const titre = `<text x="${W / 2}" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">${esc(g.titre || '')}${unite}</text>`;
+    const nice = max => { const p = Math.pow(10, Math.floor(Math.log10(max || 1))); const f = max / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; };
+    const legende = noms => noms.map((n, i) =>
+        `<rect x="${20 + i * 150}" y="${H - 16}" width="12" height="12" fill="${couleurs[i % 8]}"/><text x="${37 + i * 150}" y="${H - 6}" font-size="12" fill="#334155">${esc(n)}</text>`).join('');
+
+    if (g.type === 'secteurs') {
+        const vals = series[0].valeurs, total = vals.reduce((a, b) => a + b, 0);
+        if (!total) throw new Error('total nul');
+        const cx = 170, cy = 180, r = 105;
+        let ang = -Math.PI / 2;
+        let parts = '', leg = '';
+        vals.forEach((v, i) => {
+            const a2 = ang + (v / total) * 2 * Math.PI;
+            const x1 = cx + r * Math.cos(ang), y1 = cy + r * Math.sin(ang), x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+            const grand = (a2 - ang) > Math.PI ? 1 : 0;
+            parts += v / total >= 0.9999
+                ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${couleurs[i % 8]}"/>`
+                : `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${grand} 1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${couleurs[i % 8]}" stroke="#fff" stroke-width="2"/>`;
+            if (v / total >= 0.05) {
+                const am = (ang + a2) / 2;
+                parts += `<text x="${(cx + r * 0.62 * Math.cos(am)).toFixed(1)}" y="${(cy + r * 0.62 * Math.sin(am) + 4).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">${(v / total * 100).toFixed(0)} %</text>`;
+            }
+            leg += `<rect x="330" y="${70 + i * 24}" width="12" height="12" fill="${couleurs[i % 8]}"/><text x="349" y="${81 + i * 24}" font-size="12" fill="#334155">${esc(cats[i])} (${v})</text>`;
+            ang = a2;
+        });
+        corps = parts + leg;
+        return `<svg viewBox="0 0 ${W} ${H}" class="graphique-svg" role="img" aria-label="${esc(g.titre || 'Graphique')}">${titre}${corps}</svg>`;
+    }
+
+    if (g.type === 'pyramide') {
+        if (series.length < 2) throw new Error('pyramide : 2 séries');
+        const gauche = series[0].valeurs, droite = series[1].valeurs;
+        const max = nice(Math.max(...gauche, ...droite));
+        const cx = W / 2, demi = 200, top = 44, bas = H - 44;
+        const n = cats.length, h = (bas - top) / n;
+        for (let i = 0; i < n; i++) {
+            const y = bas - (i + 1) * h;
+            const lw = gauche[i] / max * demi, rw = droite[i] / max * demi;
+            corps += `<rect x="${(cx - lw).toFixed(1)}" y="${(y + 1).toFixed(1)}" width="${lw.toFixed(1)}" height="${(h - 2).toFixed(1)}" fill="${couleurs[0]}"/>`;
+            corps += `<rect x="${cx}" y="${(y + 1).toFixed(1)}" width="${rw.toFixed(1)}" height="${(h - 2).toFixed(1)}" fill="${couleurs[4]}"/>`;
+            corps += `<text x="${cx}" y="${(y + h / 2 + 4).toFixed(1)}" text-anchor="middle" font-size="10" fill="#0f172a" style="paint-order:stroke;stroke:#fff;stroke-width:3px">${esc(cats[i])}</text>`;
+        }
+        corps += `<line x1="${cx}" y1="${top}" x2="${cx}" y2="${bas}" stroke="#94a3b8"/>`;
+        corps += `<text x="${cx - demi}" y="${bas + 14}" font-size="11" fill="#475569">${max}</text><text x="${cx + demi}" y="${bas + 14}" text-anchor="end" font-size="11" fill="#475569">${max}</text>`;
+        corps += legende([series[0].nom || 'Hommes', series[1].nom || 'Femmes'].map((x, i) => i === 1 ? x : x)).replace(`fill="${couleurs[1]}"`, `fill="${couleurs[4]}"`);
+        return `<svg viewBox="0 0 ${W} ${H}" class="graphique-svg" role="img" aria-label="${esc(g.titre || 'Pyramide')}">${titre}${corps}</svg>`;
+    }
+
+    // histogramme (barres groupées) et courbe : axes communs
+    const tous = series.flatMap(s => s.valeurs);
+    const max = nice(Math.max(...tous));
+    const gx = 56, gy = 40, gw = W - gx - 20, gh = H - gy - 70;
+    for (let k = 0; k <= 5; k++) {
+        const y = gy + gh - (k / 5) * gh;
+        corps += `<line x1="${gx}" y1="${y.toFixed(1)}" x2="${gx + gw}" y2="${y.toFixed(1)}" stroke="#e2e8f0"/><text x="${gx - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#475569">${+(max * k / 5).toFixed(2)}</text>`;
+    }
+    const n = cats.length, pas = gw / n;
+    cats.forEach((c, i) => {
+        corps += `<text x="${(gx + pas * (i + 0.5)).toFixed(1)}" y="${gy + gh + 16}" text-anchor="middle" font-size="11" fill="#334155">${esc(c)}</text>`;
+    });
+    if (g.type === 'courbe') {
+        series.forEach((s, k) => {
+            const pts = s.valeurs.map((v, i) => `${(gx + pas * (i + 0.5)).toFixed(1)},${(gy + gh - v / max * gh).toFixed(1)}`);
+            corps += `<polyline points="${pts.join(' ')}" fill="none" stroke="${couleurs[k % 8]}" stroke-width="2.5"/>`;
+            pts.forEach(p => { const [x, y] = p.split(','); corps += `<circle cx="${x}" cy="${y}" r="3.5" fill="${couleurs[k % 8]}"/>`; });
+        });
+    } else {
+        const m = series.length, bw = Math.min(46, (pas * 0.8) / m);
+        series.forEach((s, k) => {
+            s.valeurs.forEach((v, i) => {
+                const x = gx + pas * (i + 0.5) - (bw * m) / 2 + k * bw;
+                const hh = v / max * gh;
+                corps += `<rect x="${x.toFixed(1)}" y="${(gy + gh - hh).toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${hh.toFixed(1)}" fill="${couleurs[k % 8]}"/>`;
+                corps += `<text x="${(x + (bw - 2) / 2).toFixed(1)}" y="${(gy + gh - hh - 4).toFixed(1)}" text-anchor="middle" font-size="10" fill="#334155">${v}</text>`;
+            });
+        });
+    }
+    corps += `<line x1="${gx}" y1="${gy}" x2="${gx}" y2="${gy + gh}" stroke="#64748b"/><line x1="${gx}" y1="${gy + gh}" x2="${gx + gw}" y2="${gy + gh}" stroke="#64748b"/>`;
+    if (series.length > 1 || series[0].nom) corps += legende(series.map(s => s.nom || ''));
+    return `<svg viewBox="0 0 ${W} ${H}" class="graphique-svg" role="img" aria-label="${esc(g.titre || 'Graphique')}">${titre}${corps}</svg>`;
+}
+
+function reinjecterGraphique(html, jetons) {
+    if (!jetons.length) return html;
+    let resultat = html;
+    jetons.forEach(({ jeton, source }) => {
+        let rendu;
+        try {
+            rendu = `<div class="graphique-fiche">${svgGraphique(JSON.parse(source))}</div>`;
+        } catch (e) {
+            rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
+        }
+        resultat = resultat.split(jeton).join(rendu);
+    });
+    return resultat;
+}
+
 function extraireEtRendreQuiz(texte) {
     const jetons = [];
     let compteur = 0;
@@ -3672,13 +3803,15 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
         // laissé tel quel serait transformé en <pre><code> générique par
         // marked.parse puis habillé en carte "Devoir", ce qui n'a aucun
         // rapport avec son contenu réel.
-        const { texte: sourceSansQuiz, jetons: jetonsQuiz } = extraireEtRendreQuiz(source);
+        const { texte: sourceSansGraph, jetons: jetonsGraph } = extraireEtRendreGraphique(source);
+        const { texte: sourceSansQuiz, jetons: jetonsQuiz } = extraireEtRendreQuiz(sourceSansGraph);
         const { texte: sourceSansABC, jetons: jetonsABC } = extraireEtRendreABC(sourceSansQuiz);
         const { texte: sourceSansLatex, jetons: jetonsLatex } = extraireEtRendreLatex(sourceSansABC);
         html = marked.parse(sourceSansLatex);
         if (jetonsLatex.length) html = reinjecterLatex(html, jetonsLatex);
         if (jetonsABC.length) html = reinjecterABC(html, jetonsABC);
         if (jetonsQuiz.length) html = reinjecterQuiz(html, jetonsQuiz);
+        if (jetonsGraph.length) html = reinjecterGraphique(html, jetonsGraph);
         if (attenuerSignature) {
             html = html
                 .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
