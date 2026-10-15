@@ -3381,7 +3381,8 @@ function extraireEtRendreLatex(texte) {
     resultat = extraireMotif(resultat, /\$\$([\s\S]+?)\$\$/g, true);
     resultat = extraireMotif(resultat, /\\\[([\s\S]+?)\\\]/g, true);
     resultat = extraireMotif(resultat, /\$([^$\n]+?)\$/g, false);
-    resultat = extraireMotif(resultat, /\\\(([^)]+?)\\\)/g, false);
+    // [\s\S]+? (et non [^)]+?) : une formule comme \( \vec{u}(-3, 4) \) contient des parenthèses.
+    resultat = extraireMotif(resultat, /\\\(([\s\S]+?)\\\)/g, false);
     // ❖ Filet de sécurité : une commande connue écrite sans délimiteur du
     // tout -- chaque occurrence devient sa propre petite formule en ligne.
     resultat = resultat.replace(RE_LATEX_COMMANDE_BRUTE, (motifEntier) => {
@@ -3546,6 +3547,14 @@ function extraireEtRendreQuiz(texte) {
     return { texte: resultat, jetons };
 }
 
+// Texte d'un quiz (question, option, explication) : échappé en HTML, avec les
+// formules LaTeX rendues par KaTeX (le quiz est extrait avant l'étape LaTeX
+// principale, il doit donc faire son propre rendu).
+function texteQuizAvecLatex(s) {
+    const { texte, jetons } = extraireEtRendreLatex(String(s));
+    return reinjecterLatex(echapperHTMLFiche(texte), jetons);
+}
+
 function reinjecterQuiz(html, jetons) {
     if (!jetons.length) return html;
     let resultat = html;
@@ -3561,10 +3570,10 @@ function reinjecterQuiz(html, jetons) {
             }
             const lettres = 'ABCDEF';
             const boutons = options.map((opt, i) =>
-                `<button type="button" class="quiz-option" data-i="${i}" onclick="repondreQuiz(this)"><span class="quiz-lettre">${lettres[i]}</span><span class="quiz-texte">${echapperHTMLFiche(opt)}</span></button>`
+                `<button type="button" class="quiz-option" data-i="${i}" onclick="repondreQuiz(this)"><span class="quiz-lettre">${lettres[i]}</span><span class="quiz-texte">${texteQuizAvecLatex(opt)}</span></button>`
             ).join('');
-            const explication = q.explication ? echapperHTMLFiche(String(q.explication)) : '';
-            rendu = `<div class="quiz-carte" data-bonne="${bonne}"><div class="quiz-etiquette">Quiz</div><div class="quiz-question">${echapperHTMLFiche(String(q.question))}</div><div class="quiz-options">${boutons}</div><div class="quiz-retour" style="display:none"></div><div class="quiz-explication" style="display:none">${explication}</div></div>`;
+            const explication = q.explication ? texteQuizAvecLatex(q.explication) : '';
+            rendu = `<div class="quiz-carte" data-bonne="${bonne}"><div class="quiz-etiquette">Quiz</div><div class="quiz-question">${texteQuizAvecLatex(q.question)}</div><div class="quiz-options">${boutons}</div><div class="quiz-retour" style="display:none"></div><div class="quiz-explication" style="display:none">${explication}</div></div>`;
         } catch (e) {
             rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
         }

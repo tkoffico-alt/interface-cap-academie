@@ -2016,6 +2016,24 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js').catch(() => {});
             });
+            // ❖ Mise à jour automatique : quand une nouvelle version du service
+            // worker prend le contrôle (déploiement), la page se recharge une
+            // fois pour charger le nouveau code -- sauf si l'élève est en train
+            // d'écrire (on attend alors qu'il ait fini). Pas de rechargement à
+            // la toute première installation (aucun contrôleur auparavant).
+            const avaitControleur = !!navigator.serviceWorker.controller;
+            let rechargementFait = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!avaitControleur || rechargementFait) return;
+                rechargementFait = true;
+                const recharger = () => {
+                    const actif = document.activeElement;
+                    const saisie = actif && (actif.tagName === 'TEXTAREA' || actif.tagName === 'INPUT' || actif.isContentEditable) && (actif.value || actif.textContent || '').length > 0;
+                    if (saisie) { setTimeout(recharger, 15000); return; }
+                    location.reload();
+                };
+                recharger();
+            });
         }
     </script>
 </body>
