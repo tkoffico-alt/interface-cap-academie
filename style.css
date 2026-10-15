@@ -1808,6 +1808,14 @@ body.dark-theme .input-matricule { background-color: rgba(2, 6, 23, 0.6); color:
     border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 
+.note-relire-fiche {
+    align-self: center;
+    font-size: 0.75rem;
+    color: #94A3B8;
+    font-style: italic;
+    margin-left: 4px;
+}
+
 .btn-action-doc {
     background-color: transparent;
     border: 1px solid #3B82F6;
