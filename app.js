@@ -3846,6 +3846,12 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
         html += '<span class="curseur-frappe">▍</span>';
     }
     element.innerHTML = html;
+    // ❖ Texte brut conservé (Forge seulement) : les boutons « dernière fiche »
+    // le renvoient au modèle. Le texte affiché (innerText) aurait perdu la
+    // structure « Libellé : valeur » et fait échouer la mise en forme.
+    if (!enCoursDeFrappe && outil === 'forge') {
+        element.dataset.sourceBrute = texteMarkdown;
+    }
     appliquerTailleIllustrations(element);
     hydraterIllustrationsFiche(element);
     if (!element.dataset.fonduJoue) {
@@ -5200,6 +5206,10 @@ function handleTeacherKeyPress(event, outil) {
 function derniereReponseEnseignant(outil) {
     const histo = document.getElementById(`${outil}-chat-history`);
     if (!histo) return "";
+    const brutes = Array.from(histo.querySelectorAll('[data-source-brute]'));
+    if (brutes.length) {
+        return (brutes[brutes.length - 1].dataset.sourceBrute || "").slice(0, 12000);
+    }
     const bulles = Array.from(histo.querySelectorAll('.bot-message'));
     for (let i = bulles.length - 1; i >= 0; i--) {
         const t = (bulles[i].innerText || "").trim();
@@ -5250,7 +5260,7 @@ async function sendTeacherMessage(outil, contexteJoint) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 query: contexteJoint
-                    ? `${message}\n\n[DOCUMENT PRÉCÉDENT À MODIFIER :]\n${contexteJoint}`
+                    ? `${message}\n\n[DOCUMENT PRÉCÉDENT À MODIFIER — réécris la fiche complète avec exactement la même structure, les mêmes titres de section et la même mise en forme, en intégrant la demande ci-dessus :]\n${contexteJoint}`
                     : message,
                 conversation_id: teacherConversationIds[outil] || "",
                 outil: outil,
