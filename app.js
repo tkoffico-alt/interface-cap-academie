@@ -66,6 +66,17 @@ document.addEventListener('click', function (evenement) {
             // ❖ 16/10/2026 : « dernière évaluation » n'était pas reconnu, donc
             // l'Atelier repartait d'un fil vierge et répondait « je ne sais pas
             // de quelle évaluation vous parlez » (boutons Références/Variante).
+            // ❖ 16/10/2026 : la Forge est en mode complétion (une demande = une
+            // fiche, aucun dialogue) : « aide-moi à cadrer » ne produisait qu'une
+            // bulle vide. « Nouvelle fiche de leçon » pré-remplit donc un modèle
+            // à compléter, sans rien envoyer.
+            if (outil === 'forge' && /nouvelle\s+fiche/i.test(libelle)) {
+                reinitialiserConversationEnseignant(outil);
+                champ.value = "Fiche de leçon — Matière : … ; Classe : … ; Chapitre/Thème : …";
+                champ.focus();
+                try { champ.setSelectionRange(champ.value.indexOf('…'), champ.value.indexOf('…') + 1); } catch (e) {}
+                return;
+            }
             const prolongeLEchange = /ajoute[rz]?\s+des\s+exercices|derni[èe]re\s+(fiche|[ée]valuation)|cette\s+le[çc]on/i.test(libelle);
             if (!prolongeLEchange) reinitialiserConversationEnseignant(outil);
             // La Forge secondaire est en mode complétion (aucune mémoire côté
