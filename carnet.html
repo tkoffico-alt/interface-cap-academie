@@ -140,6 +140,9 @@
         text-align: right;
         flex-shrink: 0;
     }
+    .guide-lecture summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+    .guide-lecture ul { margin: 12px 0 0; padding-left: 20px; font-size: 0.88em; color: var(--texte-att); line-height: 1.5; }
+    .guide-lecture li { margin-bottom: 8px; }
     #resultats { display: none; }
     #zone-vide, #zone-erreur { display: none; text-align: center; color: var(--texte-att); padding: 10px 0; }
     .retour-lien {
@@ -166,6 +169,18 @@
         </div>
         <p id="message"></p>
     </div>
+
+    <details class="carte guide-lecture">
+        <summary>ℹ️ Comment lire ce carnet ?</summary>
+        <ul>
+            <li><strong>Les notions</strong> : chaque ligne est un point précis du programme, testé lors des devoirs corrigés dans l'Espace de Préparation.</li>
+            <li><strong>« 3/5 »</strong> : sur 5 questions posées sur cette notion, 3 ont été réussies. Le pourcentage en découle.</li>
+            <li><strong>Les couleurs</strong> : <span style="color:#10B981;font-weight:700;">vert</span> = bien maîtrisé (75 % et plus) ; <span style="color:#F59E0B;font-weight:700;">orange</span> = en cours d'acquisition (50 à 74 %) ; <span style="color:#EF4444;font-weight:700;">rouge</span> = à retravailler (moins de 50 %).</li>
+            <li><strong>« Mis à jour le… »</strong> : date de la dernière évaluation de la notion. Une date ancienne signifie simplement qu'elle n'a pas été retestée depuis ; ce n'est pas un signe de difficulté.</li>
+            <li><strong>Peu de données ?</strong> Avec 1 ou 2 questions, le pourcentage est un premier indice, pas un verdict. Le carnet devient fiable au fil des devoirs.</li>
+            <li><strong>Que faire ?</strong> Encouragez votre enfant à reprendre en priorité les notions en rouge, avec l'assistant de l'Espace de Préparation.</li>
+        </ul>
+    </details>
 
     <div class="carte" id="zone-vide">
         <p>Aucune donnée de progression pour ce matricule pour l'instant. Le carnet se remplit automatiquement au fil des devoirs corrigés dans l'Espace de Préparation — rien à faire de particulier, ça viendra avec l'usage.</p>
