@@ -1565,6 +1565,12 @@ function analyserFicheLecon(texteBrut) {
             const sepIdx = l2.indexOf(':');
             if (sepIdx > -1 && sepIdx < 60) {
                 badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
+            } else if (badges.length) {
+                // Valeur écrite sur plusieurs lignes (ex. "Objectives :" puis
+                // une ligne par objectif) : rattachée au champ précédent au
+                // lieu de devenir une pastille sans libellé.
+                const prec = badges[badges.length - 1];
+                prec.valeur = prec.valeur ? prec.valeur + ' ; ' + l2 : l2;
             } else {
                 badges.push({ label: '', valeur: l2 });
             }
@@ -1640,7 +1646,18 @@ function analyserFicheLecon(texteBrut) {
             titreSuivant = separation.titreSuivant;
         }
 
-        phases.push({ titre: titreCourant, prof: contenuProf, classe: contenuClasse, trace: contenuTrace });
+        // Un second triplet Prof/Classe/Trace sans titre propre (ex. deux
+        // activités sous « IV. Additional Activities ») est fusionné dans
+        // l'étape précédente au lieu d'apparaître comme une carte orpheline.
+        if (!titreCourant && phases.length) {
+            const prec = phases[phases.length - 1];
+            const joindre = (a, b) => (a && b) ? a + '\n\n' + b : (a || b);
+            prec.prof = joindre(prec.prof, contenuProf);
+            prec.classe = joindre(prec.classe, contenuClasse);
+            prec.trace = joindre(prec.trace, contenuTrace);
+        } else {
+            phases.push({ titre: titreCourant, prof: contenuProf, classe: contenuClasse, trace: contenuTrace });
+        }
         titreCourant = titreSuivant;
         k += mTrace ? 3 : (mClasse ? 2 : 1);
     }
