@@ -63,10 +63,20 @@ document.addEventListener('click', function (evenement) {
             // difficulté » et « Gestion de classe », accumuler indéfiniment
             // ses consultations dans un seul fil.
             const libelle = `${bouton.textContent || ''} ${bouton.dataset.message || ''}`;
-            const prolongeLEchange = /ajoute[rz]?\s+des\s+exercices|derni[èe]re\s+fiche/i.test(libelle);
+            // ❖ 16/10/2026 : « dernière évaluation » n'était pas reconnu, donc
+            // l'Atelier repartait d'un fil vierge et répondait « je ne sais pas
+            // de quelle évaluation vous parlez » (boutons Références/Variante).
+            const prolongeLEchange = /ajoute[rz]?\s+des\s+exercices|derni[èe]re\s+(fiche|[ée]valuation)|cette\s+le[çc]on/i.test(libelle);
             if (!prolongeLEchange) reinitialiserConversationEnseignant(outil);
+            // La Forge secondaire est en mode complétion (aucune mémoire côté
+            // Dify) : pour « la dernière fiche », on joint le texte de la
+            // dernière réponse à la requête (jamais affiché dans la bulle).
+            let contexteJoint = "";
+            if (prolongeLEchange && (outil === 'forge' || !teacherConversationIds[outil])) {
+                contexteJoint = derniereReponseEnseignant(outil);
+            }
             champ.value = bouton.dataset.message || "";
-            sendTeacherMessage(outil);
+            sendTeacherMessage(outil, contexteJoint);
         }
     }
 });
@@ -5186,7 +5196,19 @@ function handleTeacherKeyPress(event, outil) {
     if (event.key === 'Enter') sendTeacherMessage(outil);
 }
 
-async function sendTeacherMessage(outil) {
+// Texte de la dernière vraie réponse (fiche/évaluation) d'un outil enseignant.
+function derniereReponseEnseignant(outil) {
+    const histo = document.getElementById(`${outil}-chat-history`);
+    if (!histo) return "";
+    const bulles = Array.from(histo.querySelectorAll('.bot-message'));
+    for (let i = bulles.length - 1; i >= 0; i--) {
+        const t = (bulles[i].innerText || "").trim();
+        if (t.length > 400) return t.slice(0, 12000);
+    }
+    return "";
+}
+
+async function sendTeacherMessage(outil, contexteJoint) {
     const inputField = document.getElementById(`${outil}-user-input`);
     const button = inputField.nextElementSibling;
     const message = inputField.value.trim();
@@ -5227,7 +5249,9 @@ async function sendTeacherMessage(outil) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                query: message,
+                query: contexteJoint
+                    ? `${message}\n\n[DOCUMENT PRÉCÉDENT À MODIFIER :]\n${contexteJoint}`
+                    : message,
                 conversation_id: teacherConversationIds[outil] || "",
                 outil: outil,
                 matricule: sceau,
