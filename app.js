@@ -4027,6 +4027,86 @@ function ouvrirHistoriqueSas(idOuvert) {
         }
     }
     document.body.appendChild(m);
+    if (!ouverte) chargerHistoriqueSasServeur(boite);
+}
+
+// Historique serveur (Code ELV-) : titres et dates stockés côté serveur,
+// textes relus à la demande depuis Dify. Complète l'historique local.
+async function chargerHistoriqueSasServeur(boite) {
+    const sceau = localStorage.getItem('eduka_sceau');
+    if (!sceau || !sceau.startsWith('ELV-')) return;
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/sas/historique/liste', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau, avatar: avatarActif })
+        });
+        const d = await r.json();
+        if (d.status !== 'success' || !d.sessions.length || !boite.isConnected) return;
+        const h = document.createElement('h4');
+        h.textContent = 'Sessions liées à votre Code (tous appareils)';
+        boite.appendChild(h);
+        d.sessions.forEach(s => {
+            const ligne = document.createElement('div');
+            ligne.className = 'hist-sas-ligne';
+            const ouvrir = document.createElement('button');
+            ouvrir.type = 'button'; ouvrir.className = 'hist-sas-item';
+            const dt = document.createElement('span'); dt.className = 'hist-sas-date';
+            dt.textContent = new Date((s.date_maj || '').replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+            const t = document.createElement('span'); t.className = 'hist-sas-titre';
+            t.textContent = s.titre || 'Session';
+            ouvrir.appendChild(dt); ouvrir.appendChild(t);
+            ouvrir.onclick = () => lireSessionSasServeur(boite, sceau, s);
+            const sup = document.createElement('button');
+            sup.type = 'button'; sup.className = 'hist-sas-suppr'; sup.title = 'Retirer de la liste'; sup.textContent = '🗑';
+            sup.onclick = async () => {
+                if (!confirm('Retirer cette session de la liste ?')) return;
+                await fetch('https://api.edukatchat.org/api/sas/historique/supprimer', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matricule: sceau, conversation_id: s.conversation_id })
+                });
+                ouvrirHistoriqueSas();
+            };
+            ligne.appendChild(ouvrir); ligne.appendChild(sup);
+            boite.appendChild(ligne);
+        });
+    } catch (e) { /* silencieux : l'historique local reste disponible */ }
+}
+
+async function lireSessionSasServeur(boite, sceau, s) {
+    boite.innerHTML = '<p>Chargement…</p>';
+    let d;
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/sas/historique/lire', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau, conversation_id: s.conversation_id })
+        });
+        d = await r.json();
+    } catch (e) { d = { status: 'error', message: 'Connexion impossible.' }; }
+    boite.innerHTML = '';
+    const fermer = document.createElement('button');
+    fermer.type = 'button'; fermer.className = 'hist-sas-fermer'; fermer.textContent = '✕';
+    fermer.onclick = fermerModaleHistoriqueSas;
+    boite.appendChild(fermer);
+    const retour = document.createElement('button');
+    retour.type = 'button'; retour.className = 'hist-sas-lien'; retour.textContent = '← Retour à la liste';
+    retour.onclick = () => ouvrirHistoriqueSas();
+    boite.appendChild(retour);
+    if (d.status !== 'success') {
+        const p = document.createElement('p'); p.textContent = d.message || 'Session indisponible.';
+        boite.appendChild(p); return;
+    }
+    const h = document.createElement('h3'); h.textContent = d.titre || 'Session';
+    boite.appendChild(h);
+    const note = document.createElement('p');
+    note.textContent = 'Lecture seule.';
+    boite.appendChild(note);
+    d.echanges.forEach(e => {
+        const q = document.createElement('div'); q.className = 'message user-message'; q.textContent = e.question;
+        const a = document.createElement('div'); a.className = 'message ai-message';
+        a.innerHTML = (typeof marked !== 'undefined') ? marked.parse(e.reponse) : '';
+        if (typeof marked === 'undefined') a.textContent = e.reponse;
+        boite.appendChild(q); boite.appendChild(a);
+    });
 }
 
 function restoreChatHistories() {
