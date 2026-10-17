@@ -5234,12 +5234,14 @@ function handleTeacherKeyPress(event, outil) {
 function derniereReponseEnseignant(outil) {
     const histo = document.getElementById(`${outil}-chat-history`);
     if (!histo) return "";
-    const brutes = Array.from(histo.querySelectorAll('[data-source-brute]'));
-    if (brutes.length) {
-        return (brutes[brutes.length - 1].dataset.sourceBrute || "").slice(0, 12000);
-    }
+    // 17/10/2026 : on part de la DERNIÈRE bulle substantielle, pas du dernier
+    // élément portant data-source-brute (après un rechargement de page cet
+    // attribut peut manquer sur la fiche récente : on renvoyait alors une
+    // ancienne fiche, d'une autre matière).
     const bulles = Array.from(histo.querySelectorAll('.bot-message'));
     for (let i = bulles.length - 1; i >= 0; i--) {
+        const brute = (bulles[i].dataset && bulles[i].dataset.sourceBrute) || "";
+        if (brute.length > 200) return brute.slice(0, 12000);
         const t = (bulles[i].innerText || "").trim();
         if (t.length > 400) return t.slice(0, 12000);
     }
