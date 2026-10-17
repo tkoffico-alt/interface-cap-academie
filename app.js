@@ -4469,7 +4469,10 @@ let inputFichierImageCache = null;
 // un autre via "Tous les fichiers"). L'attribut "capture" (ouverture
 // directe de l'appareil photo) reste sans effet sur les documents -- les
 // navigateurs l'ignorent silencieusement en dehors des images/vidéos.
-const EXTENSIONS_FICHIER_ACCEPTEES = 'image/*,.pdf,.doc,.docx,.txt,.md,.csv,.xls,.xlsx';
+// ❖ 17/10/2026 : restreint aux photos (jpg/jpeg/png) -- aucun modèle OpenAI
+// n'expose la capacité "Document" dans Dify, un PDF/Word était donc toujours
+// rejeté. À rouvrir le jour où un modèle compatible est activé.
+const EXTENSIONS_FICHIER_ACCEPTEES = 'image/jpeg,image/png,.jpg,.jpeg,.png';
 
 function obtenirInputFichierImage() {
     if (!inputFichierImageCache) {
