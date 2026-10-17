@@ -1050,7 +1050,7 @@ const ALTERNATIVES_SECTION_FICHE = {
     ],
     deroulement: [
         "D[ÉE]ROULEMENT DU COURS(?:\\s*\\([^)]*\\))?",
-        "LESSON PROCEDURE",
+        "LESSON (?:PROCEDURE|PROCESS|DEVELOPMENT|PROGRESSION|FLOW)",
         "DESARROLLO DE LA CLASE",
         "UNTERRICHTSABLAUF"
     ],
@@ -1079,9 +1079,11 @@ const ALTERNATIVES_SECTION_FICHE = {
 // que le DÉBUT de la ligne (pas la ligne entière) -- tout ce qui suit le
 // ':' est capturé comme contenu par analyserFicheLecon().
 const ALTERNATIVES_PHASE_FICHE = {
-    prof: ["ACTIVIT[ÉE] DU PROFESSEUR", "TEACHER['’]S ACTIVITY", "ACTIVIDAD DEL PROFESOR", "LEHRERAKTIVIT[ÄA]T"],
-    classe: ["ACTIVIT[ÉE] DE LA CLASSE", "STUDENTS['’] ACTIVITY", "ACTIVIDAD DE LA CLASE", "SCH[ÜU]LERAKTIVIT[ÄA]T"],
-    trace: ["TRACE [ÉE]CRITE VALID[ÉE]E", "VALIDATED NOTES", "APUNTES VALIDADOS", "G[ÜU]LTIGE MITSCHRIFT"]
+    // 17/10/2026 : variantes anglaises élargies (Luna écrit parfois « Teacher
+    // Activity », « Learners' Activity », « Validated Notes (Trace) »...).
+    prof: ["ACTIVIT[ÉE] DU PROFESSEUR", "TEACHER['’]?S?\\s+ACTIVITY", "TEACHER['’]?S?\\s+ACTIVITIES", "ACTIVIDAD DEL PROFESOR", "LEHRERAKTIVIT[ÄA]T"],
+    classe: ["ACTIVIT[ÉE] DE LA CLASSE", "(?:STUDENTS?|LEARNERS?|PUPILS?|CLASS)['’]?S?\\s+ACTIVIT(?:Y|IES)", "ACTIVIDAD DE LA CLASE", "SCH[ÜU]LERAKTIVIT[ÄA]T"],
+    trace: ["TRACE [ÉE]CRITE VALID[ÉE]E", "VALIDATED\\s+(?:NOTES|TRACE|SUMMARY)", "APUNTES VALIDADOS", "G[ÜU]LTIGE MITSCHRIFT"]
 };
 
 function nettoyerLigneFiche(ligne) {
@@ -1124,7 +1126,7 @@ function trouverOccurrencesFiche(texte) {
     });
 
     Object.entries(ALTERNATIVES_PHASE_FICHE).forEach(([type, variantes]) => {
-        const re = new RegExp(`^[ \\t]*(?:[-•]\\s*)?(?:${variantes.join('|')})[ \\t]*:[ \\t]*`, 'gim');
+        const re = new RegExp(`^[ \\t]*(?:[-•]\\s*)?(?:${variantes.join('|')})[ \\t]*(?::[ \\t]*|$)`, 'gim');
         let m;
         while ((m = re.exec(texte)) !== null) {
             occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
