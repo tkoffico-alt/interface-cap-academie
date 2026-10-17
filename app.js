@@ -26,7 +26,7 @@ let sasPremierEchangeEnAttente = false;
 // switchTeacherTool ci-dessous).
 let outilsDejaAmorces = new Set();
 const MESSAGES_AMORCAGE_ENSEIGNANT = {
-    atelier: "C'est ma première visite dans l'Atelier des Évaluations. Réponds en 3 phrases courtes maximum, sans titre, sans liste et SANS produire d'évaluation d'exemple : dis ce que tu conçois ici, puis ce que je dois taper pour en obtenir une (matière, classe, thème, type d'épreuve).",
+    atelier: "C'est ma première visite dans l'Atelier des Évaluations. Réponds en 3 phrases courtes maximum, sans titre, sans liste et SANS produire d'évaluation d'exemple : dis ce que tu conçois ici, puis ce que je dois taper pour en obtenir une (matière, classe, thème, type d'épreuve). Ajoute une dernière phrase : je peux aussi corriger la photo d'une copie (JPG/PNG), à condition que je précise le barème.",
     forge: "C'est ma première visite dans la Forge des Leçons. Réponds en 3 phrases courtes maximum, sans titre, sans liste et SANS produire de fiche d'exemple : dis ce que tu produis ici, puis ce que je dois taper pour obtenir une fiche (matière, classe, titre de la leçon).",
     cabinet: "C'est ma première visite dans le Cabinet d'Étude. Réponds en 3 phrases courtes maximum, sans titre, sans liste et sans exemple développé : dis comment tu peux m'accompagner ici, puis ce que je peux te demander."
 };
@@ -73,6 +73,15 @@ document.addEventListener('click', function (evenement) {
             if (outil === 'forge' && /nouvelle\s+fiche/i.test(libelle)) {
                 reinitialiserConversationEnseignant(outil);
                 champ.value = "Fiche de leçon — Matière : … ; Classe : … ; Chapitre/Thème : …";
+                champ.focus();
+                try { champ.setSelectionRange(champ.value.indexOf('…'), champ.value.indexOf('…') + 1); } catch (e) {}
+                return;
+            }
+            // ❖ 17/10/2026 : « Correction de copies » pré-remplit un modèle avec le
+            // barème à renseigner (la photo se joint ensuite avec le trombone).
+            if (outil === 'atelier' && /correction\s+de\s+copie/i.test(libelle)) {
+                reinitialiserConversationEnseignant(outil);
+                champ.value = "Correction de copie — Matière : … ; Classe : … ; Barème (question par question, total /20) : … ; (joins la photo de la copie avec le trombone 📎, JPG/PNG)";
                 champ.focus();
                 try { champ.setSelectionRange(champ.value.indexOf('…'), champ.value.indexOf('…') + 1); } catch (e) {}
                 return;
