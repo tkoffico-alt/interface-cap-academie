@@ -142,7 +142,16 @@ async function generer(){
   btn.disabled = true; btn.textContent = 'Génération en cours… (30 à 60 secondes)';
   try{
     const r = await fetch(API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(corps)});
-    const d = await r.json();
+    let d;
+    try{ d = await r.json(); }
+    catch(_){
+      console.error('Essai gratuit : réponse non JSON, HTTP', r.status);
+      err.textContent = (r.status === 502 || r.status === 504 || r.status === 524)
+        ? 'La génération a pris trop de temps. Réessayez dans un instant (votre essai n’est pas consommé).'
+        : 'Le service rencontre un souci passager (code ' + r.status + '). Réessayez dans quelques minutes.';
+      btn.disabled = false; btn.textContent = 'Générer gratuitement';
+      return;
+    }
     if(d.status === 'success'){
       texteBrut = d.texte;
       const zone = document.getElementById('resultat');
