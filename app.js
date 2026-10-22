@@ -86,6 +86,15 @@ document.addEventListener('click', function (evenement) {
                 try { champ.setSelectionRange(champ.value.indexOf('…'), champ.value.indexOf('…') + 1); } catch (e) {}
                 return;
             }
+            // ❖ 22/10/2026 : « Format officiel » pré-remplit une consigne d'épreuve
+            // type BEPC/BAC (déclenche le mode EXERCICE 1 … EXERCICE N de l'Atelier).
+            if (outil === 'atelier' && /format\s+officiel/i.test(libelle)) {
+                reinitialiserConversationEnseignant(outil);
+                champ.value = "Épreuve type BEPC/BAC au format officiel — Matière : … ; Classe : … ; Chapitres/notions : … ; Durée : …";
+                champ.focus();
+                try { champ.setSelectionRange(champ.value.indexOf('…'), champ.value.indexOf('…') + 1); } catch (e) {}
+                return;
+            }
             const prolongeLEchange = /ajoute[rz]?\s+des\s+exercices|derni[èe]re\s+(fiche|[ée]valuation)|cette\s+le[çc]on/i.test(libelle);
             if (!prolongeLEchange) reinitialiserConversationEnseignant(outil);
             // La Forge secondaire est en mode complétion (aucune mémoire côté
