@@ -3130,6 +3130,11 @@ const ALTERNATIVES_SECTION_EVALUATION = {
     // critères analytiques, jamais d'un barème question par question.
     sujet: ["LE SUJET(?:\\s*\\([^)]*\\))?"],
     grilleCriteres: ["GRILLE DE CRIT[ÈE]RES D['’]?[ÉE]VALUATION(?:\\s*\\([^)]*\\))?"],
+    // ❖ Quatrième canevas valide (22/10/2026) : ÉPREUVE AU FORMAT OFFICIEL
+    // (BEPC/Bac blanc) -- une suite d'EXERCICE 1, EXERCICE 2... suivie du
+    // BARÈME TOTAL et du CORRIGÉ. Utilisé seulement si aucun des trois
+    // canevas ci-dessus n'est reconnu (voir analyserEvaluation).
+    exercice: ["EXERCICE\\s+\\d+(?:\\s*\\([^)]*\\))?", "EXERCISE\\s+\\d+(?:\\s*\\([^)]*\\))?", "EJERCICIO\\s+\\d+(?:\\s*\\([^)]*\\))?", "AUFGABE\\s+\\d+(?:\\s*\\([^)]*\\))?"],
     corrige: ["CORRIG[ÉE]", "ANSWER KEY", "SOLUCIONARIO", "L[ÖO]SUNGEN"]
 };
 
@@ -3187,18 +3192,35 @@ function analyserEvaluation(texteBrut) {
         .trim();
     if (!texte) return null;
 
-    const occurrences = trouverOccurrencesEvaluation(texte);
+    let occurrences = trouverOccurrencesEvaluation(texte);
     const aPartieA = occurrences.some(o => o.type === 'partieA');
     const aPartieB = occurrences.some(o => o.type === 'partieB');
     const aSituation = occurrences.some(o => o.type === 'situation');
     const aQuestions = occurrences.some(o => o.type === 'questions');
     const aSujet = occurrences.some(o => o.type === 'sujet');
     const aGrille = occurrences.some(o => o.type === 'grilleCriteres');
+    // ❖ Canevas "épreuve au format officiel" : seulement si aucun des trois
+    // autres n'est reconnu. Les EXERCICE n'comptent qu'avant le CORRIGÉ (le
+    // corrigé répète ses propres sous-titres), et on écarte alors les types
+    // des autres canevas (une "SITUATION D'ÉVALUATION" peut n'être qu'un
+    // sous-titre à l'intérieur d'un exercice).
+    const canevasClassique = (aPartieA && aPartieB) || (aSituation && aQuestions) || (aSujet && aGrille);
+    let modeExercices = false;
+    if (!canevasClassique) {
+        const occCorr = occurrences.find(o => o.type === 'corrige');
+        const finExos = occCorr ? occCorr.start : Infinity;
+        const nbExos = occurrences.filter(o => o.type === 'exercice' && o.start < finExos).length;
+        if (nbExos >= 2) {
+            modeExercices = true;
+            occurrences = occurrences.filter(o =>
+                (o.type === 'exercice' && o.start < finExos) || o.type === 'bareme' || o.type === 'corrige');
+        }
+    }
     // ❖ Trois canevas valides désormais : PARTIE A/PARTIE B (générique),
     // SITUATION D'ÉVALUATION/QUESTIONS-CONSIGNES (EDHC), ou LE SUJET/GRILLE
     // DE CRITÈRES D'ÉVALUATION (épreuve de dissertation) -- voir le
     // commentaire sur ALTERNATIVES_SECTION_EVALUATION ci-dessus.
-    if (!(aPartieA && aPartieB) && !(aSituation && aQuestions) && !(aSujet && aGrille)) return null;
+    if (!canevasClassique && !modeExercices) return null;
 
     function contenuApres(occ) {
         const idx = occurrences.indexOf(occ);
@@ -3247,15 +3269,37 @@ function analyserEvaluation(texteBrut) {
     // couperait le corrigé après seulement quelques mots).
     const corrigeTexte = occCorrige ? texte.slice(occCorrige.end).trim() : '';
 
-    return { preambuleTexte, partieATexte, partieBTexte, situationTexte, questionsTexte, sujetTexte, grilleTexte, baremeTexte, corrigeTexte, titres };
+    const exercices = modeExercices
+        ? occurrences.filter(o => o.type === 'exercice').map(o => ({ titre: o.texte, texte: contenuApres(o) }))
+        : [];
+
+    return { preambuleTexte, partieATexte, partieBTexte, situationTexte, questionsTexte, sujetTexte, grilleTexte, baremeTexte, corrigeTexte, titres, exercices };
 }
 
 function construireHTMLEvaluation(analyse, classeAccent) {
     const { preambuleTexte, partieATexte, partieBTexte, situationTexte, questionsTexte, sujetTexte, grilleTexte, baremeTexte, corrigeTexte, titres } = analyse;
+    const exercices = analyse.exercices || [];
     let html = '';
 
     if (preambuleTexte) {
         html += `<div class="fiche-preambule">${texteVersHtmlLegerFiche(preambuleTexte)}</div>`;
+    }
+
+    // ❖ Quatrième canevas : épreuve au format officiel (EXERCICE 1…N).
+    // Une carte par exercice, puis barème et corrigé comme les autres.
+    if (exercices.length) {
+        exercices.forEach(ex => {
+            html += `<div class="fiche-section-titre">📝 ${echapperHTMLFiche(ex.titre || '')}</div>`;
+            html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(ex.texte)}</div>`;
+        });
+        if (baremeTexte) {
+            html += `<div class="fiche-bloc-entete"><span class="fiche-badge fiche-badge-competence">${echapperHTMLFiche(titres.bareme || 'BARÈME TOTAL')} : ${echapperHTMLFiche(baremeTexte)}</span></div>`;
+        }
+        if (corrigeTexte) {
+            html += `<div class="fiche-section-titre">🔑 ${echapperHTMLFiche(titres.corrige || '')}</div>`;
+            html += `<div class="fiche-carte fiche-corrige">${texteVersHtmlLegerFiche(corrigeTexte)}</div>`;
+        }
+        return `<div class="fiche-lecon${classeAccent || ''}">${html}</div>`;
     }
 
     // ❖ Trois canevas possibles : PARTIE A/B (générique), SITUATION D'ÉVALUATION
