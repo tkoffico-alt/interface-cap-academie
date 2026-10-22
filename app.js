@@ -3205,6 +3205,15 @@ function analyserEvaluation(texteBrut) {
     // des autres canevas (une "SITUATION D'ÉVALUATION" peut n'être qu'un
     // sous-titre à l'intérieur d'un exercice).
     const canevasClassique = (aPartieA && aPartieB) || (aSituation && aQuestions) || (aSujet && aGrille);
+    // ❖ Correctif 22/10/2026 : dans un canevas PARTIE A/B, la PARTIE B
+    // commence souvent par une ligne "Situation d'évaluation : ..." (ou
+    // contient "Questions : ..."). Reconnue comme section du canevas EDHC,
+    // elle coupait la PARTIE B juste après son titre (carte vide). Quand
+    // PARTIE A et B sont présentes, ces libellés ne sont que du contenu.
+    if (aPartieA && aPartieB) {
+        occurrences = occurrences.filter(o =>
+            !['situation', 'questions', 'sujet', 'grilleCriteres'].includes(o.type));
+    }
     let modeExercices = false;
     if (!canevasClassique) {
         const occCorr = occurrences.find(o => o.type === 'corrige');
