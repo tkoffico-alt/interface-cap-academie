@@ -118,6 +118,20 @@
 <script>
 const API = 'https://api.edukatchat.org/api/essai_enseignant';
 let texteBrut = '';
+// Interroge le résultat toutes les 3 s ; tolère les coupures réseau passagères
+// (la génération continue côté serveur). Abandon après ~4 minutes.
+async function attendreResultat(id){
+  const fin = Date.now() + 240000;
+  while(Date.now() < fin){
+    await new Promise(res => setTimeout(res, 3000));
+    try{
+      const r = await fetch(API + '/resultat?id=' + encodeURIComponent(id));
+      const d = await r.json();
+      if(d.status !== 'en_cours') return d;
+    }catch(_){ /* réseau coupé : on réessaie */ }
+  }
+  return {status:'error', message:'La génération prend plus de temps que prévu. Réessayez dans un instant.'};
+}
 async function generer(){
   const btn = document.getElementById('btn'), err = document.getElementById('erreur');
   err.textContent = '';
@@ -146,30 +160,50 @@ async function generer(){
     try{ d = await r.json(); }
     catch(_){
       console.error('Essai gratuit : réponse non JSON, HTTP', r.status);
-      err.textContent = (r.status === 502 || r.status === 504 || r.status === 524)
-        ? 'La génération a pris trop de temps. Réessayez dans un instant (votre essai n’est pas consommé).'
-        : 'Le service rencontre un souci passager (code ' + r.status + '). Réessayez dans quelques minutes.';
+      err.textContent = 'Le service rencontre un souci passager (code ' + r.status + '). Réessayez dans quelques minutes.';
       btn.disabled = false; btn.textContent = 'Générer gratuitement';
       return;
     }
+    if(d.status === 'en_cours'){
+      try{ localStorage.setItem('essai_job', d.id); }catch(_){}
+      d = await attendreResultat(d.id);
+    }
     if(d.status === 'success'){
-      texteBrut = d.texte;
-      const zone = document.getElementById('resultat');
-      // Même chemin que l'Espace Enseignant : Forge = fiche stylée, Atelier = évaluation stylée.
-      afficherReponseAvecFondu(zone, d.texte, true, false, d.type === 'fiche' ? 'forge' : (d.type === 'fiche_primaire' ? 'forge_primaire' : 'atelier'));
-      document.getElementById('zoneResultat').classList.remove('cache');
-      document.getElementById('cta').classList.remove('cache');
-      document.getElementById('formulaire').classList.add('cache');
-      document.getElementById('zoneResultat').scrollIntoView({behavior:'smooth'});
+      afficherSucces(d);
     } else {
+      try{ localStorage.removeItem('essai_job'); }catch(_){}
       err.textContent = d.message || 'Une erreur est survenue.';
       if(d.status === 'limite') document.getElementById('cta').classList.remove('cache');
     }
   }catch(e){
+    // Le POST a peut-être abouti : l'identifiant n'est connu que s'il a été reçu.
     err.textContent = 'Connexion impossible. Vérifiez votre réseau et réessayez.';
   }
   btn.disabled = false; btn.textContent = 'Générer gratuitement';
 }
+function afficherSucces(d){
+  try{ localStorage.removeItem('essai_job'); }catch(_){}
+  texteBrut = d.texte;
+  const zone = document.getElementById('resultat');
+  // Même chemin que l'Espace Enseignant : Forge = fiche stylée, Atelier = évaluation stylée.
+  afficherReponseAvecFondu(zone, d.texte, true, false, d.type === 'fiche' ? 'forge' : (d.type === 'fiche_primaire' ? 'forge_primaire' : 'atelier'));
+  document.getElementById('zoneResultat').classList.remove('cache');
+  document.getElementById('cta').classList.remove('cache');
+  document.getElementById('formulaire').classList.add('cache');
+  document.getElementById('zoneResultat').scrollIntoView({behavior:'smooth'});
+}
+// Reprise après rechargement ou retour sur la page : on récupère le résultat en cours.
+window.addEventListener('load', async () => {
+  let id = null;
+  try{ id = localStorage.getItem('essai_job'); }catch(_){}
+  if(!id) return;
+  const btn = document.getElementById('btn'), err = document.getElementById('erreur');
+  btn.disabled = true; btn.textContent = 'Récupération de votre document…';
+  const d = await attendreResultat(id);
+  if(d.status === 'success') afficherSucces(d);
+  else { try{ localStorage.removeItem('essai_job'); }catch(_){}; err.textContent = d.message || ''; }
+  btn.disabled = false; btn.textContent = 'Générer gratuitement';
+});
 function majCategorie(){
   const instit = document.querySelector('input[name=cat]:checked').value === 'instit';
   document.getElementById('bloc-prof').classList.toggle('cache', instit);
