@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Merci — Votre Code d'accès EdukaTchat</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;background:#f1f5f9;margin:0;padding:1.5rem;color:#0f172a}
+  .boite{max-width:480px;margin:2rem auto;background:#fff;border-radius:16px;padding:2rem 1.5rem;box-shadow:0 8px 30px rgba(0,0,0,.08);text-align:center}
+  h1{font-size:1.3rem;margin:0 0 .5rem}
+  p{line-height:1.5;color:#334155}
+  .code{font-size:2rem;font-weight:800;letter-spacing:.08em;background:#ecfdf5;color:#047857;border:2px dashed #10b981;border-radius:12px;padding:1rem;margin:1.2rem 0;user-select:all}
+  button,a.btn{display:inline-block;background:#3b82f6;color:#fff;border:0;border-radius:10px;padding:.75rem 1.2rem;font-size:1rem;cursor:pointer;text-decoration:none;margin:.3rem}
+  a.btn.vert{background:#10b981}
+  .petit{font-size:.85rem;color:#64748b}
+</style>
+</head>
+<body>
+<div class="boite" id="boite">
+  <h1>⏳ Confirmation de votre paiement…</h1>
+  <p>Merci ! Nous préparons votre Code d'accès. Cela prend quelques secondes.</p>
+</div>
+<script>
+(function(){
+  var API = 'https://api.edukatchat.org/api/paiement/code';
+  var p = new URLSearchParams(location.search);
+  var ref = p.get('reference') || p.get('trxref') || '';
+  var boite = document.getElementById('boite');
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  if(!ref){
+    boite.innerHTML = '<h1>Merci !</h1><p>Votre Code d\'accès vous est envoyé par WhatsApp. Sans nouvelle, écrivez-nous au +225 01 42 67 43 15.</p><a class="btn" href="/">Retour à EdukaTchat</a>';
+    return;
+  }
+  var essais = 0;
+  function afficher(sceau, fin){
+    var esp = sceau.indexOf('ENS-') === 0 ? 'l\'Espace Enseignant' : 'l\'Espace Élève (Académie / Espace de Préparation)';
+    boite.innerHTML = '<h1>✅ Paiement confirmé — merci !</h1>' +
+      '<p>Voici votre Code d\'accès :</p><div class="code" id="code">' + esc(sceau) + '</div>' +
+      '<button id="copier">Copier le code</button>' +
+      '<p>Valable jusqu\'au <b>' + esc(fin) + '</b>.<br>Entrez-le dans ' + esc(esp) + ' sur EdukaTchat.</p>' +
+      '<a class="btn vert" href="/">Aller sur EdukaTchat</a>' +
+      '<p class="petit">Notez-le bien : il sert aussi de clé pour le Carnet de progression. Il vous est aussi envoyé par WhatsApp.</p>';
+    document.getElementById('copier').onclick = function(){
+      var b = this;
+      (navigator.clipboard ? navigator.clipboard.writeText(sceau) : Promise.reject()).then(function(){b.textContent='Copié ✓';}).catch(function(){b.textContent='Sélectionnez le code ci-dessus';});
+    };
+  }
+  function interroger(){
+    essais++;
+    fetch(API + '?reference=' + encodeURIComponent(ref)).then(function(r){return r.json();}).then(function(d){
+      if(d.status === 'success'){ afficher(d.sceau, d.date_fin); return; }
+      if(d.status === 'error'){ fin(); return; }
+      if(essais < 20){ setTimeout(interroger, 3000); } else { fin(); }
+    }).catch(function(){ if(essais < 20){ setTimeout(interroger, 3000); } else { fin(); } });
+  }
+  function fin(){
+    boite.innerHTML = '<h1>Paiement reçu — merci !</h1><p>Votre Code d\'accès est en cours d\'envoi par WhatsApp. S\'il n\'arrive pas dans quelques minutes, écrivez-nous au +225 01 42 67 43 15 en indiquant votre numéro.</p><a class="btn" href="/">Retour à EdukaTchat</a>';
+  }
+  interroger();
+})();
+</script>
+</body>
+</html>
