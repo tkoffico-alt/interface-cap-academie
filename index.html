@@ -1535,6 +1535,7 @@
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
                         <button type="button" class="btn-suggestion" data-outil="forge" data-message="Je veux créer une nouvelle fiche de leçon, aide-moi à cadrer matière, classe et chapitre.">📖 Nouvelle fiche de leçon</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide" data-outil="forge" onclick="ouvrirFormulaireGuide('forge')" title="Renseigner durée, matériel… pour obtenir exactement la fiche voulue">📋 Formulaire guidé</button>
                         <button type="button" class="btn-suggestion" data-outil="forge" data-message="Ajoute des activités ou exercices d'application à la dernière fiche.">🧩 Ajouter des activités</button>
                         <button type="button" class="btn-suggestion" data-outil="forge" data-message="Actualise l'entête de la dernière fiche (identification, objectifs, prérequis).">🔖 Actualiser l'entête</button>
                     </div>
@@ -1670,7 +1671,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.5"></script>
+    <script src="app.js?v=3.6"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->

@@ -52,8 +52,8 @@
     <div id="bloc-prof">
     <label>Que voulez-vous générer ?</label>
     <div class="choix">
-      <label><input type="radio" name="type" value="fiche" checked>Fiche de leçon</label>
-      <label><input type="radio" name="type" value="evaluation">Évaluation</label>
+      <label><input type="radio" name="type" value="fiche" checked onchange="majType()">Fiche de leçon</label>
+      <label><input type="radio" name="type" value="evaluation" onchange="majType()">Évaluation</label>
     </div>
     <label for="discipline">Discipline</label>
     <select id="discipline">
@@ -69,6 +69,28 @@
     </select>
     <label for="theme">Thème / titre de la leçon</label>
     <input id="theme" maxlength="150" placeholder="Ex. Le théorème de Thalès">
+    <div id="options-fiche">
+      <p class="petit" style="margin-top:14px"><strong>Précisions (facultatif)</strong> — rien n'est obligatoire ; ce que vous indiquez sera respecté.</p>
+      <label for="f-duree">Durée de la séance</label>
+      <input id="f-duree" maxlength="30" placeholder="Ex. 55 min">
+      <label for="f-materiel">Matériel disponible</label>
+      <input id="f-materiel" maxlength="150" placeholder="Ex. tableau, règle, pas de vidéoprojecteur">
+      <label for="f-consigne">Autre demande</label>
+      <input id="f-consigne" maxlength="200" placeholder="Ex. beaucoup d'exercices d'application">
+    </div>
+    <div id="options-eval" class="cache">
+      <p class="petit" style="margin-top:14px"><strong>Précisions (facultatif)</strong> — rien n'est obligatoire ; ce que vous indiquez sera respecté.</p>
+      <label for="e-format">Type d'évaluation</label>
+      <select id="e-format"><option value="">Au choix d'EdukaTchat</option><option>Devoir de niveau</option><option>Composition</option><option>Interrogation écrite</option><option>Format officiel BEPC</option><option>Format officiel BAC</option></select>
+      <label for="e-duree">Durée</label>
+      <input id="e-duree" maxlength="30" placeholder="Ex. 2 h">
+      <label for="e-nb">Nombre d'exercices</label>
+      <select id="e-nb"><option value="">Au choix</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <label for="e-bareme">Répartition des points</label>
+      <input id="e-bareme" maxlength="100" placeholder="Ex. Partie A sur 8 points, Partie B sur 12 points">
+      <label for="e-consigne">Autre demande</label>
+      <input id="e-consigne" maxlength="200" placeholder="Ex. inclure un QCM">
+    </div>
     </div>
 
     <div id="bloc-instit" class="cache">
@@ -87,6 +109,10 @@
       <div style="flex:1"><label for="p-semaine">Semaine (facultatif)</label><input id="p-semaine" inputmode="numeric" maxlength="2" placeholder="Ex. 2"></div>
       <div style="flex:1"><label for="p-jour">Jour (facultatif)</label><input id="p-jour" inputmode="numeric" maxlength="1" placeholder="Ex. 1"></div>
     </div>
+    <label for="p-duree">Durée de la séance (facultatif)</label>
+    <input id="p-duree" maxlength="30" placeholder="Ex. 45 min">
+    <label for="p-consigne">Autre demande (facultatif)</label>
+    <input id="p-consigne" maxlength="200" placeholder="Ex. prévoir un travail en petits groupes">
     <p class="petit">Une fiche de leçon primaire par semaine (canevas PNAPAS pour CP1–CE2, APC pour CM1–CM2).</p>
     </div>
     <button class="btn-principal" id="btn" onclick="generer()">Générer gratuitement</button>
@@ -114,7 +140,7 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-<script src="app.js?v=3.5"></script>
+<script src="app.js?v=3.6"></script>
 <script>
 const API = 'https://api.edukatchat.org/api/essai_enseignant';
 let texteBrut = '';
@@ -144,7 +170,9 @@ async function generer(){
     niveau: document.getElementById('p-classe').value,
     theme: document.getElementById('p-theme').value,
     semaine: document.getElementById('p-semaine').value,
-    jour: document.getElementById('p-jour').value
+    jour: document.getElementById('p-jour').value,
+    duree: document.getElementById('p-duree').value,
+    consigne: document.getElementById('p-consigne').value
   } : {
     nom: document.getElementById('nom').value,
     telephone: document.getElementById('tel').value,
@@ -153,6 +181,19 @@ async function generer(){
     niveau: document.getElementById('niveau').value,
     theme: document.getElementById('theme').value
   };
+  if(!instit){
+    if(corps.type === 'fiche'){
+      corps.duree = document.getElementById('f-duree').value;
+      corps.materiel = document.getElementById('f-materiel').value;
+      corps.consigne = document.getElementById('f-consigne').value;
+    } else {
+      corps.format = document.getElementById('e-format').value;
+      corps.duree = document.getElementById('e-duree').value;
+      corps.nb_exercices = document.getElementById('e-nb').value;
+      corps.bareme = document.getElementById('e-bareme').value;
+      corps.consigne = document.getElementById('e-consigne').value;
+    }
+  }
   btn.disabled = true; btn.textContent = 'Génération en cours… (30 à 60 secondes)';
   try{
     const r = await fetch(API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(corps)});
@@ -204,6 +245,11 @@ window.addEventListener('load', async () => {
   else { try{ localStorage.removeItem('essai_job'); }catch(_){}; err.textContent = d.message || ''; }
   btn.disabled = false; btn.textContent = 'Générer gratuitement';
 });
+function majType(){
+  const eval_ = document.querySelector('input[name=type]:checked').value === 'evaluation';
+  document.getElementById('options-fiche').classList.toggle('cache', eval_);
+  document.getElementById('options-eval').classList.toggle('cache', !eval_);
+}
 function majCategorie(){
   const instit = document.querySelector('input[name=cat]:checked').value === 'instit';
   document.getElementById('bloc-prof').classList.toggle('cache', instit);

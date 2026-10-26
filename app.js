@@ -41,6 +41,7 @@ const MESSAGES_AMORCAGE_ENSEIGNANT = {
 document.addEventListener('click', function (evenement) {
     const bouton = evenement.target.closest('.btn-suggestion');
     if (!bouton) return;
+    if (bouton.classList.contains('btn-formulaire-guide')) return; // ouvre son propre panneau (ouvrirFormulaireGuide)
     const outil = bouton.dataset.outil || 'sas';
     if (outil === 'sas') {
         sasPremierEchangeEnAttente = false;
@@ -109,6 +110,109 @@ document.addEventListener('click', function (evenement) {
         }
     }
 });
+
+// =======================================================================
+// ❖ LE FORMULAIRE GUIDÉ (Forge secondaire) -- 26/10/2026 ❖
+// =======================================================================
+// Un panneau facultatif à côté des suggestions rapides : l'enseignant renseigne
+// matière, classe, thème, durée, matériel… et le formulaire compose la même
+// demande qu'il aurait tapée (« Fiche de leçon — Matière : … ») avec, en plus,
+// « Précisions de l'enseignant (à respecter à la lettre) : … » que le prompt de
+// la Forge sait lire. Aucun champ n'est obligatoire sauf matière, classe, thème.
+const FORMULAIRE_GUIDE = {
+    forge: {
+        titre: "Formulaire guidé — Fiche de leçon",
+        champs: [
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Mathématiques','Physique-Chimie','SVT','Français','Histoire-Géographie','Anglais','Espagnol','Allemand','Philosophie','EDHC','TICE','Éducation Musicale','Arts Plastiques']},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['6ème','5ème','4ème','3ème','2nde','1ère','Terminale']},
+            {id: 'theme', lib: 'Chapitre / thème de la leçon', type: 'text', obligatoire: true, ph: 'Ex. Le théorème de Thalès'},
+            {id: 'duree', lib: 'Durée de la séance (facultatif)', type: 'text', ph: 'Ex. 55 min', precision: 'Durée de la séance'},
+            {id: 'materiel', lib: 'Matériel disponible (facultatif)', type: 'text', ph: 'Ex. tableau, règle, pas de vidéoprojecteur', precision: 'Matériel disponible'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: "Ex. beaucoup d'exercices d'application", precision: 'Autre demande'}
+        ],
+        entete: (v) => `Fiche de leçon — Matière : ${v.matiere} ; Classe : ${v.classe} ; Chapitre/Thème : ${v.theme}`
+    }
+};
+
+function fermerFormulaireGuide() {
+    const m = document.getElementById('formulaire-guide-overlay');
+    if (m) m.remove();
+}
+
+function ouvrirFormulaireGuide(outil) {
+    const def = FORMULAIRE_GUIDE[outil];
+    if (!def) return;
+    fermerFormulaireGuide();
+    const ov = document.createElement('div');
+    ov.id = 'formulaire-guide-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+    const carte = document.createElement('div');
+    carte.style.cssText = 'background:#fff;color:#0f172a;border-radius:14px;padding:18px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.3);';
+    const h = document.createElement('h3');
+    h.textContent = def.titre;
+    h.style.cssText = 'margin:0 0 4px;font-size:1.15rem;';
+    carte.appendChild(h);
+    const note = document.createElement('p');
+    note.textContent = "Seuls matière, classe et thème sont nécessaires. Ce que vous précisez en plus sera respecté.";
+    note.style.cssText = 'margin:0 0 6px;font-size:.85rem;color:#475569;';
+    carte.appendChild(note);
+    def.champs.forEach(c => {
+        const l = document.createElement('label');
+        l.textContent = c.lib;
+        l.htmlFor = 'fg-' + c.id;
+        l.style.cssText = 'display:block;font-weight:600;font-size:.88rem;margin:10px 0 3px;';
+        carte.appendChild(l);
+        let el;
+        if (c.type === 'select') {
+            el = document.createElement('select');
+            c.options.forEach(o => { const op = document.createElement('option'); op.textContent = o; el.appendChild(op); });
+        } else {
+            el = document.createElement('input');
+            el.type = 'text';
+            el.maxLength = 200;
+            el.placeholder = c.ph || '';
+        }
+        el.id = 'fg-' + c.id;
+        el.style.cssText = 'width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem;background:#fff;color:#0f172a;box-sizing:border-box;';
+        carte.appendChild(el);
+    });
+    const err = document.createElement('div');
+    err.style.cssText = 'color:#b91c1c;font-size:.88rem;margin-top:8px;min-height:1em;';
+    carte.appendChild(err);
+    const barre = document.createElement('div');
+    barre.style.cssText = 'display:flex;gap:10px;margin-top:12px;';
+    const annuler = document.createElement('button');
+    annuler.type = 'button';
+    annuler.textContent = 'Annuler';
+    annuler.style.cssText = 'flex:1;padding:11px;border:0;border-radius:9px;background:#e2e8f0;color:#0f172a;font-weight:600;cursor:pointer;';
+    annuler.onclick = fermerFormulaireGuide;
+    const ok = document.createElement('button');
+    ok.type = 'button';
+    ok.textContent = 'Générer';
+    ok.style.cssText = 'flex:2;padding:11px;border:0;border-radius:9px;background:#3B82F6;color:#fff;font-weight:700;cursor:pointer;';
+    ok.onclick = () => {
+        const v = {};
+        def.champs.forEach(c => { v[c.id] = (document.getElementById('fg-' + c.id).value || '').replace(/[\[\]{}<>`]/g, '').replace(/\s+/g, ' ').trim(); });
+        if (v.theme.length < 3) { err.textContent = "Merci d'indiquer le chapitre ou le thème de la leçon."; return; }
+        const precisions = def.champs.filter(c => c.precision && v[c.id]).map(c => `${c.precision} : ${v[c.id]}`).join(' ; ');
+        const message = def.entete(v) + (precisions ? `. Précisions de l'enseignant (à respecter à la lettre) : ${precisions}.` : '');
+        const champ = document.getElementById(`${outil}-user-input`);
+        if (!champ || champ.disabled) { fermerFormulaireGuide(); return; }
+        outilsDejaAmorces.add(outil);
+        reinitialiserConversationEnseignant(outil);
+        champ.value = message;
+        fermerFormulaireGuide();
+        sendTeacherMessage(outil, "");
+    };
+    barre.appendChild(annuler);
+    barre.appendChild(ok);
+    carte.appendChild(barre);
+    ov.appendChild(carte);
+    ov.addEventListener('click', e => { if (e.target === ov) fermerFormulaireGuide(); });
+    document.body.appendChild(ov);
+    const premier = document.getElementById('fg-theme');
+    if (premier) premier.focus();
+}
 
 // =======================================================================
 // ❖ LA GESTION DES ESPACES ET DE L'AIGUILLAGE ❖
