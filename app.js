@@ -131,6 +131,22 @@ const FORMULAIRE_GUIDE = {
             {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: "Ex. beaucoup d'exercices d'application", precision: 'Autre demande'}
         ],
         entete: (v) => `Fiche de leçon — Matière : ${v.matiere} ; Classe : ${v.classe} ; Chapitre/Thème : ${v.theme}`
+    },
+    atelier: {
+        titre: "Formulaire guidé — Évaluation",
+        champs: [
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Mathématiques','Physique-Chimie','SVT','Français','Histoire-Géographie','Anglais','Espagnol','Allemand','Philosophie','EDHC','TICE']},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['6ème','5ème','4ème','3ème','2nde','1ère','Terminale']},
+            {id: 'theme', lib: 'Chapitres / notions évalués', type: 'text', obligatoire: true, ph: 'Ex. Le théorème de Pythagore et sa réciproque'},
+            {id: 'format', lib: "Type d'évaluation (facultatif)", type: 'select', options: ["Au choix d'EdukaTchat",'Devoir de niveau','Composition','Interrogation écrite','Format officiel BEPC','Format officiel BAC'], precision: "Type d'évaluation"},
+            {id: 'duree', lib: 'Durée (facultatif)', type: 'text', ph: 'Ex. 2 h', precision: 'Durée'},
+            {id: 'nb', lib: "Nombre d'exercices (facultatif)", type: 'select', options: ['Au choix','2','3','4','5'], precision: "Nombre d'exercices"},
+            {id: 'bareme', lib: 'Répartition des points (facultatif)', type: 'text', ph: 'Ex. Partie A sur 8 points, Partie B sur 12 points', precision: 'Répartition des points'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: 'Ex. inclure un QCM', precision: 'Autre demande'}
+        ],
+        entete: (v) => /officiel/i.test(v.format)
+            ? `Épreuve type BEPC/BAC au format officiel — Matière : ${v.matiere} ; Classe : ${v.classe} ; Chapitres/notions : ${v.theme}` + (v.duree ? ` ; Durée : ${v.duree}` : '')
+            : `Crée une évaluation de ${v.matiere} pour la classe de ${v.classe} sur le thème : ${v.theme}`
     }
 };
 
@@ -193,6 +209,8 @@ function ouvrirFormulaireGuide(outil) {
     ok.onclick = () => {
         const v = {};
         def.champs.forEach(c => { v[c.id] = (document.getElementById('fg-' + c.id).value || '').replace(/[\[\]{}<>`]/g, '').replace(/\s+/g, ' ').trim(); });
+        if (/^Au choix/i.test(v.format || '')) v.format = '';
+        if (/^Au choix/i.test(v.nb || '')) v.nb = '';
         if (v.theme.length < 3) { err.textContent = "Merci d'indiquer le chapitre ou le thème de la leçon."; return; }
         const precisions = def.champs.filter(c => c.precision && v[c.id]).map(c => `${c.precision} : ${v[c.id]}`).join(' ; ');
         const message = def.entete(v) + (precisions ? `. Précisions de l'enseignant (à respecter à la lettre) : ${precisions}.` : '');
