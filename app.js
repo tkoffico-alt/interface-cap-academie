@@ -3343,7 +3343,11 @@ function analyserEvaluation(texteBrut) {
     // PARTIE A et B sont présentes, ces libellés ne sont que du contenu.
     if (aPartieA && aPartieB) {
         occurrences = occurrences.filter(o =>
-            !['situation', 'questions', 'sujet', 'grilleCriteres'].includes(o.type));
+            !['situation', 'questions', 'sujet', 'grilleCriteres', 'exercice'].includes(o.type));
+        // ❖ Correctif 26/10/2026 : avec un nombre d'exercices demandé (formulaire guidé),
+        // la PARTIE A s'écrit « PARTIE A … / EXERCICE 1 / Question 1… ». L'intitulé
+        // « EXERCICE 1 » coupait la PARTIE A juste après son titre (carte vide, énoncé
+        // perdu). Dans un canevas PARTIE A/B, « EXERCICE n » n'est que du contenu.
     }
     let modeExercices = false;
     if (!canevasClassique) {
