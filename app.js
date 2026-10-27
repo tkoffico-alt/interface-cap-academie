@@ -4049,6 +4049,38 @@ function reinjecterQuiz(html, jetons) {
     return resultat;
 }
 
+// ❖ RÉSULTATS D'ÉVALUATION TRANSMIS AU BILAN (27/10/2026) ❖
+// L'agent ne voit pas les clics sur les cartes de quiz (ils restent dans le
+// navigateur) : sans ce relais, il notait le bilan sur la seule conversation
+// écrite (18/20 alors que le quiz donnait 1/5). On compte donc ici les
+// résultats par matière et on les joint au message de fin de session / de
+// demande de bilan.
+function cleResultatsEval(avatar) { return 'eduka_resultats_eval_' + (avatar || 'general'); }
+function enregistrerResultatEvaluation(type, juste, avatar) {
+    try {
+        const cle = cleResultatsEval(avatar);
+        const etat = JSON.parse(localStorage.getItem(cle) || '{}');
+        const e = etat[type] || { juste: 0, total: 0 };
+        e.total += 1;
+        if (juste) e.juste += 1;
+        etat[type] = e;
+        localStorage.setItem(cle, JSON.stringify(etat));
+    } catch (err) {}
+}
+function resumeResultatsEvaluations(avatar) {
+    try {
+        const etat = JSON.parse(localStorage.getItem(cleResultatsEval(avatar)) || '{}');
+        const noms = { quiz: 'Quiz' };
+        const parties = Object.keys(etat).filter(k => etat[k] && etat[k].total > 0)
+            .map(k => (noms[k] || k) + ' : ' + etat[k].juste + ' bonne(s) réponse(s) sur ' + etat[k].total);
+        if (!parties.length) return '\n[RÉSULTATS ÉVALUÉS DE LA SESSION : aucun quiz répondu sur l\'application]';
+        return '\n[RÉSULTATS ÉVALUÉS DE LA SESSION : ' + parties.join(' ; ') + ']';
+    } catch (err) { return ''; }
+}
+function reinitialiserResultatsEvaluations(avatar) {
+    try { localStorage.removeItem(cleResultatsEval(avatar)); } catch (err) {}
+}
+
 function repondreQuiz(bouton) {
     const carte = bouton.closest('.quiz-carte');
     if (!carte || carte.classList.contains('quiz-repondu')) return;
@@ -4065,6 +4097,7 @@ function repondreQuiz(bouton) {
     retour.textContent = (choix === bonne) ? 'Bravo, bonne réponse !' : 'Pas tout à fait. La bonne réponse est en vert.';
     retour.classList.add(choix === bonne ? 'quiz-retour-juste' : 'quiz-retour-faux');
     retour.style.display = 'block';
+    enregistrerResultatEvaluation('quiz', choix === bonne, (typeof avatarActif !== 'undefined') ? avatarActif : 'general');
     const expl = carte.querySelector('.quiz-explication');
     if (expl && expl.textContent.trim()) expl.style.display = 'block';
     const historique = carte.closest('[id$="-chat-history"]');
@@ -4254,6 +4287,7 @@ function nouvelleSessionSas() {
 
     if (aEchange) {
         declencherClotureAutomatiqueSas('nouvelle_session'); // envoie le rapport avec l'ancien conversation_id
+        reinitialiserResultatsEvaluations(avatarActif);
         archiverSessionSas(avatarActif, chatHistory.innerHTML);
     }
     sasConversationIds[avatarActif] = '';
@@ -4955,7 +4989,7 @@ function verifierRattrapageClotureSas() {
 
     try {
         const payload = JSON.stringify({
-            query: SENTINEL_FIN_SESSION_SAS,
+            query: SENTINEL_FIN_SESSION_SAS + resumeResultatsEvaluations(etat.avatar || 'general'),
             conversation_id: etat.conversation_id || "",
             matricule: etat.matricule,
             avatar: etat.avatar || "general",
@@ -4985,7 +5019,7 @@ function declencherClotureAutomatiqueSas(raison) {
 
     try {
         const payload = JSON.stringify({
-            query: SENTINEL_FIN_SESSION_SAS,
+            query: SENTINEL_FIN_SESSION_SAS + resumeResultatsEvaluations(avatarActif),
             conversation_id: sasConversationIds[avatarActif] || "",
             matricule: sceau,
             avatar: avatarActif,
@@ -4994,6 +5028,7 @@ function declencherClotureAutomatiqueSas(raison) {
             methode_travail: (typeof methodeTravailActive !== 'undefined') ? methodeTravailActive : "",
             gestion_stress: (typeof gestionStressActive !== 'undefined') ? gestionStressActive : ""
         });
+        reinitialiserResultatsEvaluations(avatarActif); // le score est parti avec la clôture
 
         // fetch({keepalive:true}) plutôt que sendBeacon : autorise un
         // Content-Type JSON explicite tout en survivant à la fermeture
@@ -5302,7 +5337,7 @@ async function sendSasMessage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                query: message,
+                query: message + (/bilan|termine (la|cette) session|fin de (la |cette )?session/i.test(message) ? resumeResultatsEvaluations(avatarActif) : ''),
                 conversation_id: sasConversationIds[avatarActif] || "",
                 matricule: sceau,
                 avatar: avatarActif,
