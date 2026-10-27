@@ -139,7 +139,7 @@ const FORMULAIRE_GUIDE = {
             {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['CP1','CP2','CE1','CE2','CM1','CM2']},
             {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Français','Mathématiques','EDHC','Histoire-Géographie','Sciences','Arts plastiques','Éducation musicale','EPS','Autre (précisée dans le thème)']},
             {id: 'theme', lib: 'Leçon / thème', type: 'text', obligatoire: true, ph: 'Ex. Lecture : le texte « … » ; ou Grammaire : le verbe'},
-            {id: 'semaine', lib: 'Semaine et jour de la progression (facultatif)', type: 'text', ph: 'Ex. Semaine 2, Jour 1', precision: 'Semaine et jour de la progression'},
+            {id: 'semaine', lib: 'Semaine et jour de la progression (facultatif — la leçon sera vérifiée avec la progression officielle)', type: 'text', ph: 'Ex. Semaine 2, Jour 1', precision: 'Semaine et jour de la progression'},
             {id: 'duree', lib: 'Durée de la séance (facultatif)', type: 'text', ph: 'Ex. 40 min', precision: 'Durée de la séance'},
             {id: 'materiel', lib: 'Matériel disponible (facultatif)', type: 'text', ph: 'Ex. ardoises, bûchettes, pas de vidéoprojecteur', precision: 'Matériel disponible'},
             {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: "Ex. beaucoup d'exercices d'application", precision: 'Autre demande'}
@@ -291,7 +291,7 @@ function ouvrirFormulaireGuide(outil) {
     ok.style.cssText = 'flex:2;padding:11px;border:0;border-radius:9px;background:#3B82F6;color:#fff;font-weight:700;cursor:pointer;';
     ok.onclick = () => {
         const v = {};
-        def.champs.forEach(c => { v[c.id] = (document.getElementById('fg-' + c.id).value || '').replace(/[\[\]{}<>`]/g, '').replace(/\s+/g, ' ').trim(); });
+        def.champs.forEach(c => { v[c.id] = (document.getElementById('fg-' + c.id).value || '').replace(/[\[\]{}<>`]/g, '').replace(/\s+/g, ' ').trim().replace(/[\s,;.]+$/, ''); });
         if (/^Au choix/i.test(v.format || '')) v.format = '';
         if (/^Au choix/i.test(v.nb || '')) v.nb = '';
         const manquant = def.champs.find(c => c.obligatoire && c.type === 'text' && (v[c.id] || '').length < 3)
