@@ -1658,6 +1658,45 @@
                     </div>
                 </div>
             </div>
+            <!-- SAS DES ATELIERS (27/10/2026) : affiché après le choix Professeur/Instituteur.
+                 Aucun atelier n'est lancé (donc aucun jeton consommé) tant que l'enseignant
+                 n'a pas choisi celui où il veut entrer. -->
+            <div id="teacher-atelier-chooser" class="categorie-chooser-grid" style="display: none;">
+                <div id="sas-ateliers-professeur" class="sas-ateliers-groupe">
+                    <div class="categorie-card sas-atelier-card sas-atelier-evaluations" onclick="switchTeacherTool('atelier')">
+                        <div class="sas-atelier-icone">❖</div>
+                        <h3>Évaluations</h3>
+                        <p>Créer devoirs, compositions et épreuves, corriger des copies.</p>
+                        <span class="sas-atelier-entrer">Entrer →</span>
+                    </div>
+                    <div class="categorie-card sas-atelier-card sas-atelier-lecons" onclick="switchTeacherTool('forge')">
+                        <div class="sas-atelier-icone">✦</div>
+                        <h3>Leçons</h3>
+                        <p>Préparer vos fiches de leçon et vos exercices.</p>
+                        <span class="sas-atelier-entrer">Entrer →</span>
+                    </div>
+                    <div class="categorie-card sas-atelier-card sas-atelier-cabinet" onclick="switchTeacherTool('cabinet')">
+                        <div class="sas-atelier-icone">⚜</div>
+                        <h3>Cabinet</h3>
+                        <p>Conseil pédagogique, situations-problèmes, élèves en difficulté.</p>
+                        <span class="sas-atelier-entrer">Entrer →</span>
+                    </div>
+                </div>
+                <div id="sas-ateliers-instituteur" class="sas-ateliers-groupe">
+                    <div class="categorie-card sas-atelier-card sas-atelier-vert" onclick="switchTeacherTool('forge_primaire')">
+                        <div class="sas-atelier-icone">🌱</div>
+                        <h3>Leçons</h3>
+                        <p>Préparer vos fiches de séance et d'évaluation (CP1 à CM2).</p>
+                        <span class="sas-atelier-entrer">Entrer →</span>
+                    </div>
+                    <div class="categorie-card sas-atelier-card sas-atelier-vert" onclick="switchTeacherTool('cabinet_primaire')">
+                        <div class="sas-atelier-icone">🌱</div>
+                        <h3>Cabinet</h3>
+                        <p>Élève en difficulté, conseil pédagogique, gestion de classe.</p>
+                        <span class="sas-atelier-entrer">Entrer →</span>
+                    </div>
+                </div>
+            </div>
             <!-- Sas -->
             <div id="container-sas-custom" class="custom-chat-container">
                 <div id="banniere-matiere" class="banniere-matiere">
@@ -1886,7 +1925,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.15"></script>
+    <script src="app.js?v=3.16"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->
