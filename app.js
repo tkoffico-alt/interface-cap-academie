@@ -679,6 +679,69 @@ async function payerAbonnementEnseignant() {
     if (!ok) bouton.disabled = false;
 }
 
+// ❖ RELECTURE DU PLANNING PAR LE PARENT AVANT PAIEMENT (27/10/2026) ❖
+function preAboAfficherRelecture(creneaux) {
+    const zone = document.getElementById('pre-abo-relecture');
+    const lignes = document.getElementById('pre-abo-lignes');
+    if (!zone || !lignes) return;
+    lignes.innerHTML = creneaux.map(planningLigneHTML).join('');
+    zone.style.display = 'block';
+}
+function preAboAjouterLigne() {
+    const lignes = document.getElementById('pre-abo-lignes');
+    if (lignes) lignes.insertAdjacentHTML('beforeend', planningLigneHTML({ jour: 'lundi', heure_debut: '', heure_fin: '', matiere: '' }));
+}
+function preAboReprendrePhoto() {
+    const zone = document.getElementById('pre-abo-relecture');
+    if (zone) zone.style.display = 'none';
+    const input = document.getElementById('pre-abo-photo-input');
+    if (input) input.value = '';
+    const feedback = document.getElementById('pre-abo-feedback');
+    if (feedback) { feedback.textContent = 'Choisissez une autre photo, plus nette si possible.'; feedback.style.color = '#F59E0B'; }
+}
+async function preAboValiderEtPayer() {
+    const telephone = document.getElementById('pre-abo-telephone').value.trim();
+    const nomEleve = document.getElementById('pre-abo-nom-eleve').value.trim();
+    const feedback = document.getElementById('pre-abo-feedback');
+    const bouton = document.getElementById('btn-pre-abo-valider');
+    const creneaux = Array.from(document.querySelectorAll('#pre-abo-lignes .planning-ligne')).map(l => ({
+        jour: l.querySelector('.pl-jour').value,
+        heure_debut: l.querySelector('.pl-debut').value,
+        heure_fin: l.querySelector('.pl-fin').value,
+        matiere: l.querySelector('.pl-matiere').value.trim()
+    })).filter(c => c.matiere);
+    if (!creneaux.length) {
+        feedback.textContent = "Ajoutez au moins un cours avant de continuer.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+    if (bouton) bouton.disabled = true;
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/planning/pre_abonnement_valider', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telephone, nom_eleve: nomEleve, creneaux })
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            feedback.textContent = "✔ Emploi du temps validé. Ouverture du paiement...";
+            feedback.style.color = "#10B981";
+            const mots = nomEleve.split(/\s+/);
+            const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
+            const ok = await ouvrirPaiementAbonnement({ profil: 'eleve', duree, prenom: mots[0], nom: mots.slice(1).join(' ') || mots[0], telephone }, feedback);
+            if (!ok && bouton) bouton.disabled = false;
+        } else {
+            feedback.textContent = data.message || 'Une erreur est survenue.';
+            feedback.style.color = '#F87171';
+            if (bouton) bouton.disabled = false;
+        }
+    } catch (err) {
+        feedback.textContent = 'Le réseau est instable. Réessayez dans un instant.';
+        feedback.style.color = '#F87171';
+        if (bouton) bouton.disabled = false;
+    }
+}
+
 async function envoyerPhotoPreAbonnement() {
     const telephone = document.getElementById('pre-abo-telephone').value.trim();
     const nomEleve = document.getElementById('pre-abo-nom-eleve').value.trim();
@@ -709,6 +772,7 @@ async function envoyerPhotoPreAbonnement() {
     const formulaire = new FormData();
     formulaire.append('telephone', telephone);
     formulaire.append('nom_eleve', nomEleve);
+    formulaire.append('apercu', '1');
     formulaire.append('photo', inputFichier.files[0]);
 
     try {
@@ -718,7 +782,12 @@ async function envoyerPhotoPreAbonnement() {
         });
         const data = await response.json();
 
-        if (data.status === 'success') {
+        if (data.status === 'apercu') {
+            feedback.textContent = data.message;
+            feedback.style.color = "#2563EB";
+            preAboAfficherRelecture(data.creneaux || []);
+            bouton.disabled = false;
+        } else if (data.status === 'success') {
             feedback.textContent = `✔ ${data.message}`;
             feedback.style.color = "#10B981";
             feedback.textContent = "✔ Photo reçue. Ouverture du paiement...";

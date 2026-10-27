@@ -1388,8 +1388,19 @@
                         <option value="semestriel">6 mois — 25 000 FCFA (−17 %)</option>
                         <option value="annuel">12 mois — 48 000 FCFA (−20 %)</option>
                     </select>
-                    <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Envoyer la photo et payer</button>
+                    <p style="margin: 0 0 8px 0; color:#92400E; background:#FEF3C7; border-radius:8px; padding:6px 8px; font-size:0.75em; text-align:left;">📸 Photo nette, bien droite, toute la page visible, sans ombre ni reflet. Vous pourrez corriger avant de payer.</p>
+                    <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Lire la photo</button>
                     <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0 0 10px 0; min-height: 16px;"></p>
+                    <!-- ❖ 27/10/2026 : relecture avant paiement (rempli par app.js) -->
+                    <div id="pre-abo-relecture" style="display:none; text-align:left; margin-bottom:10px;">
+                        <p style="font-size:0.78em; color:#4B5563; margin-bottom:6px;">Voici ce que l'Académie a lu. <strong>Vérifiez chaque ligne</strong> : corrigez le jour, l'heure ou la matière, supprimez une ligne fausse, ajoutez un cours oublié. Le paiement ne s'ouvre qu'après votre validation.</p>
+                        <div id="pre-abo-lignes" style="max-height:240px; overflow-y:auto;"></div>
+                        <button type="button" onclick="preAboAjouterLigne()" style="margin-top:6px; background:#EFF6FF; color:#1D4ED8; border:1px solid #93C5FD; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:0.8em;">+ Ajouter un cours</button>
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+                            <button type="button" id="btn-pre-abo-valider" onclick="preAboValiderEtPayer()" style="flex:2; background:#10B981; color:#fff; border:none; border-radius:8px; padding:10px; font-weight:700; cursor:pointer;">Valider et payer</button>
+                            <button type="button" onclick="preAboReprendrePhoto()" style="flex:1; background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; border-radius:8px; padding:10px; cursor:pointer;">Autre photo</button>
+                        </div>
+                    </div>
                 </div>
                 <button class="btn-retour-etape-abo" onclick="parentAboEtape(2)">← Retour</button>
             </div>
@@ -1793,7 +1804,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.12"></script>
+    <script src="app.js?v=3.13"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->
