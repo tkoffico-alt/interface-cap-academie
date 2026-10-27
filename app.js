@@ -680,17 +680,8 @@ async function payerAbonnementEnseignant() {
 }
 
 // ❖ RELECTURE DU PLANNING PAR LE PARENT AVANT PAIEMENT (27/10/2026) ❖
-function preAboAfficherRelecture(creneaux) {
-    const zone = document.getElementById('pre-abo-relecture');
-    const lignes = document.getElementById('pre-abo-lignes');
-    if (!zone || !lignes) return;
-    lignes.innerHTML = creneaux.map(planningLigneHTML).join('');
-    zone.style.display = 'block';
-}
-function preAboAjouterLigne() {
-    const lignes = document.getElementById('pre-abo-lignes');
-    if (lignes) lignes.insertAdjacentHTML('beforeend', planningLigneHTML({ jour: 'lundi', heure_debut: '', heure_fin: '', matiere: '' }));
-}
+function preAboAfficherRelecture(creneaux) { relectureAfficher('pre-abo', creneaux); }
+function preAboAjouterLigne() { relectureAjouter('pre-abo'); }
 function preAboReprendrePhoto() {
     const zone = document.getElementById('pre-abo-relecture');
     if (zone) zone.style.display = 'none';
@@ -808,7 +799,7 @@ async function envoyerPhotoPreAbonnement() {
 }
 
 // ❖ RELECTURE DU PLANNING AVANT ENREGISTREMENT (27/10/2026) ❖
-const PLANNING_JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const PLANNING_JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 function planningEchapper(t) {
     return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
@@ -816,24 +807,94 @@ function planningLigneHTML(c) {
     const opts = PLANNING_JOURS.map(j => `<option value="${j}"${j === c.jour ? ' selected' : ''}>${j.charAt(0).toUpperCase() + j.slice(1)}</option>`).join('');
     const st = 'padding:5px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.85em;';
     return `<div class="planning-ligne" style="display:flex; gap:4px; align-items:center; margin-bottom:6px;">
-        <select class="pl-jour" style="${st}">${opts}</select>
+        <select class="pl-jour" style="${st}" onchange="relectureRefiltrer(this)">${opts}</select>
         <input class="pl-debut" type="time" value="${planningEchapper(c.heure_debut)}" style="${st} width:92px;">
         <input class="pl-fin" type="time" value="${planningEchapper(c.heure_fin)}" style="${st} width:92px;">
         <input class="pl-matiere" type="text" value="${planningEchapper(c.matiere)}" placeholder="Matière" style="${st} flex:1; min-width:0;">
-        <button type="button" onclick="this.closest('.planning-ligne').remove()" title="Supprimer" style="background:#FEE2E2; color:#B91C1C; border:none; border-radius:6px; padding:5px 8px; cursor:pointer;">✕</button>
+        <button type="button" onclick="relectureSupprimer(this)" title="Supprimer" style="background:#FEE2E2; color:#B91C1C; border:none; border-radius:6px; padding:5px 8px; cursor:pointer;">✕</button>
     </div>`;
 }
-function planningAfficherRelecture(creneaux) {
-    const zone = document.getElementById('planning-relecture');
-    const lignes = document.getElementById('planning-lignes');
+// ❖ 27/10/2026 (v2) : relecture PAR JOUR (onglets) + photo envoyée affichée à côté, agrandissable.
+const RELECTURE_CONFIG = {
+    'planning': { zone: 'planning-relecture', lignes: 'planning-lignes', photo: 'planning-photo-input' },
+    'pre-abo': { zone: 'pre-abo-relecture', lignes: 'pre-abo-lignes', photo: 'pre-abo-photo-input' }
+};
+const relectureJourActif = {};
+const RELECTURE_ABREV = { lundi: 'Lun', mardi: 'Mar', mercredi: 'Mer', jeudi: 'Jeu', vendredi: 'Ven', samedi: 'Sam', dimanche: 'Dim' };
+function relectureAfficher(prefixe, creneaux) {
+    const cfg = RELECTURE_CONFIG[prefixe];
+    const zone = document.getElementById(cfg.zone);
+    const lignes = document.getElementById(cfg.lignes);
     if (!zone || !lignes) return;
+    lignes.dataset.relecture = prefixe;
     lignes.innerHTML = creneaux.map(planningLigneHTML).join('');
+    ['-apercu', '-onglets'].forEach(suf => { const e = document.getElementById(prefixe + suf); if (e) e.remove(); });
+    let htmlPhoto = '';
+    const input = document.getElementById(cfg.photo);
+    if (input && input.files && input.files[0]) {
+        const url = URL.createObjectURL(input.files[0]);
+        htmlPhoto = `<div id="${prefixe}-apercu" style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+            <img src="${url}" alt="Photo envoyée" onclick="relectureAgrandirPhoto(this.src)" style="width:84px; height:84px; object-fit:cover; border-radius:8px; border:2px solid #93C5FD; cursor:zoom-in;">
+            <span style="font-size:0.78em; color:#1E3A8A;">📷 Votre photo. <strong>Touchez-la pour l'agrandir</strong> et comparez avec la liste ci-dessous.</span>
+        </div>`;
+    }
+    lignes.insertAdjacentHTML('beforebegin', htmlPhoto + `<div id="${prefixe}-onglets" style="display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px;"></div>`);
+    const premier = PLANNING_JOURS.find(j => creneaux.some(c => c.jour === j)) || 'lundi';
+    relectureJourActif[prefixe] = premier;
+    relectureRefiltrer(prefixe);
     zone.style.display = 'block';
 }
-function planningAjouterLigne() {
-    const lignes = document.getElementById('planning-lignes');
-    if (lignes) lignes.insertAdjacentHTML('beforeend', planningLigneHTML({ jour: 'lundi', heure_debut: '', heure_fin: '', matiere: '' }));
+function relectureRefiltrer(arg) {
+    const prefixe = (typeof arg === 'string') ? arg : (arg.closest('[data-relecture]') || {dataset: {}}).dataset.relecture;
+    if (!prefixe) return;
+    const lignes = document.getElementById(RELECTURE_CONFIG[prefixe].lignes);
+    const onglets = document.getElementById(prefixe + '-onglets');
+    if (!lignes || !onglets) return;
+    const rangs = Array.from(lignes.querySelectorAll('.planning-ligne'));
+    const compte = {};
+    rangs.forEach(r => { const j = r.querySelector('.pl-jour').value; compte[j] = (compte[j] || 0) + 1; });
+    const actif = relectureJourActif[prefixe] || 'lundi';
+    rangs.forEach(r => { r.style.display = (r.querySelector('.pl-jour').value === actif) ? 'flex' : 'none'; });
+    onglets.innerHTML = PLANNING_JOURS.filter(j => ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].includes(j) || compte[j]).map(j => {
+        const n = compte[j] || 0;
+        const style = (j === actif)
+            ? 'background:#1D4ED8; color:#fff; border:1px solid #1E3A8A;'
+            : 'background:#F1F5F9; color:#334155; border:1px solid #CBD5E1;';
+        return `<button type="button" onclick="relectureChoisirJour('${prefixe}','${j}')" style="${style} border-radius:8px; padding:5px 9px; font-size:0.8em; cursor:pointer; font-weight:600;">${RELECTURE_ABREV[j]} (${n})</button>`;
+    }).join('');
 }
+function relectureChoisirJour(prefixe, jour) {
+    relectureJourActif[prefixe] = jour;
+    relectureRefiltrer(prefixe);
+}
+function relectureSupprimer(bouton) {
+    const ligne = bouton.closest('.planning-ligne');
+    const zone = bouton.closest('[data-relecture]');
+    const prefixe = zone ? zone.dataset.relecture : null;
+    if (ligne) ligne.remove();
+    if (prefixe) relectureRefiltrer(prefixe);
+}
+function relectureAjouter(prefixe) {
+    const lignes = document.getElementById(RELECTURE_CONFIG[prefixe].lignes);
+    if (!lignes) return;
+    lignes.insertAdjacentHTML('beforeend', planningLigneHTML({ jour: relectureJourActif[prefixe] || 'lundi', heure_debut: '', heure_fin: '', matiere: '' }));
+    relectureRefiltrer(prefixe);
+}
+function relectureAgrandirPhoto(src) {
+    let o = document.getElementById('relecture-photo-overlay');
+    if (!o) {
+        o = document.createElement('div');
+        o.id = 'relecture-photo-overlay';
+        o.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2147483000; display:flex; align-items:center; justify-content:center; padding:12px; cursor:zoom-out;';
+        o.onclick = () => { o.style.display = 'none'; };
+        o.innerHTML = '<img alt="Photo agrandie" style="max-width:100%; max-height:100%; border-radius:8px;">';
+        document.body.appendChild(o);
+    }
+    o.querySelector('img').src = src;
+    o.style.display = 'flex';
+}
+function planningAfficherRelecture(creneaux) { relectureAfficher('planning', creneaux); }
+function planningAjouterLigne() { relectureAjouter('planning'); }
 function planningReprendrePhoto() {
     const zone = document.getElementById('planning-relecture');
     if (zone) zone.style.display = 'none';
