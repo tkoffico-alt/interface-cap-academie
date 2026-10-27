@@ -280,6 +280,53 @@
         #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover {
             background-color: #BFDBFE;
         }
+
+        /* ❖ PALETTE DES BOUTONS RAPIDES (27/10/2026) : chaque couleur a UNE signification stable.
+           Bleu profond = action principale ; turquoise = outil pédagogique / activité ;
+           orange = action ponctuelle à mettre en évidence ; violet = espace spécialisé / navigation ;
+           gris clair = fonction secondaire. Appliqué au Sas, à l'Atelier (Évaluations) et à la Forge (Leçons). */
+        #sas-suggestions-rapides .btn-suggestion.sug-principal,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-principal,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal {
+            background-color: #1D4ED8; color: #FFFFFF; border-color: #1E3A8A; font-weight: 700;
+            box-shadow: 0 2px 8px rgba(29, 78, 216, 0.35);
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-principal:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-principal:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal:hover { background-color: #1E40AF; }
+        #sas-suggestions-rapides .btn-suggestion.sug-outil,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-outil,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil {
+            background-color: #CCFBF1; color: #0F766E; border-color: #5EEAD4;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-outil:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-outil:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil:hover { background-color: #99F6E4; }
+        #sas-suggestions-rapides .btn-suggestion.sug-ponctuel,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ponctuel,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel {
+            background-color: #FFEDD5; color: #C2410C; border-color: #FDBA74;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover { background-color: #FED7AA; }
+        #sas-suggestions-rapides .btn-suggestion.sug-violet,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-violet,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet {
+            background-color: #EDE9FE; color: #6D28D9; border-color: #C4B5FD;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-violet:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-violet:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet:hover { background-color: #DDD6FE; }
+        #sas-suggestions-rapides .btn-suggestion.sug-secondaire,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-secondaire,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire {
+            background-color: #F1F5F9; color: #475569; border-color: #CBD5E1;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-secondaire:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover { background-color: #E2E8F0; }
+
         /* ❖ Espace Instituteurs (Primaire) : une SEULE identité verte
            partagée entre la Forge Primaire et le Cabinet Primaire (au lieu
            d'une teinte par outil comme côté secondaire) -- l'objectif ici
@@ -1395,11 +1442,11 @@
                 <div id="teacher-tabs-groupe-professeur" class="teacher-tabs-groupe">
                     <span class="teacher-tabs-groupe-label">Professeur</span>
                     <div class="teacher-tabs-groupe-boutons">
-                        <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')" title="L'Atelier des Évaluations">
+                        <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')" title="Évaluations : créer devoirs, compositions et épreuves, corriger des copies">
                             ❖ Évaluations
                         </button>
-                        <button id="tab-forge" class="tab-btn" onclick="switchTeacherTool('forge')" title="La Forge des Leçons">
-                            ✦ Forge
+                        <button id="tab-forge" class="tab-btn" onclick="switchTeacherTool('forge')" title="Leçons : préparer des fiches de leçon">
+                            ✦ Leçons
                         </button>
                         <button id="tab-cabinet" class="tab-btn" onclick="switchTeacherTool('cabinet')" title="Le Cabinet d'Étude">
                             ⚜ Cabinet
@@ -1410,8 +1457,8 @@
                 <div id="teacher-tabs-groupe-instituteur" class="teacher-tabs-groupe">
                     <span class="teacher-tabs-groupe-label teacher-tabs-groupe-label-vert">Instituteur</span>
                     <div class="teacher-tabs-groupe-boutons">
-                        <button id="tab-forge_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('forge_primaire')" title="La Forge des Leçons (Primaire)">
-                            🌱 Forge
+                        <button id="tab-forge_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('forge_primaire')" title="Leçons : préparer des fiches de séance (primaire)">
+                            🌱 Leçons
                         </button>
                         <button id="tab-cabinet_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('cabinet_primaire')" title="Le Cabinet d'Étude (Primaire)">
                             🌱 Cabinet
@@ -1432,7 +1479,7 @@
                 <div class="glass-card door-card categorie-card categorie-card-bleu" onclick="choisirCategorieEnseignant('professeur')">
                     <div class="icon-wrapper">🎓</div>
                     <h3>Professeur</h3>
-                    <p>Secondaire — L'Atelier des Évaluations, La Forge des Leçons, Le Cabinet d'Étude.</p>
+                    <p>Secondaire — Évaluations, Leçons et Cabinet d'Étude.</p>
                     <div class="card-action-area">
                         <button class="btn-entrer" style="background-color: #3B82F6; color: white; border: none;">Entrer</button>
                     </div>
@@ -1440,7 +1487,7 @@
                 <div class="glass-card door-card categorie-card categorie-card-vert" onclick="choisirCategorieEnseignant('instituteur')">
                     <div class="icon-wrapper">🌱</div>
                     <h3>Instituteur</h3>
-                    <p>Primaire — La Forge (Primaire) et Le Cabinet (Primaire).</p>
+                    <p>Primaire — Leçons et Cabinet.</p>
                     <div class="card-action-area">
                         <button class="btn-entrer" style="background-color: #10B981; color: white; border: none;">Entrer</button>
                     </div>
@@ -1463,10 +1510,12 @@
                 </div>
                 <div class="chat-input-area">
                     <div id="sas-suggestions-rapides" class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion btn-suggestion-guide" data-message="Je ne sais pas par où commencer aujourd'hui, guide-moi."><span class="suggestion-emoji">🧭</span>Guide-moi</button>
-                        <button type="button" class="btn-suggestion btn-suggestion-reviser" data-message="Je veux réviser un chapitre, aide-moi à choisir lequel."><span class="suggestion-emoji">📖</span>Réviser un chapitre</button>
-                        <button type="button" class="btn-suggestion btn-suggestion-exercice" data-message="J'ai un exercice précis sur lequel je bloque, je vais te l'expliquer."><span class="suggestion-emoji">✏️</span>Un exercice précis</button>
-                        <button type="button" class="btn-suggestion btn-suggestion-rentree" data-message="C'est les vacances : aide-moi à préparer la rentrée prochaine."><span class="suggestion-emoji">🌴</span>Préparer la rentrée</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-guide sug-principal" data-message="Je ne sais pas par où commencer aujourd'hui, guide-moi."><span class="suggestion-emoji">🧭</span>Guide-moi</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-reviser sug-outil" data-message="Je veux réviser un chapitre, aide-moi à choisir lequel."><span class="suggestion-emoji">📖</span>Réviser un chapitre</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-exercice sug-outil" data-message="J'ai un exercice précis sur lequel je bloque, je vais te l'expliquer."><span class="suggestion-emoji">✏️</span>Un exercice précis</button>
+                        <button type="button" class="btn-suggestion sug-ponctuel" data-message="Quiz sur cette leçon : pose-moi 5 questions à choix pour me tester sur la leçon que nous venons de voir."><span class="suggestion-emoji">🎯</span>Quiz sur cette leçon</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-message="Explique-moi autrement ta dernière explication, plus simplement, avec un exemple de la vie en Côte d'Ivoire."><span class="suggestion-emoji">💡</span>Explique-moi autrement</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-rentree sug-violet" data-message="C'est les vacances : aide-moi à préparer la rentrée prochaine."><span class="suggestion-emoji">🌴</span>Préparer la rentrée</button>
                     </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('sas-chat-history', 'sas')" title="Joindre un document">
@@ -1498,12 +1547,12 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Je veux créer une nouvelle évaluation, aide-moi à cadrer matière, classe et durée.">📝 Nouvelle évaluation</button>
-                        <button type="button" class="btn-suggestion btn-formulaire-guide" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier')" title="Renseigner type, durée, nombre d'exercices et répartition des points">📋 Formulaire guidé</button>
-                        <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Ajoute des références ou sources fiables à la dernière évaluation générée.">📚 Ajouter des références</button>
-                        <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Générer une variante</button>
-                        <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Correction de copie" title="Joignez la photo d'une copie (📎, JPG/PNG) et indiquez le barème">✍️ Correction de copies</button>
-                        <button type="button" class="btn-suggestion" data-outil="atelier" data-message="Format officiel" title="Épreuve type BEPC/BAC au format officiel (Exercice 1, 2, 3… avec barème sur 20)">📝 Format officiel</button>
+                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Je veux créer une nouvelle évaluation, aide-moi à cadrer matière, classe et durée.">📝 Évaluation libre</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier')" title="Renseigner type, durée, nombre d'exercices et répartition des points">📋 Formulaire guidé</button>
+                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Ajoute des références ou sources fiables à la dernière évaluation générée.">📚 Ajouter des sources</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="atelier" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Variante</button>
+                        <button type="button" class="btn-suggestion sug-ponctuel" data-outil="atelier" data-message="Correction de copie" title="Joignez la photo d'une copie (📎, JPG/PNG) et indiquez le barème">✍️ Corriger des copies</button>
+                        <button type="button" class="btn-suggestion sug-violet" data-outil="atelier" data-message="Format officiel" title="Épreuve type BEPC/BAC au format officiel (Exercice 1, 2, 3… avec barème sur 20)">🏛️ Épreuve BEPC / BAC</button>
                     </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('atelier-chat-history', 'atelier')" title="Joindre une photo (JPG/PNG uniquement, une copie par photo, bien éclairée et à plat)">
@@ -1535,10 +1584,10 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion" data-outil="forge" data-message="Je veux créer une nouvelle fiche de leçon, aide-moi à cadrer matière, classe et chapitre.">📖 Nouvelle fiche de leçon</button>
-                        <button type="button" class="btn-suggestion btn-formulaire-guide" data-outil="forge" onclick="ouvrirFormulaireGuide('forge')" title="Renseigner durée, matériel… pour obtenir exactement la fiche voulue">📋 Formulaire guidé</button>
-                        <button type="button" class="btn-suggestion" data-outil="forge" data-message="Ajoute des activités ou exercices d'application à la dernière fiche.">🧩 Ajouter des activités</button>
-                        <button type="button" class="btn-suggestion" data-outil="forge" data-message="Actualise l'entête de la dernière fiche (identification, objectifs, prérequis).">🔖 Actualiser l'entête</button>
+                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="forge" data-message="Je veux créer une nouvelle fiche de leçon, aide-moi à cadrer matière, classe et chapitre.">📖 Leçon libre</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="forge" onclick="ouvrirFormulaireGuide('forge')" title="Renseigner durée, matériel… pour obtenir exactement la fiche voulue">📋 Formulaire guidé</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="forge" data-message="Ajoute des activités ou exercices d'application à la dernière fiche.">🧩 Ajouter des activités</button>
+                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="forge" data-message="Actualise l'entête de la dernière fiche (identification, objectifs, prérequis).">🔖 Mettre à jour l'en-tête</button>
                     </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('forge-chat-history', 'forge')" title="Joindre une photo (JPG/PNG uniquement, bien éclairée et à plat)">
