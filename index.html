@@ -1851,8 +1851,9 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion sug-principal" data-outil="forge_primaire" data-message="Je veux créer une fiche de préparation, aide-moi à cadrer classe, matière et leçon.">📖 Nouvelle fiche de préparation</button>
-                        <button type="button" class="btn-suggestion sug-outil" data-outil="forge_primaire" data-message="Je veux créer une fiche d'évaluation pour cette leçon.">📝 Nouvelle fiche d'évaluation</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="forge_primaire" onclick="ouvrirFormulaireGuide('forge_primaire')" title="Renseigner type de fiche, classe, matière, leçon, durée… pour obtenir exactement la fiche voulue">📋 Formulaire guidé</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="forge_primaire" data-message="Je veux créer une fiche de préparation, aide-moi à cadrer classe, matière et leçon.">📖 Nouvelle fiche de préparation</button>
+                        <button type="button" class="btn-suggestion sug-ambre" data-outil="forge_primaire" data-message="Je veux créer une fiche d'évaluation pour cette leçon.">📝 Nouvelle fiche d'évaluation</button>
                         <button type="button" class="btn-suggestion sug-vert" data-outil="forge_primaire" data-message="Ajoute des exercices d'application à la dernière fiche.">🧩 Ajouter des exercices</button>
                     </div>
                     <div class="chat-input-wrapper">
@@ -1925,7 +1926,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.16"></script>
+    <script src="app.js?v=3.17"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->

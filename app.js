@@ -132,6 +132,20 @@ const FORMULAIRE_GUIDE = {
         ],
         entete: (v) => `Fiche de leçon — Matière : ${v.matiere} ; Classe : ${v.classe} ; Chapitre/Thème : ${v.theme}`
     },
+    forge_primaire: {
+        titre: "Formulaire guidé — Fiche (Primaire)",
+        champs: [
+            {id: 'type', lib: 'Type de fiche', type: 'select', obligatoire: true, options: ['Fiche de préparation', "Fiche d'évaluation"]},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['CP1','CP2','CE1','CE2','CM1','CM2']},
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Français','Mathématiques','EDHC','Histoire-Géographie','Sciences','Arts plastiques','Éducation musicale','EPS','Autre (précisée dans le thème)']},
+            {id: 'theme', lib: 'Leçon / thème', type: 'text', obligatoire: true, ph: 'Ex. Lecture : le texte « … » ; ou Grammaire : le verbe'},
+            {id: 'semaine', lib: 'Semaine et jour de la progression (facultatif)', type: 'text', ph: 'Ex. Semaine 2, Jour 1', precision: 'Semaine et jour de la progression'},
+            {id: 'duree', lib: 'Durée de la séance (facultatif)', type: 'text', ph: 'Ex. 40 min', precision: 'Durée de la séance'},
+            {id: 'materiel', lib: 'Matériel disponible (facultatif)', type: 'text', ph: 'Ex. ardoises, bûchettes, pas de vidéoprojecteur', precision: 'Matériel disponible'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: "Ex. beaucoup d'exercices d'application", precision: 'Autre demande'}
+        ],
+        entete: (v) => `${v.type}, ${v.classe}, ${v.matiere.replace(/\s*\(.*\)/, '')}, ${v.theme}`
+    },
     atelier_officiel: {
         outil: 'atelier',
         titre: "Épreuve type BEPC / BAC",
