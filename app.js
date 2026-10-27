@@ -145,6 +145,21 @@ const FORMULAIRE_GUIDE = {
         ],
         entete: (v) => `Épreuve type BEPC/BAC au format officiel — Matière : ${v.matiere} ; Classe : ${v.classe.replace(/\s*\(.*\)/, '')} ; Chapitres/notions : ${v.theme}` + (v.duree ? ` ; Durée : ${v.duree}` : '')
     },
+    atelier_copies: {
+        outil: 'atelier',
+        titre: "Correction de copies",
+        sansEnvoi: true,
+        bouton: 'Préparer la correction',
+        avertissement: "🎁 Fonction bonus. L'assistant peut se tromper (écriture difficile à lire, barème mal interprété) : sa correction est une PROPOSITION soumise à votre appréciation. Relisez-la et ajustez toujours la note avant de la communiquer.",
+        rappelPhoto: "📸 Étape suivante : joignez la photo de la copie avec le trombone 📎 (JPG ou PNG, une copie par photo, bien éclairée et à plat), puis envoyez.",
+        champs: [
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Mathématiques','Physique-Chimie','SVT','Français','Histoire-Géographie','Anglais','Espagnol','Allemand','Philosophie','EDHC']},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['6ème','5ème','4ème','3ème','2nde','1ère','Terminale']},
+            {id: 'bareme', lib: 'Barème, question par question (total sur 20)', type: 'textarea', obligatoire: true, ph: 'Ex. Q1 : 3 points ; Q2 : 4 points ; Q3 : 5 points ; Q4 : 8 points'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: 'Ex. ajouter un commentaire encourageant pour l\'élève', precision: 'Autre demande'}
+        ],
+        entete: (v) => `Correction de copie — Matière : ${v.matiere} ; Classe : ${v.classe} ; Barème (question par question, total /20) : ${v.bareme}`
+    },
     atelier: {
         titre: "Formulaire guidé — Évaluation",
         champs: [
@@ -162,6 +177,33 @@ const FORMULAIRE_GUIDE = {
             : `Crée une évaluation de ${v.matiere} pour la classe de ${v.classe} sur le thème : ${v.theme}`
     }
 };
+
+// Après « Préparer la correction » : le texte est dans le champ (non envoyé) ; un bandeau rappelle
+// de joindre la photo avec le trombone, puis il disparaît dès que le champ est vidé (message envoyé).
+function afficherRappelPhoto(outil, texteRappel, message) {
+    const champ = document.getElementById(`${outil}-user-input`);
+    if (!champ) return;
+    const zone = champ.closest('.chat-input-area');
+    const ancien = document.getElementById('bandeau-rappel-photo');
+    if (ancien) ancien.remove();
+    const bandeau = document.createElement('div');
+    bandeau.id = 'bandeau-rappel-photo';
+    bandeau.textContent = texteRappel + ' Proposition de correction : à vérifier par l\'enseignant.';
+    bandeau.style.cssText = 'background:#E0F2FE;border:1px solid #7DD3FC;color:#0C4A6E;border-radius:12px;padding:8px 12px;font-size:.84rem;font-weight:600;width:100%;max-width:1000px;box-sizing:border-box;';
+    const avant = zone && zone.querySelector('.chat-input-wrapper');
+    if (zone && avant) zone.insertBefore(bandeau, avant);
+    champ.value = message + ' (la photo de la copie est jointe avec le trombone 📎)';
+    champ.focus();
+    const trombone = zone ? zone.querySelector('.btn-icone-neutre') : null;
+    if (trombone) { trombone.style.boxShadow = '0 0 0 4px rgba(14,165,233,0.45)'; }
+    const surveille = setInterval(() => {
+        if (!document.body.contains(bandeau) || !champ.value.startsWith('Correction de copie')) {
+            clearInterval(surveille);
+            bandeau.remove();
+            if (trombone) trombone.style.boxShadow = '';
+        }
+    }, 1000);
+}
 
 function fermerFormulaireGuide() {
     const m = document.getElementById('formulaire-guide-overlay');
@@ -185,6 +227,15 @@ function ouvrirFormulaireGuide(outil) {
     note.textContent = "Seuls matière, classe et thème sont nécessaires. Ce que vous précisez en plus sera respecté.";
     note.style.cssText = 'margin:0 0 6px;font-size:.85rem;color:#475569;';
     carte.appendChild(note);
+    [def.avertissement, def.rappelPhoto].forEach((txt, i) => {
+        if (!txt) return;
+        const bloc = document.createElement('div');
+        bloc.textContent = txt;
+        bloc.style.cssText = i === 0
+            ? 'background:#FEF3C7;border:1px solid #FCD34D;color:#78350F;border-radius:10px;padding:10px 12px;font-size:.86rem;margin:10px 0 4px;'
+            : 'background:#E0F2FE;border:1px solid #7DD3FC;color:#0C4A6E;border-radius:10px;padding:10px 12px;font-size:.86rem;margin:6px 0 4px;font-weight:600;';
+        carte.appendChild(bloc);
+    });
     def.champs.forEach(c => {
         const l = document.createElement('label');
         l.textContent = c.lib;
@@ -195,6 +246,11 @@ function ouvrirFormulaireGuide(outil) {
         if (c.type === 'select') {
             el = document.createElement('select');
             c.options.forEach(o => { const op = document.createElement('option'); op.textContent = o; el.appendChild(op); });
+        } else if (c.type === 'textarea') {
+            el = document.createElement('textarea');
+            el.maxLength = 500;
+            el.rows = 3;
+            el.placeholder = c.ph || '';
         } else {
             el = document.createElement('input');
             el.type = 'text';
@@ -217,14 +273,16 @@ function ouvrirFormulaireGuide(outil) {
     annuler.onclick = fermerFormulaireGuide;
     const ok = document.createElement('button');
     ok.type = 'button';
-    ok.textContent = 'Générer';
+    ok.textContent = def.bouton || 'Générer';
     ok.style.cssText = 'flex:2;padding:11px;border:0;border-radius:9px;background:#3B82F6;color:#fff;font-weight:700;cursor:pointer;';
     ok.onclick = () => {
         const v = {};
         def.champs.forEach(c => { v[c.id] = (document.getElementById('fg-' + c.id).value || '').replace(/[\[\]{}<>`]/g, '').replace(/\s+/g, ' ').trim(); });
         if (/^Au choix/i.test(v.format || '')) v.format = '';
         if (/^Au choix/i.test(v.nb || '')) v.nb = '';
-        if (v.theme.length < 3) { err.textContent = "Merci d'indiquer le chapitre ou le thème de la leçon."; return; }
+        const manquant = def.champs.find(c => c.obligatoire && c.type === 'text' && (v[c.id] || '').length < 3)
+            || def.champs.find(c => c.obligatoire && c.type === 'textarea' && (v[c.id] || '').length < 3);
+        if (manquant) { err.textContent = `Merci de renseigner : ${manquant.lib.toLowerCase()}.`; return; }
         const precisions = def.champs.filter(c => c.precision && v[c.id]).map(c => `${c.precision} : ${v[c.id]}`).join(' ; ');
         const message = def.entete(v) + (precisions ? `. Précisions de l'enseignant (à respecter à la lettre) : ${precisions}.` : '');
         const cible = def.outil || outil;
@@ -234,6 +292,7 @@ function ouvrirFormulaireGuide(outil) {
         reinitialiserConversationEnseignant(cible);
         champ.value = message;
         fermerFormulaireGuide();
+        if (def.sansEnvoi) { afficherRappelPhoto(cible, def.rappelPhoto, message); return; }
         sendTeacherMessage(cible, "");
     };
     barre.appendChild(annuler);

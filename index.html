@@ -281,52 +281,70 @@
             background-color: #BFDBFE;
         }
 
-        /* ❖ PALETTE DES BOUTONS RAPIDES (27/10/2026) : chaque couleur a UNE signification stable, et
-           c'est la seule couleur + la disposition (ordre, taille) qui crée la hiérarchie.
-           Bleu profond = action principale (en premier, plus grand, avec ombre) ; turquoise = outil
-           pédagogique / activité ; orange = action ponctuelle à mettre en évidence ; violet = espace
-           spécialisé ; gris = fonction secondaire. Teintes pleines mais sobres (contraste texte blanc ≥ 4,5). */
+        /* ❖ PALETTE DES BOUTONS RAPIDES (27/10/2026, v2) : couleurs vives en dégradé, une famille par rôle.
+           Bleu profond uni = action principale (premier, plus grand, ombre) ; turquoise / vert = outils
+           pédagogiques et exercices ; ambre = aide à la compréhension ; corail = action ponctuelle à
+           mettre en évidence ; violet = espace spécialisé ; gris atténué = fonction secondaire.
+           Le texte est foncé sur les teintes claires, blanc sur les teintes profondes. */
         #sas-suggestions-rapides .btn-suggestion.sug-principal,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-principal,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal {
-            background-color: #1D4ED8; color: #FFFFFF; border-color: #1E3A8A; font-weight: 600;
+            background: #1D4ED8; color: #FFFFFF; border-color: #1E3A8A; font-weight: 600;
             font-weight: 700; font-size: 0.92em; padding: 8px 16px; box-shadow: 0 3px 10px rgba(29, 78, 216, 0.40);
         }
         #sas-suggestions-rapides .btn-suggestion.sug-principal:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-principal:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal:hover { background-color: #1E40AF; color: #FFFFFF; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal:hover { background: #1D4ED8; color: #FFFFFF; filter: brightness(1.06) saturate(1.1); }
         #sas-suggestions-rapides .btn-suggestion.sug-outil,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-outil,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil {
-            background-color: #0F766E; color: #FFFFFF; border-color: #115E59; font-weight: 600;
+            background: linear-gradient(135deg, #5EEAD4 0%, #22D3EE 100%); color: #134E4A; border-color: #2DD4BF; font-weight: 600;
         }
         #sas-suggestions-rapides .btn-suggestion.sug-outil:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-outil:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil:hover { background-color: #115E59; color: #FFFFFF; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil:hover { background: linear-gradient(135deg, #5EEAD4 0%, #22D3EE 100%); color: #134E4A; filter: brightness(1.06) saturate(1.1); }
+        #sas-suggestions-rapides .btn-suggestion.sug-vert,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-vert,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-vert {
+            background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%); color: #14532D; border-color: #4ADE80; font-weight: 600;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-vert:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-vert:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-vert:hover { background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%); color: #14532D; filter: brightness(1.06) saturate(1.1); }
+        #sas-suggestions-rapides .btn-suggestion.sug-ambre,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ambre,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ambre {
+            background: linear-gradient(135deg, #FEF08A 0%, #FBBF24 100%); color: #78350F; border-color: #FACC15; font-weight: 600;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-ambre:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ambre:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ambre:hover { background: linear-gradient(135deg, #FEF08A 0%, #FBBF24 100%); color: #78350F; filter: brightness(1.06) saturate(1.1); }
         #sas-suggestions-rapides .btn-suggestion.sug-ponctuel,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ponctuel,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel {
-            background-color: #C2410C; color: #FFFFFF; border-color: #9A3412; font-weight: 600;
+            background: linear-gradient(135deg, #F97316 0%, #DB2777 100%); color: #FFFFFF; border-color: #EA580C; font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.25);
         }
         #sas-suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover { background-color: #9A3412; color: #FFFFFF; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover { background: linear-gradient(135deg, #F97316 0%, #DB2777 100%); color: #FFFFFF; filter: brightness(1.06) saturate(1.1); }
         #sas-suggestions-rapides .btn-suggestion.sug-violet,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-violet,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet {
-            background-color: #6D28D9; color: #FFFFFF; border-color: #5B21B6; font-weight: 600;
+            background: linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%); color: #FFFFFF; border-color: #7C3AED; font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         #sas-suggestions-rapides .btn-suggestion.sug-violet:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-violet:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet:hover { background-color: #5B21B6; color: #FFFFFF; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet:hover { background: linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%); color: #FFFFFF; filter: brightness(1.06) saturate(1.1); }
         #sas-suggestions-rapides .btn-suggestion.sug-secondaire,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-secondaire,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire {
-            background-color: #E2E8F0; color: #334155; border-color: #94A3B8; font-weight: 600;
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%); color: #475569; border-color: #CBD5E1; font-weight: 600;
         }
         #sas-suggestions-rapides .btn-suggestion.sug-secondaire:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover { background-color: #CBD5E1; color: #334155; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover { background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%); color: #475569; filter: brightness(1.06) saturate(1.1); }
 
         /* ❖ Espace Instituteurs (Primaire) : une SEULE identité verte
            partagée entre la Forge Primaire et le Cabinet Primaire (au lieu
@@ -1513,9 +1531,9 @@
                     <div id="sas-suggestions-rapides" class="suggestions-rapides">
                         <button type="button" class="btn-suggestion btn-suggestion-guide sug-principal" data-message="Je ne sais pas par où commencer aujourd'hui, guide-moi."><span class="suggestion-emoji">🧭</span>Guide-moi</button>
                         <button type="button" class="btn-suggestion btn-suggestion-reviser sug-outil" data-message="Je veux réviser un chapitre, aide-moi à choisir lequel."><span class="suggestion-emoji">📖</span>Réviser un chapitre</button>
-                        <button type="button" class="btn-suggestion btn-suggestion-exercice sug-outil" data-message="J'ai un exercice précis sur lequel je bloque, je vais te l'expliquer."><span class="suggestion-emoji">✏️</span>Un exercice précis</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-exercice sug-vert" data-message="J'ai un exercice précis sur lequel je bloque, je vais te l'expliquer."><span class="suggestion-emoji">✏️</span>Un exercice précis</button>
                         <button type="button" class="btn-suggestion sug-ponctuel" data-message="Quiz sur cette leçon : pose-moi 5 questions à choix pour me tester sur la leçon que nous venons de voir."><span class="suggestion-emoji">🎯</span>Quiz sur cette leçon</button>
-                        <button type="button" class="btn-suggestion sug-outil" data-message="Explique-moi autrement ta dernière explication, plus simplement, avec un exemple de la vie en Côte d'Ivoire."><span class="suggestion-emoji">💡</span>Explique-moi autrement</button>
+                        <button type="button" class="btn-suggestion sug-ambre" data-message="Explique-moi autrement ta dernière explication, plus simplement, avec un exemple de la vie en Côte d'Ivoire."><span class="suggestion-emoji">💡</span>Explique-moi autrement</button>
                         <button type="button" class="btn-suggestion btn-suggestion-rentree sug-violet" data-message="C'est les vacances : aide-moi à préparer la rentrée prochaine."><span class="suggestion-emoji">🌴</span>Préparer la rentrée</button>
                     </div>
                     <div class="chat-input-wrapper">
@@ -1552,7 +1570,7 @@
                         <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Je veux créer une nouvelle évaluation, aide-moi à cadrer matière, classe et durée.">📝 Évaluation libre</button>
                         <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Ajoute des références ou sources fiables à la dernière évaluation générée.">📚 Ajouter des sources</button>
                         <button type="button" class="btn-suggestion sug-outil" data-outil="atelier" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Variante</button>
-                        <button type="button" class="btn-suggestion sug-ponctuel" data-outil="atelier" data-message="Correction de copie" title="Joignez la photo d'une copie (📎, JPG/PNG) et indiquez le barème">✍️ Corriger des copies</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-ponctuel" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier_copies')" title="Bonus : proposition de correction à relire et ajuster (photo de la copie à joindre)">✍️ Corriger des copies</button>
                         <button type="button" class="btn-suggestion btn-formulaire-guide sug-violet" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier_officiel')" title="Épreuve type BEPC/BAC au format officiel (Exercice 1, 2, 3… avec barème sur 20)">🏛️ Épreuve BEPC / BAC</button>
                     </div>
                     <div class="chat-input-wrapper">
@@ -1722,7 +1740,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.9"></script>
+    <script src="app.js?v=3.10"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->
