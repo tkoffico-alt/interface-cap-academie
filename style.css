@@ -2253,3 +2253,34 @@ body.dark-theme .graphique-fiche {
     background: #ffffff;
     border-color: #475569;
 }
+
+
+/* ❖ SAS DES ATELIERS (27/10/2026) : cartes de choix de l'atelier après la catégorie. */
+.sas-ateliers-groupe { display: none; flex-wrap: wrap; justify-content: center; gap: 1.5rem; width: 100%; }
+.sas-atelier-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-bottom: 4px solid var(--sas-couleur, #3B82F6);
+    border-radius: 14px;
+    padding: 1.6rem 1.4rem 1.3rem;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.sas-atelier-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14); }
+.sas-atelier-icone {
+    width: 56px; height: 56px; margin: 0 auto .8rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; color: #FFFFFF; border-radius: 12px;
+    background: linear-gradient(135deg, var(--sas-couleur, #3B82F6), var(--sas-couleur2, #6366F1));
+}
+.sas-atelier-card h3 { margin: 0 0 .4rem; font-size: 1.15rem; color: #0F172A; }
+.sas-atelier-card p { margin: 0 0 .9rem; font-size: .88rem; line-height: 1.45; color: #64748B; }
+.sas-atelier-entrer { font-weight: 700; font-size: .9rem; color: var(--sas-couleur, #3B82F6); }
+.sas-atelier-evaluations { --sas-couleur: #2563EB; --sas-couleur2: #4F46E5; }
+.sas-atelier-lecons { --sas-couleur: #7C3AED; --sas-couleur2: #A855F7; }
+.sas-atelier-cabinet { --sas-couleur: #0D9488; --sas-couleur2: #14B8A6; }
+.sas-atelier-vert { --sas-couleur: #059669; --sas-couleur2: #34D399; }
+body.dark-theme .sas-atelier-card { background: #1E293B; border-color: #334155; }
+body.dark-theme .sas-atelier-card h3 { color: #F1F5F9; }
+body.dark-theme .sas-atelier-card p { color: #94A3B8; }

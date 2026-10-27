@@ -417,6 +417,7 @@ function entrerDansEspaceEnseignant() {
     const btnMatieresEnseignant = document.getElementById('btn-matieres');
     if (btnMatieresEnseignant) btnMatieresEnseignant.style.display = 'none';
     document.getElementById('teacher-categorie-chooser').style.display = 'flex';
+    masquerSasAteliersEnseignant();
 }
 
 // ❖ SÉLECTION DE CATÉGORIE (PROFESSEUR / INSTITUTEUR) -- ESPACE ENSEIGNANT
@@ -441,11 +442,11 @@ function choisirCategorieEnseignant(categorie) {
     if (categorie === 'instituteur') {
         if (groupeProfesseur) groupeProfesseur.style.display = 'none';
         if (groupeInstituteur) groupeInstituteur.style.display = 'flex';
-        switchTeacherTool('forge_primaire');
+        afficherSasAteliersEnseignant('instituteur');
     } else {
         if (groupeInstituteur) groupeInstituteur.style.display = 'none';
         if (groupeProfesseur) groupeProfesseur.style.display = 'flex';
-        switchTeacherTool('atelier');
+        afficherSasAteliersEnseignant('professeur');
     }
 }
 
@@ -457,9 +458,34 @@ function choisirCategorieEnseignant(categorie) {
 function masquerChooserCategorieEnseignant() {
     const chooser = document.getElementById('teacher-categorie-chooser');
     if (chooser) chooser.style.display = 'none';
+    masquerSasAteliersEnseignant();
+}
+
+// ❖ SAS DES ATELIERS (27/10/2026) : après le choix de catégorie, l'enseignant
+// choisit lui-même l'atelier où entrer (plus d'ouverture automatique sur
+// Évaluations, qui lançait l'amorçage IA et consommait des jetons pour rien).
+function afficherSasAteliersEnseignant(categorie) {
+    ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].forEach((id) => {
+        const conteneur = document.getElementById(`container-${id}-custom`);
+        if (conteneur) conteneur.classList.remove('active');
+        const onglet = document.getElementById(`tab-${id}`);
+        if (onglet) onglet.classList.remove('active');
+    });
+    const sas = document.getElementById('teacher-atelier-chooser');
+    const prof = document.getElementById('sas-ateliers-professeur');
+    const inst = document.getElementById('sas-ateliers-instituteur');
+    if (prof) prof.style.display = categorie === 'instituteur' ? 'none' : 'flex';
+    if (inst) inst.style.display = categorie === 'instituteur' ? 'flex' : 'none';
+    if (sas) sas.style.display = 'flex';
+}
+
+function masquerSasAteliersEnseignant() {
+    const sas = document.getElementById('teacher-atelier-chooser');
+    if (sas) sas.style.display = 'none';
 }
 
 function retourChoixCategorieEnseignant() {
+    masquerSasAteliersEnseignant();
     document.getElementById('teacher-tabs-container').style.display = 'none';
     ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].forEach((id) => {
         const conteneur = document.getElementById(`container-${id}-custom`);
@@ -1225,6 +1251,7 @@ function mettreAJourBanniereMatiere() {
 }
 
 function switchTeacherTool(toolID) {
+    masquerSasAteliersEnseignant();
     document.getElementById('container-atelier-custom').classList.remove('active');
     document.getElementById('container-forge-custom').classList.remove('active');
     document.getElementById('container-cabinet-custom').classList.remove('active');
