@@ -281,51 +281,52 @@
             background-color: #BFDBFE;
         }
 
-        /* ❖ PALETTE DES BOUTONS RAPIDES (27/10/2026) : chaque couleur a UNE signification stable.
-           Bleu profond = action principale ; turquoise = outil pédagogique / activité ;
-           orange = action ponctuelle à mettre en évidence ; violet = espace spécialisé / navigation ;
-           gris clair = fonction secondaire. Appliqué au Sas, à l'Atelier (Évaluations) et à la Forge (Leçons). */
+        /* ❖ PALETTE DES BOUTONS RAPIDES (27/10/2026) : chaque couleur a UNE signification stable, et
+           c'est la seule couleur + la disposition (ordre, taille) qui crée la hiérarchie.
+           Bleu profond = action principale (en premier, plus grand, avec ombre) ; turquoise = outil
+           pédagogique / activité ; orange = action ponctuelle à mettre en évidence ; violet = espace
+           spécialisé ; gris = fonction secondaire. Teintes pleines mais sobres (contraste texte blanc ≥ 4,5). */
         #sas-suggestions-rapides .btn-suggestion.sug-principal,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-principal,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal {
-            background-color: #1D4ED8; color: #FFFFFF; border-color: #1E3A8A; font-weight: 700;
-            box-shadow: 0 2px 8px rgba(29, 78, 216, 0.35);
+            background-color: #1D4ED8; color: #FFFFFF; border-color: #1E3A8A; font-weight: 600;
+            font-weight: 700; font-size: 0.92em; padding: 8px 16px; box-shadow: 0 3px 10px rgba(29, 78, 216, 0.40);
         }
         #sas-suggestions-rapides .btn-suggestion.sug-principal:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-principal:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal:hover { background-color: #1E40AF; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal:hover { background-color: #1E40AF; color: #FFFFFF; }
         #sas-suggestions-rapides .btn-suggestion.sug-outil,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-outil,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil {
-            background-color: #CCFBF1; color: #0F766E; border-color: #5EEAD4;
+            background-color: #0F766E; color: #FFFFFF; border-color: #115E59; font-weight: 600;
         }
         #sas-suggestions-rapides .btn-suggestion.sug-outil:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-outil:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil:hover { background-color: #99F6E4; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil:hover { background-color: #115E59; color: #FFFFFF; }
         #sas-suggestions-rapides .btn-suggestion.sug-ponctuel,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ponctuel,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel {
-            background-color: #FFEDD5; color: #C2410C; border-color: #FDBA74;
+            background-color: #C2410C; color: #FFFFFF; border-color: #9A3412; font-weight: 600;
         }
         #sas-suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover { background-color: #FED7AA; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover { background-color: #9A3412; color: #FFFFFF; }
         #sas-suggestions-rapides .btn-suggestion.sug-violet,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-violet,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet {
-            background-color: #EDE9FE; color: #6D28D9; border-color: #C4B5FD;
+            background-color: #6D28D9; color: #FFFFFF; border-color: #5B21B6; font-weight: 600;
         }
         #sas-suggestions-rapides .btn-suggestion.sug-violet:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-violet:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet:hover { background-color: #DDD6FE; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet:hover { background-color: #5B21B6; color: #FFFFFF; }
         #sas-suggestions-rapides .btn-suggestion.sug-secondaire,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-secondaire,
         #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire {
-            background-color: #F1F5F9; color: #475569; border-color: #CBD5E1;
+            background-color: #E2E8F0; color: #334155; border-color: #94A3B8; font-weight: 600;
         }
         #sas-suggestions-rapides .btn-suggestion.sug-secondaire:hover,
         #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover,
-        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover { background-color: #E2E8F0; }
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover { background-color: #CBD5E1; color: #334155; }
 
         /* ❖ Espace Instituteurs (Primaire) : une SEULE identité verte
            partagée entre la Forge Primaire et le Cabinet Primaire (au lieu
@@ -1547,12 +1548,12 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Je veux créer une nouvelle évaluation, aide-moi à cadrer matière, classe et durée.">📝 Évaluation libre</button>
                         <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier')" title="Renseigner type, durée, nombre d'exercices et répartition des points">📋 Formulaire guidé</button>
+                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Je veux créer une nouvelle évaluation, aide-moi à cadrer matière, classe et durée.">📝 Évaluation libre</button>
                         <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Ajoute des références ou sources fiables à la dernière évaluation générée.">📚 Ajouter des sources</button>
                         <button type="button" class="btn-suggestion sug-outil" data-outil="atelier" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Variante</button>
                         <button type="button" class="btn-suggestion sug-ponctuel" data-outil="atelier" data-message="Correction de copie" title="Joignez la photo d'une copie (📎, JPG/PNG) et indiquez le barème">✍️ Corriger des copies</button>
-                        <button type="button" class="btn-suggestion sug-violet" data-outil="atelier" data-message="Format officiel" title="Épreuve type BEPC/BAC au format officiel (Exercice 1, 2, 3… avec barème sur 20)">🏛️ Épreuve BEPC / BAC</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-violet" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier_officiel')" title="Épreuve type BEPC/BAC au format officiel (Exercice 1, 2, 3… avec barème sur 20)">🏛️ Épreuve BEPC / BAC</button>
                     </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('atelier-chat-history', 'atelier')" title="Joindre une photo (JPG/PNG uniquement, une copie par photo, bien éclairée et à plat)">
@@ -1584,8 +1585,8 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="forge" data-message="Je veux créer une nouvelle fiche de leçon, aide-moi à cadrer matière, classe et chapitre.">📖 Leçon libre</button>
                         <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="forge" onclick="ouvrirFormulaireGuide('forge')" title="Renseigner durée, matériel… pour obtenir exactement la fiche voulue">📋 Formulaire guidé</button>
+                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="forge" data-message="Je veux créer une nouvelle fiche de leçon, aide-moi à cadrer matière, classe et chapitre.">📖 Leçon libre</button>
                         <button type="button" class="btn-suggestion sug-outil" data-outil="forge" data-message="Ajoute des activités ou exercices d'application à la dernière fiche.">🧩 Ajouter des activités</button>
                         <button type="button" class="btn-suggestion sug-secondaire" data-outil="forge" data-message="Actualise l'entête de la dernière fiche (identification, objectifs, prérequis).">🔖 Mettre à jour l'en-tête</button>
                     </div>
@@ -1721,7 +1722,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.8"></script>
+    <script src="app.js?v=3.9"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->

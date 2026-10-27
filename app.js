@@ -132,6 +132,19 @@ const FORMULAIRE_GUIDE = {
         ],
         entete: (v) => `Fiche de leçon — Matière : ${v.matiere} ; Classe : ${v.classe} ; Chapitre/Thème : ${v.theme}`
     },
+    atelier_officiel: {
+        outil: 'atelier',
+        titre: "Épreuve type BEPC / BAC",
+        champs: [
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Mathématiques','Physique-Chimie','SVT','Français','Histoire-Géographie','Anglais','Espagnol','Allemand','Philosophie']},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['3ème (BEPC)','Terminale (BAC)','1ère','2nde','4ème','5ème','6ème']},
+            {id: 'theme', lib: 'Chapitres / notions de l\'épreuve', type: 'text', obligatoire: true, ph: 'Ex. Équations, Pythagore, Thalès'},
+            {id: 'duree', lib: 'Durée (facultatif)', type: 'text', ph: 'Ex. 2 h'},
+            {id: 'nb', lib: "Nombre d'exercices (facultatif)", type: 'select', options: ['Au choix','2','3','4','5'], precision: "Nombre d'exercices"},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: 'Ex. un exercice avec une figure', precision: 'Autre demande'}
+        ],
+        entete: (v) => `Épreuve type BEPC/BAC au format officiel — Matière : ${v.matiere} ; Classe : ${v.classe.replace(/\s*\(.*\)/, '')} ; Chapitres/notions : ${v.theme}` + (v.duree ? ` ; Durée : ${v.duree}` : '')
+    },
     atelier: {
         titre: "Formulaire guidé — Évaluation",
         champs: [
@@ -214,13 +227,14 @@ function ouvrirFormulaireGuide(outil) {
         if (v.theme.length < 3) { err.textContent = "Merci d'indiquer le chapitre ou le thème de la leçon."; return; }
         const precisions = def.champs.filter(c => c.precision && v[c.id]).map(c => `${c.precision} : ${v[c.id]}`).join(' ; ');
         const message = def.entete(v) + (precisions ? `. Précisions de l'enseignant (à respecter à la lettre) : ${precisions}.` : '');
-        const champ = document.getElementById(`${outil}-user-input`);
+        const cible = def.outil || outil;
+        const champ = document.getElementById(`${cible}-user-input`);
         if (!champ || champ.disabled) { fermerFormulaireGuide(); return; }
-        outilsDejaAmorces.add(outil);
-        reinitialiserConversationEnseignant(outil);
+        outilsDejaAmorces.add(cible);
+        reinitialiserConversationEnseignant(cible);
         champ.value = message;
         fermerFormulaireGuide();
-        sendTeacherMessage(outil, "");
+        sendTeacherMessage(cible, "");
     };
     barre.appendChild(annuler);
     barre.appendChild(ok);
