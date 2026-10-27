@@ -562,6 +562,8 @@ function ouvrirPlanningModal() {
 
 function fermerPlanningModal() {
     document.getElementById('planning-modal').classList.remove('active');
+    const zoneRel = document.getElementById('planning-relecture');
+    if (zoneRel) zoneRel.style.display = 'none';
 }
 
 // =======================================================================
@@ -736,6 +738,83 @@ async function envoyerPhotoPreAbonnement() {
     }
 }
 
+// ❖ RELECTURE DU PLANNING AVANT ENREGISTREMENT (27/10/2026) ❖
+const PLANNING_JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+function planningEchapper(t) {
+    return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+function planningLigneHTML(c) {
+    const opts = PLANNING_JOURS.map(j => `<option value="${j}"${j === c.jour ? ' selected' : ''}>${j.charAt(0).toUpperCase() + j.slice(1)}</option>`).join('');
+    const st = 'padding:5px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.85em;';
+    return `<div class="planning-ligne" style="display:flex; gap:4px; align-items:center; margin-bottom:6px;">
+        <select class="pl-jour" style="${st}">${opts}</select>
+        <input class="pl-debut" type="time" value="${planningEchapper(c.heure_debut)}" style="${st} width:92px;">
+        <input class="pl-fin" type="time" value="${planningEchapper(c.heure_fin)}" style="${st} width:92px;">
+        <input class="pl-matiere" type="text" value="${planningEchapper(c.matiere)}" placeholder="Matière" style="${st} flex:1; min-width:0;">
+        <button type="button" onclick="this.closest('.planning-ligne').remove()" title="Supprimer" style="background:#FEE2E2; color:#B91C1C; border:none; border-radius:6px; padding:5px 8px; cursor:pointer;">✕</button>
+    </div>`;
+}
+function planningAfficherRelecture(creneaux) {
+    const zone = document.getElementById('planning-relecture');
+    const lignes = document.getElementById('planning-lignes');
+    if (!zone || !lignes) return;
+    lignes.innerHTML = creneaux.map(planningLigneHTML).join('');
+    zone.style.display = 'block';
+}
+function planningAjouterLigne() {
+    const lignes = document.getElementById('planning-lignes');
+    if (lignes) lignes.insertAdjacentHTML('beforeend', planningLigneHTML({ jour: 'lundi', heure_debut: '', heure_fin: '', matiere: '' }));
+}
+function planningReprendrePhoto() {
+    const zone = document.getElementById('planning-relecture');
+    if (zone) zone.style.display = 'none';
+    const input = document.getElementById('planning-photo-input');
+    if (input) input.value = '';
+    const feedback = document.getElementById('planning-feedback');
+    if (feedback) { feedback.textContent = 'Choisis une autre photo, plus nette si possible.'; feedback.style.color = '#F59E0B'; }
+}
+async function planningValiderRelecture() {
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    const feedback = document.getElementById('planning-feedback');
+    const bouton = document.getElementById('btn-valider-planning');
+    const creneaux = Array.from(document.querySelectorAll('#planning-lignes .planning-ligne')).map(l => ({
+        jour: l.querySelector('.pl-jour').value,
+        heure_debut: l.querySelector('.pl-debut').value,
+        heure_fin: l.querySelector('.pl-fin').value,
+        matiere: l.querySelector('.pl-matiere').value.trim()
+    })).filter(c => c.matiere);
+    if (!sceau) { openPremiumModal(); return; }
+    if (!creneaux.length) {
+        feedback.textContent = "Ajoute au moins un cours avant d'enregistrer.";
+        feedback.style.color = '#F59E0B';
+        return;
+    }
+    if (bouton) bouton.disabled = true;
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/planning/valider', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau, creneaux })
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            feedback.textContent = `✔ ${data.message}`;
+            feedback.style.color = '#10B981';
+            const zone = document.getElementById('planning-relecture');
+            if (zone) zone.style.display = 'none';
+            setTimeout(fermerPlanningModal, 2000);
+        } else {
+            feedback.textContent = data.message || 'Une erreur est survenue.';
+            feedback.style.color = '#F87171';
+        }
+    } catch (err) {
+        feedback.textContent = 'Le réseau est instable. Réessaie dans un instant.';
+        feedback.style.color = '#F87171';
+    } finally {
+        if (bouton) bouton.disabled = false;
+    }
+}
+
 async function envoyerPhotoEmploiDuTemps() {
     const sceau = localStorage.getItem('eduka_sceau') || "";
     const inputFichier = document.getElementById('planning-photo-input');
@@ -758,6 +837,7 @@ async function envoyerPhotoEmploiDuTemps() {
 
     const formulaire = new FormData();
     formulaire.append('matricule', sceau);
+    formulaire.append('apercu', '1');
     formulaire.append('photo', inputFichier.files[0]);
 
     try {
@@ -767,7 +847,11 @@ async function envoyerPhotoEmploiDuTemps() {
         });
         const data = await response.json();
 
-        if (data.status === 'success') {
+        if (data.status === 'apercu') {
+            feedback.textContent = data.message;
+            feedback.style.color = "#2563EB";
+            planningAfficherRelecture(data.creneaux || []);
+        } else if (data.status === 'success') {
             feedback.textContent = `✔ ${data.message}`;
             feedback.style.color = "#10B981";
             setTimeout(fermerPlanningModal, 2000);
