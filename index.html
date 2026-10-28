@@ -1604,6 +1604,7 @@
                 <button class="btn-changer-categorie-enseignant" onclick="retourChoixCategorieEnseignant()" title="Changer de catégorie (Professeur / Instituteur)">
                     🔄<span class="btn-changer-categorie-texte">&nbsp;Catégorie</span>
                 </button>
+                <button type="button" class="btn-aide-visite" onclick="lancerVisiteGuidee()" title="Visite guidée : à quoi sert chaque bouton">❓<span class="btn-changer-categorie-texte">&nbsp;Aide</span></button>
                 <div id="teacher-tabs-groupe-professeur" class="teacher-tabs-groupe">
                     <span class="teacher-tabs-groupe-label">Professeur</span>
                     <div class="teacher-tabs-groupe-boutons">
@@ -1707,6 +1708,7 @@
                     <span class="banniere-actions-sas">
                         <button type="button" class="btn-banniere-action btn-banniere-nouvelle" onclick="nouvelleSessionSas()" title="Terminer cette session et en commencer une nouvelle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nouvelle session</button>
                         <button type="button" class="btn-banniere-action btn-banniere-historique" onclick="ouvrirHistoriqueSas()" title="Revoir vos sessions précédentes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Historique</button>
+                        <button type="button" class="btn-banniere-action btn-banniere-aide" onclick="lancerVisiteGuidee('sas')" title="Visite guidée : à quoi sert chaque bouton">❓ Aide</button>
                     </span>
                 </div>
                 <div id="sas-chat-history" class="chat-history">
@@ -1926,7 +1928,8 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.18"></script>
+    <script src="app.js?v=3.19"></script>
+    <script src="visite-guidee.js?v=1"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->

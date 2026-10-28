@@ -491,6 +491,7 @@ function afficherSasAteliersEnseignant(categorie) {
     if (prof) prof.style.display = categorie === 'instituteur' ? 'none' : 'flex';
     if (inst) inst.style.display = categorie === 'instituteur' ? 'flex' : 'none';
     if (sas) sas.style.display = 'flex';
+    if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('choix_atelier');
 }
 
 function masquerSasAteliersEnseignant() {
@@ -1207,6 +1208,7 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
         }
 
         scrollToBottom('sas-chat-history');
+        if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('sas');
     }
 }
 
@@ -1321,6 +1323,7 @@ function switchTeacherTool(toolID) {
             }
         }, 800);
     }
+    if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto(toolID);
 }
 
 function goHome() {

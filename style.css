@@ -2312,3 +2312,52 @@ body.dark-theme .sas-atelier-card p { color: #94A3B8; }
     .sas-atelier-card p { margin: .15rem 0 .25rem; font-size: .8rem; }
     .sas-atelier-entrer { font-size: .8rem; }
 }
+
+
+/* ❖ VISITE GUIDÉE (28/10/2026) ❖ */
+.btn-aide-visite, .btn-banniere-aide {
+    border-radius: 10px; cursor: pointer; font-weight: 700; font-family: inherit;
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border: 1px solid #FCD34D; border-bottom: 3px solid #F59E0B; color: #92400E;
+    padding: 0.4rem 0.8rem; white-space: nowrap; flex-shrink: 0;
+    transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+.btn-aide-visite:hover, .btn-banniere-aide:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(146,64,14,.2); }
+.btn-banniere-aide { font-size: 0.85rem; }
+#visite-guidee-overlay { position: fixed; inset: 0; z-index: 10050; pointer-events: auto; }
+#visite-guidee-overlay .vg-spot {
+    position: fixed; border-radius: 12px; border: 3px solid #F59E0B;
+    box-shadow: 0 0 0 9999px rgba(15,23,42,.64); pointer-events: none;
+    transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease;
+}
+#visite-guidee-overlay .vg-bulle {
+    position: fixed; width: max-content; background: #FFFFFF; color: #1E293B;
+    border-radius: 14px; padding: 14px 16px 12px; box-shadow: 0 12px 32px rgba(0,0,0,.35);
+    font-family: inherit; line-height: 1.45;
+}
+#visite-guidee-overlay .vg-fleche {
+    position: absolute; width: 18px; height: 18px; background: #FFFFFF; transform: rotate(45deg);
+}
+#visite-guidee-overlay .vg-fleche-haut { top: -9px; }
+#visite-guidee-overlay .vg-fleche-bas { bottom: -9px; }
+#visite-guidee-overlay .vg-compteur { font-size: .72rem; font-weight: 700; color: #D97706; letter-spacing: .04em; }
+#visite-guidee-overlay .vg-titre { font-size: 1.02rem; font-weight: 800; margin: 2px 0 4px; }
+#visite-guidee-overlay .vg-texte { font-size: .9rem; color: #334155; }
+#visite-guidee-overlay .vg-boutons { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+#visite-guidee-overlay .vg-espace { flex: 1; }
+#visite-guidee-overlay .vg-boutons button {
+    border: 0; border-radius: 9px; padding: 8px 14px; font-weight: 700; font-size: .85rem; cursor: pointer; font-family: inherit;
+}
+#visite-guidee-overlay .vg-passer { background: transparent; color: #64748B; padding-left: 0; }
+#visite-guidee-overlay .vg-prec { background: #E2E8F0; color: #334155; }
+#visite-guidee-overlay .vg-suiv { background: linear-gradient(135deg,#F59E0B,#EA580C); color: #fff; }
+body.dark-theme #visite-guidee-overlay .vg-bulle, body.dark-theme #visite-guidee-overlay .vg-fleche { background: #1E293B; color: #F1F5F9; }
+body.dark-theme #visite-guidee-overlay .vg-texte { color: #CBD5E1; }
+body.dark-theme #visite-guidee-overlay .vg-prec { background: #334155; color: #E2E8F0; }
+.badge-nouveau {
+    display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+    background: #EF4444; color: #fff; font-size: .62rem; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; vertical-align: middle; animation: vg-pulse 1.6s ease-in-out infinite;
+}
+@keyframes vg-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@media (max-width: 700px) { .btn-aide-visite { padding: 0.35rem 0.6rem; } }
