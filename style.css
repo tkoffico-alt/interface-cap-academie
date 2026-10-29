@@ -2361,3 +2361,64 @@ body.dark-theme #visite-guidee-overlay .vg-prec { background: #334155; color: #E
 }
 @keyframes vg-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 @media (max-width: 700px) { .btn-aide-visite { padding: 0.35rem 0.6rem; } }
+
+/* ❖ LECTURE SUR TÉLÉPHONE — zone de réponse élargie (29/10/2026) ❖
+   Retour de Constant (comparaison avec une application de référence) : sur
+   mobile la bulle de l'assistant était étroite, car trois marges s'empilaient
+   (marge du fil 2rem + bulle à 90 % + marge interne 1,5rem), plus une bordure
+   de bulle autour des cartes de fiche. Sur écran étroit : marges du fil
+   réduites, bulle de l'assistant pleine largeur, cartes de fiche collées à
+   la bulle, barre de saisie plus compacte. Le bureau n'est pas modifié. */
+@media (max-width: 700px) {
+    .chat-history {
+        padding: 0.9rem 0.45rem 1.1rem;
+        gap: 0.8rem;
+    }
+    .chat-history .message {
+        max-width: 100%;
+        padding: 0.9rem 1rem;
+        line-height: 1.62;
+    }
+    .chat-history .bot-message {
+        align-self: stretch;
+        width: 100%;
+        border-radius: 16px;
+        border-bottom-left-radius: 6px;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+    }
+    .chat-history .user-message {
+        max-width: 90%;
+        border-radius: 16px;
+        border-bottom-right-radius: 6px;
+    }
+    .chat-history .system-message {
+        max-width: 100%;
+        align-self: stretch;
+    }
+    /* Une fiche est déjà une carte : la bulle qui l'entoure s'efface pour
+       éviter « une carte dans une bulle ». */
+    .chat-history .bot-message:has(> .fiche-lecon),
+    .chat-history .bot-message:has(> .fiche-carte) {
+        padding: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        gap: 0.6rem;
+    }
+    body.dark-theme .chat-history .bot-message:has(> .fiche-lecon),
+    body.dark-theme .chat-history .bot-message:has(> .fiche-carte) { background: transparent; }
+    .fiche-carte {
+        padding: 0.85rem 0.9rem;
+        border-radius: 14px;
+    }
+    .chat-history .message-actions {
+        margin-top: 0.7rem;
+        padding-top: 0.5rem;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .chat-input-area {
+        padding: 0.6rem 0.5rem;
+        padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
+    }
+}
