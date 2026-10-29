@@ -2381,7 +2381,6 @@ body.dark-theme #visite-guidee-overlay .vg-prec { background: #334155; color: #E
     }
     .chat-history .bot-message {
         align-self: stretch;
-        width: 100%;
         border-radius: 16px;
         border-bottom-left-radius: 6px;
         box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
@@ -2397,7 +2396,7 @@ body.dark-theme #visite-guidee-overlay .vg-prec { background: #334155; color: #E
     }
     /* Une fiche est déjà une carte : la bulle qui l'entoure s'efface pour
        éviter « une carte dans une bulle ». */
-    .chat-history .bot-message:has(> .fiche-lecon),
+    .chat-history .bot-message:has(> .fiche-lecon .fiche-carte),
     .chat-history .bot-message:has(> .fiche-carte) {
         padding: 0;
         background: transparent;
@@ -2405,7 +2404,7 @@ body.dark-theme #visite-guidee-overlay .vg-prec { background: #334155; color: #E
         box-shadow: none;
         gap: 0.6rem;
     }
-    body.dark-theme .chat-history .bot-message:has(> .fiche-lecon),
+    body.dark-theme .chat-history .bot-message:has(> .fiche-lecon .fiche-carte),
     body.dark-theme .chat-history .bot-message:has(> .fiche-carte) { background: transparent; }
     .fiche-carte {
         padding: 0.85rem 0.9rem;
@@ -2421,4 +2420,27 @@ body.dark-theme #visite-guidee-overlay .vg-prec { background: #334155; color: #E
         padding: 0.6rem 0.5rem;
         padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
     }
+    /* Fil figé : jamais de glissement latéral. Un mot très long, un tableau
+       ou une carte ne doivent plus élargir le fil (cause du décalage vers la
+       droite signalé le 29/10/2026). */
+    .chat-history {
+        overflow-x: hidden;
+        overscroll-behavior-x: none;
+    }
+    .chat-history > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+    .chat-history .bot-message,
+    .chat-history .user-message,
+    .chat-history .fiche-lecon,
+    .chat-history .fiche-carte {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+    /* Mode mascotte : l'avatar reste entièrement visible à gauche. */
+    body.mode-mascotte .chat-history { padding-left: 0.85rem; }
+    body.mode-mascotte .chat-history .bot-message { margin-left: 8px; }
+    .chat-history .mascotte-avatar { left: -12px; top: -13px; width: 30px; height: 30px; }
 }
