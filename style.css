@@ -2469,3 +2469,19 @@ body.dark-theme .defi-champ { background: #0F172A; border-color: #475569; color:
 body.dark-theme .defi-message { color: #FCA5A5; }
 body.dark-theme .defi-succes { color: #6EE7B7; }
 body.dark-theme .defi-btn-secondaire { background: #334155; color: #E2E8F0; border-color: #475569; }
+
+
+/* ===== BOUTONS RAPIDES PLUS SERRÉS (29/10/2026) =====
+   Les règles de même nom dans index.html sont chargées après ce fichier et
+   portent un identifiant : !important est donc nécessaire ici. Sur grand
+   écran, les boutons passent à la ligne (centrés) plutôt que d'être coupés ;
+   sur téléphone, ils restent sur une ligne défilante, en plus serrés. */
+.suggestions-rapides { gap: 5px !important; }
+.suggestions-rapides .btn-suggestion { padding: 6px 10px !important; font-size: 0.78em !important; }
+.suggestions-rapides .btn-suggestion .suggestion-emoji { margin-right: 0 !important; }
+@media (min-width: 701px) {
+    .suggestions-rapides { flex-wrap: wrap !important; justify-content: center; overflow-x: visible !important; }
+}
+@media (max-width: 700px) {
+    .suggestions-rapides .btn-suggestion { padding: 5px 8px !important; font-size: 0.72em !important; }
+}

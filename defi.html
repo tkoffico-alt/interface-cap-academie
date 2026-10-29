@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2563EB">
+<title>Défi EdukaTchat</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+/* Thème : même réglage que l'application (clé « eduka_theme »). Sombre seulement
+   si le joueur l'a choisi, ou si son appareil le demande et qu'il n'a rien choisi. */
+(function () {
+  var sombre = false;
+  try {
+    var choix = localStorage.getItem('eduka_theme');
+    sombre = (choix === 'dark') || (!choix && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) {}
+  if (sombre) document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<style>
+  :root {
+    --fond: #F1F5F9; --carte: #FFFFFF; --texte: #1E293B; --doux: #475569; --bord: #CBD5E1;
+    --primaire: #2563EB; --primaire-texte: #FFFFFF; --accent: #F59E0B;
+    --juste-fond: #D1FAE5; --juste-bord: #10B981; --juste-texte: #047857;
+    --faux-fond: #FEE2E2; --faux-bord: #EF4444; --faux-texte: #B91C1C;
+    --option: #FFFFFF; --option-survol: #DBEAFE; --expl-fond: #EFF6FF;
+  }
+  :root[data-theme="dark"] {
+    --fond: #0F172A; --carte: #1E293B; --texte: #E2E8F0; --doux: #CBD5E1; --bord: #475569;
+    --primaire: #3B82F6; --juste-fond: #064E3B; --juste-texte: #6EE7B7;
+    --faux-fond: #7F1D1D; --faux-texte: #FCA5A5; --option: #0F172A; --option-survol: #334155; --expl-fond: #172033;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--fond); color: var(--texte);
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.5; }
+  .page { max-width: 560px; margin: 0 auto; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; }
+  .entete { display: flex; align-items: center; justify-content: space-between; padding: 4px 2px 14px; }
+  .marque { font-weight: 800; font-size: 1.05rem; color: var(--primaire); text-decoration: none; }
+  .carte { background: var(--carte); border-radius: 16px; padding: 20px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.10); }
+  h1 { font-size: 1.35rem; line-height: 1.3; margin: 0 0 6px; overflow-wrap: anywhere; }
+  h2 { font-size: 1.1rem; line-height: 1.4; margin: 0 0 14px; overflow-wrap: anywhere; }
+  p { margin: 0 0 12px; }
+  .doux { color: var(--doux); font-size: 0.92rem; }
+  .pastille { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--expl-fond); color: var(--primaire); font-size: 0.82rem; font-weight: 600; margin-bottom: 10px; }
+  label { display: block; font-weight: 600; font-size: 0.92rem; margin: 14px 0 4px; }
+  input[type="text"] { width: 100%; min-height: 48px; padding: 10px 14px; font: inherit; border: 1px solid var(--bord);
+                       border-radius: 10px; background: var(--option); color: var(--texte); }
+  input[type="text"]:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 14px; padding: 12px 18px;
+         border: 0; border-radius: 12px; background: var(--primaire); color: var(--primaire-texte); font: inherit; font-weight: 700;
+         cursor: pointer; text-decoration: none; }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .btn-sec { background: transparent; color: var(--primaire); border: 2px solid var(--primaire); }
+  .erreur-msg { min-height: 1.3em; margin: 10px 0 0; color: var(--faux-texte); font-size: 0.92rem; font-weight: 600; }
+  .barre { height: 8px; border-radius: 999px; background: var(--bord); overflow: hidden; margin: 6px 0 16px; }
+  .barre > span { display: block; height: 100%; width: 0; background: var(--primaire); transition: width 0.3s ease; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 14px; text-align: left;
+            border: 2px solid var(--bord); border-radius: 12px; background: var(--option); color: var(--texte); font: inherit; cursor: pointer; }
+  .option:hover:not(:disabled) { background: var(--option-survol); }
+  .option:disabled { cursor: default; }
+  .lettre { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--primaire); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
+  .texte-option { overflow-wrap: anywhere; }
+  .option.juste { background: var(--juste-fond); border-color: var(--juste-bord); }
+  .option.faux { background: var(--faux-fond); border-color: var(--faux-bord); }
+  .retour { margin-top: 14px; font-weight: 700; }
+  .retour.juste { color: var(--juste-texte); } .retour.faux { color: var(--faux-texte); }
+  .explication { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--expl-fond); font-size: 0.95rem; overflow-wrap: anywhere; }
+  .score-grand { font-size: 3rem; font-weight: 800; line-height: 1.1; text-align: center; color: var(--primaire); margin: 6px 0; }
+  .centre { text-align: center; }
+  .pied { margin-top: auto; padding: 18px 4px 6px; text-align: center; font-size: 0.8rem; color: var(--doux); }
+  .cache { display: none !important; }
+  .sr-seul { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { .barre > span { transition: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <a class="marque" href="https://edukatchat.org/">EdukaTchat</a>
+    <span class="doux">⚔️ Défi</span>
+  </header>
+
+  <main id="contenu" aria-live="polite">
+    <section id="ecran-chargement" class="carte centre">
+      <p>Chargement du défi…</p>
+    </section>
+
+    <section id="ecran-erreur" class="carte cache">
+      <h1 id="erreur-titre">Oups</h1>
+      <p id="erreur-texte" class="doux"></p>
+      <a class="btn" href="https://edukatchat.org/">Découvrir EdukaTchat</a>
+    </section>
+
+    <section id="ecran-accueil" class="carte cache">
+      <span class="pastille" id="accueil-meta"></span>
+      <h1 id="accueil-titre"></h1>
+      <p class="doux" id="accueil-createur"></p>
+      <p id="accueil-infos"></p>
+      <label for="pseudo">Choisis un pseudonyme</label>
+      <input type="text" id="pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Awa" enterkeyhint="go">
+      <p id="accueil-msg" class="erreur-msg" role="alert"></p>
+      <button type="button" id="btn-demarrer" class="btn">Relever le défi</button>
+      <p class="doux" style="margin-top:14px">Pas de compte, pas d'abonnement. Seuls ton pseudonyme, ton score et ton temps sont gardés ; ils sont effacés 30 jours après la fin du défi.</p>
+    </section>
+
+    <section id="ecran-jeu" class="carte cache">
+      <div class="doux" id="jeu-progression"></div>
+      <div class="barre" aria-hidden="true"><span id="jeu-barre"></span></div>
+      <h2 id="jeu-question" tabindex="-1"></h2>
+      <div class="options" id="jeu-options"></div>
+      <div id="jeu-retour" class="retour cache" role="status"></div>
+      <div id="jeu-explication" class="explication cache"></div>
+      <p id="jeu-msg" class="erreur-msg" role="alert"></p>
+      <button type="button" id="btn-suivant" class="btn cache"></button>
+    </section>
+
+    <section id="ecran-resultat" class="carte cache centre">
+      <p class="doux" id="resultat-bravo"></p>
+      <div class="score-grand" id="resultat-score"></div>
+      <p id="resultat-temps"></p>
+      <p id="resultat-phrase"></p>
+      <a class="btn" href="https://edukatchat.org/">Réviser avec EdukaTchat</a>
+    </section>
+  </main>
+
+  <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" defer></script>
+<script src="defi.js?v=1" defer></script>
+</body>
+</html>
