@@ -7,6 +7,7 @@
   var NB = 5;
   var code = (new URLSearchParams(location.search).get('c') || '').trim().toUpperCase();
   var etat = { appareil: '', pseudo: '', suivante: null, termine: false, score: 0, duree: null, occupe: false };
+  var minuterie = null;
 
   function $(id) { return document.getElementById(id); }
   function lire(cle) { try { return localStorage.getItem(cle) || ''; } catch (e) { return ''; } }
@@ -201,6 +202,97 @@
       'Courage ! Révise la leçon puis reviens tenter ta chance sur un autre défi.';
     ecran('resultat');
     window.scrollTo(0, 0);
+    $('classement-bloc').classList.remove('cache');
+    chargerClassement();
+    demarrerRafraichissement();
+  }
+
+  /* ---------- Classement et signalement (étape 5) ---------- */
+  function rangTexte(n) { return n === 1 ? '1er' : n + 'e'; }
+
+  function chargerClassement() {
+    return appel(code + '/classement', 'GET').then(function (res) {
+      if (!res.ok) {
+        if (res.statut === 410 || res.statut === 404) { arreterRafraichissement(); erreur('Défi indisponible', messageErreur(res)); }
+        return;
+      }
+      afficherClassement(res.donnees);
+    });
+  }
+
+  function afficherClassement(d) {
+    var liste = $('classement-liste');
+    liste.innerHTML = '';
+    var n = d.nb_termines;
+    $('classement-info').textContent = n === 0 ? 'Personne n\'a encore terminé.' :
+      (n + ' joueur' + (n > 1 ? 's ont' : ' a') + ' terminé' + (d.nb_en_cours > 0 ? ' · ' + d.nb_en_cours + ' en train de jouer' : ''));
+    d.joueurs.forEach(function (j) {
+      var moi = (j.pseudo !== null && j.pseudo === etat.pseudo);
+      var li = document.createElement('li');
+      li.className = 'rang' + (moi ? ' moi' : '');
+      var rang = document.createElement('span'); rang.className = 'rang-n'; rang.textContent = rangTexte(j.rang);
+      var nom = document.createElement('span'); nom.className = 'rang-nom' + (j.masque ? ' masque' : '');
+      nom.textContent = j.masque ? 'Pseudonyme masqué' : (j.pseudo + (moi ? ' (toi)' : ''));
+      var score = document.createElement('span'); score.className = 'rang-score'; score.textContent = j.score + '/' + d.nb_questions;
+      var temps = document.createElement('span'); temps.className = 'rang-temps'; temps.textContent = formaterDuree(j.duree_s);
+      li.appendChild(rang); li.appendChild(nom); li.appendChild(score); li.appendChild(temps);
+      if (!moi && !j.masque) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'rang-signal'; b.textContent = '⚑';
+        b.setAttribute('aria-label', 'Signaler le pseudonyme ' + j.pseudo);
+        b.addEventListener('click', function () { demanderConfirmation(li, b, j.pseudo); });
+        li.appendChild(b);
+      }
+      liste.appendChild(li);
+    });
+  }
+
+  /* Confirmation en ligne (pas de fenêtre du navigateur) avant d'envoyer un signalement. */
+  function demanderConfirmation(li, bouton, pseudo) {
+    var zone = document.createElement('span');
+    zone.className = 'confirmation';
+    zone.appendChild(document.createTextNode('Signaler ?'));
+    var oui = document.createElement('button'); oui.type = 'button'; oui.textContent = 'Oui';
+    var non = document.createElement('button'); non.type = 'button'; non.textContent = 'Non';
+    zone.appendChild(oui); zone.appendChild(non);
+    bouton.style.display = 'none';
+    li.appendChild(zone);
+    non.addEventListener('click', function () { zone.remove(); bouton.style.display = ''; });
+    oui.addEventListener('click', function () {
+      oui.disabled = non.disabled = true;
+      envoyerSignalement(pseudo).then(function (ok) {
+        zone.textContent = ok ? 'Merci, signalement envoyé.' : 'Échec, réessaie plus tard.';
+        if (!ok) { setTimeout(function () { zone.remove(); bouton.style.display = ''; }, 2500); }
+        else { chargerClassement(); }
+      });
+    });
+  }
+
+  function envoyerSignalement(cible) {
+    return appel(code + '/signaler', 'POST', { appareil: etat.appareil, cible: cible || '' }).then(function (res) {
+      if (!res.ok) { $('signal-msg').textContent = messageErreur(res); }
+      return res.ok;
+    });
+  }
+
+  function demarrerRafraichissement() {
+    arreterRafraichissement();
+    minuterie = setInterval(function () {
+      if (!document.hidden && !$('ecran-resultat').classList.contains('cache')) chargerClassement();
+    }, 15000);
+  }
+  function arreterRafraichissement() { if (minuterie) { clearInterval(minuterie); minuterie = null; } }
+
+  /* Défi dont le délai est dépassé : on ne joue plus, mais le classement final reste lisible. */
+  function afficherDefiTermine(d) {
+    etat.pseudo = lire('eduka_defi_' + code);
+    $('resultat-bravo').textContent = d.titre;
+    $('resultat-score').textContent = 'Défi terminé';
+    $('resultat-temps').textContent = 'Le délai pour jouer est dépassé.';
+    $('resultat-phrase').textContent = 'Voici le classement final. Demande à ton camarade de te lancer un nouveau défi !';
+    ecran('resultat');
+    $('classement-bloc').classList.remove('cache');
+    chargerClassement();
   }
 
   /* ---------- Démarrage de la page ---------- */
@@ -215,6 +307,16 @@
       if (etat.termine) afficherResultat();
       else if (etat.suivante) afficherQuestion(etat.suivante);
     });
+    $('btn-actualiser').addEventListener('click', chargerClassement);
+    $('btn-signaler-defi').addEventListener('click', function () {
+      var bouton = $('btn-signaler-defi');
+      bouton.disabled = true;
+      $('signal-msg').textContent = '';
+      envoyerSignalement('').then(function (ok) {
+        if (ok) { $('signal-msg').textContent = 'Merci, ton signalement a été enregistré.'; bouton.style.display = 'none'; }
+        else { bouton.disabled = false; }
+      });
+    });
     appel(code, 'GET').then(function (res) {
       if (!res.ok) {
         return erreur(res.statut === 410 ? 'Défi indisponible' : (res.statut === 404 ? 'Défi introuvable' : 'Oups'), messageErreur(res));
@@ -224,11 +326,11 @@
       if (dejaJoue) {   // cet appareil a déjà commencé ce défi : on reprend là où il en était
         return demarrer(dejaJoue, true).then(function () {
           if ($('ecran-chargement').classList.contains('cache')) return;   // partie reprise : rien à faire
-          if (d.etat !== 'actif') return erreur('Ce défi est terminé', 'Le délai pour jouer est dépassé. Demande à ton camarade de te lancer un nouveau défi !');
+          if (d.etat !== 'actif') return afficherDefiTermine(d);
           afficherAccueil(d);
         });
       }
-      if (d.etat !== 'actif') return erreur('Ce défi est terminé', 'Le délai pour jouer est dépassé. Demande à ton camarade de te lancer un nouveau défi !');
+      if (d.etat !== 'actif') return afficherDefiTermine(d);
       afficherAccueil(d);
     });
   }

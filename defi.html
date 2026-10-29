@@ -74,6 +74,20 @@
   .score-grand { font-size: 3rem; font-weight: 800; line-height: 1.1; text-align: center; color: var(--primaire); margin: 6px 0; }
   .centre { text-align: center; }
   .pied { margin-top: auto; padding: 18px 4px 6px; text-align: center; font-size: 0.8rem; color: var(--doux); }
+  .classement { margin-top: 22px; text-align: left; }
+  .liste-classement { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .rang { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--option); }
+  .rang.moi { border: 2px solid var(--primaire); background: var(--expl-fond); }
+  .rang-n { flex-shrink: 0; min-width: 2.6em; font-weight: 800; color: var(--primaire); }
+  .rang-nom { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+  .rang-nom.masque { font-style: italic; color: var(--doux); font-weight: 400; }
+  .rang-score { font-weight: 700; white-space: nowrap; }
+  .rang-temps { color: var(--doux); font-size: 0.85rem; white-space: nowrap; }
+  .rang-signal { flex-shrink: 0; min-width: 44px; min-height: 44px; border: 0; background: transparent; color: var(--doux); font-size: 1rem; cursor: pointer; border-radius: 10px; }
+  .rang-signal:hover { background: var(--option-survol); }
+  .confirmation { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.85rem; }
+  .confirmation button { min-height: 44px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--bord); background: var(--option); color: var(--texte); font: inherit; cursor: pointer; }
+  .lien-discret { display: inline-block; margin-top: 10px; min-height: 44px; padding: 8px 12px; border: 0; background: transparent; color: var(--doux); font: inherit; font-size: 0.85rem; text-decoration: underline; cursor: pointer; }
   .cache { display: none !important; }
   .sr-seul { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   @media (prefers-reduced-motion: reduce) { .barre > span { transition: none; } }
@@ -126,12 +140,20 @@
       <p id="resultat-temps"></p>
       <p id="resultat-phrase"></p>
       <a class="btn" href="https://edukatchat.org/">Réviser avec EdukaTchat</a>
+      <div id="classement-bloc" class="classement cache">
+        <h2>Classement</h2>
+        <p class="doux" id="classement-info"></p>
+        <ol id="classement-liste" class="liste-classement"></ol>
+        <button type="button" id="btn-actualiser" class="btn btn-sec">Actualiser le classement</button>
+      </div>
+      <p id="signal-msg" class="doux" role="status"></p>
+      <button type="button" id="btn-signaler-defi" class="lien-discret">Signaler ce défi</button>
     </section>
   </main>
 
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" defer></script>
-<script src="defi.js?v=1" defer></script>
+<script src="defi.js?v=2" defer></script>
 </body>
 </html>
