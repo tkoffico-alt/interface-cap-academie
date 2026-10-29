@@ -4313,7 +4313,7 @@ function reinjecterQuiz(html, jetons) {
                 `<button type="button" class="quiz-option" data-i="${i}" onclick="repondreQuiz(this)"><span class="quiz-lettre">${lettres[i]}</span><span class="quiz-texte">${texteQuizAvecLatex(opt)}</span></button>`
             ).join('');
             const explication = q.explication ? texteQuizAvecLatex(q.explication) : '';
-            rendu = `<div class="quiz-carte" data-bonne="${bonne}"><div class="quiz-etiquette">Quiz</div><div class="quiz-question">${texteQuizAvecLatex(q.question)}</div><div class="quiz-options">${boutons}</div><div class="quiz-retour" style="display:none"></div><div class="quiz-explication" style="display:none">${explication}</div></div>`;
+            rendu = `<div class="quiz-carte" data-bonne="${bonne}" data-quiz-source="${source.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"><div class="quiz-etiquette">Quiz</div><div class="quiz-question">${texteQuizAvecLatex(q.question)}</div><div class="quiz-options">${boutons}</div><div class="quiz-retour" style="display:none"></div><div class="quiz-explication" style="display:none">${explication}</div></div>`;
         } catch (e) {
             rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
         }
@@ -4373,6 +4373,7 @@ function repondreQuiz(bouton) {
     enregistrerResultatEvaluation('quiz', choix === bonne, (typeof avatarActif !== 'undefined') ? avatarActif : 'general');
     const expl = carte.querySelector('.quiz-explication');
     if (expl && expl.textContent.trim()) expl.style.display = 'block';
+    try { mettreAJourBoutonDefi(carte); } catch (e) { /* le défi ne doit jamais gêner le quiz */ }
     const historique = carte.closest('[id$="-chat-history"]');
     if (historique) saveChatHistory(historique.id.replace('-chat-history', ''));
 }
@@ -7020,3 +7021,189 @@ async function chargerFonctionsActives() {
     }
 }
 document.addEventListener('DOMContentLoaded', chargerFonctionsActives);
+
+
+// ❖ DÉFI PAR LIEN — étape 3 : bouton « Défier un camarade » (29/10/2026) ❖
+// Visible UNIQUEMENT si le serveur a répondu « true » pour la fonction « defi »
+// (voir fonctionActive). Le bouton apparaît sous le 5e quiz d'un même message
+// quand les 5 premières questions ont reçu une réponse. Voir
+// cahiers_des_charges/CDC_defi_par_lien.md.
+const DEFI_NB_QUESTIONS = 5;
+
+function cartesDefiDeLaBulle(bulle) {
+    return Array.from(bulle.querySelectorAll('.quiz-carte[data-quiz-source]')).slice(0, DEFI_NB_QUESTIONS);
+}
+
+function mettreAJourBoutonDefi(carte) {
+    if (!fonctionActive('defi') || !carte) return;
+    const bulle = carte.closest('.bot-message') || carte.parentElement;
+    if (!bulle || bulle.querySelector('.defi-action')) return;
+    const cartes = cartesDefiDeLaBulle(bulle);
+    if (cartes.length < DEFI_NB_QUESTIONS) return;
+    if (!cartes.every(c => c.classList.contains('quiz-repondu'))) return;
+    const zone = document.createElement('div');
+    zone.className = 'defi-action';
+    const bouton = document.createElement('button');
+    bouton.type = 'button';
+    bouton.className = 'defi-bouton';
+    bouton.setAttribute('onclick', 'ouvrirFenetreDefi(this)');
+    bouton.textContent = '⚔️ Défier un camarade';
+    zone.appendChild(bouton);
+    cartes[cartes.length - 1].insertAdjacentElement('afterend', zone);
+}
+
+function balayerBoutonsDefi() {
+    if (!fonctionActive('defi')) {
+        document.querySelectorAll('.defi-action').forEach(z => z.remove());
+        return;
+    }
+    document.querySelectorAll('.quiz-carte[data-quiz-source].quiz-repondu').forEach(c => {
+        try { mettreAJourBoutonDefi(c); } catch (e) { /* ignoré */ }
+    });
+}
+document.addEventListener('fonctions-actives', balayerBoutonsDefi);
+
+function fermerFenetreDefi() {
+    const ancienne = document.getElementById('defi-overlay');
+    if (ancienne) ancienne.remove();
+    document.removeEventListener('keydown', toucheFenetreDefi);
+}
+function toucheFenetreDefi(e) { if (e.key === 'Escape') fermerFenetreDefi(); }
+
+function creerElementDefi(balise, classe, texte) {
+    const el = document.createElement(balise);
+    if (classe) el.className = classe;
+    if (texte !== undefined) el.textContent = texte;
+    return el;
+}
+
+function ouvrirFenetreDefi(bouton) {
+    const bulle = bouton.closest('.bot-message');
+    if (!bulle) return;
+    const cartes = cartesDefiDeLaBulle(bulle);
+    const questions = [];
+    for (const c of cartes) {
+        try {
+            const q = JSON.parse(c.getAttribute('data-quiz-source'));
+            questions.push({ question: q.question, options: q.options, bonne: q.bonne, explication: q.explication || '' });
+        } catch (e) { /* carte illisible : le serveur refusera si elles ne sont pas 5 */ }
+    }
+    const score = cartes.filter(c => c.querySelector('.quiz-retour-juste')).length;
+    const matiere = formaterNomMatiere(avatarActif);
+    let pseudoMemorise = '';
+    try { pseudoMemorise = localStorage.getItem('eduka_defi_pseudo') || ''; } catch (e) { /* stockage indisponible */ }
+
+    fermerFenetreDefi();
+    const overlay = creerElementDefi('div', 'defi-overlay');
+    overlay.id = 'defi-overlay';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) fermerFenetreDefi(); });
+    const fenetre = creerElementDefi('div', 'defi-fenetre');
+    fenetre.setAttribute('role', 'dialog');
+    fenetre.setAttribute('aria-modal', 'true');
+    fenetre.setAttribute('aria-label', 'Défier un camarade');
+
+    const titreFenetre = creerElementDefi('h3', 'defi-titre-fenetre', '⚔️ Défier un camarade');
+    const aide = creerElementDefi('p', 'defi-aide', 'Ton camarade rejouera ces 5 questions depuis un lien, sans compte ni abonnement. Le lien est valable 7 jours.');
+
+    const labelTitre = creerElementDefi('label', 'defi-label', 'Titre du défi');
+    const champTitre = creerElementDefi('input', 'defi-champ');
+    champTitre.type = 'text'; champTitre.maxLength = 80;
+    champTitre.value = matiere + ' — Quiz de révision';
+    labelTitre.appendChild(champTitre);
+
+    const labelPseudo = creerElementDefi('label', 'defi-label', 'Ton pseudonyme (visible par tes camarades)');
+    const champPseudo = creerElementDefi('input', 'defi-champ');
+    champPseudo.type = 'text'; champPseudo.maxLength = 20; champPseudo.placeholder = 'Ex. : Awa';
+    champPseudo.value = pseudoMemorise;
+    labelPseudo.appendChild(champPseudo);
+
+    const message = creerElementDefi('p', 'defi-message');
+    message.setAttribute('role', 'status');
+    const zoneResultat = creerElementDefi('div', 'defi-resultat');
+    zoneResultat.style.display = 'none';
+
+    const boutons = creerElementDefi('div', 'defi-boutons');
+    const btnAnnuler = creerElementDefi('button', 'defi-btn defi-btn-secondaire', 'Fermer');
+    btnAnnuler.type = 'button';
+    btnAnnuler.addEventListener('click', fermerFenetreDefi);
+    const btnCreer = creerElementDefi('button', 'defi-btn defi-btn-principal', 'Créer le lien');
+    btnCreer.type = 'button';
+    boutons.appendChild(btnAnnuler);
+    boutons.appendChild(btnCreer);
+
+    btnCreer.addEventListener('click', async () => {
+        const titre = champTitre.value.trim();
+        const pseudo = champPseudo.value.trim();
+        message.textContent = '';
+        if (!titre) { message.textContent = 'Donne un titre à ton défi.'; return; }
+        btnCreer.disabled = true;
+        btnCreer.textContent = 'Création…';
+        try {
+            let sceau = '';
+            try { sceau = localStorage.getItem('eduka_sceau') || ''; } catch (e) { /* stockage indisponible */ }
+            const reponse = await fetch('https://api.edukatchat.org/api/defis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ matricule: sceau, titre, pseudo, matiere, classe: classeActive, questions })
+            });
+            let donnees = {};
+            try { donnees = await reponse.json(); } catch (e) { /* réponse vide */ }
+            if (!reponse.ok) {
+                message.textContent = (reponse.status === 404)
+                    ? "Cette fonction n'est pas disponible pour le moment."
+                    : (typeof donnees.detail === 'string' ? donnees.detail : 'Impossible de créer le défi. Réessaie dans un instant.');
+                btnCreer.disabled = false;
+                btnCreer.textContent = 'Créer le lien';
+                return;
+            }
+            try { localStorage.setItem('eduka_defi_pseudo', pseudo); } catch (e) { /* stockage indisponible */ }
+            afficherLienDefi(fenetre, zoneResultat, donnees, titre, score);
+            labelTitre.style.display = 'none';
+            labelPseudo.style.display = 'none';
+            aide.style.display = 'none';
+            btnCreer.remove();
+            btnAnnuler.textContent = 'Terminé';
+        } catch (e) {
+            message.textContent = 'Connexion impossible. Vérifie ta connexion et réessaie.';
+            btnCreer.disabled = false;
+            btnCreer.textContent = 'Créer le lien';
+        }
+    });
+
+    fenetre.append(titreFenetre, aide, labelTitre, labelPseudo, message, zoneResultat, boutons);
+    overlay.appendChild(fenetre);
+    document.body.appendChild(overlay);
+    document.addEventListener('keydown', toucheFenetreDefi);
+    champTitre.focus();
+}
+
+function afficherLienDefi(fenetre, zone, donnees, titre, score) {
+    zone.style.display = 'block';
+    zone.textContent = '';
+    zone.appendChild(creerElementDefi('p', 'defi-succes', '✅ Ton défi est prêt !'));
+    const boite = creerElementDefi('input', 'defi-champ defi-lien');
+    boite.type = 'text'; boite.readOnly = true; boite.value = donnees.lien || '';
+    boite.addEventListener('focus', () => boite.select());
+    zone.appendChild(boite);
+    const texteWhatsApp = 'Défi EdukaTchat : je viens de faire ' + score + '/' + DEFI_NB_QUESTIONS
+        + ' sur « ' + titre + ' ». Peux-tu faire mieux ? Joue ici (' + DEFI_NB_QUESTIONS
+        + ' questions, 2 minutes) : ' + (donnees.lien || '');
+    const rang = creerElementDefi('div', 'defi-boutons');
+    const btnWa = creerElementDefi('a', 'defi-btn defi-btn-principal', 'Partager sur WhatsApp');
+    btnWa.href = 'https://wa.me/?text=' + encodeURIComponent(texteWhatsApp);
+    btnWa.target = '_blank'; btnWa.rel = 'noopener noreferrer';
+    const btnCopier = creerElementDefi('button', 'defi-btn defi-btn-secondaire', 'Copier le lien');
+    btnCopier.type = 'button';
+    btnCopier.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(donnees.lien || '');
+            btnCopier.textContent = 'Lien copié ✓';
+        } catch (e) {
+            boite.focus(); boite.select();
+            btnCopier.textContent = 'Sélectionné : copie-le';
+        }
+    });
+    rang.append(btnWa, btnCopier);
+    zone.appendChild(rang);
+    zone.appendChild(creerElementDefi('p', 'defi-aide', 'Les résultats sont effacés 30 jours après la fin du défi.'));
+}
