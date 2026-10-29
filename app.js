@@ -4263,11 +4263,26 @@ function reinjecterGraphique(html, jetons) {
 function extraireEtRendreQuiz(texte) {
     const jetons = [];
     let compteur = 0;
-    const resultat = texte.replace(/```quiz\s*\n([\s\S]*?)```/g, (motifEntier, source) => {
+    // ❖ 29/10/2026 : l'agent écrit parfois une clôture abîmée (« ``} » au lieu de
+    // « ``` ») ou oublie l'étiquette « quiz » (bloc « ```json » ou sans étiquette) :
+    // le quiz s'affichait alors en code brut dans une carte « Devoir ». On
+    // tolère donc ces écarts ; un bloc sans étiquette « quiz » n'est transformé
+    // que si son contenu est réellement un quiz valide (jamais un autre code).
+    const mettreEnJeton = (source) => {
         const jeton = `@@QUIZ${compteur}@@`;
         jetons.push({ jeton, source: source.trim() });
         compteur++;
         return jeton;
+    };
+    let resultat = texte.replace(/```quiz\s*\n([\s\S]*?)(?:```|``\})/g, (motifEntier, source) => mettreEnJeton(source));
+    resultat = resultat.replace(/```(?:json)?[ \t]*\n(\{[\s\S]*?\})[ \t]*\n?(?:```|``\})/g, (motifEntier, source) => {
+        try {
+            const q = JSON.parse(source.trim());
+            if (q && typeof q.question === 'string' && Array.isArray(q.options) && 'bonne' in q) {
+                return mettreEnJeton(source);
+            }
+        } catch (e) { /* pas un quiz : on laisse le bloc tel quel */ }
+        return motifEntier;
     });
     return { texte: resultat, jetons };
 }
