@@ -4260,7 +4260,7 @@ function reinjecterGraphique(html, jetons) {
     return resultat;
 }
 
-function extraireEtRendreQuiz(texte) {
+function extraireEtRendreQuiz(texte, enCours) {
     const jetons = [];
     let compteur = 0;
     // ❖ 29/10/2026 : l'agent écrit parfois une clôture abîmée (« ``} » au lieu de
@@ -4284,6 +4284,16 @@ function extraireEtRendreQuiz(texte) {
         } catch (e) { /* pas un quiz : on laisse le bloc tel quel */ }
         return motifEntier;
     });
+    // ❖ 29/10/2026 : PENDANT la frappe, un bloc de quiz pas encore refermé s'affichait
+    // brièvement en code brut avant de devenir une carte. On le masque derrière une
+    // ligne douce jusqu'à ce qu'il soit complet (les blocs déjà complets, eux, sont
+    // déjà devenus des cartes ci-dessus). Au rendu final (enCours faux), rien ne change.
+    if (enCours) {
+        const masque = '\n\n🎯 *Préparation du quiz…*\n';
+        resultat = resultat.replace(/```quiz[\s\S]*$/, masque);
+        resultat = resultat.replace(/```(?:json)?[ \t]*\n[ \t]*\{(?:(?!```)[\s\S])*$/, (m) => (/"question"/.test(m) || m.length < 40) ? masque : m);
+        resultat = resultat.replace(/`{1,3}(?:q|qu|qui|quiz|j|js|jso|json)?[ \t]*$/, '');
+    }
     return { texte: resultat, jetons };
 }
 
@@ -4421,7 +4431,7 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
         // marked.parse puis habillé en carte "Devoir", ce qui n'a aucun
         // rapport avec son contenu réel.
         const { texte: sourceSansGraph, jetons: jetonsGraph } = extraireEtRendreGraphique(source);
-        const { texte: sourceSansQuiz, jetons: jetonsQuiz } = extraireEtRendreQuiz(sourceSansGraph);
+        const { texte: sourceSansQuiz, jetons: jetonsQuiz } = extraireEtRendreQuiz(sourceSansGraph, enCoursDeFrappe);
         const { texte: sourceSansABC, jetons: jetonsABC } = extraireEtRendreABC(sourceSansQuiz);
         const { texte: sourceSansLatex, jetons: jetonsLatex } = extraireEtRendreLatex(sourceSansABC);
         html = marked.parse(sourceSansLatex);
