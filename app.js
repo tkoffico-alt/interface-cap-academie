@@ -4985,6 +4985,7 @@ async function verifyMatricule() {
             feedback.style.color = "#10B981";
 
             localStorage.setItem('eduka_sceau', matricule);
+            if (typeof chargerFonctionsActives === 'function') setTimeout(chargerFonctionsActives, 0);
 
             setTimeout(() => {
                 closePremiumModal();
@@ -6992,3 +6993,30 @@ window.addEventListener('appinstalled', () => {
     if (banniere) banniere.classList.remove('active');
     localStorage.setItem(CLE_BANNIERE_PWA_MASQUEE, '1');
 });
+
+
+// ❖ FONCTIONS EN TEST (29/10/2026) ❖
+// Le serveur dit quelles fonctions en chantier (ex. « defi ») sont visibles pour
+// CE Sceau (voir FONCTIONS_EN_TEST dans gateway/main.py). Tant que la réponse n'est
+// pas « true », la fonction n'existe pas dans la page. Échec réseau = tout fermé.
+window.fonctionsActives = {};
+function fonctionActive(nom) {
+    return !!(window.fonctionsActives && window.fonctionsActives[nom]);
+}
+async function chargerFonctionsActives() {
+    try {
+        let sceau = '';
+        try { sceau = localStorage.getItem('eduka_sceau') || ''; } catch (e) { /* stockage indisponible */ }
+        const reponse = await fetch('https://api.edukatchat.org/api/fonctions-actives', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau })
+        });
+        if (!reponse.ok) return;
+        window.fonctionsActives = await reponse.json();
+        document.dispatchEvent(new CustomEvent('fonctions-actives'));
+    } catch (e) {
+        window.fonctionsActives = {};
+    }
+}
+document.addEventListener('DOMContentLoaded', chargerFonctionsActives);
