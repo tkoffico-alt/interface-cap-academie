@@ -1718,7 +1718,7 @@
                     <div id="sas-suggestions-rapides" class="suggestions-rapides">
                         <button type="button" class="btn-suggestion btn-suggestion-guide sug-principal" data-message="Je ne sais pas par où commencer aujourd'hui, guide-moi."><span class="suggestion-emoji">🧭</span>Guide-moi</button>
                         <button type="button" class="btn-suggestion btn-suggestion-reviser sug-outil" data-message="Je veux réviser un chapitre, aide-moi à choisir lequel."><span class="suggestion-emoji">📖</span>Réviser un chapitre</button>
-                        <button type="button" class="btn-suggestion btn-suggestion-exercice sug-vert" data-message="J'ai un exercice précis sur lequel je bloque, je vais te l'expliquer."><span class="suggestion-emoji">✏️</span>Un exercice précis</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-exercice sug-vert" data-prefill="J'ai un exercice précis sur lequel je bloque. Voici l'énoncé : …"><span class="suggestion-emoji">✏️</span>Un exercice précis</button>
                         <button type="button" class="btn-suggestion sug-ponctuel" data-message="Quiz sur cette leçon : pose-moi 5 questions à choix pour me tester sur la leçon que nous venons de voir."><span class="suggestion-emoji">🎯</span>Quiz sur cette leçon</button>
                         <button type="button" class="btn-suggestion sug-ambre" data-message="Explique-moi autrement ta dernière explication, plus simplement, avec un exemple de la vie en Côte d'Ivoire."><span class="suggestion-emoji">💡</span>Explique-moi autrement</button>
                         <button type="button" class="btn-suggestion btn-suggestion-rentree sug-violet" data-message="C'est les vacances : aide-moi à préparer la rentrée prochaine."><span class="suggestion-emoji">🌴</span>Préparer la rentrée</button>
@@ -1754,9 +1754,10 @@
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
                         <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier')" title="Renseigner type, durée, nombre d'exercices et répartition des points">📋 Formulaire guidé</button>
-                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Je veux créer une nouvelle évaluation, aide-moi à cadrer matière, classe et durée.">📝 Évaluation libre</button>
-                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-message="Ajoute des références ou sources fiables à la dernière évaluation générée.">📚 Ajouter des sources</button>
-                        <button type="button" class="btn-suggestion sug-outil" data-outil="atelier" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Variante</button>
+                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="atelier" data-apres-doc="1" data-message="Ajoute des références ou sources fiables à la dernière évaluation générée.">📚 Ajouter des sources</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="atelier" data-apres-doc="1" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Variante</button>
+                        <button type="button" class="btn-suggestion sug-ambre" data-outil="atelier" data-apres-doc="1" data-message="Rédige le corrigé-type détaillé et le barème de la dernière évaluation générée.">✅ Corrigé-type et barème</button>
+                        <button type="button" class="btn-suggestion sug-vert" data-outil="atelier" data-apres-doc="1" data-message="Propose des exercices de remédiation pour les élèves en difficulté, d'après la dernière évaluation générée.">🩹 Remédiation</button>
                         <button type="button" class="btn-suggestion btn-formulaire-guide sug-ponctuel" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier_copies')" title="Bonus : proposition de correction à relire et ajuster (photo de la copie à joindre)">✍️ Corriger des copies</button>
                         <button type="button" class="btn-suggestion btn-formulaire-guide sug-violet" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier_officiel')" title="Épreuve type BEPC/BAC au format officiel (Exercice 1, 2, 3… avec barème sur 20)">🏛️ Épreuve BEPC / BAC</button>
                     </div>
@@ -1791,9 +1792,9 @@
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
                         <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="forge" onclick="ouvrirFormulaireGuide('forge')" title="Renseigner durée, matériel… pour obtenir exactement la fiche voulue">📋 Formulaire guidé</button>
-                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="forge" data-message="Je veux créer une nouvelle fiche de leçon, aide-moi à cadrer matière, classe et chapitre.">📖 Leçon libre</button>
-                        <button type="button" class="btn-suggestion sug-outil" data-outil="forge" data-message="Ajoute des activités ou exercices d'application à la dernière fiche.">🧩 Ajouter des activités</button>
-                        <button type="button" class="btn-suggestion sug-secondaire" data-outil="forge" data-message="Actualise l'entête de la dernière fiche (identification, objectifs, prérequis).">🔖 Mettre à jour l'en-tête</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="forge" data-apres-doc="1" data-message="Ajoute des activités ou exercices d'application à la dernière fiche.">🧩 Ajouter des activités</button>
+                        <button type="button" class="btn-suggestion sug-ambre" data-outil="forge" data-apres-doc="1" data-message="Ajoute à la dernière fiche une courte évaluation de fin de séance (3 à 5 questions) avec corrigé.">🎯 Évaluation de fin de séance</button>
+                        <button type="button" class="btn-suggestion sug-vert" data-outil="forge" data-apres-doc="1" data-message="Propose une version différenciée de la dernière fiche : activités de soutien et d'approfondissement.">🧑‍🏫 Différenciation</button>
                     </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('forge-chat-history', 'forge')" title="Joindre une photo (JPG/PNG uniquement, bien éclairée et à plat)">
@@ -1825,9 +1826,9 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion sug-principal" data-outil="cabinet" data-message="J'ai une situation-problème à te soumettre, aide-moi à l'analyser.">💡 Une situation-problème</button>
+                        <button type="button" class="btn-suggestion sug-principal" data-outil="cabinet" data-prefill="Situation-problème — Classe : … ; Ce qui s'est passé : … ; Ce que j'ai déjà essayé : …">💡 Une situation-problème</button>
                         <button type="button" class="btn-suggestion sug-outil" data-outil="cabinet" data-message="Donne-moi un conseil pédagogique pour un point du programme que je maîtrise moins.">🧑‍🏫 Conseil pédagogique</button>
-                        <button type="button" class="btn-suggestion sug-ambre" data-outil="cabinet" data-message="Aide-moi à analyser une difficulté récurrente rencontrée avec mes élèves.">📊 Analyser une difficulté</button>
+                        <button type="button" class="btn-suggestion sug-ambre" data-outil="cabinet" data-prefill="Difficulté récurrente — Classe : … ; Matière : … ; Ce que je constate chez les élèves : …">📊 Analyser une difficulté</button>
                     </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('cabinet-chat-history', 'cabinet')" title="Joindre une photo (JPG/PNG uniquement, bien éclairée et à plat)">
@@ -1853,10 +1854,9 @@
                 </div>
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
-                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="forge_primaire" onclick="ouvrirFormulaireGuide('forge_primaire')" title="Renseigner type de fiche, classe, matière, leçon, durée… pour obtenir exactement la fiche voulue">📋 Formulaire guidé</button>
-                        <button type="button" class="btn-suggestion sug-outil" data-outil="forge_primaire" data-message="Je veux créer une fiche de préparation, aide-moi à cadrer classe, matière et leçon.">📖 Nouvelle fiche de préparation</button>
-                        <button type="button" class="btn-suggestion sug-ambre" data-outil="forge_primaire" data-message="Je veux créer une fiche d'évaluation pour cette leçon.">📝 Nouvelle fiche d'évaluation</button>
-                        <button type="button" class="btn-suggestion sug-vert" data-outil="forge_primaire" data-message="Ajoute des exercices d'application à la dernière fiche.">🧩 Ajouter des exercices</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="forge_primaire" onclick="ouvrirFormulaireGuide('forge_primaire')" title="Renseigner classe, matière, leçon, durée… pour obtenir exactement la fiche voulue">📋 Formulaire de préparation</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-outil" data-outil="forge_primaire" onclick="ouvrirFormulaireGuide('forge_primaire_eval')" title="Classe, matière, type d'évaluation, durée, barème…">📝 Formulaire d'évaluation</button>
+                        <button type="button" class="btn-suggestion sug-vert" data-outil="forge_primaire" data-apres-doc="1" data-message="Ajoute des exercices d'application à la dernière fiche.">🧩 Ajouter des exercices</button>
                     </div>
                     <div class="chat-input-wrapper">
                         <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('forge_primaire-chat-history', 'forge_primaire')" title="Joindre une photo (JPG/PNG uniquement, bien éclairée et à plat)">
@@ -1883,7 +1883,7 @@
                 <div class="chat-input-area">
                     <div class="suggestions-rapides">
                         <button type="button" class="btn-suggestion sug-outil" data-outil="cabinet_primaire" data-message="Donne-moi un conseil pédagogique pour un point du programme que je maîtrise moins.">🧑‍🏫 Conseil pédagogique</button>
-                        <button type="button" class="btn-suggestion sug-principal" data-outil="cabinet_primaire" data-message="J'ai un élève en difficulté, aide-moi à analyser sa situation.">📊 Un élève en difficulté</button>
+                        <button type="button" class="btn-suggestion sug-principal" data-outil="cabinet_primaire" data-prefill="Élève en difficulté — Classe : … ; Matière : … ; Ce que j'observe : …">📊 Un élève en difficulté</button>
                         <button type="button" class="btn-suggestion sug-vert" data-outil="cabinet_primaire" data-message="Comment gérer une classe à plusieurs niveaux de compréhension ?">🧭 Gestion de classe</button>
                     </div>
                     <div class="chat-input-wrapper">
@@ -1928,7 +1928,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.23"></script>
+    <script src="app.js?v=3.24"></script>
     <script src="visite-guidee.js?v=1"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">

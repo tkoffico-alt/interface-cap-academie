@@ -2514,3 +2514,7 @@ body.dark-theme .banniere-actions-sas .btn-banniere-aide { background: rgba(245,
 @media (max-width: 700px) {
     .banniere-actions-sas .btn-banniere-action { min-height: 28px; padding: 0.18rem 0.6rem; font-size: 0.74rem; }
 }
+
+/* ===== BOUTONS D'ACTION « APRÈS DOCUMENT » (30/10/2026) =====
+   Visibles seulement une fois un document généré (classe .doc-pret posée par app.js). */
+.suggestions-rapides .btn-suggestion[data-apres-doc]:not(.doc-pret) { display: none !important; }

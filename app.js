@@ -43,6 +43,21 @@ document.addEventListener('click', function (evenement) {
     if (!bouton) return;
     if (bouton.classList.contains('btn-formulaire-guide')) return; // ouvre son propre panneau (ouvrirFormulaireGuide)
     const outil = bouton.dataset.outil || 'sas';
+    // ❖ 30/10/2026 : bouton « à pré-remplir » (data-prefill) : il place un modèle à
+    // compléter dans le champ SANS rien envoyer (aucun appel au modèle, aucun message
+    // du quota quotidien consommé tant que l'utilisateur n'a pas envoyé lui-même).
+    if (bouton.dataset.prefill) {
+        const cible = document.getElementById(`${outil}-user-input`);
+        if (cible && !cible.disabled) {
+            if (outil === 'sas') sasPremierEchangeEnAttente = false;
+            else { outilsDejaAmorces.add(outil); reinitialiserConversationEnseignant(outil); }
+            cible.value = bouton.dataset.prefill;
+            cible.focus();
+            const i = cible.value.indexOf('…');
+            try { if (i >= 0) cible.setSelectionRange(i, i + 1); } catch (e) {}
+        }
+        return;
+    }
     if (outil === 'sas') {
         sasPremierEchangeEnAttente = false;
         const champ = document.getElementById('sas-user-input');
@@ -133,9 +148,8 @@ const FORMULAIRE_GUIDE = {
         entete: (v) => `Fiche de leçon — Matière : ${v.matiere} ; Classe : ${v.classe} ; Chapitre/Thème : ${v.theme}`
     },
     forge_primaire: {
-        titre: "Formulaire guidé — Fiche (Primaire)",
+        titre: "Formulaire guidé — Fiche de préparation (Primaire)",
         champs: [
-            {id: 'type', lib: 'Type de fiche', type: 'select', obligatoire: true, options: ['Fiche de préparation', "Fiche d'évaluation"]},
             {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['CP1','CP2','CE1','CE2','CM1','CM2']},
             {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Français','Mathématiques','EDHC','Histoire-Géographie','Sciences','Arts plastiques','Éducation musicale','EPS','Autre (précisée dans le thème)']},
             {id: 'theme', lib: 'Leçon / thème', type: 'text', obligatoire: true, ph: 'Ex. Lecture : le texte « … » ; ou Grammaire : le verbe'},
@@ -144,7 +158,22 @@ const FORMULAIRE_GUIDE = {
             {id: 'materiel', lib: 'Matériel disponible (facultatif)', type: 'text', ph: 'Ex. ardoises, bûchettes, pas de vidéoprojecteur', precision: 'Matériel disponible'},
             {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: "Ex. beaucoup d'exercices d'application", precision: 'Autre demande'}
         ],
-        entete: (v) => `${v.type}, ${v.classe}, ${v.matiere.replace(/\s*\(.*\)/, '')}, ${v.theme}`
+        entete: (v) => `Fiche de préparation, ${v.classe}, ${v.matiere.replace(/\s*\(.*\)/, '')}, ${v.theme}`
+    },
+    forge_primaire_eval: {
+        outil: 'forge_primaire',
+        titre: "Formulaire guidé — Fiche d'évaluation (Primaire)",
+        champs: [
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['CP1','CP2','CE1','CE2','CM1','CM2']},
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Français','Mathématiques','EDHC','Histoire-Géographie','Sciences','Arts plastiques','Éducation musicale','Éducation physique']},
+            {id: 'theme', lib: 'Leçon(s) ou compétence évaluée(s)', type: 'text', obligatoire: true, ph: 'Ex. Les additions avec retenue ; ou Lecture : le texte « … »'},
+            {id: 'format', lib: "Type d'évaluation (facultatif)", type: 'select', options: ["Au choix d'EdukaTchat",'Évaluation diagnostique','Évaluation formative','Évaluation sommative'], precision: "Type d'évaluation"},
+            {id: 'duree', lib: 'Durée (facultatif)', type: 'text', ph: 'Ex. 30 min', precision: 'Durée'},
+            {id: 'nb', lib: "Nombre d'exercices (facultatif)", type: 'select', options: ['Au choix','2','3','4','5'], precision: "Nombre d'exercices"},
+            {id: 'bareme', lib: 'Barème (facultatif)', type: 'select', options: ['Au choix','Sur 10','Sur 20'], precision: 'Barème'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: 'Ex. consignes très courtes, prévoir un exercice de remédiation', precision: 'Autre demande'}
+        ],
+        entete: (v) => `Fiche d'évaluation, ${v.classe}, ${v.matiere}, ${v.theme}`
     },
     atelier_officiel: {
         outil: 'atelier',
@@ -292,8 +321,7 @@ function ouvrirFormulaireGuide(outil) {
     ok.onclick = () => {
         const v = {};
         def.champs.forEach(c => { v[c.id] = (document.getElementById('fg-' + c.id).value || '').replace(/[\[\]{}<>`]/g, '').replace(/\s+/g, ' ').trim().replace(/[\s,;.]+$/, ''); });
-        if (/^Au choix/i.test(v.format || '')) v.format = '';
-        if (/^Au choix/i.test(v.nb || '')) v.nb = '';
+        def.champs.forEach(c => { if (c.type === 'select' && /^Au choix/i.test(v[c.id] || '')) v[c.id] = ''; });
         const manquant = def.champs.find(c => c.obligatoire && c.type === 'text' && (v[c.id] || '').length < 3)
             || def.champs.find(c => c.obligatoire && c.type === 'textarea' && (v[c.id] || '').length < 3);
         if (manquant) { err.textContent = `Merci de renseigner : ${manquant.lib.toLowerCase()}.`; return; }
@@ -7217,3 +7245,33 @@ function afficherLienDefi(fenetre, zone, donnees, titre, score) {
     zone.appendChild(rang);
     zone.appendChild(creerElementDefi('p', 'defi-aide', 'Les résultats sont effacés 30 jours après la fin du défi.'));
 }
+
+
+// =======================================================================
+// ❖ BOUTONS « APRÈS DOCUMENT » (30/10/2026) ❖
+// Les boutons qui agissent sur le dernier document (variante, corrigé,
+// activités…) n'apparaissent qu'une fois un document généré : ils ne
+// prennent pas de place -- et ne provoquent aucun clic inutile -- au départ.
+// =======================================================================
+function majBoutonsApresDocument() {
+    document.querySelectorAll('.btn-suggestion[data-apres-doc]').forEach(b => {
+        const outil = b.dataset.outil;
+        b.classList.toggle('doc-pret', !!(outil && derniereReponseEnseignant(outil)));
+    });
+}
+(function () {
+    let minuteur = null;
+    const planifier = () => { clearTimeout(minuteur); minuteur = setTimeout(majBoutonsApresDocument, 400); };
+    const brancher = () => {
+        ['atelier', 'forge', 'forge_primaire'].forEach(o => {
+            const h = document.getElementById(`${o}-chat-history`);
+            if (h && !h.dataset.obsApresDoc) {
+                h.dataset.obsApresDoc = '1';
+                new MutationObserver(planifier).observe(h, {childList: true, subtree: true, characterData: true});
+            }
+        });
+        majBoutonsApresDocument();
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', brancher); else brancher();
+    setTimeout(brancher, 3000);
+})();
