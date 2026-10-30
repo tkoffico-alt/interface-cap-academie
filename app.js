@@ -4333,13 +4333,38 @@ function texteQuizAvecLatex(s) {
     return reinjecterLatex(echapperHTMLFiche(texte), jetons);
 }
 
+// ❖ 30/10/2026 : l'agent place presque toujours la bonne réponse en première position
+// (A). On mélange donc les options au rendu, de façon DÉTERMINISTE (graine tirée du
+// texte de la question : le même quiz garde le même ordre à chaque réaffichage).
+// Pas de mélange pour Vrai/Faux ni pour les options qui renvoient aux autres
+// (« toutes les réponses… », « aucune… », « A et B »…). Le JSON mélangé remplace
+// la source : le bouton « Défier » transmet donc le même ordre au serveur.
+function melangerOptionsQuiz(q) {
+    try {
+        if (!q || !Array.isArray(q.options)) return q;
+        const options = q.options.map(String);
+        const bonne = Number(q.bonne);
+        if (options.length < 3 || options.length > 6 || !Number.isInteger(bonne) || bonne < 0 || bonne >= options.length) return q;
+        const norm = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (options.some(o => /\b(toutes?|tous|aucune?|les deux|ci-dessus|ci-dessous|autre)\b|^\s*[a-f]\s*(et|,)\s*[a-f]\s*$/.test(norm(o)))) return q;
+        let h = 2166136261;
+        const graine = String(q.question || '') + '|' + options.join('|');
+        for (let i = 0; i < graine.length; i++) { h ^= graine.charCodeAt(i); h = Math.imul(h, 16777619); }
+        const alea = () => { h += 0x6D2B79F5; let t = Math.imul(h ^ (h >>> 15), 1 | h); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+        const ordre = options.map((_, i) => i);
+        for (let i = ordre.length - 1; i > 0; i--) { const j = Math.floor(alea() * (i + 1)); [ordre[i], ordre[j]] = [ordre[j], ordre[i]]; }
+        return Object.assign({}, q, { options: ordre.map(i => options[i]), bonne: ordre.indexOf(bonne) });
+    } catch (e) { return q; }
+}
+
 function reinjecterQuiz(html, jetons) {
     if (!jetons.length) return html;
     let resultat = html;
     jetons.forEach(({ jeton, source }) => {
         let rendu;
         try {
-            const q = JSON.parse(source);
+            const q = melangerOptionsQuiz(JSON.parse(source));
+            source = JSON.stringify(q);
             const options = Array.isArray(q.options) ? q.options.map(String) : [];
             const bonne = Number(q.bonne);
             if (!q.question || options.length < 2 || options.length > 6 ||
