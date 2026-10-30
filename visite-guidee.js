@@ -22,7 +22,7 @@
             { s: '#sas-suggestions-rapides .btn-suggestion-guide', t: 'Guide-moi', x: 'Vous ne savez pas par où commencer ? L’assistant vous pose quelques questions et vous guide.' },
             { s: '#sas-suggestions-rapides .btn-suggestion-reviser', t: 'Réviser un chapitre', x: 'Indiquez le chapitre à réviser (il suffit de compléter la phrase) : l’assistant l’explique pas à pas.' },
             { s: '#sas-suggestions-rapides .btn-suggestion-exercice', t: 'Un exercice précis', x: 'Vous bloquez sur un exercice ? Expliquez-le, on le travaille ensemble.' },
-            { s: '#sas-suggestions-rapides .sug-ponctuel', t: 'Quiz sur cette leçon', x: 'Après une première explication, testez-vous avec 5 questions à choix sur la leçon que vous venez de voir.' },
+            { s: '#sas-suggestions-rapides .sug-ponctuel', t: 'Quiz sur cette leçon', x: 'Après une première explication, testez-vous avec 5 questions à choix sur la leçon. Puis défiez un camarade : un lien à partager sur WhatsApp, et vous comparez vos scores.' },
             { s: '#sas-suggestions-rapides .sug-ambre', t: 'Explique-moi autrement', x: 'Après une première explication : pas compris ? Demandez la même explication, plus simple, avec un exemple de la vie en Côte d’Ivoire.' },
             { s: '#sas-suggestions-rapides .btn-suggestion-rentree', t: 'Préparer la rentrée', x: 'Visible de juillet à septembre : pendant les vacances, préparez la rentrée prochaine.' },
             { s: '#container-sas-custom .btn-icone-neutre', t: 'Joindre une photo', x: 'Envoyez la photo de votre exercice ou de votre leçon.' },

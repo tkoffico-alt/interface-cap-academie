@@ -7113,6 +7113,18 @@ function mettreAJourBoutonDefi(carte) {
     bouton.className = 'defi-bouton';
     bouton.setAttribute('onclick', 'ouvrirFenetreDefi(this)');
     bouton.textContent = '⚔️ Défier un camarade';
+    // Badge « Nouveau » (30/10/2026) : jusqu'au premier clic ou 30 jours ; la clé est la même
+    // que celle de visite-guidee.js (eduka_nouveau_defi), qui retire le badge au clic.
+    try {
+        const dejaVu = localStorage.getItem('eduka_nouveau_defi');
+        if (!dejaVu && Date.now() - new Date('2026-10-30').getTime() < 30 * 86400000) {
+            bouton.setAttribute('data-nouveau-id', 'defi');
+            const badge = document.createElement('span');
+            badge.className = 'badge-nouveau';
+            badge.textContent = 'Nouveau';
+            bouton.appendChild(badge);
+        }
+    } catch (e) { /* stockage indisponible : pas de badge */ }
     zone.appendChild(bouton);
     cartes[cartes.length - 1].insertAdjacentElement('afterend', zone);
 }
