@@ -2448,8 +2448,8 @@ body.dark-theme #visite-guidee-overlay .vg-prec { background: #334155; color: #E
 
 /* ===== DÉFI PAR LIEN (étape 3, 29/10/2026) ===== */
 .defi-action { margin: 6px 0 12px; display: flex; justify-content: center; }
-.defi-bouton { min-height: 44px; padding: 10px 20px; border: none; border-radius: 999px; background: #F59E0B; color: #1F2937; font: inherit; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-.defi-bouton:hover { background: #FBBF24; }
+.defi-bouton { min-height: 38px; padding: 6px 16px; border: none; border-radius: 999px; background: linear-gradient(135deg, #F43F5E, #E11D48); color: #FFFFFF; font: inherit; font-size: 0.88em; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(225,29,72,0.35); }
+.defi-bouton:hover { background: linear-gradient(135deg, #FB7185, #F43F5E); }
 .defi-overlay { position: fixed; inset: 0; z-index: 10050; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(15, 23, 42, 0.6); }
 .defi-fenetre { width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; padding: 20px; border-radius: 14px; background: #FFFFFF; color: #1E293B; box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
 .defi-titre-fenetre { margin: 0 0 8px; font-size: 1.15em; }
