@@ -2520,82 +2520,63 @@ body.dark-theme .banniere-actions-sas .btn-banniere-aide { background: rgba(245,
 .suggestions-rapides .btn-suggestion[data-apres-doc]:not(.doc-pret) { display: none !important; }
 
 
-/* ===== BOUTONS RAPIDES : PLUS VIVANTS, PLUS RAFFINÉS (30/10/2026) =====
-   Chaque rôle garde sa teinte, mais en « verre teinté » : fond clair légèrement dégradé,
-   texte et bordure de la couleur du rôle, petite lueur colorée sous le bouton. Le bouton
-   principal (Formulaire guidé) est un dégradé indigo→bleu avec un reflet discret qui le
-   traverse. Survol : le bouton se soulève ; appui : il s'enfonce légèrement ; apparition
-   en cascade. Mouvements coupés si l'utilisateur a demandé « réduire les animations ». */
-.suggestions-rapides { padding-top: 4px !important; }
-.suggestions-rapides .btn-suggestion {
-    --fond1: #F8FAFC; --fond2: #EEF2F7; --bord: #CBD5E1; --texte: #334155; --lueur: rgba(51, 65, 85, 0.22);
-    position: relative;
-    background: linear-gradient(160deg, var(--fond1) 0%, var(--fond2) 100%) !important;
-    color: var(--texte) !important;
-    border: 1px solid var(--bord) !important;
-    border-radius: 999px !important;
-    font-weight: 650 !important;
-    letter-spacing: 0.005em;
-    text-shadow: none !important;
-    filter: none !important;
-    box-shadow: 0 1px 1px rgba(15, 23, 42, 0.05), 0 4px 10px -4px var(--lueur) !important;
-    transition: transform 0.18s cubic-bezier(.2,.8,.3,1), box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease !important;
-    animation: sugEntree 0.45s cubic-bezier(.2,.8,.3,1) backwards;
-    -webkit-tap-highlight-color: transparent;
+/* ===== MENU ☰, THÈME ET PLEIN ÉCRAN : PLUS ESTHÉTIQUES (30/10/2026) =====
+   Menu : bouton rond en verre indigo, trois barres nettes qui deviennent une croix à l'ouverture.
+   Thème : la lune dort dans un halo indigo ; en mode sombre, le soleil rayonne en ambre.
+   Plein écran : icône à quatre coins, teinte turquoise. Mouvements coupés si « réduire les animations ». */
+#btn-menu-nav {
+    background: linear-gradient(145deg, #FFFFFF 0%, #EEF2FF 100%);
+    border: 1px solid #C7D2FE;
+    color: #4338CA;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 5px 12px -5px rgba(79, 70, 229, 0.45);
+    transition: transform 0.18s cubic-bezier(.2,.8,.3,1), box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
-.suggestions-rapides .btn-suggestion:nth-child(2) { animation-delay: 0.05s; }
-.suggestions-rapides .btn-suggestion:nth-child(3) { animation-delay: 0.10s; }
-.suggestions-rapides .btn-suggestion:nth-child(4) { animation-delay: 0.15s; }
-.suggestions-rapides .btn-suggestion:nth-child(5) { animation-delay: 0.20s; }
-.suggestions-rapides .btn-suggestion:nth-child(n+6) { animation-delay: 0.25s; }
-@keyframes sugEntree { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: none; } }
-
-.suggestions-rapides .btn-suggestion:hover {
-    transform: translateY(-2px) !important;
-    border-color: var(--texte) !important;
-    box-shadow: 0 1px 1px rgba(15, 23, 42, 0.06), 0 8px 16px -6px var(--lueur) !important;
+#btn-menu-nav:hover {
+    background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 1px 2px rgba(30, 58, 138, 0.25), 0 8px 16px -6px rgba(37, 99, 235, 0.65);
 }
-.suggestions-rapides .btn-suggestion:active { transform: translateY(0) scale(.96) !important; transition-duration: 0.06s !important; }
-.suggestions-rapides .btn-suggestion:focus-visible { outline: 2px solid var(--texte); outline-offset: 2px; }
-
-/* Teintes par rôle */
-.suggestions-rapides .btn-suggestion.sug-outil      { --fond1: #F0FDFF; --fond2: #CFFAFE; --bord: #67E8F9; --texte: #0E7490; --lueur: rgba(8, 145, 178, 0.45); }
-.suggestions-rapides .btn-suggestion.sug-vert       { --fond1: #F3FDF6; --fond2: #D5F8E0; --bord: #86EFAC; --texte: #166534; --lueur: rgba(22, 163, 74, 0.42); }
-.suggestions-rapides .btn-suggestion.sug-ambre      { --fond1: #FFFCEB; --fond2: #FDEFC0; --bord: #FCD34D; --texte: #92400E; --lueur: rgba(217, 119, 6, 0.42); }
-.suggestions-rapides .btn-suggestion.sug-ponctuel   { --fond1: #FFF4F6; --fond2: #FFDCE3; --bord: #FDA4AF; --texte: #BE123C; --lueur: rgba(225, 29, 72, 0.40); }
-.suggestions-rapides .btn-suggestion.sug-violet     { --fond1: #F7F4FF; --fond2: #E4DCFE; --bord: #C4B5FD; --texte: #5B21B6; --lueur: rgba(124, 58, 237, 0.42); }
-.suggestions-rapides .btn-suggestion.sug-secondaire { --fond1: #F8FAFC; --fond2: #E9EEF5; --bord: #CBD5E1; --texte: #475569; --lueur: rgba(71, 85, 105, 0.30); }
-
-/* Bouton principal : dégradé profond + reflet qui le traverse de temps en temps */
-.suggestions-rapides .btn-suggestion.sug-principal {
-    --texte: #1E3A8A; --lueur: rgba(37, 99, 235, 0.60);
-    background: linear-gradient(135deg, #4F46E5 0%, #2563EB 55%, #0EA5E9 100%) !important;
-    color: #FFFFFF !important;
-    border-color: rgba(255, 255, 255, 0.35) !important;
-    font-weight: 700 !important;
-    overflow: hidden;
-    box-shadow: 0 1px 1px rgba(30, 58, 138, 0.25), 0 6px 14px -4px var(--lueur), inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
+#btn-menu-nav:active { transform: scale(.94); }
+#btn-menu-nav:focus-visible { outline: 2px solid #4F46E5; outline-offset: 2px; }
+#btn-menu-nav .ico-menu path { transform-box: fill-box; transform-origin: center; transition: transform 0.25s cubic-bezier(.2,.8,.3,1), opacity 0.2s ease; }
+#btn-menu-nav[aria-expanded="true"] { background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.5); }
+#btn-menu-nav[aria-expanded="true"] .barre-haut { transform: translateY(5.5px) rotate(45deg); }
+#btn-menu-nav[aria-expanded="true"] .barre-milieu { opacity: 0; transform: scaleX(0.2); }
+#btn-menu-nav[aria-expanded="true"] .barre-bas { transform: translateY(-5.5px) rotate(-45deg); }
+body.dark-theme #btn-menu-nav {
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0.10) 100%);
+    border-color: rgba(129, 140, 248, 0.55);
+    color: #C7D2FE;
+    box-shadow: 0 5px 12px -5px rgba(0, 0, 0, 0.6);
 }
-.suggestions-rapides .btn-suggestion.sug-principal:hover { border-color: rgba(255, 255, 255, 0.6) !important; box-shadow: 0 1px 1px rgba(30, 58, 138, 0.25), 0 10px 20px -6px var(--lueur), inset 0 1px 0 rgba(255, 255, 255, 0.40) !important; }
-.suggestions-rapides .btn-suggestion.sug-principal::after {
-    content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
-    background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.38) 50%, transparent 100%);
-    transform: skewX(-18deg); pointer-events: none;
-    animation: sugReflet 6s ease-in-out 1.2s infinite;
-}
-@keyframes sugReflet { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+body.dark-theme #btn-menu-nav:hover, body.dark-theme #btn-menu-nav[aria-expanded="true"] { background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%); color: #FFFFFF; }
 
-/* Thème sombre : fonds translucides colorés, texte clair */
-body.dark-theme .suggestions-rapides .btn-suggestion { --fond1: rgba(148, 163, 184, 0.16); --fond2: rgba(148, 163, 184, 0.08); --bord: rgba(148, 163, 184, 0.45); --texte: #CBD5E1; --lueur: rgba(0, 0, 0, 0.55); }
-body.dark-theme .suggestions-rapides .btn-suggestion.sug-outil    { --fond1: rgba(34, 211, 238, 0.20); --fond2: rgba(34, 211, 238, 0.09); --bord: rgba(34, 211, 238, 0.55); --texte: #67E8F9; --lueur: rgba(8, 145, 178, 0.55); }
-body.dark-theme .suggestions-rapides .btn-suggestion.sug-vert     { --fond1: rgba(74, 222, 128, 0.20); --fond2: rgba(74, 222, 128, 0.09); --bord: rgba(74, 222, 128, 0.55); --texte: #86EFAC; --lueur: rgba(22, 163, 74, 0.55); }
-body.dark-theme .suggestions-rapides .btn-suggestion.sug-ambre    { --fond1: rgba(251, 191, 36, 0.20); --fond2: rgba(251, 191, 36, 0.09); --bord: rgba(251, 191, 36, 0.55); --texte: #FCD34D; --lueur: rgba(217, 119, 6, 0.55); }
-body.dark-theme .suggestions-rapides .btn-suggestion.sug-ponctuel { --fond1: rgba(251, 113, 133, 0.20); --fond2: rgba(251, 113, 133, 0.09); --bord: rgba(251, 113, 133, 0.55); --texte: #FDA4AF; --lueur: rgba(225, 29, 72, 0.55); }
-body.dark-theme .suggestions-rapides .btn-suggestion.sug-violet   { --fond1: rgba(167, 139, 250, 0.22); --fond2: rgba(167, 139, 250, 0.10); --bord: rgba(167, 139, 250, 0.55); --texte: #C4B5FD; --lueur: rgba(124, 58, 237, 0.55); }
-body.dark-theme .suggestions-rapides .btn-suggestion.sug-principal { --lueur: rgba(59, 130, 246, 0.55); }
+/* Socle des réglages : filet fin et léger relief */
+.toolbar-outils {
+    background: linear-gradient(180deg, #F4F7FB 0%, #E9EEF5 100%);
+    border: 1px solid #E2E8F0;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+body.dark-theme .toolbar-outils { background: rgba(255, 255, 255, 0.06); border-color: rgba(148, 163, 184, 0.22); box-shadow: none; }
+.toolbar-outils .btn-icon-groupe { transition: transform 0.2s cubic-bezier(.2,.8,.3,1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.25s ease; }
+.toolbar-outils .btn-icon-groupe:active { transform: scale(.92); }
+
+/* Thème : lune dans un halo indigo / soleil ambre qui rayonne */
+#btn-theme { background: radial-gradient(circle at 50% 40%, #FFFFFF 0%, #E0E7FF 100%); color: #4338CA; box-shadow: 0 0 0 1px #C7D2FE, 0 3px 8px -3px rgba(79, 70, 229, 0.45); }
+#btn-theme:hover { background: radial-gradient(circle at 50% 40%, #FFFFFF 0%, #C7D2FE 100%); color: #3730A3; transform: rotate(-14deg) scale(1.08); box-shadow: 0 0 0 1px #A5B4FC, 0 6px 12px -4px rgba(79, 70, 229, 0.55); }
+body.dark-theme #btn-theme { background: radial-gradient(circle at 50% 40%, rgba(253, 224, 71, 0.30) 0%, rgba(251, 191, 36, 0.12) 100%); color: #FDE68A; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.55), 0 0 14px rgba(251, 191, 36, 0.35); }
+body.dark-theme #btn-theme:hover { background: radial-gradient(circle at 50% 40%, rgba(253, 224, 71, 0.42) 0%, rgba(251, 191, 36, 0.20) 100%); color: #FEF3C7; transform: rotate(18deg) scale(1.08); box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.75), 0 0 20px rgba(251, 191, 36, 0.5); }
+
+/* Plein écran : turquoise */
+#btn-fullscreen { color: #0E7490; }
+#btn-fullscreen:hover { background-color: #CFFAFE; color: #155E75; box-shadow: 0 0 0 1px #67E8F9, 0 4px 10px -4px rgba(8, 145, 178, 0.5); }
+body.dark-theme #btn-fullscreen { color: #67E8F9; }
+body.dark-theme #btn-fullscreen:hover { background-color: rgba(34, 211, 238, 0.18); color: #A5F3FC; box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.5); }
+#btn-matieres:hover { background-color: #FEF3C7; box-shadow: 0 0 0 1px #FCD34D; }
 
 @media (prefers-reduced-motion: reduce) {
-    .suggestions-rapides .btn-suggestion { animation: none !important; }
-    .suggestions-rapides .btn-suggestion.sug-principal::after { animation: none !important; display: none; }
-    .suggestions-rapides .btn-suggestion:hover { transform: none !important; }
+    #btn-menu-nav, #btn-menu-nav .ico-menu path, .toolbar-outils .btn-icon-groupe { transition: none !important; }
+    #btn-theme:hover, #btn-theme:active { transform: none !important; }
 }
