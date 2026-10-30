@@ -483,6 +483,15 @@
     $('pseudo').addEventListener('keydown', function (e) { if (e.key === 'Enter') { rejoindre(); demarrerSuivi(); } });
     $('btn-expose').addEventListener('click', ouvrirExpose);
     $('btn-suggerer').addEventListener('click', suggerer);
+    // Retour à l'application : on revient à la page d'où l'on vient (l'espace de départ),
+    // sinon on ouvre simplement EdukaTchat.
+    $('btn-retour-app').addEventListener('click', function (e) {
+      try {
+        if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+          e.preventDefault(); history.back();
+        }
+      } catch (err) { /* lien normal */ }
+    });
     $('btn-consigne').addEventListener('click', function () {
       var f = $('consigne-form'); f.classList.toggle('cache');
       if (!f.classList.contains('cache')) { $('consigne-saisie').value = (etat.donnees && etat.donnees.consigne) || ''; $('consigne-saisie').focus(); }
