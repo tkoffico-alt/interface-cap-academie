@@ -122,7 +122,7 @@
       <input type="text" id="c-pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Awa">
       <p id="creation-msg" class="erreur-msg" role="alert"></p>
       <button type="button" id="btn-creer" class="btn">Créer la salle</button>
-      <p class="doux" style="margin-top:14px">Réservé aux abonnés Premium. Jusqu'à 6 personnes, sans compte pour les camarades. La salle reste ouverte 30 jours.</p>
+      <p class="doux" style="margin-top:14px">Réservé aux abonnés Premium. Jusqu'à 6 personnes, sans compte pour les camarades. La salle reste ouverte jusqu'à la date de l'examen (5 mois au maximum) ; le créateur peut la prolonger.</p>
     </section>
 
     <section id="ecran-cree" class="carte cache">
@@ -176,6 +176,7 @@
         <button type="button" id="btn-actualiser" class="btn btn-sec" style="margin-top:0">Actualiser</button>
         <button type="button" id="btn-partager" class="btn btn-sec">Inviter un camarade (copier le lien)</button>
         <button type="button" id="btn-quitter" class="lien-discret">Quitter la salle</button>
+        <button type="button" id="btn-prolonger" class="lien-discret cache">Prolonger de 30 jours</button>
         <button type="button" id="btn-fermer" class="lien-discret cache">Fermer la salle</button>
       </div>
     </section>
@@ -183,6 +184,6 @@
 
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
-<script src="salle.js?v=1" defer></script>
+<script src="salle.js?v=2" defer></script>
 </body>
 </html>

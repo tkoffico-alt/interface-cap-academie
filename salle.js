@@ -192,6 +192,7 @@
 
     $('btn-quitter').classList.toggle('cache', d.est_createur);
     $('btn-fermer').classList.toggle('cache', !d.est_createur);
+    $('btn-prolonger').classList.toggle('cache', !d.est_createur);
     ecran('salle');
   }
 
@@ -258,6 +259,7 @@
     $('btn-actualiser').addEventListener('click', function () { message(''); actualiser(); });
     $('btn-partager').addEventListener('click', function () { copier(lienSalle(code), $('salle-msg'), 'Lien copié : envoie-le à ton camarade.'); });
     $('btn-quitter').addEventListener('click', function () { if (confirm('Quitter la salle ?')) action('quitter'); });
+    $('btn-prolonger').addEventListener('click', function () { action('prolonger', {}, 'Salle prolongée de 30 jours.'); });
     $('btn-fermer').addEventListener('click', function () { if (confirm('Fermer la salle pour tout le monde ?')) action('fermer'); });
     charger();
   }
