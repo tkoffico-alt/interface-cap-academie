@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2563EB">
+<title>Salle d'étude EdukaTchat</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<script>
+/* Thème : même réglage que l'application (clé « eduka_theme »). */
+(function () {
+  var sombre = false;
+  try {
+    var choix = localStorage.getItem('eduka_theme');
+    sombre = (choix === 'dark') || (!choix && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) {}
+  if (sombre) document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<style>
+  :root {
+    --fond: #F1F5F9; --carte: #FFFFFF; --texte: #1E293B; --doux: #475569; --bord: #CBD5E1;
+    --primaire: #2563EB; --primaire-texte: #FFFFFF; --accent: #F59E0B;
+    --juste-fond: #D1FAE5; --juste-bord: #10B981; --juste-texte: #047857;
+    --faux-texte: #B91C1C; --option: #FFFFFF; --option-survol: #DBEAFE; --expl-fond: #EFF6FF;
+  }
+  :root[data-theme="dark"] {
+    --fond: #0F172A; --carte: #1E293B; --texte: #E2E8F0; --doux: #CBD5E1; --bord: #475569;
+    --primaire: #3B82F6; --juste-fond: #064E3B; --juste-texte: #6EE7B7;
+    --faux-texte: #FCA5A5; --option: #0F172A; --option-survol: #334155; --expl-fond: #172033;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--fond); color: var(--texte);
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.5; }
+  .page { max-width: 560px; margin: 0 auto; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; }
+  .entete { display: flex; align-items: center; justify-content: space-between; padding: 4px 2px 14px; }
+  .marque { font-weight: 800; font-size: 1.05rem; color: var(--primaire); text-decoration: none; }
+  .carte { background: var(--carte); border-radius: 16px; padding: 20px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.10); margin-bottom: 14px; }
+  h1 { font-size: 1.35rem; line-height: 1.3; margin: 0 0 6px; overflow-wrap: anywhere; }
+  h2 { font-size: 1.05rem; line-height: 1.4; margin: 0 0 12px; overflow-wrap: anywhere; }
+  p { margin: 0 0 12px; }
+  .doux { color: var(--doux); font-size: 0.92rem; }
+  .pastille { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--expl-fond); color: var(--primaire); font-size: 0.82rem; font-weight: 600; margin: 0 6px 10px 0; }
+  label { display: block; font-weight: 600; font-size: 0.92rem; margin: 14px 0 4px; }
+  input[type="text"], input[type="date"], select, textarea { width: 100%; min-height: 48px; padding: 10px 14px; font: inherit; border: 1px solid var(--bord);
+      border-radius: 10px; background: var(--option); color: var(--texte); }
+  textarea { min-height: 150px; resize: vertical; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 14px; padding: 12px 18px;
+         border: 0; border-radius: 12px; background: var(--primaire); color: var(--primaire-texte); font: inherit; font-weight: 700;
+         cursor: pointer; text-decoration: none; }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .btn-sec { background: transparent; color: var(--primaire); border: 2px solid var(--primaire); }
+  .erreur-msg { min-height: 1.3em; margin: 10px 0 0; color: var(--faux-texte); font-size: 0.92rem; font-weight: 600; }
+  .barre { height: 10px; border-radius: 999px; background: var(--bord); overflow: hidden; margin: 6px 0 4px; }
+  .barre > span { display: block; height: 100%; width: 0; background: var(--juste-bord); transition: width 0.3s ease; }
+  .liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .tache { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--option); }
+  .tache.fait { background: var(--juste-fond); border-color: var(--juste-bord); }
+  .tache input[type="checkbox"] { flex-shrink: 0; width: 26px; height: 26px; margin-top: 2px; accent-color: var(--juste-bord); cursor: pointer; }
+  .tache-corps { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .tache-nom { font-weight: 600; }
+  .tache-info { font-size: 0.85rem; color: var(--doux); }
+  .btn-petit { min-height: 44px; min-width: 44px; padding: 6px 10px; border: 1px solid var(--bord); border-radius: 10px; background: var(--option);
+               color: var(--texte); font: inherit; font-size: 0.85rem; cursor: pointer; }
+  .btn-petit.actif { background: var(--accent); border-color: var(--accent); color: #1F2937; font-weight: 700; }
+  .membre { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--option); }
+  .membre.moi { border: 2px solid var(--primaire); background: var(--expl-fond); }
+  .membre-nom { flex: 1 1 120px; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .membre-score { font-size: 0.85rem; color: var(--doux); white-space: nowrap; }
+  .reactions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .recu { display: inline-block; margin: 0 6px 6px 0; padding: 4px 10px; border-radius: 999px; background: var(--expl-fond); font-size: 0.9rem; }
+  .lien-discret { display: inline-block; min-height: 44px; padding: 8px 12px; border: 0; background: transparent; color: var(--doux); font: inherit; font-size: 0.85rem; text-decoration: underline; cursor: pointer; }
+  .centre { text-align: center; }
+  .pied { margin-top: auto; padding: 18px 4px 6px; text-align: center; font-size: 0.8rem; color: var(--doux); }
+  .cache { display: none !important; }
+  .lien-boite { padding: 10px 12px; border: 1px dashed var(--bord); border-radius: 10px; overflow-wrap: anywhere; font-weight: 600; margin-bottom: 8px; }
+  @media (prefers-reduced-motion: reduce) { .barre > span { transition: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <a class="marque" href="https://edukatchat.org/">EdukaTchat</a>
+    <span class="doux">📚 Salle d'étude</span>
+  </header>
+
+  <main id="contenu" aria-live="polite">
+    <section id="ecran-chargement" class="carte centre"><p>Chargement…</p></section>
+
+    <section id="ecran-erreur" class="carte cache">
+      <h1 id="erreur-titre">Oups</h1>
+      <p id="erreur-texte" class="doux"></p>
+      <a class="btn" href="https://edukatchat.org/">Découvrir EdukaTchat</a>
+    </section>
+
+    <!-- Création d'une salle (sans code dans l'adresse) -->
+    <section id="ecran-creation" class="carte cache">
+      <h1>Créer une salle d'étude</h1>
+      <p class="doux">Prépare un devoir ou un examen avec tes camarades : un plan de révision commun, chacun coche ce qu'il a révisé, et vous vous encouragez. Pas de discussion libre.</p>
+      <label for="c-titre">Titre de la salle</label>
+      <input type="text" id="c-titre" maxlength="60" placeholder="Ex. : Révision BEPC de maths">
+      <label for="c-objectif">Objectif</label>
+      <select id="c-objectif">
+        <option value="devoir">Un devoir</option>
+        <option value="bepc">Le BEPC</option>
+        <option value="bac">Le BAC</option>
+        <option value="expose">Un exposé</option>
+        <option value="autre">Autre</option>
+      </select>
+      <label for="c-matiere">Matière</label>
+      <input type="text" id="c-matiere" maxlength="40" placeholder="Ex. : Mathématiques">
+      <label for="c-classe">Classe</label>
+      <input type="text" id="c-classe" maxlength="20" placeholder="Ex. : 3e">
+      <label for="c-date">Date de l'examen ou du rendu (facultatif)</label>
+      <input type="date" id="c-date">
+      <label for="c-chapitres">Chapitres à réviser (un par ligne, de 2 à 12)</label>
+      <textarea id="c-chapitres" placeholder="Calcul littéral&#10;Théorème de Thalès&#10;Statistiques"></textarea>
+      <label for="c-pseudo">Ton pseudonyme</label>
+      <input type="text" id="c-pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Awa">
+      <p id="creation-msg" class="erreur-msg" role="alert"></p>
+      <button type="button" id="btn-creer" class="btn">Créer la salle</button>
+      <p class="doux" style="margin-top:14px">Réservé aux abonnés Premium. Jusqu'à 6 personnes, sans compte pour les camarades. La salle reste ouverte 30 jours.</p>
+    </section>
+
+    <section id="ecran-cree" class="carte cache">
+      <h1>Salle créée 🎉</h1>
+      <p>Envoie ce lien à tes camarades (2 à 6 personnes en tout) :</p>
+      <div id="cree-lien" class="lien-boite"></div>
+      <button type="button" id="btn-copier" class="btn btn-sec">Copier le lien</button>
+      <a id="btn-whatsapp" class="btn" target="_blank" rel="noopener">Partager sur WhatsApp</a>
+      <button type="button" id="btn-entrer" class="btn btn-sec">Entrer dans la salle</button>
+    </section>
+
+    <!-- Rejoindre -->
+    <section id="ecran-accueil" class="carte cache">
+      <span class="pastille" id="accueil-meta"></span>
+      <h1 id="accueil-titre"></h1>
+      <p class="doux" id="accueil-createur"></p>
+      <p id="accueil-infos"></p>
+      <label for="pseudo">Choisis un pseudonyme</label>
+      <input type="text" id="pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Koffi" enterkeyhint="go">
+      <p id="accueil-msg" class="erreur-msg" role="alert"></p>
+      <button type="button" id="btn-rejoindre" class="btn">Rejoindre la salle</button>
+      <p class="doux" style="margin-top:14px">Pas de compte, pas d'abonnement. Seuls ton pseudonyme et les chapitres que tu coches sont gardés ; tout est effacé après la fin de la salle.</p>
+    </section>
+
+    <!-- La salle -->
+    <section id="ecran-salle" class="cache">
+      <div class="carte">
+        <span class="pastille" id="salle-meta"></span><span class="pastille" id="salle-jours"></span>
+        <h1 id="salle-titre"></h1>
+        <div class="doux">Progression du groupe : <strong id="salle-pct"></strong></div>
+        <div class="barre" aria-hidden="true"><span id="salle-barre"></span></div>
+      </div>
+
+      <div class="carte">
+        <h2>Mon plan de révision</h2>
+        <p class="doux">Coche un chapitre quand tu l'as révisé. Si tu bloques, demande de l'aide : tes camarades le verront.</p>
+        <ul id="liste-plan" class="liste"></ul>
+      </div>
+
+      <div class="carte">
+        <h2>Dans la salle</h2>
+        <ul id="liste-membres" class="liste"></ul>
+        <div id="zone-recu" class="cache" style="margin-top:14px">
+          <h2>Messages reçus</h2>
+          <div id="liste-recu"></div>
+        </div>
+        <p id="salle-msg" class="erreur-msg" role="alert"></p>
+      </div>
+
+      <div class="carte centre">
+        <button type="button" id="btn-actualiser" class="btn btn-sec" style="margin-top:0">Actualiser</button>
+        <button type="button" id="btn-partager" class="btn btn-sec">Inviter un camarade (copier le lien)</button>
+        <button type="button" id="btn-quitter" class="lien-discret">Quitter la salle</button>
+        <button type="button" id="btn-fermer" class="lien-discret cache">Fermer la salle</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
+</div>
+<script src="salle.js?v=1" defer></script>
+</body>
+</html>
