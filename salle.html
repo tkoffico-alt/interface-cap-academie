@@ -34,7 +34,7 @@
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--fond); color: var(--texte);
          font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.5; }
-  .page { max-width: 560px; margin: 0 auto; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; }
+  .page { max-width: 1040px; margin: 0 auto; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; }
   .entete { display: flex; align-items: center; justify-content: space-between; padding: 4px 2px 14px; }
   .marque { font-weight: 800; font-size: 1.05rem; color: var(--primaire); text-decoration: none; }
   .carte { background: var(--carte); border-radius: 16px; padding: 20px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.10); margin-bottom: 14px; }
@@ -56,6 +56,9 @@
   .erreur-msg { min-height: 1.3em; margin: 10px 0 0; color: var(--faux-texte); font-size: 0.92rem; font-weight: 600; }
   .barre { height: 10px; border-radius: 999px; background: var(--bord); overflow: hidden; margin: 6px 0 4px; }
   .barre > span { display: block; height: 100%; width: 0; background: var(--juste-bord); transition: width 0.3s ease; }
+  .tableau-suivi { border-collapse: collapse; font-size: .85rem; margin: 10px 0; }
+  .tableau-suivi th, .tableau-suivi td { border: 1px solid #ddd; padding: 4px 8px; text-align: center; }
+  .tableau-suivi td:first-child { text-align: left; }
   .liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
   .tache { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--option); }
   .tache.fait { background: var(--juste-fond); border-color: var(--juste-bord); }
@@ -77,6 +80,15 @@
   .pied { margin-top: auto; padding: 18px 4px 6px; text-align: center; font-size: 0.8rem; color: var(--doux); }
   .cache { display: none !important; }
   .lien-boite { padding: 10px 12px; border: 1px dashed var(--bord); border-radius: 10px; overflow-wrap: anywhere; font-weight: 600; margin-bottom: 8px; }
+  #ecran-liste, #ecran-creation, #ecran-cree, #ecran-accueil, #ecran-erreur, #ecran-chargement { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+  .salle-colonnes { display: block; }
+  @media (min-width: 900px) {
+    .salle-colonnes { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+    .salle-colonnes .carte { margin-bottom: 18px; }
+    .salle-colonnes > div:last-child > .carte:last-child { margin-bottom: 0; }
+    .carte { padding: 24px; }
+    #salle-titre { font-size: 1.8rem; }
+  }
   @media (prefers-reduced-motion: reduce) { .barre > span { transition: none; } }
 </style>
 </head>
@@ -128,6 +140,7 @@
       <label for="c-chapitres" id="c-chap-label">Chapitres à réviser (un par ligne, de 1 à 12)</label>
       <textarea id="c-chapitres" placeholder="Calcul littéral&#10;Théorème de Thalès&#10;Statistiques"></textarea>
       <p class="doux" id="c-chap-aide" style="margin:6px 0 0"></p>
+      <button type="button" id="btn-suggerer" class="btn btn-sec">💡 Suggérer des parties (IA, facultatif)</button>
       <label for="c-pseudo">Ton pseudonyme</label>
       <input type="text" id="c-pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Awa">
       <p id="creation-msg" class="erreur-msg" role="alert"></p>
@@ -166,6 +179,8 @@
         <div class="barre" aria-hidden="true"><span id="salle-barre"></span></div>
       </div>
 
+      <div class="salle-colonnes">
+      <div>
       <div class="carte">
         <h2 id="plan-titre">Mon plan de révision</h2>
         <p class="doux" id="plan-aide">Coche un chapitre quand tu l'as révisé. Si tu bloques, demande de l'aide : tes camarades le verront.</p>
@@ -179,7 +194,9 @@
         <textarea id="ps-texte" maxlength="3000" style="min-height:220px"></textarea>
         <div class="doux" id="ps-compteur"></div>
         <p id="ps-msg" class="erreur-msg" role="alert"></p>
+        <div id="ps-relecture" class="cache"></div>
         <button type="button" id="ps-enregistrer" class="btn">Enregistrer ma section</button>
+        <button type="button" id="ps-relire" class="btn btn-sec cache">🔍 Demander une relecture (IA)</button>
         <button type="button" id="ps-liberer" class="btn btn-sec cache">Libérer cette section</button>
         <button type="button" id="ps-fermer" class="btn btn-sec">Fermer</button>
       </div>
@@ -193,6 +210,24 @@
         <button type="button" id="pe-fermer" class="btn btn-sec">Fermer</button>
       </div>
 
+      </div>
+      <div>
+      <div class="carte">
+        <h2>⚔️ Défis de la salle</h2>
+        <p class="doux">Lance un Défi à tes camarades depuis l'application (bouton « Défier un camarade »), puis colle ici son lien pour le partager dans la salle.</p>
+        <ul id="liste-defis" class="liste"></ul>
+        <input type="text" id="sd-lien" maxlength="200" placeholder="Colle ici le lien ou le code du défi">
+        <button type="button" id="sd-poster" class="btn btn-sec">Partager dans la salle</button>
+        <p id="sd-msg" class="erreur-msg" role="alert"></p>
+      </div>
+
+      <div id="carte-suivi" class="carte cache">
+        <h2>📊 Suivi de la salle (créateur)</h2>
+        <p class="doux">Qui a révisé quoi, et quand. Les échanges privés avec l'IA ne sont jamais visibles.</p>
+        <button type="button" id="btn-suivi" class="btn btn-sec">Voir le tableau d'avancement</button>
+        <div id="suivi-contenu" style="overflow-x:auto"></div>
+      </div>
+
       <div class="carte">
         <h2>Dans la salle</h2>
         <ul id="liste-membres" class="liste"></ul>
@@ -201,6 +236,9 @@
           <div id="liste-recu"></div>
         </div>
         <p id="salle-msg" class="erreur-msg" role="alert"></p>
+      </div>
+
+      </div>
       </div>
 
       <div class="carte centre">
@@ -215,6 +253,6 @@
 
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
-<script src="salle.js?v=5" defer></script>
+<script src="salle.js?v=6" defer></script>
 </body>
 </html>

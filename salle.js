@@ -241,6 +241,14 @@
     $('zone-recu').classList.toggle('cache', !d.reactions.length);
     d.reactions.forEach(function (r) { zone.appendChild(el('span', 'recu', (REACTIONS[r.type] || r.type) + ' de ' + r.de)); });
 
+    var ld = $('liste-defis'); ld.textContent = '';
+    (d.defis || []).forEach(function (x) {
+      var li2 = el('li', 'membre');
+      var a2 = el('a', 'membre-nom', '⚔️ ' + x.titre + ' (par ' + x.pseudo + ')');
+      a2.href = 'https://edukatchat.org/defi.html?c=' + encodeURIComponent(x.code); a2.target = '_blank'; a2.rel = 'noopener';
+      li2.appendChild(a2); ld.appendChild(li2);
+    });
+    $('carte-suivi').classList.toggle('cache', !d.est_createur);
     $('btn-expose').classList.toggle('cache', d.objectif !== 'expose');
     $('plan-titre').textContent = (d.objectif === 'expose') ? 'Les sections de l\u2019exposé' : 'Mon plan de révision';
     $('plan-aide').textContent = (d.objectif === 'expose')
@@ -273,6 +281,8 @@
       $('ps-texte').readOnly = !mienne;
       $('ps-enregistrer').classList.toggle('cache', !mienne);
       $('ps-liberer').classList.toggle('cache', !(mienne || d.est_createur));
+      $('ps-relire').classList.toggle('cache', !mienne); $('ps-relecture').classList.add('cache'); $('ps-relecture').textContent = '';
+      $('ps-relire').onclick = function () { relire(i); };
       $('ps-enregistrer').onclick = function () {
         $('ps-msg').textContent = '';
         appel('/' + code + '/section/deposer', 'POST', { appareil: etat.appareil, index: i, texte: $('ps-texte').value }).then(function (r2) {
@@ -290,6 +300,70 @@
       compter();
       $('panneau-section').classList.remove('cache');
       $('panneau-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  function relire(i) {
+    var b = $('ps-relire'), zone = $('ps-relecture'); $('ps-msg').textContent = '';
+    b.disabled = true; b.textContent = 'Relecture en cours…';
+    appel('/' + code + '/section/relire', 'POST', { appareil: etat.appareil, index: i, matricule: lire('eduka_sceau') }).then(function (res) {
+      b.disabled = false; b.textContent = '🔍 Demander une relecture (IA)';
+      if (!res.ok) { $('ps-msg').textContent = messageErreur(res); return; }
+      var r = res.donnees; zone.textContent = '';
+      function bloc(titre, liste) {
+        if (!liste || !liste.length) return;
+        zone.appendChild(el('h3', '', titre));
+        var ul = el('ul', 'liste');
+        liste.forEach(function (t) { ul.appendChild(el('li', '', t)); });
+        zone.appendChild(ul);
+      }
+      bloc('👍 Ce qui est réussi', r.points_forts);
+      bloc('💡 À améliorer', r.a_ameliorer);
+      bloc('✏️ Fautes repérées', (r.fautes || []).map(function (f) { return f.avant + ' → ' + f.apres; }));
+      zone.appendChild(el('p', 'doux', 'L\u2019IA te guide, mais c\u2019est toi qui corriges. Vérifie toujours les faits dans ton cours.'));
+      zone.classList.remove('cache');
+    });
+  }
+  function suggerer() {
+    var msg = $('creation-msg'); msg.textContent = '';
+    if (!$('c-titre').value.trim()) { msg.textContent = 'Écris d\u2019abord le titre ou le thème.'; return; }
+    var b = $('btn-suggerer'); b.disabled = true; b.textContent = 'Réflexion…';
+    appel('/suggerer', 'POST', { matricule: lire('eduka_sceau'), objectif: $('c-objectif').value, titre: $('c-titre').value.trim(),
+      matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim() }).then(function (res) {
+      b.disabled = false; b.textContent = '💡 Suggérer des parties (IA, facultatif)';
+      if (!res.ok) { msg.textContent = messageErreur(res); return; }
+      $('c-chapitres').value = res.donnees.parties.join('\n');
+      msg.textContent = 'Proposition de l\u2019IA : modifie-la comme tu veux avant de créer la salle.';
+    });
+  }
+  function posterDefi() {
+    var msg = $('sd-msg'); msg.textContent = '';
+    var m = $('sd-lien').value.toUpperCase().match(/[A-Z0-9]{8}(?![A-Z0-9])/);
+    if (!m) { msg.textContent = 'Colle le lien du défi ou son code (8 caractères).'; return; }
+    appel('/' + code + '/defi', 'POST', { appareil: etat.appareil, defi_code: m[0] }).then(function (res) {
+      if (!res.ok) { msg.textContent = messageErreur(res); return; }
+      $('sd-lien').value = ''; actualiser(true);
+    });
+  }
+  function voirSuivi() {
+    var zone = $('suivi-contenu'); zone.textContent = 'Chargement…';
+    appel('/' + code + '/suivi', 'POST', { appareil: etat.appareil }).then(function (res) {
+      zone.textContent = '';
+      if (!res.ok) { zone.textContent = messageErreur(res); return; }
+      var d = res.donnees, t = el('table', 'tableau-suivi');
+      var tr = el('tr'); tr.appendChild(el('th', '', 'Élève'));
+      d.plan.forEach(function (p, i) { var th = el('th', '', String(i + 1)); th.title = p; tr.appendChild(th); });
+      tr.appendChild(el('th', '', 'Vu le')); t.appendChild(tr);
+      d.membres.forEach(function (m) {
+        var r = el('tr'); r.appendChild(el('td', '', m.pseudo + (m.createur ? ' ⭐' : '')));
+        m.faits.forEach(function (f) { r.appendChild(el('td', '', f ? '✅' : '·')); });
+        r.appendChild(el('td', '', (m.derniere_visite || '').slice(5, 16).replace('-', '/')));
+        t.appendChild(r);
+      });
+      zone.appendChild(t);
+      var lg = el('ol', 'doux'); d.plan.forEach(function (p) { lg.appendChild(el('li', '', p)); }); zone.appendChild(lg);
+      var rediges = [];
+      d.membres.forEach(function (m) { m.sections.forEach(function (s) { rediges.push(m.pseudo + ' : partie ' + (s.index + 1) + ', ' + s.nb_car + ' caractères'); }); });
+      if (rediges.length) zone.appendChild(el('p', 'doux', 'Sections déposées — ' + rediges.join(' ; ')));
     });
   }
   function echapperHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -384,6 +458,9 @@
     $('btn-rejoindre').addEventListener('click', function () { rejoindre(); demarrerSuivi(); });
     $('pseudo').addEventListener('keydown', function (e) { if (e.key === 'Enter') { rejoindre(); demarrerSuivi(); } });
     $('btn-expose').addEventListener('click', ouvrirExpose);
+    $('btn-suggerer').addEventListener('click', suggerer);
+    $('sd-poster').addEventListener('click', posterDefi);
+    $('btn-suivi').addEventListener('click', voirSuivi);
     $('ps-fermer').addEventListener('click', fermerPanneaux);
     $('pe-fermer').addEventListener('click', fermerPanneaux);
     $('ps-texte').addEventListener('input', compter);
