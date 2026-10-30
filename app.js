@@ -7203,6 +7203,21 @@ function ouvrirFenetreDefi(bouton) {
     champPseudo.value = pseudoMemorise;
     labelPseudo.appendChild(champPseudo);
 
+    // Salles d'étude de cet appareil : permet de partager le défi directement dans une salle.
+    let sallesPossibles = [];
+    try {
+        if (fonctionActive('salle')) {
+            const l = JSON.parse(localStorage.getItem('eduka_salles') || '[]');
+            if (Array.isArray(l)) sallesPossibles = l.filter(x => x && /^[A-Z0-9]{8}$/.test(String(x.code || ''))).slice(0, 8);
+        }
+    } catch (e) { /* stockage indisponible : pas de partage en salle */ }
+    const labelSalle = creerElementDefi('label', 'defi-label', 'Partager aussi dans une salle d\u2019étude (facultatif)');
+    const choixSalle = creerElementDefi('select', 'defi-champ');
+    choixSalle.appendChild(new Option('Non, seulement le lien', ''));
+    sallesPossibles.forEach(x => choixSalle.appendChild(new Option('\uD83D\uDCDA ' + String(x.titre || 'Salle').slice(0, 60), x.code)));
+    labelSalle.appendChild(choixSalle);
+    if (!sallesPossibles.length) labelSalle.style.display = 'none';
+
     const message = creerElementDefi('p', 'defi-message');
     message.setAttribute('role', 'status');
     const zoneResultat = creerElementDefi('div', 'defi-resultat');
@@ -7244,6 +7259,24 @@ function ouvrirFenetreDefi(bouton) {
             }
             try { localStorage.setItem('eduka_defi_pseudo', pseudo); } catch (e) { /* stockage indisponible */ }
             afficherLienDefi(fenetre, zoneResultat, donnees, titre, score);
+            const salleChoisie = choixSalle.value;
+            const codeDefi = (String(donnees.lien || '').match(/[A-Z0-9]{8}$/) || [''])[0];
+            if (salleChoisie && codeDefi) {
+                let appareilSalle = '';
+                try { appareilSalle = localStorage.getItem('eduka_appareil_defi') || ''; } catch (e) { /* ignoré */ }
+                let partage = false;
+                try {
+                    const r2 = await fetch('https://api.edukatchat.org/api/salles/' + salleChoisie + '/defi', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ appareil: appareilSalle, defi_code: codeDefi })
+                    });
+                    partage = r2.ok;
+                } catch (e) { /* réseau */ }
+                zoneResultat.appendChild(creerElementDefi('p', partage ? 'defi-succes' : 'defi-aide', partage
+                    ? '\u2705 Défi partagé dans ta salle d\u2019étude.'
+                    : 'Le défi est créé, mais n\u2019a pas pu être ajouté à la salle : colle son lien dans la salle.'));
+            }
+            labelSalle.style.display = 'none';
             labelTitre.style.display = 'none';
             labelPseudo.style.display = 'none';
             aide.style.display = 'none';
@@ -7256,7 +7289,7 @@ function ouvrirFenetreDefi(bouton) {
         }
     });
 
-    fenetre.append(titreFenetre, aide, labelTitre, labelPseudo, message, zoneResultat, boutons);
+    fenetre.append(titreFenetre, aide, labelTitre, labelPseudo, labelSalle, message, zoneResultat, boutons);
     overlay.appendChild(fenetre);
     document.body.appendChild(overlay);
     document.addEventListener('keydown', toucheFenetreDefi);
