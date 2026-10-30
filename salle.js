@@ -188,8 +188,13 @@
       corps.appendChild(el('div', 'tache-nom', t.texte));
       var info = t.nb_faits + ' / ' + d.membres.length + ' ont révisé ce chapitre';
       if (t.aides.length) info += ' · 🙋 ' + t.aides.join(', ') + (t.aides.length > 1 ? ' demandent' : ' demande') + ' de l’aide';
-      if (t.commentaire) info += ' · 💬 commentaire du créateur';
       corps.appendChild(el('div', 'tache-info', info));
+      if (t.commentaire) {
+        var bulle = el('div', 'bulle-comm');
+        bulle.appendChild(el('strong', '', '💬 Commentaire du créateur : '));
+        bulle.appendChild(document.createTextNode(t.commentaire));
+        corps.appendChild(bulle);
+      }
       if (d.objectif === 'expose') {
         var act = el('div', 'tache-info');
         if (!t.auteur) {
@@ -302,7 +307,7 @@
           fermerPanneaux(); actualiser(true);
         });
       };
-      $('ps-comm-lecture').classList.toggle('cache', !r.commentaire);
+      $('ps-comm-lecture').classList.toggle('cache', !r.commentaire || (d.est_createur && !mienne));
       $('ps-comm-texte-lu').textContent = r.commentaire || '';
       var peutCommenter = d.est_createur && r.auteur && !mienne;
       $('ps-comm-edition').classList.toggle('cache', !peutCommenter);
@@ -311,7 +316,7 @@
         $('ps-comm-msg').textContent = '';
         appel('/' + code + '/section/commenter', 'POST', { appareil: etat.appareil, index: i, texte: $('ps-comm-saisie').value }).then(function (r4) {
           $('ps-comm-msg').textContent = r4.ok ? 'Commentaire enregistré ✓' : messageErreur(r4);
-          if (r4.ok) { $('ps-comm-lecture').classList.toggle('cache', !r4.donnees.commentaire); $('ps-comm-texte-lu').textContent = r4.donnees.commentaire || ''; actualiser(true); }
+          if (r4.ok) { actualiser(true); }
         });
       };
       compter();
