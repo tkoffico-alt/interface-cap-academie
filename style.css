@@ -2518,3 +2518,84 @@ body.dark-theme .banniere-actions-sas .btn-banniere-aide { background: rgba(245,
 /* ===== BOUTONS D'ACTION « APRÈS DOCUMENT » (30/10/2026) =====
    Visibles seulement une fois un document généré (classe .doc-pret posée par app.js). */
 .suggestions-rapides .btn-suggestion[data-apres-doc]:not(.doc-pret) { display: none !important; }
+
+
+/* ===== BOUTONS RAPIDES : PLUS VIVANTS, PLUS RAFFINÉS (30/10/2026) =====
+   Chaque rôle garde sa teinte, mais en « verre teinté » : fond clair légèrement dégradé,
+   texte et bordure de la couleur du rôle, petite lueur colorée sous le bouton. Le bouton
+   principal (Formulaire guidé) est un dégradé indigo→bleu avec un reflet discret qui le
+   traverse. Survol : le bouton se soulève ; appui : il s'enfonce légèrement ; apparition
+   en cascade. Mouvements coupés si l'utilisateur a demandé « réduire les animations ». */
+.suggestions-rapides { padding-top: 4px !important; }
+.suggestions-rapides .btn-suggestion {
+    --fond1: #F8FAFC; --fond2: #EEF2F7; --bord: #CBD5E1; --texte: #334155; --lueur: rgba(51, 65, 85, 0.22);
+    position: relative;
+    background: linear-gradient(160deg, var(--fond1) 0%, var(--fond2) 100%) !important;
+    color: var(--texte) !important;
+    border: 1px solid var(--bord) !important;
+    border-radius: 999px !important;
+    font-weight: 650 !important;
+    letter-spacing: 0.005em;
+    text-shadow: none !important;
+    filter: none !important;
+    box-shadow: 0 1px 1px rgba(15, 23, 42, 0.05), 0 4px 10px -4px var(--lueur) !important;
+    transition: transform 0.18s cubic-bezier(.2,.8,.3,1), box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease !important;
+    animation: sugEntree 0.45s cubic-bezier(.2,.8,.3,1) backwards;
+    -webkit-tap-highlight-color: transparent;
+}
+.suggestions-rapides .btn-suggestion:nth-child(2) { animation-delay: 0.05s; }
+.suggestions-rapides .btn-suggestion:nth-child(3) { animation-delay: 0.10s; }
+.suggestions-rapides .btn-suggestion:nth-child(4) { animation-delay: 0.15s; }
+.suggestions-rapides .btn-suggestion:nth-child(5) { animation-delay: 0.20s; }
+.suggestions-rapides .btn-suggestion:nth-child(n+6) { animation-delay: 0.25s; }
+@keyframes sugEntree { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: none; } }
+
+.suggestions-rapides .btn-suggestion:hover {
+    transform: translateY(-2px) !important;
+    border-color: var(--texte) !important;
+    box-shadow: 0 1px 1px rgba(15, 23, 42, 0.06), 0 8px 16px -6px var(--lueur) !important;
+}
+.suggestions-rapides .btn-suggestion:active { transform: translateY(0) scale(.96) !important; transition-duration: 0.06s !important; }
+.suggestions-rapides .btn-suggestion:focus-visible { outline: 2px solid var(--texte); outline-offset: 2px; }
+
+/* Teintes par rôle */
+.suggestions-rapides .btn-suggestion.sug-outil      { --fond1: #F0FDFF; --fond2: #CFFAFE; --bord: #67E8F9; --texte: #0E7490; --lueur: rgba(8, 145, 178, 0.45); }
+.suggestions-rapides .btn-suggestion.sug-vert       { --fond1: #F3FDF6; --fond2: #D5F8E0; --bord: #86EFAC; --texte: #166534; --lueur: rgba(22, 163, 74, 0.42); }
+.suggestions-rapides .btn-suggestion.sug-ambre      { --fond1: #FFFCEB; --fond2: #FDEFC0; --bord: #FCD34D; --texte: #92400E; --lueur: rgba(217, 119, 6, 0.42); }
+.suggestions-rapides .btn-suggestion.sug-ponctuel   { --fond1: #FFF4F6; --fond2: #FFDCE3; --bord: #FDA4AF; --texte: #BE123C; --lueur: rgba(225, 29, 72, 0.40); }
+.suggestions-rapides .btn-suggestion.sug-violet     { --fond1: #F7F4FF; --fond2: #E4DCFE; --bord: #C4B5FD; --texte: #5B21B6; --lueur: rgba(124, 58, 237, 0.42); }
+.suggestions-rapides .btn-suggestion.sug-secondaire { --fond1: #F8FAFC; --fond2: #E9EEF5; --bord: #CBD5E1; --texte: #475569; --lueur: rgba(71, 85, 105, 0.30); }
+
+/* Bouton principal : dégradé profond + reflet qui le traverse de temps en temps */
+.suggestions-rapides .btn-suggestion.sug-principal {
+    --texte: #1E3A8A; --lueur: rgba(37, 99, 235, 0.60);
+    background: linear-gradient(135deg, #4F46E5 0%, #2563EB 55%, #0EA5E9 100%) !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    font-weight: 700 !important;
+    overflow: hidden;
+    box-shadow: 0 1px 1px rgba(30, 58, 138, 0.25), 0 6px 14px -4px var(--lueur), inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
+}
+.suggestions-rapides .btn-suggestion.sug-principal:hover { border-color: rgba(255, 255, 255, 0.6) !important; box-shadow: 0 1px 1px rgba(30, 58, 138, 0.25), 0 10px 20px -6px var(--lueur), inset 0 1px 0 rgba(255, 255, 255, 0.40) !important; }
+.suggestions-rapides .btn-suggestion.sug-principal::after {
+    content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+    background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.38) 50%, transparent 100%);
+    transform: skewX(-18deg); pointer-events: none;
+    animation: sugReflet 6s ease-in-out 1.2s infinite;
+}
+@keyframes sugReflet { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+
+/* Thème sombre : fonds translucides colorés, texte clair */
+body.dark-theme .suggestions-rapides .btn-suggestion { --fond1: rgba(148, 163, 184, 0.16); --fond2: rgba(148, 163, 184, 0.08); --bord: rgba(148, 163, 184, 0.45); --texte: #CBD5E1; --lueur: rgba(0, 0, 0, 0.55); }
+body.dark-theme .suggestions-rapides .btn-suggestion.sug-outil    { --fond1: rgba(34, 211, 238, 0.20); --fond2: rgba(34, 211, 238, 0.09); --bord: rgba(34, 211, 238, 0.55); --texte: #67E8F9; --lueur: rgba(8, 145, 178, 0.55); }
+body.dark-theme .suggestions-rapides .btn-suggestion.sug-vert     { --fond1: rgba(74, 222, 128, 0.20); --fond2: rgba(74, 222, 128, 0.09); --bord: rgba(74, 222, 128, 0.55); --texte: #86EFAC; --lueur: rgba(22, 163, 74, 0.55); }
+body.dark-theme .suggestions-rapides .btn-suggestion.sug-ambre    { --fond1: rgba(251, 191, 36, 0.20); --fond2: rgba(251, 191, 36, 0.09); --bord: rgba(251, 191, 36, 0.55); --texte: #FCD34D; --lueur: rgba(217, 119, 6, 0.55); }
+body.dark-theme .suggestions-rapides .btn-suggestion.sug-ponctuel { --fond1: rgba(251, 113, 133, 0.20); --fond2: rgba(251, 113, 133, 0.09); --bord: rgba(251, 113, 133, 0.55); --texte: #FDA4AF; --lueur: rgba(225, 29, 72, 0.55); }
+body.dark-theme .suggestions-rapides .btn-suggestion.sug-violet   { --fond1: rgba(167, 139, 250, 0.22); --fond2: rgba(167, 139, 250, 0.10); --bord: rgba(167, 139, 250, 0.55); --texte: #C4B5FD; --lueur: rgba(124, 58, 237, 0.55); }
+body.dark-theme .suggestions-rapides .btn-suggestion.sug-principal { --lueur: rgba(59, 130, 246, 0.55); }
+
+@media (prefers-reduced-motion: reduce) {
+    .suggestions-rapides .btn-suggestion { animation: none !important; }
+    .suggestions-rapides .btn-suggestion.sug-principal::after { animation: none !important; display: none; }
+    .suggestions-rapides .btn-suggestion:hover { transform: none !important; }
+}
