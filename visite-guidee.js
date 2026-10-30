@@ -17,7 +17,7 @@
 
     const VISITES = {
         sas: [
-            { s: '#container-sas-custom .btn-banniere-nouvelle', t: 'Nouvelle session', x: 'Terminez cette session et commencez-en une nouvelle.' },
+            { s: '#container-sas-custom .btn-banniere-nouvelle', t: 'Nouvelle discussion', x: 'Terminez cette discussion et commencez-en une nouvelle.' },
             { s: '#container-sas-custom .btn-banniere-historique', t: 'Historique', x: 'Revoyez vos sessions précédentes.' },
             { s: '#sas-suggestions-rapides .btn-suggestion-guide', t: 'Guide-moi', x: 'Vous ne savez pas par où commencer ? L’assistant vous pose quelques questions et vous guide.' },
             { s: '#sas-suggestions-rapides .btn-suggestion-reviser', t: 'Réviser un chapitre', x: 'Indiquez le chapitre à réviser (il suffit de compléter la phrase) : l’assistant l’explique pas à pas.' },

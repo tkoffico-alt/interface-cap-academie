@@ -4611,7 +4611,7 @@ function nouvelleSessionSas() {
     chatHistory.innerHTML = '';
     const w = document.createElement('div');
     w.className = 'message system-message';
-    w.textContent = "Nouvelle session. Posez votre première question pour commencer.";
+    w.textContent = "Nouvelle discussion. Posez votre première question pour commencer.";
     chatHistory.appendChild(w);
 }
 
@@ -4658,7 +4658,7 @@ function ouvrirHistoriqueSas(idOuvert) {
         boite.appendChild(h);
         if (!liste.length) {
             const p = document.createElement('p');
-            p.textContent = "Aucune session archivée pour l'instant. Elles apparaissent ici quand vous cliquez sur « Nouvelle session ». L'historique reste sur cet appareil.";
+            p.textContent = "Aucune session archivée pour l'instant. Elles apparaissent ici quand vous cliquez sur « Nouvelle discussion ». L'historique reste sur cet appareil.";
             boite.appendChild(p);
         } else {
             liste.forEach(item => {
@@ -7294,3 +7294,85 @@ function majBoutonsSaisonniers() {
     document.querySelectorAll('[data-saison-rentree]').forEach(b => { b.style.display = vacances ? '' : 'none'; });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', majBoutonsSaisonniers); else majBoutonsSaisonniers();
+
+
+// =======================================================================
+// ❖ SÉLECTEUR DE PHOTO AVEC BOUTON « + » (30/10/2026) ❖
+// À la place du champ « Choisir un fichier » : un bouton + ouvre un petit menu
+// (Appareil photo / Galerie), comme dans l'application Claude. L'input d'origine
+// est conservé (masqué) : tout le code existant continue de lire input.files.
+// =======================================================================
+function installerSelecteurPhoto(idInput) {
+    const principal = document.getElementById(idInput);
+    if (!principal || principal.dataset.selecteurPhoto) return;
+    principal.dataset.selecteurPhoto = '1';
+    principal.removeAttribute('capture');   // galerie / fichiers
+    principal.style.display = 'none';
+
+    const camera = document.createElement('input');
+    camera.type = 'file'; camera.accept = 'image/*'; camera.setAttribute('capture', 'environment');
+    camera.style.display = 'none';
+
+    const zone = document.createElement('div');
+    zone.className = 'photo-picker';
+    zone.innerHTML =
+        '<button type="button" class="photo-plus" aria-haspopup="true" aria-expanded="false" aria-label="Ajouter une photo" title="Ajouter une photo">' +
+        '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>' +
+        '<img class="photo-apercu" alt="" style="display:none">' +
+        '<span class="photo-nom">Aucune photo choisie</span>' +
+        '<div class="photo-menu" role="menu" style="display:none">' +
+        '<button type="button" role="menuitem" data-src="camera">📷&nbsp; Prendre une photo</button>' +
+        '<button type="button" role="menuitem" data-src="galerie">🖼️&nbsp; Choisir dans la galerie</button></div>';
+    principal.parentNode.insertBefore(zone, principal);
+    zone.appendChild(camera);
+
+    const plus = zone.querySelector('.photo-plus'), menu = zone.querySelector('.photo-menu');
+    const nom = zone.querySelector('.photo-nom'), apercu = zone.querySelector('.photo-apercu');
+    const fermer = () => { menu.style.display = 'none'; plus.setAttribute('aria-expanded', 'false'); };
+    plus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const ouvrir = menu.style.display === 'none';
+        menu.style.display = ouvrir ? 'block' : 'none';
+        plus.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
+    });
+    document.addEventListener('click', (e) => { if (!zone.contains(e.target)) fermer(); });
+    menu.addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-src]');
+        if (!b) return;
+        fermer();
+        (b.dataset.src === 'camera' ? camera : principal).click();
+    });
+    // Photo prise avec l'appareil : on la recopie dans l'input d'origine
+    camera.addEventListener('change', () => {
+        if (!camera.files || !camera.files.length) return;
+        try {
+            const dt = new DataTransfer();
+            dt.items.add(camera.files[0]);
+            principal.files = dt.files;
+        } catch (err) { /* navigateur ancien : on garde seulement l'aperçu */ }
+        camera.value = '';
+        principal.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+    let derniereUrl = '';
+    const rafraichir = () => {
+        const f = principal.files && principal.files[0];
+        const cle = f ? f.name + f.size + f.lastModified : '';
+        if (cle === zone.dataset.cle) return;
+        zone.dataset.cle = cle;
+        if (derniereUrl) { try { URL.revokeObjectURL(derniereUrl); } catch (e) {} derniereUrl = ''; }
+        if (f) {
+            nom.textContent = f.name.length > 28 ? f.name.slice(0, 25) + '…' : f.name;
+            nom.classList.add('choisie');
+            try { derniereUrl = URL.createObjectURL(f); apercu.src = derniereUrl; apercu.style.display = 'block'; } catch (e) {}
+        } else {
+            nom.textContent = 'Aucune photo choisie'; nom.classList.remove('choisie');
+            apercu.removeAttribute('src'); apercu.style.display = 'none';
+        }
+    };
+    principal.addEventListener('change', rafraichir);
+    setInterval(rafraichir, 800); // le code existant vide parfois le champ sans événement
+}
+document.addEventListener('DOMContentLoaded', () => {
+    installerSelecteurPhoto('planning-photo-input');
+    installerSelecteurPhoto('pre-abo-photo-input');
+});
