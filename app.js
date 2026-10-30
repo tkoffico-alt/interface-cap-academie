@@ -117,7 +117,7 @@ document.addEventListener('click', function (evenement) {
             // Dify) : pour « la dernière fiche », on joint le texte de la
             // dernière réponse à la requête (jamais affiché dans la bulle).
             let contexteJoint = "";
-            if (prolongeLEchange && (outil === 'forge' || !teacherConversationIds[outil])) {
+            if (prolongeLEchange) { // 30/10/2026 : toujours joint (la mémoire Dify peut manquer ou être tronquée)
                 contexteJoint = derniereReponseEnseignant(outil);
             }
             champ.value = bouton.dataset.message || "";
@@ -5913,7 +5913,9 @@ async function sendTeacherMessage(outil, contexteJoint) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 query: contexteJoint
-                    ? `${message}\n\n[DOCUMENT PRÉCÉDENT À MODIFIER — réécris la fiche complète avec exactement la même structure, les mêmes titres de section et la même mise en forme, en intégrant la demande ci-dessus :]\n${contexteJoint}`
+                    ? (outil === 'forge'
+                        ? `${message}\n\n[DOCUMENT PRÉCÉDENT À MODIFIER — réécris la fiche complète avec exactement la même structure, les mêmes titres de section et la même mise en forme, en intégrant la demande ci-dessus :]\n${contexteJoint}`
+                        : `${message}\n\n[DOCUMENT DE RÉFÉRENCE — dernier document généré dans cette conversation ; appuie-toi dessus pour répondre à la demande ci-dessus, sans me redemander de le rappeler :]\n${contexteJoint}`)
                     : message,
                 conversation_id: teacherConversationIds[outil] || "",
                 outil: outil,
@@ -7256,14 +7258,21 @@ function afficherLienDefi(fenetre, zone, donnees, titre, score) {
 function majBoutonsApresDocument() {
     document.querySelectorAll('.btn-suggestion[data-apres-doc]').forEach(b => {
         const outil = b.dataset.outil;
-        b.classList.toggle('doc-pret', !!(outil && derniereReponseEnseignant(outil)));
+        let pret;
+        if (outil === 'sas') { // réponses d'élève souvent plus courtes : une bulle de plus de 150 caractères suffit
+            const h = document.getElementById('sas-chat-history');
+            pret = !!(h && Array.from(h.querySelectorAll('.bot-message')).some(m => (m.innerText || '').trim().length > 150));
+        } else {
+            pret = !!(outil && derniereReponseEnseignant(outil));
+        }
+        b.classList.toggle('doc-pret', pret);
     });
 }
 (function () {
     let minuteur = null;
     const planifier = () => { clearTimeout(minuteur); minuteur = setTimeout(majBoutonsApresDocument, 400); };
     const brancher = () => {
-        ['atelier', 'forge', 'forge_primaire'].forEach(o => {
+        ['sas', 'atelier', 'forge', 'forge_primaire'].forEach(o => {
             const h = document.getElementById(`${o}-chat-history`);
             if (h && !h.dataset.obsApresDoc) {
                 h.dataset.obsApresDoc = '1';
@@ -7275,3 +7284,13 @@ function majBoutonsApresDocument() {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', brancher); else brancher();
     setTimeout(brancher, 3000);
 })();
+
+
+// ❖ 30/10/2026 : « Préparer la rentrée » n'apparaît que pendant les vacances scolaires,
+// de juillet à septembre inclus (il disparaît dès le 1er octobre).
+function majBoutonsSaisonniers() {
+    const mois = new Date().getMonth(); // 0 = janvier ; 6 = juillet ; 8 = septembre
+    const vacances = mois >= 6 && mois <= 8;
+    document.querySelectorAll('[data-saison-rentree]').forEach(b => { b.style.display = vacances ? '' : 'none'; });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', majBoutonsSaisonniers); else majBoutonsSaisonniers();
