@@ -91,7 +91,7 @@
     var ul = $('liste-salles'); ul.textContent = '';
     l.forEach(function (x) {
       var li = el('li', 'membre');
-      var a = el('a', 'membre-nom', '📚 ' + x.titre); a.href = '?c=' + encodeURIComponent(x.code);
+      var a = el('a', 'membre-nom', '👥 ' + x.titre); a.href = '?c=' + encodeURIComponent(x.code);
       li.appendChild(a); ul.appendChild(li);
     });
     ecran('liste');
