@@ -151,6 +151,23 @@
       var info = t.nb_faits + ' / ' + d.membres.length + ' ont révisé ce chapitre';
       if (t.aides.length) info += ' · 🙋 ' + t.aides.join(', ') + (t.aides.length > 1 ? ' demandent' : ' demande') + ' de l’aide';
       corps.appendChild(el('div', 'tache-info', info));
+      if (d.objectif === 'expose') {
+        var act = el('div', 'tache-info');
+        if (!t.auteur) {
+          var prendre = el('button', 'btn-petit', '✍️ Je prends cette section'); prendre.type = 'button';
+          prendre.addEventListener('click', function () { prendreSection(i); });
+          act.appendChild(prendre);
+        } else {
+          var mienne = (t.auteur === d.moi);
+          act.appendChild(document.createTextNode('✍️ ' + (mienne ? 'Ta section' : 'Section de ' + t.auteur) + ' · ' + t.nb_car + ' caractère' + (t.nb_car > 1 ? 's' : '') + ' '));
+          if (mienne || t.nb_car > 0 || d.est_createur) {
+            var ouvrir = el('button', 'btn-petit', mienne ? 'Écrire / modifier' : 'Lire'); ouvrir.type = 'button';
+            ouvrir.addEventListener('click', function () { ouvrirSection(i); });
+            act.appendChild(ouvrir);
+          }
+        }
+        corps.appendChild(act);
+      }
       var moiAide = t.aides.indexOf(d.moi) !== -1;
       var aide = el('button', 'btn-petit' + (moiAide ? ' actif' : ''), moiAide ? '🙋 Aide demandée' : '🙋 Besoin d’aide');
       aide.type = 'button';
@@ -190,10 +207,84 @@
     $('zone-recu').classList.toggle('cache', !d.reactions.length);
     d.reactions.forEach(function (r) { zone.appendChild(el('span', 'recu', (REACTIONS[r.type] || r.type) + ' de ' + r.de)); });
 
+    $('btn-expose').classList.toggle('cache', d.objectif !== 'expose');
+    $('plan-titre').textContent = (d.objectif === 'expose') ? 'Les sections de l\u2019exposé' : 'Mon plan de révision';
+    $('plan-aide').textContent = (d.objectif === 'expose')
+      ? 'Prends une section, rédige-la et dépose-la ; coche-la quand elle est terminée. Tout le monde peut lire les sections des autres.'
+      : 'Coche un chapitre quand tu l\u2019as révisé. Si tu bloques, demande de l\u2019aide : tes camarades le verront.';
     $('btn-quitter').classList.toggle('cache', d.est_createur);
     $('btn-fermer').classList.toggle('cache', !d.est_createur);
     $('btn-prolonger').classList.toggle('cache', !d.est_createur);
     ecran('salle');
+  }
+
+
+  /* ---------- Exposé : sections ---------- */
+  function prendreSection(i) {
+    appel('/' + code + '/section/prendre', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
+      if (!res.ok) message(messageErreur(res));
+      actualiser(true).then(function () { if (res.ok) ouvrirSection(i); });
+    });
+  }
+  function fermerPanneaux() { $('panneau-section').classList.add('cache'); $('panneau-expose').classList.add('cache'); }
+  function compter() { $('ps-compteur').textContent = $('ps-texte').value.length + ' / 3000 caractères'; }
+  function ouvrirSection(i) {
+    fermerPanneaux(); $('ps-msg').textContent = '';
+    appel('/' + code + '/section/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
+      if (!res.ok) { message(messageErreur(res)); return; }
+      var d = etat.donnees, r = res.donnees, mienne = (r.auteur === d.moi);
+      $('ps-titre').textContent = r.titre_section;
+      $('ps-auteur').textContent = r.auteur ? ('Section rédigée par ' + (mienne ? 'toi' : r.auteur)) : 'Section libre';
+      $('ps-texte').value = r.texte || '';
+      $('ps-texte').readOnly = !mienne;
+      $('ps-enregistrer').classList.toggle('cache', !mienne);
+      $('ps-liberer').classList.toggle('cache', !(mienne || d.est_createur));
+      $('ps-enregistrer').onclick = function () {
+        $('ps-msg').textContent = '';
+        appel('/' + code + '/section/deposer', 'POST', { appareil: etat.appareil, index: i, texte: $('ps-texte').value }).then(function (r2) {
+          $('ps-msg').textContent = r2.ok ? 'Section enregistrée ✓' : messageErreur(r2);
+          if (r2.ok) actualiser(true);
+        });
+      };
+      $('ps-liberer').onclick = function () {
+        if (!confirm('Libérer cette section ? Le texte déposé sera effacé.')) return;
+        appel('/' + code + '/section/liberer', 'POST', { appareil: etat.appareil, index: i }).then(function (r3) {
+          if (!r3.ok) { $('ps-msg').textContent = messageErreur(r3); return; }
+          fermerPanneaux(); actualiser(true);
+        });
+      };
+      compter();
+      $('panneau-section').classList.remove('cache');
+      $('panneau-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  function echapperHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function ouvrirExpose() {
+    fermerPanneaux();
+    appel('/' + code + '/expose', 'POST', { appareil: etat.appareil }).then(function (res) {
+      if (!res.ok) { message(messageErreur(res)); return; }
+      var donnees = res.donnees, zone = $('pe-contenu'); zone.textContent = '';
+      var brut = donnees.titre + '\n\n', html = '<h1>' + echapperHtml(donnees.titre) + '</h1>';
+      donnees.sections.forEach(function (sec, k) {
+        var titre = (k + 1) + '. ' + sec.titre;
+        zone.appendChild(el('h2', '', titre));
+        zone.appendChild(el('p', sec.texte ? '' : 'doux', sec.texte || '(section pas encore rédigée' + (sec.auteur ? ' — ' + sec.auteur : '') + ')'));
+        zone.lastChild.style.whiteSpace = 'pre-wrap';
+        brut += titre + '\n' + (sec.texte || '(à rédiger)') + '\n\n';
+        html += '<h2>' + echapperHtml(titre) + '</h2><p>' + echapperHtml(sec.texte || '(à rédiger)').replace(/\n/g, '<br>') + '</p>';
+      });
+      $('pe-copier').onclick = function () { copier(brut, $('pe-msg'), 'Texte copié ✓'); };
+      $('pe-telecharger').onclick = function () {
+        try {
+          var blob = new Blob(['<html><head><meta charset="utf-8"></head><body>' + html + '</body></html>'], { type: 'application/msword' });
+          var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'expose.doc';
+          document.body.appendChild(a); a.click(); a.remove();
+        } catch (e) { $('pe-msg').textContent = 'Téléchargement impossible : utilise « Copier le texte ».'; }
+      };
+      $('pe-msg').textContent = '';
+      $('panneau-expose').classList.remove('cache');
+      $('panneau-expose').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function actualiser(silencieux) {
@@ -256,6 +347,10 @@
     $('btn-creer').addEventListener('click', creer);
     $('btn-rejoindre').addEventListener('click', function () { rejoindre(); demarrerSuivi(); });
     $('pseudo').addEventListener('keydown', function (e) { if (e.key === 'Enter') { rejoindre(); demarrerSuivi(); } });
+    $('btn-expose').addEventListener('click', ouvrirExpose);
+    $('ps-fermer').addEventListener('click', fermerPanneaux);
+    $('pe-fermer').addEventListener('click', fermerPanneaux);
+    $('ps-texte').addEventListener('input', compter);
     $('btn-actualiser').addEventListener('click', function () { message(''); actualiser(); });
     $('btn-partager').addEventListener('click', function () { copier(lienSalle(code), $('salle-msg'), 'Lien copié : envoie-le à ton camarade.'); });
     $('btn-quitter').addEventListener('click', function () { if (confirm('Quitter la salle ?')) action('quitter'); });

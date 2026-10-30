@@ -157,9 +157,30 @@
       </div>
 
       <div class="carte">
-        <h2>Mon plan de révision</h2>
-        <p class="doux">Coche un chapitre quand tu l'as révisé. Si tu bloques, demande de l'aide : tes camarades le verront.</p>
+        <h2 id="plan-titre">Mon plan de révision</h2>
+        <p class="doux" id="plan-aide">Coche un chapitre quand tu l'as révisé. Si tu bloques, demande de l'aide : tes camarades le verront.</p>
         <ul id="liste-plan" class="liste"></ul>
+        <button type="button" id="btn-expose" class="btn btn-sec cache">📄 Voir l'exposé complet</button>
+      </div>
+
+      <div id="panneau-section" class="carte cache">
+        <h2 id="ps-titre"></h2>
+        <p class="doux" id="ps-auteur"></p>
+        <textarea id="ps-texte" maxlength="3000" style="min-height:220px"></textarea>
+        <div class="doux" id="ps-compteur"></div>
+        <p id="ps-msg" class="erreur-msg" role="alert"></p>
+        <button type="button" id="ps-enregistrer" class="btn">Enregistrer ma section</button>
+        <button type="button" id="ps-liberer" class="btn btn-sec cache">Libérer cette section</button>
+        <button type="button" id="ps-fermer" class="btn btn-sec">Fermer</button>
+      </div>
+
+      <div id="panneau-expose" class="carte cache">
+        <h2>Exposé complet</h2>
+        <div id="pe-contenu"></div>
+        <p id="pe-msg" class="doux" role="status"></p>
+        <button type="button" id="pe-copier" class="btn btn-sec">Copier le texte</button>
+        <button type="button" id="pe-telecharger" class="btn">Télécharger pour Word (.doc)</button>
+        <button type="button" id="pe-fermer" class="btn btn-sec">Fermer</button>
       </div>
 
       <div class="carte">
@@ -184,6 +205,6 @@
 
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
-<script src="salle.js?v=2" defer></script>
+<script src="salle.js?v=4" defer></script>
 </body>
 </html>
