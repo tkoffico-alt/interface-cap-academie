@@ -1555,6 +1555,10 @@
                     <button class="menu-nav-item" onclick="naviguerVers('philo')">🦉 Atelier de Philosophie</button>
                     <button class="menu-nav-item" onclick="naviguerVers('sciences')">🧬 Atelier des Sciences</button>
                     <button class="menu-nav-item" onclick="naviguerVers('elan')">🚀 Atelier de l'Élan</button>
+                    <div id="menu-nav-salle-bloc" style="display: none;">
+                        <div class="menu-nav-separateur"></div>
+                        <a class="menu-nav-item" id="menu-nav-salle" href="salle.html" style="display: block; text-decoration: none;">📚 Salle d'étude <span class="badge-nouveau">Nouveau</span></a>
+                    </div>
                     <div class="menu-nav-separateur"></div>
                     <button class="menu-nav-item" onclick="naviguerVers('boussole')">🧭 Boussole d'Orientation</button>
                     <button class="menu-nav-item" onclick="naviguerVers('boussole-univ')">🎓 Boussole Universitaire</button>
@@ -1923,7 +1927,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.29"></script>
+    <script src="app.js?v=3.30"></script>
     <script src="visite-guidee.js?v=3"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">

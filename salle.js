@@ -35,7 +35,7 @@
   }
 
   function ecran(nom) {
-    ['chargement', 'erreur', 'creation', 'cree', 'accueil', 'salle'].forEach(function (n) {
+    ['chargement', 'erreur', 'liste', 'creation', 'cree', 'accueil', 'salle'].forEach(function (n) {
       $('ecran-' + n).classList.toggle('cache', n !== nom);
     });
   }
@@ -65,18 +65,51 @@
     fin(false);
   }
 
+
+  /* ---------- Libellés selon l'objectif ---------- */
+  function adapterFormulaire() {
+    var expose = ($('c-objectif').value === 'expose');
+    $('c-titre-label').textContent = expose ? 'Thème de l\u2019exposé' : 'Titre de la salle';
+    $('c-titre').placeholder = expose ? 'Ex. : Le cacao en Côte d\u2019Ivoire' : 'Ex. : Révision BEPC de maths';
+    $('c-chap-label').textContent = expose ? 'Parties de l\u2019exposé (une par ligne, une par élève)' : 'Chapitres à réviser (un par ligne, de 1 à 12)';
+    $('c-chap-aide').textContent = expose ? 'Un exposé porte sur un thème : découpe-le en parties que vous vous répartirez (de 1 à 12).' : '';
+    var zone = $('c-chapitres');
+    if (expose && !zone.value.trim()) zone.value = 'Introduction\nDéveloppement\nConclusion';
+    zone.placeholder = expose ? 'Introduction\nLes origines\nConclusion' : 'Calcul littéral\nThéorème de Thalès\nStatistiques';
+  }
+
+  /* ---------- Mes salles (mémorisées sur cet appareil) ---------- */
+  function salleMemorisees() {
+    try { var l = JSON.parse(lire('eduka_salles') || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; }
+  }
+  function memoriserSalle(c, titre) {
+    var l = salleMemorisees().filter(function (x) { return x && x.code !== c; });
+    l.unshift({ code: c, titre: String(titre || '').slice(0, 60) });
+    ecrire('eduka_salles', JSON.stringify(l.slice(0, 8)));
+  }
+  function afficherListe(l) {
+    var ul = $('liste-salles'); ul.textContent = '';
+    l.forEach(function (x) {
+      var li = el('li', 'membre');
+      var a = el('a', 'membre-nom', '📚 ' + x.titre); a.href = '?c=' + encodeURIComponent(x.code);
+      li.appendChild(a); ul.appendChild(li);
+    });
+    ecran('liste');
+  }
+
   /* ---------- Création ---------- */
   function afficherCreation() {
     var sceau = lire('eduka_sceau');
-    if (!sceau) { erreur('Réservé aux abonnés Premium', "Pour créer une salle, connecte-toi à EdukaTchat avec ton abonnement Premium, puis reviens sur cette page."); return; }
+    if (!sceau) { erreur('Créer une salle : réservé aux abonnés Premium', "Pour créer une salle, connecte-toi à EdukaTchat avec ton abonnement Premium. Pour rejoindre la salle d\u2019un camarade, ouvre le lien qu\u2019il t\u2019a envoyé : aucun abonnement n\u2019est nécessaire."); return; }
     $('c-pseudo').value = lire('eduka_salle_pseudo');
+    adapterFormulaire();
     ecran('creation');
   }
   function creer() {
     var msg = $('creation-msg'); msg.textContent = '';
     var chapitres = $('c-chapitres').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
     if (!$('c-titre').value.trim()) { msg.textContent = 'Donne un titre à la salle.'; return; }
-    if (chapitres.length < 2 || chapitres.length > 12) { msg.textContent = 'Écris entre 2 et 12 chapitres, un par ligne.'; return; }
+    if (chapitres.length < 1 || chapitres.length > 12) { msg.textContent = 'Écris entre 1 et 12 lignes, une par partie ou par chapitre.'; return; }
     if (!$('c-pseudo').value.trim()) { msg.textContent = 'Choisis un pseudonyme.'; return; }
     var b = $('btn-creer'); b.disabled = true; b.textContent = 'Création…';
     appel('', 'POST', {
@@ -133,6 +166,7 @@
   }
   function afficherSalle(d) {
     etat.donnees = d;
+    memoriserSalle(code, d.titre);
     $('salle-meta').textContent = [OBJECTIFS[d.objectif] || '', d.matiere, d.classe].filter(Boolean).join(' · ') || 'Salle';
     $('salle-jours').textContent = jours(d);
     $('salle-titre').textContent = d.titre;
@@ -324,7 +358,7 @@
 
   function charger() {
     ecran('chargement');
-    if (!code) { afficherCreation(); return; }
+    if (!code) { var l = salleMemorisees(); if (l.length) afficherListe(l); else afficherCreation(); return; }
     appel('/' + code + '/etat', 'POST', { appareil: etat.appareil }).then(function (res) {
       if (res.ok) { afficherSalle(res.donnees); demarrerSuivi(); return; }
       if (res.statut === 403) {   // pas encore membre : page d'accueil
@@ -345,6 +379,8 @@
   function init() {
     etat.appareil = identifiantAppareil();
     $('btn-creer').addEventListener('click', creer);
+    $('c-objectif').addEventListener('change', adapterFormulaire);
+    $('btn-nouvelle').addEventListener('click', afficherCreation);
     $('btn-rejoindre').addEventListener('click', function () { rejoindre(); demarrerSuivi(); });
     $('pseudo').addEventListener('keydown', function (e) { if (e.key === 'Enter') { rejoindre(); demarrerSuivi(); } });
     $('btn-expose').addEventListener('click', ouvrirExpose);

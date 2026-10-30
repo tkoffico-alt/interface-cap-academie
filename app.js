@@ -7087,6 +7087,15 @@ async function chargerFonctionsActives() {
 }
 document.addEventListener('DOMContentLoaded', chargerFonctionsActives);
 
+// Menu : le lien « Salle d'étude » n'apparaît que si le serveur ouvre la fonction « salle »
+// pour ce Sceau (30/10/2026). Fermée = absent du menu.
+document.addEventListener('fonctions-actives', function () {
+    try {
+        const bloc = document.getElementById('menu-nav-salle-bloc');
+        if (bloc) bloc.style.display = fonctionActive('salle') ? 'block' : 'none';
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+});
+
 
 // ❖ DÉFI PAR LIEN — étape 3 : bouton « Défier un camarade » (29/10/2026) ❖
 // Visible UNIQUEMENT si le serveur a répondu « true » pour la fonction « defi »
