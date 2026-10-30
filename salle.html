@@ -177,6 +177,19 @@
         <h1 id="salle-titre"></h1>
         <div class="doux">Progression du groupe : <strong id="salle-pct"></strong></div>
         <div class="barre" aria-hidden="true"><span id="salle-barre"></span></div>
+        <div id="consigne-bloc" class="cache" style="margin-top:14px">
+          <strong>📌 Consigne</strong>
+          <p id="consigne-texte" style="margin:6px 0 0;white-space:pre-wrap"></p>
+        </div>
+        <div id="consigne-edition" class="cache" style="margin-top:12px">
+          <button type="button" id="btn-consigne" class="lien-discret">Écrire ou modifier la consigne</button>
+          <div id="consigne-form" class="cache">
+            <textarea id="consigne-saisie" maxlength="300" style="min-height:80px" placeholder="Ex. : Terminez les parties 1 et 2 avant vendredi."></textarea>
+            <div class="doux" id="consigne-compteur"></div>
+            <p id="consigne-msg" class="erreur-msg" role="alert"></p>
+            <button type="button" id="consigne-enregistrer" class="btn btn-sec">Épingler la consigne</button>
+          </div>
+        </div>
       </div>
 
       <div class="salle-colonnes">
@@ -195,6 +208,16 @@
         <div class="doux" id="ps-compteur"></div>
         <p id="ps-msg" class="erreur-msg" role="alert"></p>
         <div id="ps-relecture" class="cache"></div>
+        <div id="ps-comm-lecture" class="cache" style="margin-top:12px;padding:10px 12px;border-radius:10px;background:#eff6ff">
+          <strong>💬 Commentaire du créateur</strong>
+          <p id="ps-comm-texte-lu" style="margin:6px 0 0;white-space:pre-wrap"></p>
+        </div>
+        <div id="ps-comm-edition" class="cache" style="margin-top:12px">
+          <label for="ps-comm-saisie">Ton commentaire sur cette section (visible des membres)</label>
+          <textarea id="ps-comm-saisie" maxlength="400" style="min-height:80px"></textarea>
+          <p id="ps-comm-msg" class="erreur-msg" role="alert"></p>
+          <button type="button" id="ps-comm-enregistrer" class="btn btn-sec">Enregistrer le commentaire</button>
+        </div>
         <button type="button" id="ps-enregistrer" class="btn">Enregistrer ma section</button>
         <button type="button" id="ps-relire" class="btn btn-sec cache">🔍 Demander une relecture (IA)</button>
         <button type="button" id="ps-liberer" class="btn btn-sec cache">Libérer cette section</button>
@@ -253,6 +276,6 @@
 
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
-<script src="salle.js?v=7" defer></script>
+<script src="salle.js?v=8" defer></script>
 </body>
 </html>
