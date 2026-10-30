@@ -378,9 +378,16 @@ async function openSpace(space) {
                 // Le Sceau est transmis avec l'identité de la porte (la variable 'space')
                 body: JSON.stringify({ sceau: codeAcces, espace_cible: space })
             });
-            const data = await response.json();
+            let data = {};
+            try { data = await response.json(); } catch (e) { /* réponse illisible */ }
 
             if (data.valide) {
+                closePremiumModal();
+                document.getElementById('discipline-modal').classList.add('active');
+            } else if (!response.ok || data.temporaire) {
+                // Problème passager (serveur occupé, trop de vérifications, erreur système) : le code
+                // n'est PAS effacé, sinon l'élève devrait le ressaisir à chaque connexion.
+                // Le serveur revérifiera le code à l'envoi du premier message.
                 closePremiumModal();
                 document.getElementById('discipline-modal').classList.add('active');
             } else {
@@ -418,8 +425,10 @@ async function openSpace(space) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sceau: codeEnseignant, espace_cible: 'enseignant' })
             });
-            const data = await response.json();
-            if (data.valide) {
+            let data = {};
+            try { data = await response.json(); } catch (e) { /* réponse illisible */ }
+            if (data.valide || !response.ok || data.temporaire) {
+                // Un refus définitif seul efface le code ; un problème passager ne le fait jamais.
                 entrerDansEspaceEnseignant();
             } else {
                 localStorage.removeItem('eduka_sceau_enseignant');
