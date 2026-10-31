@@ -23,7 +23,7 @@
   .doux { color: var(--doux); font-size: 0.92rem; }
   .pastille { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--expl-fond); color: var(--primaire); font-size: 0.82rem; font-weight: 600; margin: 0 6px 10px 0; }
   label { display: block; font-weight: 600; font-size: 0.92rem; margin: 14px 0 4px; }
-  input[type="text"], input[type="date"], select, textarea { width: 100%; min-height: 48px; padding: 10px 14px; font: inherit; border: 1px solid var(--bord);
+  input[type="text"], input[type="date"], input[type="datetime-local"], select, textarea { width: 100%; min-height: 48px; padding: 10px 14px; font: inherit; border: 1px solid var(--bord);
       border-radius: 10px; background: var(--option); color: var(--texte); }
   textarea { min-height: 150px; resize: vertical; }
   input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
