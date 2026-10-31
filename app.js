@@ -7132,7 +7132,7 @@ function fonctionActive(nom) {
 async function chargerFonctionsActives() {
     try {
         let sceau = '';
-        try { sceau = localStorage.getItem('eduka_sceau') || ''; } catch (e) { /* stockage indisponible */ }
+        try { sceau = localStorage.getItem('eduka_sceau') || localStorage.getItem('eduka_sceau_enseignant') || ''; } catch (e) { /* stockage indisponible */ }
         const reponse = await fetch('https://api.edukatchat.org/api/fonctions-actives', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
