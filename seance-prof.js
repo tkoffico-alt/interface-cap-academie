@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   var API = 'https://api.edukatchat.org/api/seances';
-  var etat = { sceau: '', questions: [], code: '', tableau: null };
+  var etat = { sceau: '', questions: [], code: '', tableau: null, rosterCopie: null };
 
   function $(id) { return document.getElementById(id); }
   function lire(c) { try { return localStorage.getItem(c) || ''; } catch (e) { return ''; } }
@@ -140,6 +140,12 @@
     function p(n) { return ('0' + n).slice(-2); }
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
+  function viderFormulaire() {
+    ['c-titre', 'c-matiere', 'c-classe', 'c-chapitre', 'c-extrait', 'c-roster'].forEach(function (id) { $(id).value = ''; });
+    $('c-mode').value = 'devoir'; $('c-duree').value = '45';
+    etat.questions = []; etat.rosterCopie = null; $('roster-apercu').textContent = ''; $('btn-vider-roster').classList.add('cache');
+    $('gen-msg').textContent = '';
+  }
   function ouvrirCreation() {
     var maintenant = new Date();
     $('c-ouvre').value = dateLocale(new Date(maintenant.getTime() + 10 * 60000));
@@ -151,6 +157,7 @@
   function creer() {
     var msg = $('creation-msg'); msg.textContent = '';
     var liste = analyserListe($('c-roster').value);
+    if (!liste.length && etat.rosterCopie) liste = etat.rosterCopie;
     var corps = {
       titre: $('c-titre').value.trim(), matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim(),
       chapitre: $('c-chapitre').value.trim(), mode: $('c-mode').value, duree_question: parseInt($('c-duree').value, 10),
@@ -168,8 +175,30 @@
       $('btn-copier').textContent = 'Copier le lien';
       $('btn-copier').onclick = function () { copier(lien, $('btn-copier'), 'Lien copié ✓'); };
       $('btn-whatsapp').href = 'https://wa.me/?text=' + encodeURIComponent('Séance de classe EdukaTchat : ' + corps.titre + '. Ouverte du ' + corps.ouvre_le.replace('T', ' à ') + ' au ' + corps.ferme_le.replace('T', ' à ') + '. Lien : ' + lien);
-      etat.questions = [];
+      etat.questions = []; etat.rosterCopie = null;
       ecran('cree');
+    });
+  }
+
+  function dupliquer(code) {
+    ecran('chargement');
+    appel('/' + code + '/contenu').then(function (res) {
+      if (!res.ok) { erreur('Duplication impossible', messageErreur(res)); return; }
+      var d = res.donnees;
+      viderFormulaire();
+      $('c-titre').value = (d.titre + ' (2)').slice(0, 80); $('c-matiere').value = d.matiere || ''; $('c-classe').value = d.classe || '';
+      $('c-chapitre').value = d.chapitre || ''; $('c-mode').value = d.mode; $('c-duree').value = String(d.duree_question);
+      etat.questions = d.questions;
+      var local = listeLocale(code);
+      etat.rosterCopie = local.length ? local : d.roster.map(function (n) { return { matricule: '', nomComplet: n, affiche: n }; });
+      if (!etat.rosterCopie.length) etat.rosterCopie = null;
+      ouvrirCreation();
+      $('c-nb').value = String(Math.min(d.nb_questions, Math.max(etat.questions.length, 5)));
+      if (etat.rosterCopie) {
+        $('roster-apercu').textContent = 'Liste de classe reprise de la séance précédente : ' + etat.rosterCopie.length + ' élève(s). Vous pouvez coller une autre liste pour la remplacer.';
+        $('btn-vider-roster').classList.remove('cache');
+      }
+      $('creation-msg').textContent = 'Séance copiée : choisissez les nouveaux horaires, modifiez les questions si vous le souhaitez, puis lancez.';
     });
   }
 
@@ -186,7 +215,9 @@
         li.appendChild(el('span', 'membre-score', quand(s.ouvre_le) + ' → ' + quand(s.ferme_le)));
         var b = el('button', 'btn-petit', 'Ouvrir'); b.type = 'button';
         b.addEventListener('click', function () { ouvrirTableau(s.code); });
-        li.appendChild(b); ul.appendChild(li);
+        var b2 = el('button', 'btn-petit', 'Dupliquer'); b2.type = 'button';
+        b2.addEventListener('click', function () { dupliquer(s.code); });
+        li.appendChild(b); li.appendChild(b2); ul.appendChild(li);
       });
       ecran('liste');
     });
@@ -292,7 +323,9 @@
     $('btn-retour-app').addEventListener('click', function (e) {
       try { if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) { e.preventDefault(); history.back(); } } catch (err) { /* lien normal */ }
     });
-    $('btn-nouvelle').addEventListener('click', ouvrirCreation);
+    $('btn-nouvelle').addEventListener('click', function () { viderFormulaire(); ouvrirCreation(); });
+    $('btn-vider-roster').addEventListener('click', function () { etat.rosterCopie = null; $('roster-apercu').textContent = ''; $('btn-vider-roster').classList.add('cache'); });
+    $('t-dupliquer').addEventListener('click', function () { dupliquer(etat.code); });
     $('btn-annuler').addEventListener('click', afficherListe);
     $('btn-generer').addEventListener('click', generer);
     $('btn-ajouter-q').addEventListener('click', function () {

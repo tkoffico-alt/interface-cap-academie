@@ -99,6 +99,7 @@
         <p class="doux">Collez votre liste, une ligne par élève : <strong>matricule ; Nom ; Prénom</strong> (copiée de votre tableur). Les élèves choisiront leur nom dans une liste, et vous retrouverez les matricules dans l'export. <strong>Les matricules restent sur cet appareil : ils ne sont jamais envoyés à EdukaTchat.</strong> Seuls « Prénom + initiale » sont envoyés.</p>
         <textarea id="c-roster" style="min-height:120px" placeholder="12345678A ; KOUASSI ; Awa&#10;23456789B ; YAO ; Koffi"></textarea>
         <p id="roster-apercu" class="doux"></p>
+        <button type="button" id="btn-vider-roster" class="lien-discret cache">Ne pas reprendre la liste de la séance précédente</button>
       </div>
 
       <div class="carte">
@@ -127,6 +128,7 @@
         <div class="lien-boite" id="t-lien"></div>
         <button type="button" id="t-copier" class="btn btn-sec">Copier le lien</button>
         <button type="button" id="t-actualiser" class="btn btn-sec">Actualiser</button>
+        <button type="button" id="t-dupliquer" class="btn btn-sec">📋 Dupliquer cette séance (nouveaux horaires)</button>
       </div>
       <div class="carte">
         <h2>Résultats</h2>
@@ -158,6 +160,6 @@
   </main>
   <footer class="pied">EdukaTchat — évaluer autrement.</footer>
 </div>
-<script src="seance-prof.js?v=1" defer></script>
+<script src="seance-prof.js?v=2" defer></script>
 </body>
 </html>
