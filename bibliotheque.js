@@ -27,7 +27,7 @@
   }
   function messageErreur(res) {
     if (res.statut === 0) return 'Connexion impossible. Vérifiez votre connexion et réessayez.';
-    if (res.statut === 404) return 'Cette fonction n’est pas disponible pour votre code pour le moment.';
+    if (res.statut === 404) return 'Cet espace est réservé aux enseignants (code ENS-). Si vous êtes élève, vous rejoignez une séance avec le lien donné par votre enseignant.';
     if (res.statut === 429) return 'Trop de demandes. Réessayez dans une minute.';
     var d = res.donnees && res.donnees.detail;
     return typeof d === 'string' ? d : 'Une erreur est survenue. Réessayez.';

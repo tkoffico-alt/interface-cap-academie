@@ -28,7 +28,7 @@
   }
   function messageErreur(res) {
     if (res.statut === 0) return 'Connexion impossible. Vérifiez votre connexion et réessayez.';
-    if (res.statut === 404) return 'Cette fonction n’est pas disponible pour votre code pour le moment.';
+    if (res.statut === 404) return 'Cet espace est réservé aux enseignants (code ENS-). Si vous êtes élève, vous rejoignez une séance avec le lien donné par votre enseignant.';
     return (res.donnees && typeof res.donnees.detail === 'string') ? res.donnees.detail : 'Une erreur est survenue. Réessayez.';
   }
   function quand(t) { return t ? t.slice(8, 10) + '/' + t.slice(5, 7) + ' ' + t.slice(11, 16) : ''; }
