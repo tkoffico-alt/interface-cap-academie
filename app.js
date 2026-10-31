@@ -6287,7 +6287,7 @@ function boutonBibliotheque(outil, bulle) {
         if (!fonctionActive('bibliotheque')) return '';
         if (!localStorage.getItem('eduka_sceau_enseignant')) return '';
         if (/correction\s+de\s+copie/i.test((bulle && bulle.dataset && bulle.dataset.demande) || '')) return '';
-        return `<button class="btn-action-doc btn-biblio" type="button" onclick="enregistrerDansBibliotheque(this, '${outil}')" title="Enregistrer dans ma bibliothèque" aria-label="Enregistrer dans ma bibliothèque">📚 Enregistrer</button>`;
+        return `<button class="btn-action-doc btn-biblio" type="button" onclick="enregistrerDansBibliotheque(this, '${outil}')" title="Enregistrer dans ma bibliothèque" aria-label="Enregistrer dans ma bibliothèque">📚 Enregistrer dans ma bibliothèque</button>`;
     } catch (e) { return ''; }
 }
 
@@ -6318,8 +6318,7 @@ async function enregistrerDansBibliotheque(bouton, outil) {
         });
         const d = await r.json().catch(() => ({}));
         if (r.ok) {
-            bouton.textContent = d.deja_enregistree ? '✓ Déjà dans votre bibliothèque' : '✓ Enregistrée';
-            bouton.style.color = '#10B981';
+            bouton.textContent = d.deja_enregistree ? '✓ Déjà dans votre bibliothèque' : '✓ Enregistrée dans votre bibliothèque';
             return;
         }
         bouton.textContent = (typeof d.detail === 'string' ? d.detail : 'Enregistrement impossible').slice(0, 90);

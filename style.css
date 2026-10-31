@@ -2614,3 +2614,18 @@ body.dark-theme .photo-nom.choisie { color: #F1F5F9; }
 body.dark-theme .photo-menu { background: #1E293B; border-color: #334155; }
 body.dark-theme .photo-menu button { color: #F1F5F9; }
 body.dark-theme .photo-menu button:hover { background: rgba(99, 102, 241, 0.22); }
+
+/* --- BOUTON « ENREGISTRER DANS MA BIBLIOTHÈQUE » (31/10/2026) ---
+   Sur la même rangée que les icônes quand la place suffit, sinon à la ligne ;
+   la note « Proposition à relire… » passe toujours sur sa propre ligne. */
+.message-actions { flex-wrap: wrap; }
+.message-actions:has(.btn-biblio) .note-relire-fiche { order: 9; flex-basis: 100%; margin-left: 0; margin-top: 2px; }
+.message-actions .btn-action-doc.btn-biblio {
+    order: 5;
+    background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%);
+    border-color: transparent;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+.message-actions .btn-action-doc.btn-biblio:hover:not(:disabled) { color: #FFFFFF; filter: brightness(1.08); }
+.message-actions .btn-action-doc.btn-biblio:disabled { opacity: 0.85; cursor: default; }

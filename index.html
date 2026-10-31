@@ -104,7 +104,12 @@
             position: absolute;
             top: calc(100% + 8px);
             left: 0;
-            min-width: 240px;
+            min-width: 250px;
+            max-height: calc(100vh - 110px);
+            max-height: calc(100dvh - 110px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
             background-color: #FFFFFF;
             border: 1px solid #E2E8F0;
             border-radius: 12px;
@@ -140,6 +145,7 @@
         body.dark-theme .menu-nav-item { color: #E2E8F0; }
         .menu-nav-item:hover { background-color: #F1F5F9; }
         body.dark-theme .menu-nav-item:hover { background-color: #334155; }
+        .menu-nav-item .badge-nouveau { white-space: nowrap; }
         .menu-nav-separateur { height: 1px; background-color: #E2E8F0; margin: 6px 4px; }
         body.dark-theme .menu-nav-separateur { background-color: #334155; }
 
@@ -1220,12 +1226,18 @@
                         <li><strong>🎯 Quiz cliquables :</strong> Dans l'Espace de Préparation, le Répétiteur peut poser une question à choix : on clique, la correction s'affiche aussitôt.</li>
                         <li><strong>📚 Anglais fidèle aux manuels :</strong> Les fiches d'Anglais suivent la structure des manuels ivoiriens (unité, leçon, pages) ; l'Histoire-Géographie dispose de formats types (commentaire de document, dissertation).</li>
                         <li><strong>🕘 Historique des sessions :</strong> Dans l'Espace de Préparation, « Nouvelle discussion » et « Historique » permettent de repartir à neuf et de relire les échanges passés (sur votre appareil).</li>
+                        <li><strong>📝 Séances de classe (enseignants) :</strong> Un quiz cliquable pour toute la classe, à passer sur téléphone pendant un créneau que vous choisissez. Les questions peuvent être proposées par l'IA puis relues et corrigées par vous ; correction automatique, tableau de résultats, et bouton « Dupliquer » pour relancer une séance avec de nouveaux horaires. Un outil de contrôle des connaissances qui complète les évaluations écrites sans les remplacer.</li>
+                        <li><strong>📚 Ma bibliothèque (enseignants) :</strong> Sous chaque fiche ou évaluation générée, « Enregistrer dans ma bibliothèque » la conserve dans votre espace pour la retrouver, la relire, la copier ou l'imprimer en PDF plus tard. Les corrections de copies ne sont jamais enregistrées.</li>
+                        <li><strong>👥 Salle d'étude :</strong> Un espace de révision partagé : un exposé découpé en parties, des défis entre membres, une consigne et des commentaires de l'organisateur.</li>
                         <li><strong>📊 Le Carnet de progression :</strong> Une carte de compétences par matière et par notion, avec un pourcentage de maîtrise calculé à partir des devoirs réellement corrigés — pas une estimation ponctuelle. Accessible depuis l'Espace Parents avec le Code d'accès de votre enfant, pour savoir précisément où porter l'effort.</li>
                     </ul>
                 </div>
                 <div class="glass-card info-box news-box">
                     <h4>📌 Journal de Bord</h4>
                     <ul>
+                        <li><strong>📚 Ma bibliothèque pour les enseignants</strong><br>Sous chaque fiche ou évaluation générée, un bouton « Enregistrer dans ma bibliothèque » la garde dans votre espace : retrouvez-la par matière, relisez-la, copiez-la ou imprimez-la en PDF quand vous voulez. Les corrections de copies ne sont jamais conservées.</li>
+                        <li><strong>📝 Séances de classe : dupliquez et relancez</strong><br>Créez un quiz cliquable pour toute la classe (questions proposées par l'IA, relues par vous), choisissez le créneau, et suivez les résultats. Besoin de la même séance pour une autre classe ? « Dupliquer » reprend tout, il ne reste qu'à choisir les nouveaux horaires.</li>
+                        <li><strong>👥 La Salle d'étude</strong><br>Révisez à plusieurs : l'organisateur partage un exposé en parties, lance des défis, ajoute une consigne et commente le travail de chacun.</li>
                         <li><strong>📈 Graphiques, tableaux et formats par matière</strong><br>Les fiches et évaluations d'Histoire-Géographie affichent désormais de vrais graphiques (histogramme, courbe, camembert, pyramide des âges) et tableaux ; l'Anglais suit la structure des manuels ivoiriens ; l'accueil de l'Espace Enseignant est plus court. Chaque fiche est une proposition à relire et adapter — le crayon permet de la modifier.</li>
                         <li><strong>✏️ Modifier une fiche avant impression</strong><br>Espace Enseignant : un petit crayon apparaît sous chaque fiche ou évaluation générée. Cliquez dessus, corrigez le texte directement à l'écran, puis cliquez sur la coche pour valider. L'impression et la copie reprennent votre version.</li>
                         <li><strong>🎯 Quiz cliquables dans le Sas</strong><br>Le Répétiteur peut maintenant poser une question à choix : l'élève clique sur sa réponse et voit tout de suite la correction, sans rien écrire.</li>
@@ -1933,7 +1945,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.36"></script>
+    <script src="app.js?v=3.37"></script>
     <script src="visite-guidee.js?v=4"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
