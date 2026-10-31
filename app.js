@@ -1392,6 +1392,7 @@ function toggleMenuNavigation() {
     if (!panel || !btn) return;
     const estOuvert = panel.classList.toggle('ouvert');
     btn.setAttribute('aria-expanded', estOuvert ? 'true' : 'false');
+    if (estOuvert && typeof majBoutonDeconnexion === 'function') majBoutonDeconnexion();
 }
 
 function fermerMenuNavigation() {
@@ -7264,6 +7265,50 @@ document.addEventListener('fonctions-actives', function () {
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 });
 
+
+// ❖ SE DÉCONNECTER (31/10/2026) : efface le(s) Code(s) et ce qui est propre à l'appareil, puis recharge.
+// Aucun coût serveur : tout se passe dans le navigateur. L'historique des conversations de l'élève
+// reste côté serveur, lié à son Code ELV- (il le retrouve en se reconnectant). On GARDE l'identifiant
+// d'appareil et le compteur d'essais gratuits (sinon se déconnecter permettrait de les contourner).
+function aUnCodeEnregistre() {
+    try { return !!(localStorage.getItem('eduka_sceau') || localStorage.getItem('eduka_sceau_enseignant')); } catch (e) { return false; }
+}
+function majBoutonDeconnexion() {
+    const bloc = document.getElementById('menu-nav-deconnexion-bloc');
+    if (bloc) bloc.style.display = aUnCodeEnregistre() ? 'block' : 'none';
+}
+function demanderDeconnexion() {
+    fermerMenuNavigation();
+    let fond = document.getElementById('deconnexion-modal');
+    if (!fond) {
+        fond = document.createElement('div');
+        fond.id = 'deconnexion-modal';
+        fond.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;z-index:100000;padding:16px;';
+        fond.innerHTML = '<div role="dialog" aria-modal="true" style="background:#fff;color:#0f172a;max-width:420px;width:100%;border-radius:18px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.35);font-family:inherit;">'
+            + '<h3 style="margin:0 0 10px;font-size:1.15rem;">Se déconnecter ?</h3>'
+            + '<p style="margin:0 0 16px;line-height:1.5;font-size:.95rem;">Ton Code sera effacé de cet appareil : il faudra le saisir de nouveau pour revenir. <strong>Garde-le (message WhatsApp reçu à l\'abonnement).</strong> Les conversations de l\'espace en cours affichées ici seront effacées de cet écran.</p>'
+            + '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">'
+            + '<button type="button" id="deconnexion-annuler" style="padding:10px 16px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;cursor:pointer;font-size:.95rem;">Annuler</button>'
+            + '<button type="button" id="deconnexion-ok" style="padding:10px 16px;border-radius:10px;border:0;background:#dc2626;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;">Se déconnecter</button>'
+            + '</div></div>';
+        document.body.appendChild(fond);
+        document.getElementById('deconnexion-annuler').addEventListener('click', function () { fond.style.display = 'none'; });
+        document.getElementById('deconnexion-ok').addEventListener('click', effectuerDeconnexion);
+        fond.addEventListener('click', function (e) { if (e.target === fond) fond.style.display = 'none'; });
+    }
+    fond.style.display = 'flex';
+}
+function effectuerDeconnexion() {
+    try {
+        ['eduka_sceau', 'eduka_sceau_enseignant', 'eduka_profil_eleve', 'eduka_salles', 'eduka_conv_sas'].forEach(function (k) { localStorage.removeItem(k); });
+        Object.keys(localStorage).forEach(function (k) {
+            if (k.indexOf('eduka_chat_') === 0 || k.indexOf('eduka_conv_') === 0 || k.indexOf('eduka_hist_sas_') === 0) localStorage.removeItem(k);
+        });
+    } catch (e) { /* stockage indisponible */ }
+    try { sessionStorage.removeItem('eduka_retour'); } catch (e) { /* sans gravité */ }
+    window.location.href = window.location.pathname;
+}
+document.addEventListener('DOMContentLoaded', majBoutonDeconnexion);
 
 // ❖ RETOUR AU POINT DE DÉPART (31/10/2026) : quand on quitte l'application par le menu vers
 // Salle d'étude / Séances de classe / Ma bibliothèque, on retient l'espace où l'on était ;
