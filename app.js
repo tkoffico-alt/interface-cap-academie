@@ -591,7 +591,7 @@ async function verifyMatriculeEnseignant() {
         if (data.valide === true) {
             feedback.textContent = data.message;
             feedback.style.color = "#10B981";
-            localStorage.setItem('eduka_sceau_enseignant', matricule);
+            localStorage.setItem('eduka_sceau_enseignant', matricule); try { if (typeof chargerFonctionsActives === 'function') chargerFonctionsActives(); } catch (e) { /* menu : sans gravité */ }
 
             setTimeout(() => {
                 fermerModaleAccesEnseignant();
@@ -5057,7 +5057,7 @@ async function verifyMatricule() {
             feedback.textContent = data.message;
             feedback.style.color = "#10B981";
 
-            localStorage.setItem('eduka_sceau', matricule);
+            localStorage.setItem('eduka_sceau', matricule); try { if (typeof chargerFonctionsActives === 'function') chargerFonctionsActives(); } catch (e) { /* menu : sans gravité */ }
             if (typeof chargerFonctionsActives === 'function') setTimeout(chargerFonctionsActives, 0);
 
             setTimeout(() => {
