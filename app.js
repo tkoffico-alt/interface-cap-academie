@@ -7102,6 +7102,8 @@ document.addEventListener('fonctions-actives', function () {
     try {
         const bloc = document.getElementById('menu-nav-salle-bloc');
         if (bloc) bloc.style.display = fonctionActive('salle') ? 'block' : 'none';
+        const blocSeance = document.getElementById('menu-nav-seance-bloc');
+        if (blocSeance) blocSeance.style.display = fonctionActive('seance') ? 'block' : 'none';
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 });
 

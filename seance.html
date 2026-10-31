@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2563EB">
+<title>Séance de classe EdukaTchat</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function () {
+  var sombre = false;
+  try {
+    var choix = localStorage.getItem('eduka_theme');
+    sombre = (choix === 'dark') || (!choix && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) {}
+  if (sombre) document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<link rel="stylesheet" href="seance.css?v=1">
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <a class="marque" href="https://edukatchat.org/">EdukaTchat</a>
+    <span class="doux">📝 Séance de classe</span>
+  </header>
+  <main id="seance-corps" aria-live="polite">
+    <section id="ecran-chargement" class="carte centre"><p>Chargement…</p></section>
+
+    <section id="ecran-erreur" class="carte cache">
+      <h1 id="erreur-titre"></h1>
+      <p id="erreur-texte"></p>
+    </section>
+
+    <section id="ecran-accueil" class="carte cache">
+      <span class="pastille" id="accueil-meta"></span>
+      <h1 id="accueil-titre"></h1>
+      <p class="doux" id="accueil-infos"></p>
+      <p id="accueil-etat"></p>
+      <div id="accueil-form">
+        <label for="nom-liste" id="nom-liste-label">Choisis ton nom dans la liste</label>
+        <select id="nom-liste"></select>
+        <label for="nom-libre" id="nom-libre-label">Ton prénom et l'initiale de ton nom</label>
+        <input type="text" id="nom-libre" maxlength="30" autocomplete="off" placeholder="Ex. : Awa K.">
+        <p id="accueil-msg" class="erreur-msg" role="alert"></p>
+        <button type="button" id="btn-commencer" class="btn">Commencer</button>
+      </div>
+      <button type="button" id="btn-actualiser" class="btn btn-sec cache">Actualiser</button>
+      <p class="doux" style="margin-top:14px">Pas de compte : seul ton nom est gardé, pour que ton enseignant sache qui a répondu. Tout est effacé 30 jours après la fin de la séance.</p>
+    </section>
+
+    <section id="ecran-jeu" class="carte cache">
+      <div class="doux"><span id="jeu-position"></span> · <span id="jeu-mode"></span></div>
+      <div class="barre" aria-hidden="true"><span id="jeu-barre"></span></div>
+      <div id="jeu-chrono-zone" class="cache">
+        <div class="chrono" aria-hidden="true"><span id="jeu-chrono"></span></div>
+        <div class="doux" id="jeu-temps" role="timer"></div>
+      </div>
+      <h2 id="jeu-question" style="margin-top:14px"></h2>
+      <div class="options" id="jeu-options"></div>
+      <div id="jeu-explication" class="explication cache"></div>
+      <p id="jeu-msg" class="erreur-msg" role="alert"></p>
+      <button type="button" id="btn-suivant" class="btn cache">Question suivante</button>
+    </section>
+
+    <section id="ecran-fin" class="carte cache">
+      <h1 id="fin-titre">Séance terminée 🎉</h1>
+      <div id="fin-corps"></div>
+      <button type="button" id="btn-fin-actualiser" class="btn btn-sec cache">Actualiser</button>
+    </section>
+  </main>
+  <footer class="pied">EdukaTchat — réviser autrement.</footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" defer></script>
+<script src="seance.js?v=1" defer></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2563EB">
+<title>Séances de classe — Enseignant</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function () {
+  var sombre = false;
+  try {
+    var choix = localStorage.getItem('eduka_theme');
+    sombre = (choix === 'dark') || (!choix && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) {}
+  if (sombre) document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<link rel="stylesheet" href="seance.css?v=1">
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <a class="marque" id="btn-retour-app" href="https://edukatchat.org/">← Retour à EdukaTchat</a>
+    <span class="doux">📝 Séances de classe</span>
+  </header>
+  <main id="prof-corps" aria-live="polite">
+    <section id="ecran-chargement" class="carte centre"><p>Chargement…</p></section>
+
+    <section id="ecran-erreur" class="carte cache">
+      <h1 id="erreur-titre"></h1>
+      <p id="erreur-texte"></p>
+    </section>
+
+    <!-- Liste des séances -->
+    <section id="ecran-liste" class="carte cache">
+      <h1>Mes séances de classe</h1>
+      <p class="doux">Un quiz cliquable pour toute la classe, à passer sur téléphone pendant un créneau que vous choisissez. Correction automatique, résultats dans un tableau.</p>
+      <ul id="liste-seances" class="liste"></ul>
+      <button type="button" id="btn-nouvelle" class="btn">Créer une séance</button>
+    </section>
+
+    <!-- Création -->
+    <section id="ecran-creation" class="cache">
+      <div class="carte">
+        <h1>Nouvelle séance</h1>
+        <label for="c-titre">Titre</label>
+        <input type="text" id="c-titre" maxlength="80" placeholder="Ex. : Contrôle de connaissances — Thalès">
+        <div class="grille2">
+          <div><label for="c-matiere">Matière</label><input type="text" id="c-matiere" maxlength="40" placeholder="Ex. : Mathématiques"></div>
+          <div><label for="c-classe">Classe</label><input type="text" id="c-classe" maxlength="20" placeholder="Ex. : 3e"></div>
+        </div>
+        <label for="c-chapitre">Chapitre</label>
+        <input type="text" id="c-chapitre" maxlength="120" placeholder="Ex. : Le théorème de Thalès">
+        <div class="grille2">
+          <div>
+            <label for="c-mode">Mode</label>
+            <select id="c-mode">
+              <option value="devoir">Devoir : correction après chaque question</option>
+              <option value="examen">Examen : correction à la fermeture du créneau</option>
+            </select>
+          </div>
+          <div>
+            <label for="c-duree">Minuteur par question</label>
+            <select id="c-duree">
+              <option value="0">Sans minuteur</option>
+              <option value="30">30 secondes</option>
+              <option value="45" selected>45 secondes</option>
+              <option value="60">60 secondes</option>
+              <option value="90">90 secondes</option>
+              <option value="120">2 minutes</option>
+            </select>
+          </div>
+          <div><label for="c-ouvre">Ouverture</label><input type="datetime-local" id="c-ouvre"></div>
+          <div><label for="c-ferme">Fermeture</label><input type="datetime-local" id="c-ferme"></div>
+        </div>
+        <p class="doux">Les élèves passent le quiz quand ils veulent entre l'ouverture et la fermeture (14 jours au maximum). Prévoyez un créneau assez long : tous les élèves n'ont pas un téléphone à toute heure.</p>
+      </div>
+
+      <div class="carte">
+        <h2>Questions</h2>
+        <label for="c-extrait">Extrait de votre leçon (facultatif : l'IA s'en servira)</label>
+        <textarea id="c-extrait" maxlength="3000" style="min-height:100px" placeholder="Collez ici un passage de votre leçon, ou laissez vide pour suivre le programme."></textarea>
+        <button type="button" id="btn-generer" class="btn btn-sec">✨ Générer 15 questions avec l'IA</button>
+        <p class="doux" style="margin-top:8px">L'IA peut se tromper : relisez chaque question, corrigez-la ou supprimez-la avant de lancer la séance.</p>
+        <p id="gen-msg" class="erreur-msg" role="alert"></p>
+        <div id="liste-questions"></div>
+        <button type="button" id="btn-ajouter-q" class="btn btn-sec">+ Ajouter une question</button>
+        <label for="c-nb">Nombre de questions posées à chaque élève</label>
+        <select id="c-nb"></select>
+        <p class="doux">Chaque élève reçoit un tirage différent, dans un ordre différent, avec les choix mélangés.</p>
+      </div>
+
+      <div class="carte">
+        <h2>Liste de classe (facultatif)</h2>
+        <p class="doux">Collez votre liste, une ligne par élève : <strong>matricule ; Nom ; Prénom</strong> (copiée de votre tableur). Les élèves choisiront leur nom dans une liste, et vous retrouverez les matricules dans l'export. <strong>Les matricules restent sur cet appareil : ils ne sont jamais envoyés à EdukaTchat.</strong> Seuls « Prénom + initiale » sont envoyés.</p>
+        <textarea id="c-roster" style="min-height:120px" placeholder="12345678A ; KOUASSI ; Awa&#10;23456789B ; YAO ; Koffi"></textarea>
+        <p id="roster-apercu" class="doux"></p>
+      </div>
+
+      <div class="carte">
+        <p id="creation-msg" class="erreur-msg" role="alert"></p>
+        <button type="button" id="btn-creer" class="btn">Lancer la séance</button>
+        <button type="button" id="btn-annuler" class="lien-discret">Annuler</button>
+      </div>
+    </section>
+
+    <section id="ecran-cree" class="carte cache">
+      <h1>Séance créée 🎉</h1>
+      <p>Envoyez ce lien à vos élèves :</p>
+      <div id="cree-lien" class="lien-boite"></div>
+      <button type="button" id="btn-copier" class="btn btn-sec">Copier le lien</button>
+      <a id="btn-whatsapp" class="btn" target="_blank" rel="noopener">Partager sur WhatsApp</a>
+      <button type="button" id="btn-voir-tableau" class="btn btn-sec">Voir le tableau de la séance</button>
+    </section>
+
+    <!-- Tableau -->
+    <section id="ecran-tableau" class="cache">
+      <div class="carte">
+        <button type="button" id="btn-retour-liste" class="lien-discret">← Mes séances</button>
+        <h1 id="t-titre"></h1>
+        <div><span class="pastille" id="t-etat"></span><span class="pastille" id="t-mode"></span></div>
+        <p class="doux" id="t-dates"></p>
+        <div class="lien-boite" id="t-lien"></div>
+        <button type="button" id="t-copier" class="btn btn-sec">Copier le lien</button>
+        <button type="button" id="t-actualiser" class="btn btn-sec">Actualiser</button>
+      </div>
+      <div class="carte">
+        <h2>Résultats</h2>
+        <p class="doux" id="t-resume"></p>
+        <div style="overflow-x:auto"><table class="tableau" id="t-table"></table></div>
+        <p id="t-absents" class="doux" style="margin-top:10px"></p>
+        <button type="button" id="t-export" class="btn">⬇️ Exporter pour mon tableur (CSV)</button>
+        <details style="margin-top:12px">
+          <summary class="doux">Associer les matricules de ma classe (liste collée sur cet appareil)</summary>
+          <textarea id="t-roster" style="min-height:100px" placeholder="12345678A ; KOUASSI ; Awa"></textarea>
+          <button type="button" id="t-roster-ok" class="btn btn-sec">Enregistrer sur cet appareil</button>
+          <p id="t-roster-msg" class="doux"></p>
+        </details>
+      </div>
+      <div class="carte" id="t-carte-q">
+        <h2>Questions les plus ratées</h2>
+        <ul id="t-ratees" class="liste"></ul>
+      </div>
+      <div class="carte" id="t-carte-signaux">
+        <h2>Points à examiner</h2>
+        <p class="doux">Simples indications, à apprécier par vous : un bon élève peut répondre vite sans tricher.</p>
+        <ul id="t-signaux" class="liste"></ul>
+      </div>
+      <div class="carte centre">
+        <p id="t-msg" class="erreur-msg" role="alert"></p>
+        <button type="button" id="t-retirer" class="lien-discret">Retirer cette séance</button>
+      </div>
+    </section>
+  </main>
+  <footer class="pied">EdukaTchat — évaluer autrement.</footer>
+</div>
+<script src="seance-prof.js?v=1" defer></script>
+</body>
+</html>
