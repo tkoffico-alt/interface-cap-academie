@@ -2622,6 +2622,15 @@ body.dark-theme .photo-menu button:hover { background: rgba(99, 102, 241, 0.22);
 .message-actions:has(.btn-biblio) .note-relire-fiche { order: 9; flex-basis: 100%; margin-left: 0; margin-top: 2px; }
 .message-actions .btn-action-doc.btn-biblio {
     order: 5;
+    width: auto;
+    height: auto;
+    padding: 6px 12px;
+    border-radius: 8px;
+    gap: 6px;
+    opacity: 1;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    margin-left: 6px;
     background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%);
     border-color: transparent;
     color: #FFFFFF;
@@ -2629,3 +2638,4 @@ body.dark-theme .photo-menu button:hover { background: rgba(99, 102, 241, 0.22);
 }
 .message-actions .btn-action-doc.btn-biblio:hover:not(:disabled) { color: #FFFFFF; filter: brightness(1.08); }
 .message-actions .btn-action-doc.btn-biblio:disabled { opacity: 0.85; cursor: default; }
+body.dark-theme .message-actions .btn-action-doc.btn-biblio { color: #FFFFFF; background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%); }
