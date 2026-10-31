@@ -118,22 +118,28 @@
   }
 
   /* ---------- Liste ---------- */
+  function matiereDe(f) {
+    if (f.matiere) return f.matiere;
+    var t = (f.titre || '').split(' — ')[0].trim();
+    if (!t || t.length > 40) return '';
+    t = t.toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1);
+  }
   function remplirFiltre() {
     var sel = $('filtre-matiere'), courant = sel.value, vues = {};
     sel.textContent = ''; sel.appendChild(el('option', '', 'Toutes les matières')).value = '';
-    etat.fiches.forEach(function (f) { if (f.matiere && !vues[f.matiere]) { vues[f.matiere] = 1; var o = el('option', '', f.matiere); o.value = f.matiere; sel.appendChild(o); } });
+    etat.fiches.forEach(function (f) { var m = matiereDe(f); if (m && !vues[m]) { vues[m] = 1; var o = el('option', '', m); o.value = m; sel.appendChild(o); } });
     sel.value = vues[courant] ? courant : '';
   }
   function afficherListe() {
     var filtre = $('filtre-matiere').value, ul = $('liste-fiches');
     ul.textContent = '';
-    var visibles = etat.fiches.filter(function (f) { return !filtre || f.matiere === filtre; });
+    var visibles = etat.fiches.filter(function (f) { return !filtre || matiereDe(f) === filtre; });
     $('liste-vide').classList.toggle('cache', etat.fiches.length > 0);
     visibles.forEach(function (f) {
       var li = el('li', 'tache');
       var corps = el('div', 'tache-corps');
       corps.appendChild(el('div', 'tache-nom', f.titre));
-      var infos = [NOMS_OUTILS[f.outil] || f.outil, f.matiere, f.classe, dateCourte(f.cree_le)].filter(Boolean).join(' · ');
+      var infos = [NOMS_OUTILS[f.outil] || f.outil, matiereDe(f), f.classe, dateCourte(f.cree_le)].filter(Boolean).join(' · ');
       corps.appendChild(el('div', 'tache-info', infos));
       li.appendChild(corps);
       var b = el('button', 'btn-petit', 'Ouvrir'); b.type = 'button';
