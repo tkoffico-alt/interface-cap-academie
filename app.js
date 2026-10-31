@@ -5929,6 +5929,7 @@ async function sendTeacherMessage(outil, contexteJoint) {
 
     const botLoadingDiv = document.createElement('div');
     botLoadingDiv.className = 'message bot-message apparition-fluide';
+    botLoadingDiv.dataset.demande = message.slice(0, 400);
     botLoadingDiv.innerHTML = creerBulleReflexion("Le Cabinet compile les données. L'esprit rassemble le savoir...");
     chatHistory.appendChild(botLoadingDiv);
     scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
@@ -6047,6 +6048,7 @@ async function sendTeacherMessage(outil, contexteJoint) {
                 <button class="btn-action-doc btn-modifier-fiche" onclick="basculerEditionFiche(this)" title="Modifier le texte avant impression" aria-label="Modifier le texte avant impression"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
                 <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
                 <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+                ${boutonBibliotheque(outil, botLoadingDiv)}
                 <span class="note-relire-fiche">Proposition à relire et adapter avant usage — le crayon vous permet de la modifier.</span>
             `;
             botLoadingDiv.appendChild(actionsDiv);
@@ -6276,6 +6278,55 @@ function imprimerDocument(bouton) {
         // régulièrement une page supplémentaire ne contenant que lui.
 
     window.print();
+}
+
+// ❖ BIBLIOTHÈQUE DE L'ENSEIGNANT (31/10/2026) : bouton « Enregistrer » explicite sous une fiche.
+// Jamais pour une correction de copie (noms et notes d'élèves) ; exige un code ENS- (pas l'essai gratuit).
+function boutonBibliotheque(outil, bulle) {
+    try {
+        if (!fonctionActive('bibliotheque')) return '';
+        if (!localStorage.getItem('eduka_sceau_enseignant')) return '';
+        if (/correction\s+de\s+copie/i.test((bulle && bulle.dataset && bulle.dataset.demande) || '')) return '';
+        return `<button class="btn-action-doc btn-biblio" type="button" onclick="enregistrerDansBibliotheque(this, '${outil}')" title="Enregistrer dans ma bibliothèque" aria-label="Enregistrer dans ma bibliothèque">📚 Enregistrer</button>`;
+    } catch (e) { return ''; }
+}
+
+async function enregistrerDansBibliotheque(bouton, outil) {
+    const bulle = bouton.closest('.bot-message');
+    if (!bulle) return;
+    const clone = bulle.cloneNode(true);
+    const actions = clone.querySelector('.message-actions');
+    if (actions) actions.remove();
+    const contenu = (bulle.dataset.sourceBrute && bulle.dataset.sourceBrute.length > 40) ? bulle.dataset.sourceBrute : clone.innerText;
+    const demande = bulle.dataset.demande || '';
+    const lire = (re) => { const m = re.exec(demande); return m ? m[1].trim().slice(0, 60) : ''; };
+    const texteOriginal = bouton.innerHTML;
+    bouton.disabled = true;
+    bouton.textContent = 'Enregistrement…';
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/bibliotheque/enregistrer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                matricule: localStorage.getItem('eduka_sceau_enseignant') || '',
+                outil: outil,
+                demande: demande,
+                contenu: contenu,
+                matiere: lire(/mati[eè]re\s*:\s*([^;\n,]+)/i),
+                classe: lire(/classe\s*:\s*([^;\n,]+)/i)
+            })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok) {
+            bouton.textContent = d.deja_enregistree ? '✓ Déjà dans votre bibliothèque' : '✓ Enregistrée';
+            bouton.style.color = '#10B981';
+            return;
+        }
+        bouton.textContent = (typeof d.detail === 'string' ? d.detail : 'Enregistrement impossible').slice(0, 90);
+    } catch (e) {
+        bouton.textContent = 'Connexion impossible';
+    }
+    setTimeout(() => { bouton.innerHTML = texteOriginal; bouton.disabled = false; bouton.style.color = ''; }, 3500);
 }
 
 function copierTexte(bouton) {
@@ -7104,6 +7155,8 @@ document.addEventListener('fonctions-actives', function () {
         if (bloc) bloc.style.display = fonctionActive('salle') ? 'block' : 'none';
         const blocSeance = document.getElementById('menu-nav-seance-bloc');
         if (blocSeance) blocSeance.style.display = fonctionActive('seance') ? 'block' : 'none';
+        const blocBiblio = document.getElementById('menu-nav-biblio-bloc');
+        if (blocBiblio) blocBiblio.style.display = fonctionActive('bibliotheque') ? 'block' : 'none';
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 });
 

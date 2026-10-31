@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2563EB">
+<title>Ma bibliothèque — Enseignant</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<script>
+(function () {
+  var sombre = false;
+  try {
+    var choix = localStorage.getItem('eduka_theme');
+    sombre = (choix === 'dark') || (!choix && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) {}
+  if (sombre) document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<link rel="stylesheet" href="seance.css?v=3">
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <a class="marque" id="btn-retour-app" href="https://edukatchat.org/">← Retour à EdukaTchat</a>
+    <span class="doux">📚 Ma bibliothèque</span>
+  </header>
+  <main aria-live="polite">
+    <section id="ecran-chargement" class="carte centre"><p>Chargement…</p></section>
+
+    <section id="ecran-erreur" class="carte cache">
+      <h1 id="erreur-titre"></h1>
+      <p id="erreur-texte"></p>
+    </section>
+
+    <section id="ecran-liste" class="carte cache">
+      <h1>Ma bibliothèque</h1>
+      <p class="doux">Vos fiches enregistrées depuis l’Atelier, la Forge et le Cabinet. Elles restent à vous : retrouvez-les, relisez-les, copiez-les ou imprimez-les en PDF.</p>
+      <label for="filtre-matiere">Filtrer par matière</label>
+      <select id="filtre-matiere"><option value="">Toutes les matières</option></select>
+      <p id="liste-vide" class="doux cache" style="margin-top:14px;">Aucune fiche enregistrée pour le moment. Dans l’Atelier, la Forge ou le Cabinet, cliquez sur « 📚 Enregistrer » sous une fiche qui vous plaît.</p>
+      <ul id="liste-fiches" class="liste" style="margin-top:14px;"></ul>
+      <p id="liste-compteur" class="doux" style="margin-top:10px;"></p>
+    </section>
+
+    <section id="ecran-fiche" class="carte cache">
+      <div class="no-print">
+        <button type="button" id="btn-retour-liste" class="lien-discret">← Toutes mes fiches</button>
+        <h1 id="fiche-titre"></h1>
+        <p class="doux" id="fiche-meta"></p>
+      </div>
+      <article id="fiche-corps" class="fiche-corps"></article>
+      <div class="no-print">
+        <button type="button" id="btn-copier" class="btn">Copier le texte</button>
+        <button type="button" id="btn-imprimer" class="btn btn-sec">Imprimer / Enregistrer en PDF</button>
+        <button type="button" id="btn-renommer" class="btn btn-sec">Modifier le titre, la matière, la classe</button>
+        <div id="zone-renommer" class="cache">
+          <label for="r-titre">Titre</label><input type="text" id="r-titre" maxlength="120">
+          <label for="r-matiere">Matière</label><input type="text" id="r-matiere" maxlength="60">
+          <label for="r-classe">Classe</label><input type="text" id="r-classe" maxlength="40">
+          <button type="button" id="btn-valider-renommer" class="btn">Enregistrer les modifications</button>
+        </div>
+        <button type="button" id="btn-supprimer" class="lien-discret">Supprimer cette fiche</button>
+        <p id="fiche-msg" class="erreur-msg" role="status"></p>
+      </div>
+    </section>
+  </main>
+  <footer class="pied no-print">EdukaTchat™ — Propriété Intellectuelle Exclusive</footer>
+</div>
+<script src="bibliotheque.js?v=1"></script>
+</body>
+</html>

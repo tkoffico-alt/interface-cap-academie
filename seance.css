@@ -99,3 +99,15 @@
   @media (min-width: 700px) { .grille2 { grid-template-columns: 1fr 1fr; } }
   #seance-corps { width: 100%; max-width: 760px; margin: 0 auto; }
   #prof-corps { width: 100%; max-width: 980px; margin: 0 auto; }
+  /* Bibliothèque enseignant (31/10/2026) */
+  .fiche-corps { overflow-wrap: anywhere; margin: 12px 0; }
+  .fiche-corps h2, .fiche-corps h3, .fiche-corps h4 { margin: 16px 0 6px; }
+  .fiche-corps ul, .fiche-corps ol { margin: 0 0 12px; padding-left: 22px; }
+  .tableau-defil { overflow-x: auto; margin: 8px 0 12px; }
+  .fiche-corps .tableau-suivi th, .fiche-corps .tableau-suivi td { text-align: left; border-color: var(--bord); }
+  @media print {
+    body { background: #fff; color: #000; }
+    .no-print, .entete { display: none !important; }
+    .carte { box-shadow: none; padding: 0; }
+    .pied { display: block !important; }
+  }
