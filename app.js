@@ -7286,7 +7286,7 @@ function demanderDeconnexion() {
         fond.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;z-index:100000;padding:16px;';
         fond.innerHTML = '<div role="dialog" aria-modal="true" style="background:#fff;color:#0f172a;max-width:420px;width:100%;border-radius:18px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.35);font-family:inherit;">'
             + '<h3 style="margin:0 0 10px;font-size:1.15rem;">Se déconnecter ?</h3>'
-            + '<p style="margin:0 0 16px;line-height:1.5;font-size:.95rem;">Ton Code sera effacé de cet appareil : il faudra le saisir de nouveau pour revenir. <strong>Garde-le (message WhatsApp reçu à l\'abonnement).</strong> Les conversations de l\'espace en cours affichées ici seront effacées de cet écran.</p>'
+            + '<p style="margin:0 0 16px;line-height:1.5;font-size:.95rem;">Ton Code sera effacé de cet appareil : il faudra le saisir de nouveau pour revenir. <strong>Garde-le (message WhatsApp reçu à l\'abonnement).</strong> Ta conversation en cours disparaîtra de cet écran.</p>'
             + '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">'
             + '<button type="button" id="deconnexion-annuler" style="padding:10px 16px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;cursor:pointer;font-size:.95rem;">Annuler</button>'
             + '<button type="button" id="deconnexion-ok" style="padding:10px 16px;border-radius:10px;border:0;background:#dc2626;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;">Se déconnecter</button>'
