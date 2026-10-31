@@ -7265,6 +7265,56 @@ document.addEventListener('fonctions-actives', function () {
 });
 
 
+// ❖ RETOUR AU POINT DE DÉPART (31/10/2026) : quand on quitte l'application par le menu vers
+// Salle d'étude / Séances de classe / Ma bibliothèque, on retient l'espace où l'on était ;
+// à « ← Retour à EdukaTchat », on le rouvre au lieu de tomber sur l'accueil.
+// On rouvre l'ESPACE (pas la conversation) : rien n'est envoyé à l'IA au retour.
+(function () {
+    function memoriserRetour() {
+        try {
+            let etat = null;
+            const appVue = document.getElementById('app-view');
+            if (appVue && appVue.style.display === 'flex') {
+                const sas = document.getElementById('container-sas-custom');
+                const tabs = document.getElementById('teacher-tabs-container');
+                if (sas && sas.classList.contains('active')) {
+                    etat = { type: 'eleve', matiere: avatarActif };
+                } else if (tabs && tabs.style.display !== 'none') {
+                    const instit = ['forge_primaire', 'cabinet_primaire'].some(function (id) {
+                        const t = document.getElementById('tab-' + id); return t && t.classList.contains('active');
+                    });
+                    etat = { type: 'enseignant', categorie: instit ? 'instituteur' : 'professeur' };
+                } else if (document.getElementById('teacher-categorie-chooser') && document.getElementById('teacher-categorie-chooser').style.display === 'flex') {
+                    etat = { type: 'enseignant', categorie: null };
+                }
+            }
+            if (etat) sessionStorage.setItem('eduka_retour', JSON.stringify(etat));
+            else sessionStorage.removeItem('eduka_retour');
+        } catch (e) { /* sans gravité */ }
+    }
+    ['menu-nav-salle', 'menu-nav-seance', 'menu-nav-biblio'].forEach(function (id) {
+        document.addEventListener('DOMContentLoaded', function () {
+            const a = document.getElementById(id);
+            if (a) a.addEventListener('click', memoriserRetour);
+        });
+    });
+    function restaurerRetour() {
+        let etat = null;
+        try { etat = JSON.parse(sessionStorage.getItem('eduka_retour') || 'null'); sessionStorage.removeItem('eduka_retour'); } catch (e) { return; }
+        if (!etat) return;
+        try {
+            if (etat.type === 'enseignant' && localStorage.getItem('eduka_sceau_enseignant')) {
+                entrerDansEspaceEnseignant();
+                if (etat.categorie) choisirCategorieEnseignant(etat.categorie);
+            } else if (etat.type === 'eleve' && localStorage.getItem('eduka_sceau') && etat.matiere) {
+                entrerDansLeChat(etat.matiere);
+            }
+        } catch (e) { /* on reste sur l'accueil */ }
+    }
+    document.addEventListener('DOMContentLoaded', function () { setTimeout(restaurerRetour, 50); });
+})();
+
+
 // ❖ DÉFI PAR LIEN — étape 3 : bouton « Défier un camarade » (29/10/2026) ❖
 // Visible UNIQUEMENT si le serveur a répondu « true » pour la fonction « defi »
 // (voir fonctionActive). Le bouton apparaît sous le 5e quiz d'un même message
