@@ -5,6 +5,7 @@
   var etat = { sceau: '', fiches: [], courante: null };
   var NOMS_OUTILS = { atelier: 'Atelier des Évaluations', forge: 'Forge des Leçons', cabinet: 'Cabinet d’Étude', forge_primaire: 'Forge (primaire)', cabinet_primaire: 'Cabinet (primaire)' };
 
+  var NOMS_OUTILS_COURTS = { atelier: 'l’Atelier des Évaluations', forge: 'la Forge des Leçons', cabinet: 'le Cabinet d’Étude', forge_primaire: 'la Forge (primaire)', cabinet_primaire: 'le Cabinet (primaire)' };
   function $(id) { return document.getElementById(id); }
   function lire(c) { try { return localStorage.getItem(c) || ''; } catch (e) { return ''; } }
   function el(balise, classe, texte) {
@@ -160,6 +161,7 @@
       $('fiche-titre').textContent = f.titre;
       $('fiche-meta').textContent = [NOMS_OUTILS[f.outil] || f.outil, f.matiere, f.classe, 'enregistrée le ' + dateCourte(f.cree_le)].filter(Boolean).join(' · ');
       if (f.contenu_html) rendreHtml(f.contenu_html, $('fiche-corps')); else rendre(f.contenu, $('fiche-corps'));
+      $('btn-reutiliser').textContent = '✏️ Réutiliser dans ' + (NOMS_OUTILS_COURTS[f.outil] || 'l’atelier');
       $('zone-renommer').classList.add('cache'); $('fiche-msg').textContent = '';
       ecran('fiche');
     });
@@ -195,6 +197,7 @@
     $('filtre-matiere').addEventListener('change', afficherListe);
     $('btn-retour-liste').addEventListener('click', chargerListe);
     $('btn-copier').addEventListener('click', copier);
+    $('btn-reutiliser').addEventListener('click', function () { if (etat.courante) location.href = 'index.html?reutiliser=' + encodeURIComponent(etat.courante.id); });
     $('btn-imprimer').addEventListener('click', function () { window.print(); });
     $('btn-renommer').addEventListener('click', function () {
       var f = etat.courante; $('r-titre').value = f.titre; $('r-matiere').value = f.matiere || ''; $('r-classe').value = f.classe || '';

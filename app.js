@@ -5905,12 +5905,106 @@ function derniereReponseEnseignant(outil) {
     return "";
 }
 
+// Rangée d'actions sous une fiche de l'espace enseignant (crayon, copier, imprimer, enregistrer).
+function modeleActionsFicheEnseignant(outil, botLoadingDiv) {
+    return `
+                <button class="btn-action-doc btn-modifier-fiche" onclick="basculerEditionFiche(this)" title="Modifier le texte avant impression" aria-label="Modifier le texte avant impression"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
+                <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
+                <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+                ${boutonBibliotheque(outil, botLoadingDiv)}
+                <span class="note-relire-fiche">Proposition à relire et adapter avant usage — le crayon vous permet de la modifier.</span>
+            `;
+}
+
+// ❖ RÉUTILISER UNE FICHE DE LA BIBLIOTHÈQUE (31/10/2026) : la fiche est ré-affichée dans son outil d'origine,
+// comme si elle venait d'être générée ; le prochain envoi la joint comme document de référence.
+const reutilisationEnCours = {};
+
+async function reutiliserFicheBibliotheque(id) {
+    const sceau = localStorage.getItem('eduka_sceau_enseignant') || '';
+    if (!sceau) { ouvrirModaleAccesEnseignant(); return; }
+    let fiche = null;
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/bibliotheque/lire', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau, id: Number(id) })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.fiche) fiche = d.fiche;
+    } catch (e) { /* réseau */ }
+    if (!fiche || !['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].includes(fiche.outil)) {
+        alert("Cette fiche n'a pas pu être rouverte. Retrouvez-la dans « Ma bibliothèque ».");
+        return;
+    }
+    const outil = fiche.outil;
+    outilsDejaAmorces.add(outil); // pas d'amorçage automatique : on ne consomme rien
+    entrerDansEspaceEnseignant();
+    choisirCategorieEnseignant(outil.endsWith('_primaire') ? 'instituteur' : 'professeur');
+    switchTeacherTool(outil);
+    reinitialiserConversationEnseignant(outil);
+
+    const histo = document.getElementById(`${outil}-chat-history`);
+    if (!histo) return;
+    const bulle = document.createElement('div');
+    bulle.className = 'message bot-message apparition-fluide';
+    const note = document.createElement('p');
+    note.className = 'note-relire-fiche';
+    note.style.margin = '0 0 8px';
+    note.textContent = '📚 Fiche rouverte depuis votre bibliothèque : ' + fiche.titre;
+    bulle.appendChild(note);
+    if (fiche.contenu_html) {
+        const doc = new DOMParser().parseFromString('<!doctype html><body>' + fiche.contenu_html, 'text/html');
+        doc.body.querySelectorAll('script, style, iframe, object, embed, link, meta, form, base').forEach(e => e.remove());
+        doc.body.querySelectorAll('*').forEach(e => {
+            Array.from(e.attributes).forEach(a => {
+                const n = a.name.toLowerCase();
+                if (n.startsWith('on') || ((n === 'href' || n === 'src' || n === 'xlink:href') && /^\s*javascript:/i.test(a.value))) e.removeAttribute(a.name);
+            });
+        });
+        while (doc.body.firstChild) bulle.appendChild(doc.body.firstChild);
+    } else {
+        const pre = document.createElement('div');
+        pre.style.whiteSpace = 'pre-wrap';
+        pre.textContent = fiche.contenu;
+        bulle.appendChild(pre);
+    }
+    if (fiche.contenu_source && fiche.contenu_source.length > 200) bulle.dataset.sourceBrute = fiche.contenu_source;
+    else bulle.dataset.sourceBrute = fiche.contenu.slice(0, 12000);
+    bulle.dataset.demande = fiche.demande || '';
+    const actions = document.createElement('div');
+    actions.className = 'message-actions';
+    actions.innerHTML = modeleActionsFicheEnseignant(outil, bulle).replace(/<button class="btn-action-doc btn-biblio"[\s\S]*?<\/button>/, '');
+    bulle.appendChild(actions);
+    histo.appendChild(bulle);
+    reutilisationEnCours[outil] = true;
+    const champ = document.getElementById(`${outil}-user-input`);
+    if (champ) {
+        champ.value = 'Modifie cette fiche : ';
+        champ.focus();
+        try { champ.setSelectionRange(champ.value.length, champ.value.length); } catch (e) {}
+    }
+    try { histo.scrollTop = histo.scrollHeight; } catch (e) {}
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        const id = new URLSearchParams(location.search).get('reutiliser');
+        if (!id || !/^\d{1,9}$/.test(id)) return;
+        history.replaceState(null, '', location.pathname);
+        setTimeout(() => reutiliserFicheBibliotheque(id), 400);
+    } catch (e) { /* jamais bloquant */ }
+});
+
 async function sendTeacherMessage(outil, contexteJoint) {
     const inputField = document.getElementById(`${outil}-user-input`);
     const button = inputField.nextElementSibling;
     const message = inputField.value.trim();
 
     if (!message) return;
+    if (reutilisationEnCours[outil]) {
+        reutilisationEnCours[outil] = false;
+        if (!contexteJoint) contexteJoint = derniereReponseEnseignant(outil);
+    }
 
     inputField.disabled = true;
     button.disabled = true;
@@ -6044,13 +6138,7 @@ async function sendTeacherMessage(outil, contexteJoint) {
         if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
-            actionsDiv.innerHTML = `
-                <button class="btn-action-doc btn-modifier-fiche" onclick="basculerEditionFiche(this)" title="Modifier le texte avant impression" aria-label="Modifier le texte avant impression"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
-                <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
-                <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
-                ${boutonBibliotheque(outil, botLoadingDiv)}
-                <span class="note-relire-fiche">Proposition à relire et adapter avant usage — le crayon vous permet de la modifier.</span>
-            `;
+            actionsDiv.innerHTML = modeleActionsFicheEnseignant(outil, botLoadingDiv);
             botLoadingDiv.appendChild(actionsDiv);
         }
         saveChatHistory(outil);
@@ -6328,6 +6416,7 @@ async function enregistrerDansBibliotheque(bouton, outil) {
                 demande: demande,
                 contenu: contenu,
                 html: html,
+                source: bulle.dataset.sourceBrute || '',
                 matiere: lire(/mati[eè]re\s*:\s*([^;\n,]+)/i),
                 classe: lire(/classe\s*:\s*([^;\n,]+)/i)
             })
