@@ -6294,10 +6294,25 @@ function boutonBibliotheque(outil, bulle) {
 async function enregistrerDansBibliotheque(bouton, outil) {
     const bulle = bouton.closest('.bot-message');
     if (!bulle) return;
+    // Copie nettoyée de la fiche telle qu'affichée (mise en page conservée) : sans boutons, scripts ni gestionnaires d'événements.
     const clone = bulle.cloneNode(true);
-    const actions = clone.querySelector('.message-actions');
-    if (actions) actions.remove();
-    const contenu = (bulle.dataset.sourceBrute && bulle.dataset.sourceBrute.length > 40) ? bulle.dataset.sourceBrute : clone.innerText;
+    clone.querySelectorAll('.message-actions, button, script, style, iframe, object, embed, .mascotte-avatar').forEach(e => e.remove());
+    clone.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
+    clone.querySelectorAll('*').forEach(e => { Array.from(e.attributes).forEach(a => { if (/^on/i.test(a.name)) e.removeAttribute(a.name); }); });
+    const html = clone.innerHTML;
+    // Texte lisible avec retours à la ligne : innerText ne fonctionne que sur un élément affiché, d'où l'hôte hors écran.
+    const hote = document.createElement('div');
+    hote.style.cssText = 'position:fixed;left:-99999px;top:0;width:720px;pointer-events:none;';
+    const copieTexte = clone.cloneNode(true);
+    copieTexte.querySelectorAll('svg').forEach(e => e.replaceWith(document.createTextNode('[Figure : voir la mise en page]')));
+    copieTexte.querySelectorAll('.katex').forEach(k => {
+        const ann = k.querySelector('annotation[encoding="application/x-tex"]');
+        if (ann) k.replaceWith(document.createTextNode('$' + ann.textContent + '$'));
+    });
+    hote.appendChild(copieTexte);
+    document.body.appendChild(hote);
+    const contenu = hote.innerText;
+    hote.remove();
     const demande = bulle.dataset.demande || '';
     const lire = (re) => { const m = re.exec(demande); return m ? m[1].trim().slice(0, 60) : ''; };
     const texteOriginal = bouton.innerHTML;
@@ -6312,6 +6327,7 @@ async function enregistrerDansBibliotheque(bouton, outil) {
                 outil: outil,
                 demande: demande,
                 contenu: contenu,
+                html: html,
                 matiere: lire(/mati[eè]re\s*:\s*([^;\n,]+)/i),
                 classe: lire(/classe\s*:\s*([^;\n,]+)/i)
             })
