@@ -1217,7 +1217,7 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
             // #banniere-matiere) le montre déjà en grand, en permanence.
             // Ce message se concentre donc sur l'invitation à démarrer.
             if (espaceActuel === 'eleve') {
-                welcomeDiv.innerHTML = `Bienvenue ! Sur quel chapitre ou quelle leçon travailles-tu en ce moment ? Écris-le-moi, ou clique sur un bouton rapide ci-dessous (Guide-moi, Réviser un chapitre, Un exercice précis, Quiz sur cette leçon).`;
+                welcomeDiv.innerHTML = `<span class="accueil-eleve"><span class="accueil-titre">👋 Bienvenue !</span><span class="accueil-texte">Sur quel chapitre ou quelle leçon travailles-tu en ce moment ? Écris-le-moi, ou choisis une porte d'entrée :</span><span class="accueil-chips"><button type="button" class="nom-bouton nb-bleu" data-sug="Guide-moi">🧭 Guide-moi</button><button type="button" class="nom-bouton nb-vert" data-sug="Réviser un chapitre">📖 Réviser un chapitre</button><button type="button" class="nom-bouton nb-orange" data-sug="Un exercice précis">✏️ Un exercice précis</button></span></span>`;
             } else {
                 welcomeDiv.innerHTML = `L'espace est prêt. Écris ta première question, ou clique sur un bouton rapide ci-dessous.`;
             }
@@ -7282,6 +7282,23 @@ function effectuerDeconnexion() {
     window.location.href = window.location.pathname;
 }
 document.addEventListener('DOMContentLoaded', majBoutonDeconnexion);
+
+// ❖ Messages d'accueil figés : les noms de boutons mis en exergue sont CLIQUABLES (01/11/2026).
+// Délégation d'événement : fonctionne aussi quand l'accueil est restauré depuis l'historique local.
+document.addEventListener('click', function (e) {
+    const cible = e.target && e.target.closest ? e.target.closest('.nom-bouton') : null;
+    if (!cible) return;
+    try {
+        if (cible.dataset.formulaire && typeof ouvrirFormulaireGuide === 'function') {
+            ouvrirFormulaireGuide(cible.dataset.formulaire);
+        } else if (cible.dataset.sug) {
+            const boutons = document.querySelectorAll('#sas-suggestions-rapides .btn-suggestion');
+            for (const b of boutons) {
+                if ((b.textContent || '').indexOf(cible.dataset.sug) !== -1) { b.click(); break; }
+            }
+        }
+    } catch (err) { /* sans gravité */ }
+});
 
 // ❖ RETOUR AU POINT DE DÉPART (31/10/2026) : quand on quitte l'application par le menu vers
 // Salle d'étude / Séances de classe / Ma bibliothèque, on retient l'espace où l'on était ;

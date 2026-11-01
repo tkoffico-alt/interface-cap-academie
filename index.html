@@ -1055,6 +1055,15 @@
             #tab-forge_primaire.tab-btn, #tab-cabinet_primaire.tab-btn { padding: 0.45rem 0.85rem; font-size: 0.82rem; }
             .teacher-navigation { border-radius: 14px; }
         }
+        /* ❖ 01/11/2026 : noms des boutons rapides mis en exergue dans les messages d'accueil (cliquables) */
+        .nom-bouton { display: inline-block; padding: 1px 10px; margin: 1px 2px; border-radius: 999px; border: 0; font: inherit; font-weight: 700; font-size: .92em; line-height: 1.5; white-space: nowrap; cursor: pointer; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+        .nom-bouton:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .nb-bleu { background: #1d4ed8; } .nb-violet { background: #7c3aed; } .nb-orange { background: #ea580c; }
+        .nb-vert { background: #059669; } .nb-cyan { background: #0891b2; }
+        .accueil-eleve { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+        .accueil-eleve .accueil-titre { font-size: 1.3rem; font-weight: 800; }
+        .accueil-eleve .accueil-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .accueil-eleve .nom-bouton { padding: 9px 16px; font-size: 1rem; }
 </style>
 </head>
 <body>
@@ -1784,7 +1793,7 @@
                     <div class="message system-message">
                         <span class="system-message-icone">❖</span>
                         <span class="system-message-titre">L'Atelier des Évaluations</span>
-                        <span class="system-message-texte">Je suis le Concepteur Universel. Pour une évaluation APC adaptée aux programmes ivoiriens, cliquez sur « 📋 Formulaire guidé » ci-dessous (type, durée, nombre d'exercices), ou sur « 🏛 Épreuve BEPC / BAC » pour une épreuve au format officiel. Pour corriger une copie, utilisez « Corriger des copies » ou joignez sa photo (JPG/PNG) en précisant le barème.</span>
+                        <span class="system-message-texte">Je suis le Concepteur Universel. Pour une évaluation APC adaptée aux programmes ivoiriens, cliquez sur <button type="button" class="nom-bouton nb-bleu" data-formulaire="atelier">📋 Formulaire guidé</button> ci-dessous (type, durée, nombre d'exercices), ou sur <button type="button" class="nom-bouton nb-violet" data-formulaire="atelier_officiel">🏛 Épreuve BEPC / BAC</button> pour une épreuve au format officiel. Pour corriger une copie, utilisez <button type="button" class="nom-bouton nb-orange" data-formulaire="atelier_copies">✍️ Corriger des copies</button> ou joignez sa photo (JPG/PNG) en précisant le barème.</span>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -1819,7 +1828,7 @@
                     <div class="message system-message">
                         <span class="system-message-icone">✦</span>
                         <span class="system-message-titre">La Forge des Leçons</span>
-                        <span class="system-message-texte">Je suis l'Assistant Pédagogique. Cliquez sur « 📋 Formulaire guidé » ci-dessous pour renseigner votre contexte (matière, classe, leçon) et obtenir une fiche de leçon structurée. Vous pouvez aussi décrire directement votre besoin.</span>
+                        <span class="system-message-texte">Je suis l'Assistant Pédagogique. Cliquez sur <button type="button" class="nom-bouton nb-bleu" data-formulaire="forge">📋 Formulaire guidé</button> ci-dessous pour renseigner votre contexte (matière, classe, leçon) et obtenir une fiche de leçon structurée. Vous pouvez aussi décrire directement votre besoin.</span>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -1880,7 +1889,7 @@
                     <div class="message system-message accent-vert">
                         <span class="system-message-icone">🌱</span>
                         <span class="system-message-titre">La Forge (Primaire)</span>
-                        <span class="system-message-texte">Cliquez sur « 📋 Formulaire de préparation » (fiche de leçon) ou « 📝 Formulaire d'évaluation » ci-dessous pour préciser la classe (CP1 à CM2), la matière et la leçon. Vous pouvez aussi décrire directement votre besoin.</span>
+                        <span class="system-message-texte">Cliquez sur <button type="button" class="nom-bouton nb-bleu" data-formulaire="forge_primaire">📋 Formulaire de préparation</button> (fiche de leçon) ou <button type="button" class="nom-bouton nb-cyan" data-formulaire="forge_primaire_eval">📝 Formulaire d'évaluation</button> ci-dessous pour préciser la classe (CP1 à CM2), la matière et la leçon. Vous pouvez aussi décrire directement votre besoin.</span>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -1959,7 +1968,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.45"></script>
+    <script src="app.js?v=3.46"></script>
     <script src="visite-guidee.js?v=4"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
