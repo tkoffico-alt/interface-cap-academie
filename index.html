@@ -1075,8 +1075,8 @@
         .accueil-eleve .accueil-titre { font-size: 1.1rem; font-weight: 700; }
         .accueil-eleve .accueil-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 2px; }
         .accueil-eleve .nom-bouton { padding: 3px 13px; font-size: .78rem; line-height: 1.4; border-radius: 999px; margin: 0; animation: accueilPop .4s ease both; }
-        .accueil-eleve .nom-bouton:nth-child(2) { animation-delay: .08s; }
-        .accueil-eleve .nom-bouton:nth-child(3) { animation-delay: .16s; }
+        .accueil-eleve .nom-bouton:nth-child(2), .accueil-eleve .accueil-liste .nom-bouton:nth-child(3) { animation-delay: .08s; }
+        .accueil-eleve .nom-bouton:nth-child(3), .accueil-eleve .accueil-liste .nom-bouton:nth-child(5) { animation-delay: .16s; }
         @keyframes accueilPop { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: none; } }
         @media (prefers-reduced-motion: reduce) { .accueil-eleve .nom-bouton { animation: none; } }
 </style>
@@ -1799,7 +1799,7 @@
                     <div class="message system-message">
                         <span class="system-message-icone">❖</span>
                         <span class="system-message-titre">L'Atelier des Évaluations</span>
-                        <span class="system-message-texte">Je suis le Concepteur Universel. Choisissez ce que vous voulez faire :
+                        <span class="system-message-texte">Je suis le Concepteur Universel. Choisissez ce que vous voulez faire&nbsp;:
                             <span class="accueil-liste">
                                 <button type="button" class="nom-bouton nb-principal" data-formulaire="atelier">📋 Formulaire guidé</button><span class="al-desc">évaluation APC adaptée aux programmes ivoiriens (type, durée, nombre d'exercices)</span>
                                 <button type="button" class="nom-bouton nb-violet" data-formulaire="atelier_officiel">🏛 Épreuve BEPC / BAC</button><span class="al-desc">épreuve au format officiel</span>
@@ -1900,7 +1900,7 @@
                     <div class="message system-message accent-vert">
                         <span class="system-message-icone">🌱</span>
                         <span class="system-message-titre">La Forge (Primaire)</span>
-                        <span class="system-message-texte">Choisissez ce que vous voulez préparer :
+                        <span class="system-message-texte">Choisissez ce que vous voulez préparer&nbsp;:
                             <span class="accueil-liste">
                                 <button type="button" class="nom-bouton nb-principal" data-formulaire="forge_primaire">📋 Formulaire de préparation</button><span class="al-desc">fiche de leçon (classe CP1 à CM2, matière, leçon)</span>
                                 <button type="button" class="nom-bouton nb-outil" data-formulaire="forge_primaire_eval">📝 Formulaire d'évaluation</button><span class="al-desc">évaluation adaptée à la classe et à la matière</span>
@@ -1984,7 +1984,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.53"></script>
+    <script src="app.js?v=3.54"></script>
     <script src="visite-guidee.js?v=4"></script>
     <script src="centres-interet.js?v=7"></script>
 
