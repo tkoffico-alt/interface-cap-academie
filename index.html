@@ -1067,6 +1067,10 @@
         .nb-ambre     { background: linear-gradient(135deg, #FEF08A 0%, #FBBF24 100%); color: #78350F; border-color: #FACC15; }
         .nb-ponctuel  { background: linear-gradient(135deg, #F97316 0%, #DB2777 100%); color: #FFFFFF; border-color: #EA580C; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
         .nb-violet    { background: linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%); color: #FFFFFF; border-color: #7C3AED; }
+        .accueil-liste { display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px; align-items: center; text-align: left; margin: 10px auto 4px; max-width: 520px; }
+        .accueil-liste .nom-bouton { margin: 0; justify-self: stretch; text-align: center; }
+        .accueil-liste .al-desc { font-size: .88em; opacity: .85; line-height: 1.35; }
+        @media (max-width: 560px) { .accueil-liste { grid-template-columns: 1fr; gap: 2px; } .accueil-liste .al-desc { margin: 0 0 8px 6px; } }
         .accueil-eleve { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
         .accueil-eleve .accueil-titre { font-size: 1.1rem; font-weight: 700; }
         .accueil-eleve .accueil-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 2px; }
@@ -1795,7 +1799,12 @@
                     <div class="message system-message">
                         <span class="system-message-icone">❖</span>
                         <span class="system-message-titre">L'Atelier des Évaluations</span>
-                        <span class="system-message-texte">Je suis le Concepteur Universel. Pour une évaluation APC adaptée aux programmes ivoiriens, cliquez sur <button type="button" class="nom-bouton nb-principal" data-formulaire="atelier">📋 Formulaire guidé</button> ci-dessous (type, durée, nombre d'exercices), ou sur <button type="button" class="nom-bouton nb-violet" data-formulaire="atelier_officiel">🏛 Épreuve BEPC / BAC</button> pour une épreuve au format officiel. Pour corriger une copie, utilisez <button type="button" class="nom-bouton nb-ponctuel" data-formulaire="atelier_copies">✍️ Corriger des copies</button> ou joignez sa photo (JPG/PNG) en précisant le barème.</span>
+                        <span class="system-message-texte">Je suis le Concepteur Universel. Choisissez ce que vous voulez faire :
+                            <span class="accueil-liste">
+                                <button type="button" class="nom-bouton nb-principal" data-formulaire="atelier">📋 Formulaire guidé</button><span class="al-desc">évaluation APC adaptée aux programmes ivoiriens (type, durée, nombre d'exercices)</span>
+                                <button type="button" class="nom-bouton nb-violet" data-formulaire="atelier_officiel">🏛 Épreuve BEPC / BAC</button><span class="al-desc">épreuve au format officiel</span>
+                                <button type="button" class="nom-bouton nb-ponctuel" data-formulaire="atelier_copies">✍️ Corriger des copies</button><span class="al-desc">ou joignez la photo (JPG/PNG) en précisant le barème</span>
+                            </span></span>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -1891,7 +1900,12 @@
                     <div class="message system-message accent-vert">
                         <span class="system-message-icone">🌱</span>
                         <span class="system-message-titre">La Forge (Primaire)</span>
-                        <span class="system-message-texte">Cliquez sur <button type="button" class="nom-bouton nb-principal" data-formulaire="forge_primaire">📋 Formulaire de préparation</button> (fiche de leçon) ou <button type="button" class="nom-bouton nb-outil" data-formulaire="forge_primaire_eval">📝 Formulaire d'évaluation</button> ci-dessous pour préciser la classe (CP1 à CM2), la matière et la leçon. Vous pouvez aussi décrire directement votre besoin.</span>
+                        <span class="system-message-texte">Choisissez ce que vous voulez préparer :
+                            <span class="accueil-liste">
+                                <button type="button" class="nom-bouton nb-principal" data-formulaire="forge_primaire">📋 Formulaire de préparation</button><span class="al-desc">fiche de leçon (classe CP1 à CM2, matière, leçon)</span>
+                                <button type="button" class="nom-bouton nb-outil" data-formulaire="forge_primaire_eval">📝 Formulaire d'évaluation</button><span class="al-desc">évaluation adaptée à la classe et à la matière</span>
+                            </span>
+                            Vous pouvez aussi décrire directement votre besoin.</span>
                     </div>
                 </div>
                 <div class="chat-input-area">
