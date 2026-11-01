@@ -1055,23 +1055,23 @@
             #tab-forge_primaire.tab-btn, #tab-cabinet_primaire.tab-btn { padding: 0.45rem 0.85rem; font-size: 0.82rem; }
             .teacher-navigation { border-radius: 14px; }
         }
-        /* ❖ 01/11/2026 (v2) : noms des boutons rapides dans les messages d'accueil — même langage visuel que
-           les boutons rapides du bas (pastel doux, bord fin, coins arrondis), cliquables. */
-        .nom-bouton { display: inline-block; padding: 1px 9px; margin: 1px 2px; border-radius: 10px; border: 1px solid transparent; font: inherit; font-weight: 600; font-size: .94em; line-height: 1.55; white-space: nowrap; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
-        .nom-bouton:hover { filter: brightness(.97); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(15,23,42,.14); }
+        /* ❖ 01/11/2026 (v3) : noms des boutons rapides dans les messages d'accueil — MÊMES couleurs et même
+           taille que les boutons rapides du bas (palette v2), cliquables. */
+        .nom-bouton { display: inline-block; padding: 2px 10px; margin: 1px 2px; border-radius: 12px; border: 1px solid transparent; font: inherit; font-weight: 600; font-size: .86em; line-height: 1.5; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px rgba(15,23,42,.15); transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+        .nom-bouton:hover { filter: brightness(1.06) saturate(1.1); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(15,23,42,.2); }
         .nom-bouton:active { transform: scale(.97); }
-        .nb-bleu   { background: #E0E7FF; color: #4338CA; border-color: #C7D2FE; }
-        .nb-vert   { background: #D1FAE5; color: #047857; border-color: #A7F3D0; }
-        .nb-orange { background: #FFEDD5; color: #C2410C; border-color: #FED7AA; }
-        .nb-violet { background: #EDE9FE; color: #6D28D9; border-color: #DDD6FE; }
-        .nb-cyan   { background: #CFFAFE; color: #0E7490; border-color: #A5F3FC; }
+        .nb-principal { background: #1D4ED8; color: #FFFFFF; border-color: #1E3A8A; font-weight: 700; }
+        .nb-outil     { background: linear-gradient(135deg, #5EEAD4 0%, #22D3EE 100%); color: #134E4A; border-color: #2DD4BF; }
+        .nb-vert      { background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%); color: #14532D; border-color: #4ADE80; }
+        .nb-ambre     { background: linear-gradient(135deg, #FEF08A 0%, #FBBF24 100%); color: #78350F; border-color: #FACC15; }
+        .nb-ponctuel  { background: linear-gradient(135deg, #F97316 0%, #DB2777 100%); color: #FFFFFF; border-color: #EA580C; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+        .nb-violet    { background: linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%); color: #FFFFFF; border-color: #7C3AED; }
         .accueil-eleve { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
-        .accueil-eleve .accueil-titre { font-size: 1.15rem; font-weight: 700; }
-        .accueil-eleve .accueil-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 2px; }
-        .accueil-eleve .nom-bouton { padding: 7px 14px; font-size: .95rem; border-radius: 14px; box-shadow: 0 1px 4px rgba(15,23,42,.12); animation: accueilPop .4s ease both; }
+        .accueil-eleve .accueil-titre { font-size: 1.1rem; font-weight: 700; }
+        .accueil-eleve .accueil-chips { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-top: 2px; }
+        .accueil-eleve .nom-bouton { padding: 6px 12px; font-size: .82rem; border-radius: 14px; margin: 0; animation: accueilPop .4s ease both; }
         .accueil-eleve .nom-bouton:nth-child(2) { animation-delay: .08s; }
         .accueil-eleve .nom-bouton:nth-child(3) { animation-delay: .16s; }
-        .accueil-eleve .nom-bouton:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(15,23,42,.16); }
         @keyframes accueilPop { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: none; } }
         @media (prefers-reduced-motion: reduce) { .accueil-eleve .nom-bouton { animation: none; } }
 </style>
@@ -1803,7 +1803,7 @@
                     <div class="message system-message">
                         <span class="system-message-icone">❖</span>
                         <span class="system-message-titre">L'Atelier des Évaluations</span>
-                        <span class="system-message-texte">Je suis le Concepteur Universel. Pour une évaluation APC adaptée aux programmes ivoiriens, cliquez sur <button type="button" class="nom-bouton nb-bleu" data-formulaire="atelier">📋 Formulaire guidé</button> ci-dessous (type, durée, nombre d'exercices), ou sur <button type="button" class="nom-bouton nb-violet" data-formulaire="atelier_officiel">🏛 Épreuve BEPC / BAC</button> pour une épreuve au format officiel. Pour corriger une copie, utilisez <button type="button" class="nom-bouton nb-orange" data-formulaire="atelier_copies">✍️ Corriger des copies</button> ou joignez sa photo (JPG/PNG) en précisant le barème.</span>
+                        <span class="system-message-texte">Je suis le Concepteur Universel. Pour une évaluation APC adaptée aux programmes ivoiriens, cliquez sur <button type="button" class="nom-bouton nb-principal" data-formulaire="atelier">📋 Formulaire guidé</button> ci-dessous (type, durée, nombre d'exercices), ou sur <button type="button" class="nom-bouton nb-violet" data-formulaire="atelier_officiel">🏛 Épreuve BEPC / BAC</button> pour une épreuve au format officiel. Pour corriger une copie, utilisez <button type="button" class="nom-bouton nb-ponctuel" data-formulaire="atelier_copies">✍️ Corriger des copies</button> ou joignez sa photo (JPG/PNG) en précisant le barème.</span>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -1838,7 +1838,7 @@
                     <div class="message system-message">
                         <span class="system-message-icone">✦</span>
                         <span class="system-message-titre">La Forge des Leçons</span>
-                        <span class="system-message-texte">Je suis l'Assistant Pédagogique. Cliquez sur <button type="button" class="nom-bouton nb-bleu" data-formulaire="forge">📋 Formulaire guidé</button> ci-dessous pour renseigner votre contexte (matière, classe, leçon) et obtenir une fiche de leçon structurée. Vous pouvez aussi décrire directement votre besoin.</span>
+                        <span class="system-message-texte">Je suis l'Assistant Pédagogique. Cliquez sur <button type="button" class="nom-bouton nb-principal" data-formulaire="forge">📋 Formulaire guidé</button> ci-dessous pour renseigner votre contexte (matière, classe, leçon) et obtenir une fiche de leçon structurée. Vous pouvez aussi décrire directement votre besoin.</span>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -1899,7 +1899,7 @@
                     <div class="message system-message accent-vert">
                         <span class="system-message-icone">🌱</span>
                         <span class="system-message-titre">La Forge (Primaire)</span>
-                        <span class="system-message-texte">Cliquez sur <button type="button" class="nom-bouton nb-bleu" data-formulaire="forge_primaire">📋 Formulaire de préparation</button> (fiche de leçon) ou <button type="button" class="nom-bouton nb-cyan" data-formulaire="forge_primaire_eval">📝 Formulaire d'évaluation</button> ci-dessous pour préciser la classe (CP1 à CM2), la matière et la leçon. Vous pouvez aussi décrire directement votre besoin.</span>
+                        <span class="system-message-texte">Cliquez sur <button type="button" class="nom-bouton nb-principal" data-formulaire="forge_primaire">📋 Formulaire de préparation</button> (fiche de leçon) ou <button type="button" class="nom-bouton nb-outil" data-formulaire="forge_primaire_eval">📝 Formulaire d'évaluation</button> ci-dessous pour préciser la classe (CP1 à CM2), la matière et la leçon. Vous pouvez aussi décrire directement votre besoin.</span>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -1978,7 +1978,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.47"></script>
+    <script src="app.js?v=3.48"></script>
     <script src="visite-guidee.js?v=4"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
