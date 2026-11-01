@@ -2645,3 +2645,6 @@ body.dark-theme .photo-menu button:hover { background: rgba(99, 102, 241, 0.22);
 .message-actions .btn-action-doc.btn-biblio:hover:not(:disabled) { color: #FFFFFF; filter: brightness(1.08); }
 .message-actions .btn-action-doc.btn-biblio:disabled { opacity: 0.85; cursor: default; }
 body.dark-theme .message-actions .btn-action-doc.btn-biblio { color: #FFFFFF; background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%); }
+
+/* Transition douce entre pages (navigateurs compatibles) */
+@view-transition { navigation: auto; }
