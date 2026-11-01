@@ -6521,23 +6521,55 @@ function ressembleAuFrancais(phrase) {
 }
 
 function ajouterBoutonsPrononciationInline(messageDiv) {
+    // ❖ 01/11/2026 : on travaille sur les NŒUDS TEXTE du DOM, jamais sur le HTML brut.
+    // Avant, la recherche des guillemets "..." s'appliquait au innerHTML et prenait les
+    // guillemets des attributs (class="mission-devoir") pour une phrase anglaise : un bouton
+    // 🔊 s'insérait dans la balise, d'où les « > » et haut-parleurs parasites dans l'encadré DEVOIR.
     const MOTIF_GUILLEMETS = /["“”]([^"“”<>]{1,150})["“”]/g;
     let indexPhrase = 0;
-    const phrasesTrouvees = [];
-
-    messageDiv.innerHTML = messageDiv.innerHTML.replace(MOTIF_GUILLEMETS, (correspondance, phraseBrute) => {
-        const phrase = phraseBrute.trim();
-        if (!phrase || MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase)) || ressembleAuFrancais(phrase)) {
-            return correspondance; // phrase française (courante ou détectée) : pas de bouton
+    const marcheur = document.createTreeWalker(messageDiv, NodeFilter.SHOW_TEXT, {
+        acceptNode(noeud) {
+            const parent = noeud.parentElement;
+            if (parent && parent.closest('button, script, style, .btn-ecoute-inline')) return NodeFilter.FILTER_REJECT;
+            return /["“”]/.test(noeud.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
         }
-        const id = `phrase-audio-${Date.now()}-${indexPhrase}`;
-        indexPhrase++;
-        phrasesTrouvees.push({ id, phrase });
-        return `${correspondance}<button type="button" class="btn-ecoute-inline" data-phrase-id="${id}" onclick="ecouterPhraseParId(this)" title="Écouter la prononciation" aria-label="Écouter la prononciation">🔊</button>`;
     });
+    const noeuds = [];
+    while (marcheur.nextNode()) noeuds.push(marcheur.currentNode);
 
-    phrasesTrouvees.forEach(({ id, phrase }) => {
-        phrasesAudioEnAttente[id] = phrase;
+    noeuds.forEach((noeud) => {
+        const texte = noeud.nodeValue;
+        MOTIF_GUILLEMETS.lastIndex = 0;
+        const fragment = document.createDocumentFragment();
+        let dernier = 0;
+        let modifie = false;
+        let m;
+        while ((m = MOTIF_GUILLEMETS.exec(texte)) !== null) {
+            const phrase = m[1].trim();
+            if (!phrase || MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase)) || ressembleAuFrancais(phrase)) {
+                continue; // phrase française (courante ou détectée) : pas de bouton
+            }
+            const id = `phrase-audio-${Date.now()}-${indexPhrase}`;
+            indexPhrase++;
+            phrasesAudioEnAttente[id] = phrase;
+            const fin = m.index + m[0].length;
+            fragment.appendChild(document.createTextNode(texte.slice(dernier, fin)));
+            const bouton = document.createElement('button');
+            bouton.type = 'button';
+            bouton.className = 'btn-ecoute-inline';
+            bouton.dataset.phraseId = id;
+            bouton.setAttribute('onclick', 'ecouterPhraseParId(this)');
+            bouton.title = 'Écouter la prononciation';
+            bouton.setAttribute('aria-label', 'Écouter la prononciation');
+            bouton.textContent = '🔊';
+            fragment.appendChild(bouton);
+            dernier = fin;
+            modifie = true;
+        }
+        if (modifie) {
+            fragment.appendChild(document.createTextNode(texte.slice(dernier)));
+            noeud.parentNode.replaceChild(fragment, noeud);
+        }
     });
 }
 
