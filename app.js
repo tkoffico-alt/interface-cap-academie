@@ -1219,7 +1219,7 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
             if (espaceActuel === 'eleve') {
                 welcomeDiv.innerHTML = `<span class="accueil-eleve"><span class="accueil-titre">👋 Bienvenue !</span><span class="accueil-texte">Sur quel chapitre ou quelle leçon travailles-tu en ce moment ? Écris-le-moi, ou choisis une porte d'entrée :</span><span class="accueil-chips"><button type="button" class="nom-bouton nb-bleu" data-sug="Guide-moi">🧭 Guide-moi</button><button type="button" class="nom-bouton nb-vert" data-sug="Réviser un chapitre">📖 Réviser un chapitre</button><button type="button" class="nom-bouton nb-orange" data-sug="Un exercice précis">✏️ Un exercice précis</button></span></span>`;
             } else {
-                welcomeDiv.innerHTML = `L'espace est prêt. Écris ta première question, ou clique sur un bouton rapide ci-dessous.`;
+                welcomeDiv.innerHTML = `<span class="accueil-eleve"><span class="accueil-titre">👋 Bienvenue !</span><span class="accueil-texte">L'espace est prêt. Écris ta première question, ou choisis une porte d'entrée :</span><span class="accueil-chips"><button type="button" class="nom-bouton nb-bleu" data-sug="Guide-moi">🧭 Guide-moi</button><button type="button" class="nom-bouton nb-vert" data-sug="Réviser un chapitre">📖 Réviser un chapitre</button><button type="button" class="nom-bouton nb-orange" data-sug="Un exercice précis">✏️ Un exercice précis</button></span></span>`;
             }
 
             chatHistory.appendChild(welcomeDiv);

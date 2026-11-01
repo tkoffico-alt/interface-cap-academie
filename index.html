@@ -1055,15 +1055,25 @@
             #tab-forge_primaire.tab-btn, #tab-cabinet_primaire.tab-btn { padding: 0.45rem 0.85rem; font-size: 0.82rem; }
             .teacher-navigation { border-radius: 14px; }
         }
-        /* ❖ 01/11/2026 : noms des boutons rapides mis en exergue dans les messages d'accueil (cliquables) */
-        .nom-bouton { display: inline-block; padding: 1px 10px; margin: 1px 2px; border-radius: 999px; border: 0; font: inherit; font-weight: 700; font-size: .92em; line-height: 1.5; white-space: nowrap; cursor: pointer; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
-        .nom-bouton:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        .nb-bleu { background: #1d4ed8; } .nb-violet { background: #7c3aed; } .nb-orange { background: #ea580c; }
-        .nb-vert { background: #059669; } .nb-cyan { background: #0891b2; }
-        .accueil-eleve { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
-        .accueil-eleve .accueil-titre { font-size: 1.3rem; font-weight: 800; }
-        .accueil-eleve .accueil-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-        .accueil-eleve .nom-bouton { padding: 9px 16px; font-size: 1rem; }
+        /* ❖ 01/11/2026 (v2) : noms des boutons rapides dans les messages d'accueil — même langage visuel que
+           les boutons rapides du bas (pastel doux, bord fin, coins arrondis), cliquables. */
+        .nom-bouton { display: inline-block; padding: 1px 9px; margin: 1px 2px; border-radius: 10px; border: 1px solid transparent; font: inherit; font-weight: 600; font-size: .94em; line-height: 1.55; white-space: nowrap; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+        .nom-bouton:hover { filter: brightness(.97); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(15,23,42,.14); }
+        .nom-bouton:active { transform: scale(.97); }
+        .nb-bleu   { background: #E0E7FF; color: #4338CA; border-color: #C7D2FE; }
+        .nb-vert   { background: #D1FAE5; color: #047857; border-color: #A7F3D0; }
+        .nb-orange { background: #FFEDD5; color: #C2410C; border-color: #FED7AA; }
+        .nb-violet { background: #EDE9FE; color: #6D28D9; border-color: #DDD6FE; }
+        .nb-cyan   { background: #CFFAFE; color: #0E7490; border-color: #A5F3FC; }
+        .accueil-eleve { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+        .accueil-eleve .accueil-titre { font-size: 1.15rem; font-weight: 700; }
+        .accueil-eleve .accueil-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 2px; }
+        .accueil-eleve .nom-bouton { padding: 7px 14px; font-size: .95rem; border-radius: 14px; box-shadow: 0 1px 4px rgba(15,23,42,.12); animation: accueilPop .4s ease both; }
+        .accueil-eleve .nom-bouton:nth-child(2) { animation-delay: .08s; }
+        .accueil-eleve .nom-bouton:nth-child(3) { animation-delay: .16s; }
+        .accueil-eleve .nom-bouton:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(15,23,42,.16); }
+        @keyframes accueilPop { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .accueil-eleve .nom-bouton { animation: none; } }
 </style>
 </head>
 <body>
@@ -1968,7 +1978,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.46"></script>
+    <script src="app.js?v=3.47"></script>
     <script src="visite-guidee.js?v=4"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
