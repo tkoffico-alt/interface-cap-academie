@@ -1188,12 +1188,12 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
     document.getElementById('teacher-tabs-container').style.display = 'none';
     masquerChooserCategorieEnseignant();
 
-    // ❖ Le bouton "Changer de matière" ne concerne que l'Académie Premium
-    // ("eleve") -- pas l'Espace de Préparation freemium ("sas"), pour
-    // garder la friction volontaire de cet espace-là intacte.
+    // ❖ 01/11/2026 : le bouton "Changer de matière" est désormais visible aussi dans l'Espace de
+    // Préparation freemium ("sas"), comme dans l'Académie ("eleve"). Le quota gratuit étant compté
+    // par appareil (et non par matière), changer de matière ne contourne aucune limite.
     const btnMatieres = document.getElementById('btn-matieres');
     if (btnMatieres) {
-        btnMatieres.style.display = (espaceActuel === 'eleve') ? 'flex' : 'none';
+        btnMatieres.style.display = (espaceActuel === 'eleve' || espaceActuel === 'sas') ? 'flex' : 'none';
     }
 
     if(espaceActuel === 'sas' || espaceActuel === 'eleve') {
