@@ -1776,6 +1776,7 @@ body.dark-theme .btn-attachment:hover { color: #60A5FA; }
 .modal-overlay.active { opacity: 1; pointer-events: auto; display: flex; }
 .modal-content {
     position: relative; max-width: 400px; width: 90%; text-align: center;
+    max-height: 92vh; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain;
     transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .modal-overlay.active .modal-content { transform: translateY(0); }
