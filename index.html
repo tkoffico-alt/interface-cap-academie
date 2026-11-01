@@ -1377,7 +1377,7 @@
     <div id="profil-modal" class="modal-overlay">
         <div class="glass-card modal-content" style="max-width: 500px;">
             <h3 style="text-align: center;">Configuration de la session</h3>
-            <p style="text-align: center; color: #4B5563;">Afin d'adapter notre pédagogie à ton profil, merci de nous éclairer sur ces deux points :</p>
+            <p style="text-align: center; color: #4B5563;">Afin d'adapter notre pédagogie à ton niveau, indique-nous ta classe :</p>
 
             <div style="margin-top: 20px; text-align: left;">
                 <label style="font-weight: bold; color: #374151;">Tu es en quelle classe ?</label>
@@ -1402,20 +1402,11 @@
     <option value="Tle C">Tle C</option>
     <option value="Tle D">Tle D</option>
 </select>
-                <label style="font-weight: bold; color: #374151;">Comment as-tu l'habitude de réviser à la maison ?</label>
-                <select id="habitudes-revision" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 20px; background-color: #F3F4F6; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" onchange="verifierFormulaire()">
-                    <option value="">-- Choisis une option --</option>
-                    <option value="Dans le silence total">Dans le silence total</option>
-                    <option value="En écoutant de la musique">En écoutant de la musique</option>
-                    <option value="En groupe ou avec un proche">En groupe ou avec un proche</option>
-                </select>
-                <label style="font-weight: bold; color: #374151;">Comment te sens-tu à l'approche d'un devoir important ?</label>
-                <select id="gestion-stress" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 25px; background-color: #F3F4F6; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" onchange="verifierFormulaire()">
-                    <option value="">-- Choisis une option --</option>
-                    <option value="Calme et méthodique">Calme et méthodique</option>
-                    <option value="Un peu anxieux mais concentré">Un peu anxieux mais concentré</option>
-                    <option value="Souvent submergé par le stress">Souvent submergé par le stress</option>
-                </select>
+                <!-- ❖ 01/11/2026 : seules la classe est demandée désormais. Les deux anciennes questions
+                     (habitude de révision, gestion du stress) n'avaient aucun effet mesurable ;
+                     ces champs cachés gardent le reste du code et le serveur inchangés. -->
+                <input type="hidden" id="habitudes-revision" value="Non précisé">
+                <input type="hidden" id="gestion-stress" value="Non précisé">
             </div>
 
             <button id="btn-commencer" class="btn-action-doc" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; font-size: 1.1em; opacity: 0.5; cursor: not-allowed; padding: 12px; border: none; border-radius: 5px;" onclick="validerProfilEtEntrer()" disabled>Commencer le Chat</button>
