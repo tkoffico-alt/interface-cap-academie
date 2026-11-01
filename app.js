@@ -1217,31 +1217,16 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
             // #banniere-matiere) le montre déjà en grand, en permanence.
             // Ce message se concentre donc sur l'invitation à démarrer.
             if (espaceActuel === 'eleve') {
-                welcomeDiv.innerHTML = `L'Académie Premium vous ouvre ses portes. Votre répétiteur vous écoute.`;
+                welcomeDiv.innerHTML = `Bienvenue ! Sur quel chapitre ou quelle leçon travailles-tu en ce moment ? Écris-le-moi, ou clique sur un bouton rapide ci-dessous (Guide-moi, Réviser un chapitre, Un exercice précis, Quiz sur cette leçon).`;
             } else {
-                welcomeDiv.innerHTML = `L'espace est prêt. Posez votre première question pour commencer.`;
+                welcomeDiv.innerHTML = `L'espace est prêt. Écris ta première question, ou clique sur un bouton rapide ci-dessous.`;
             }
 
             chatHistory.appendChild(welcomeDiv);
 
-            // ❖ L'AMORÇAGE AUTOMATIQUE (première visite uniquement) :
-            // un élève qui découvre l'outil face à un champ vide ne sait
-            // souvent pas quoi demander et se décourage avant même de
-            // commencer. L'absence d'historique sauvegardé ci-dessus prouve
-            // qu'il s'agit d'un tout premier contact avec CET avatar sur CET
-            // appareil (le drapeau se pose tout seul dès qu'un échange a lieu,
-            // voir eduka_chat_sas_${avatarActif} plus haut) — donc on amorce
-            // l'échange à sa place. Aux visites suivantes, l'historique existera
-            // déjà et cette branche ne sera plus jamais exécutée.
-            sasPremierEchangeEnAttente = true;
-            setTimeout(() => {
-                const inputField = document.getElementById('sas-user-input');
-                if (sasPremierEchangeEnAttente && inputField && !inputField.value.trim()) {
-                    inputField.value = `C'est ma première fois ici, aide-moi à démarrer en ${formaterNomMatiere(avatarActif)}.`;
-                    sendSasMessage();
-                }
-                sasPremierEchangeEnAttente = false;
-            }, 800);
+            // ❖ 01/11/2026 : plus d'amorçage automatique (économie de jetons) : le message d'accueil
+            // ci-dessus est figé et invite à utiliser les boutons rapides.
+            sasPremierEchangeEnAttente = false;
         }
 
         scrollToBottom('sas-chat-history');
@@ -1345,21 +1330,9 @@ function switchTeacherTool(toolID) {
         }
     }
 
-    // ❖ AMORÇAGE AUTOMATIQUE DE L'ESPACE ENSEIGNANT : au tout premier passage
-    // sur cet outil pour cet appareil (aucun historique localStorage), l'IA
-    // se présente et propose un exemple concret plutôt que de laisser
-    // l'enseignant face au message d'accueil statique et un champ vide.
-    // Se déclenche une seule fois par outil et par appareil.
-    if (!outilsDejaAmorces.has(toolID) && !localStorage.getItem(`eduka_chat_${toolID}`)) {
-        outilsDejaAmorces.add(toolID);
-        setTimeout(() => {
-            const inputField = document.getElementById(`${toolID}-user-input`);
-            if (inputField && !inputField.value.trim() && !inputField.disabled) {
-                inputField.value = MESSAGES_AMORCAGE_ENSEIGNANT[toolID] || "C'est ma première visite ici, présente-moi cet espace et propose-moi un exemple concret pour démarrer.";
-                sendTeacherMessage(toolID);
-            }
-        }, 800);
-    }
+    // ❖ 01/11/2026 : l'amorçage automatique (message caché envoyé à l'IA à la première visite) est
+    // SUPPRIMÉ pour économiser les jetons : chaque atelier affiche désormais un message d'accueil
+    // figé (voir index.html) qui invite à utiliser les boutons rapides / formulaires guidés.
     if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto(toolID);
 }
 
