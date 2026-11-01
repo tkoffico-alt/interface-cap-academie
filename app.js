@@ -6525,13 +6525,14 @@ function ajouterBoutonsPrononciationInline(messageDiv) {
     // Avant, la recherche des guillemets "..." s'appliquait au innerHTML et prenait les
     // guillemets des attributs (class="mission-devoir") pour une phrase anglaise : un bouton
     // 🔊 s'insérait dans la balise, d'où les « > » et haut-parleurs parasites dans l'encadré DEVOIR.
-    const MOTIF_GUILLEMETS = /["“”]([^"“”<>]{1,150})["“”]/g;
+    // Guillemets droits/anglais "…" ET chevrons français « … » (l'agent emploie les deux).
+    const MOTIF_GUILLEMETS = /["“”]([^"“”<>]{1,150})["“”]|«[\s\u00a0\u202f]*([^«»<>]{1,150}?)[\s\u00a0\u202f]*»/g;
     let indexPhrase = 0;
     const marcheur = document.createTreeWalker(messageDiv, NodeFilter.SHOW_TEXT, {
         acceptNode(noeud) {
             const parent = noeud.parentElement;
             if (parent && parent.closest('button, script, style, .btn-ecoute-inline')) return NodeFilter.FILTER_REJECT;
-            return /["“”]/.test(noeud.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+            return /["“”«]/.test(noeud.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
         }
     });
     const noeuds = [];
@@ -6545,8 +6546,8 @@ function ajouterBoutonsPrononciationInline(messageDiv) {
         let modifie = false;
         let m;
         while ((m = MOTIF_GUILLEMETS.exec(texte)) !== null) {
-            const phrase = m[1].trim();
-            if (!phrase || MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase)) || ressembleAuFrancais(phrase)) {
+            const phrase = (m[1] !== undefined ? m[1] : m[2] || '').trim();
+            if (!phrase || /(.)\1\1/i.test(phrase) || MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase)) || ressembleAuFrancais(phrase)) {
                 continue; // phrase française (courante ou détectée) : pas de bouton
             }
             const id = `phrase-audio-${Date.now()}-${indexPhrase}`;
