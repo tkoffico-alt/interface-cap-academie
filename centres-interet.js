@@ -96,6 +96,10 @@
         '.ci-nav{display:flex;justify-content:space-between;margin-top:16px}' +
         '.ci-lien{background:none;border:none;color:#475569;font-size:.9rem;cursor:pointer;text-decoration:underline;font-family:inherit}' +
         '.ci-btn{display:block;width:100%;padding:13px;border:none;border-radius:10px;font-size:1.02rem;font-weight:700;cursor:pointer;color:#fff;background:#F59E0B;font-family:inherit;margin-top:10px}' +
+        '.ci-bac .ci-btn{background:#14B8A6}' +
+        '.ci-bac .ci-barre>span{background:linear-gradient(90deg,#14B8A6,#0D9488)}' +
+        '.ci-bac .ci-choix button:hover,.ci-bac .ci-choix button:focus-visible{border-color:#14B8A6;background:#F0FDFA}' +
+        '.ci-bac .ci-choix button.ci-actif{border-color:#14B8A6;background:#CCFBF1}' +
         '.ci-btn.ci-vert{background:#16A34A}' +
         '.ci-btn.ci-gris{background:#64748B}' +
         '.ci-carte{border:1px solid #E2E8F0;background:#fff;border-radius:12px;padding:14px;margin:0 0 12px}' +
@@ -196,32 +200,45 @@
         // Pas d'emoji ici : certains navigateurs les affichent en « � » dans le lien WhatsApp.
         var noms = res.dominants.map(function (c) { return DIMENSIONS[c].nom; }).join(', ');
         return "Voici ce que mon test d'intérêts EdukaTchat a fait ressortir : " + noms + ". " +
-            "Ce sont des pistes pour réfléchir, pas un diagnostic. https://edukatchat.org";
+            "Ce sont des pistes pour réfléchir, pas un diagnostic. Voir le résultat : https://edukatchat.org/?ci=" + res.dominants.join('') + "&c=" + contexte;
     }
 
-    function ecranResultat() {
-        var res = calculer();
+    // partage = tableau de codes (ex. ['I','E']) quand la page est ouverte depuis le lien envoyé à un parent.
+    function ecranResultat(partage) {
+        var res = partage ? { score: null, dominants: partage, homogene: false } : calculer();
         var html = croix() + '<div style="text-align:center;font-size:2.2rem">✨</div>' +
-            '<h2>Ce qui te ressemble</h2>' +
-            '<p class="ci-sous">Voici les centres d\'intérêt qui ressortent le plus de tes réponses.</p>';
+            (partage
+                ? '<h2>Résultat du test de votre enfant</h2>' +
+                  '<p class="ci-sous">Voici les centres d\'intérêt qui sont ressortis du test EdukaTchat passé par votre enfant.</p>'
+                : '<h2>Ce qui te ressemble</h2>' +
+                  '<p class="ci-sous">Voici les centres d\'intérêt qui ressortent le plus de tes réponses.</p>');
         if (res.homogene) {
             html += '<div class="ci-alerte">Tes réponses sont très proches les unes des autres, ou peu marquées : tout t\'intéresse un peu, ou presque rien ne t\'attire encore. C\'est normal à ton âge. Tu peux refaire le test en étant plus tranché, ou en parler avec un adulte de confiance.</div>';
         }
         for (var k = 0; k < res.dominants.length; k++) {
             var code = res.dominants[k], d = DIMENSIONS[code];
-            var pct = Math.round((res.score[code] / 8) * 100);
+            var pct = res.score ? Math.round((res.score[code] / 8) * 100) : 0;
             html += '<div class="ci-carte"><h3>' + d.emoji + ' ' + d.nom + '</h3>' +
-                '<div class="ci-barre" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
-                '<p>' + d.texte + '</p>' +
-                '<p><strong>Des domaines qui peuvent te plaire :</strong> ' + d.domaines + '.</p>' +
+                (res.score ? '<div class="ci-barre" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' : '') +
+                (partage ? '' : '<p>' + d.texte + '</p>') +
+                '<p><strong>Des domaines qui peuvent ' + (partage ? 'lui' : 'te') + ' plaire :</strong> ' + d.domaines + '.</p>' +
                 '<p><strong>' + (contexte === 'bac' ? 'Pour y réfléchir après le BAC :' : 'Pour y réfléchir au lycée :') + '</strong> ' +
                 (contexte === 'bac' ? d.pistesBac : d.pistes) + '</p></div>';
         }
         html += '<div class="ci-carte" style="background:#EFF6FF;border-color:#BFDBFE"><h3>🌍 Et à l\'étranger ?</h3>' +
             '<p>Des formations dans ces domaines existent aussi dans d\'autres pays (France, Canada, Maroc, et bien d\'autres), y compris dans des établissements réputés. ' +
             'Si cela vous intéresse, renseignez-vous tôt auprès des organismes officiels (par exemple Campus France Côte d\'Ivoire pour la France) : les démarches, les dates et les conditions changent chaque année.</p></div>';
+        if (partage) {
+            html += '<p class="ci-note">Ce test donne des pistes pour réfléchir ; il ne décide pas de l\'avenir de votre enfant, et ses goûts évolueront. ' +
+                'Échangez-en avec lui, avec ses professeurs et son conseiller d\'orientation, et vérifiez toujours les conditions d\'accès auprès des sources officielles.</p>' +
+                '<button class="ci-btn" type="button" data-ci="refaire">Faire le test à mon tour</button>' +
+                '<button class="ci-lien" type="button" data-ci="fermer" style="display:block;margin:12px auto 0">Fermer</button>';
+            boite.innerHTML = html;
+            return;
+        }
         if (contexte === 'bac') {
-            html += '<button class="ci-btn" type="button" data-ci="conseiller" style="background:#14B8A6">🎓 Voir mes chances avec le Conseiller Universitaire</button>';
+            html += '<button class="ci-btn" type="button" data-ci="conseiller">🎓 Continuer avec le Conseiller Universitaire</button>' +
+                '<p class="ci-note" style="margin-top:6px">Étape suivante : tu saisis tes notes, et le Conseiller tient compte de ce profil.</p>';
         }
         html += '<p class="ci-note">Ce test donne des pistes pour réfléchir ; il ne décide pas de ton avenir, et tes goûts évolueront. ' +
             'Parles-en avec tes parents, tes professeurs et ton conseiller d\'orientation, et vérifie toujours les conditions d\'accès auprès des sources officielles.</p>' +
@@ -254,21 +271,56 @@
         else if (action === 'commencer' || action === 'refaire') demarrer();
         else if (action === 'rep') repondre(parseInt(cible.getAttribute('data-val'), 10));
         else if (action === 'retour') { if (index > 0) { index--; ecranQuestion(); } }
-        else if (action === 'conseiller') { fermer(); if (typeof ouvrirBoussoleUniv === 'function') ouvrirBoussoleUniv(); }
+        else if (action === 'conseiller') {
+            var r = calculer();   // profil gardé en mémoire de la page seulement (jamais enregistré)
+            window.__profilInterets = { codes: r.dominants.slice(), noms: r.dominants.map(function (c) { return DIMENSIONS[c].nom; }) };
+            fermer();
+            if (typeof ouvrirBoussoleUniv === 'function') ouvrirBoussoleUniv();
+        }
         else if (action === 'parents') {
             var res = calculer();
             window.open('https://wa.me/?text=' + encodeURIComponent(texteParents(res)), '_blank', 'noopener');
         }
     }
 
-    window.ouvrirCentresInteret = function (ctx) {
+    function ouvrir(ctx, partage) {
         contexte = (ctx === 'bac') ? 'bac' : 'bepc';
         creer();
+        boite.className = 'glass-card modal-content ci-boite' + (contexte === 'bac' ? ' ci-bac' : '');
         boite.removeEventListener('click', clic);
         boite.addEventListener('click', clic);
-        ecranIntro();
+        if (partage) ecranResultat(partage); else ecranIntro();
         overlay.classList.add('active');
+    }
+
+    window.ouvrirCentresInteret = function (ctx) { ouvrir(ctx, null); };
+
+    // Bandeau « profil pris en compte » dans le formulaire du Conseiller Universitaire.
+    window.majBandeauProfilInterets = function () {
+        var el = document.getElementById('univ-profil-ci');
+        if (!el) return;
+        var p = window.__profilInterets;
+        if (!p || !p.noms || !p.noms.length) { el.style.display = 'none'; return; }
+        el.textContent = '✅ Ton profil d\'intérêts sera pris en compte par le Conseiller : ' + p.noms.join(', ') + '.';
+        el.style.display = 'block';
     };
+
+    // Lien envoyé à un parent : https://edukatchat.org/?ci=IE&c=bac  → ouvre directement le résultat.
+    // Le lien ne contient que 1 à 3 lettres (aucun nom, aucune note) ; tout le reste est ignoré.
+    function lireLienPartage() {
+        try {
+            var q = new URLSearchParams(location.search);
+            var ci = q.get('ci');
+            if (!ci || !/^[RIASEC]{1,3}$/.test(ci)) return;
+            var codes = ci.split('');
+            for (var i = 0; i < codes.length; i++) { if (codes.indexOf(codes[i]) !== i) return; }
+            var ctx = q.get('c') === 'bac' ? 'bac' : 'bepc';
+            history.replaceState(null, '', location.pathname);
+            setTimeout(function () { ouvrir(ctx, codes); }, 600);
+        } catch (e) { /* jamais bloquant */ }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', lireLienPartage);
+    else lireLienPartage();
 
     // Exposé pour les tests automatisés uniquement (aucun effet sur le site).
     window.__ciTest = { calculer: function (r) { reponses = r; return calculer(); }, QUESTIONS: QUESTIONS };

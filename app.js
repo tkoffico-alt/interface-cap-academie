@@ -6723,7 +6723,10 @@ function ouvrirPhilo() { document.getElementById('philo-modal').classList.add('a
 function fermerPhilo() { document.getElementById('philo-modal').classList.remove('active'); }
 function ouvrirSciences() { document.getElementById('sciences-modal').classList.add('active'); }
 function fermerSciences() { document.getElementById('sciences-modal').classList.remove('active'); }
-function ouvrirBoussoleUniv() { document.getElementById('univ-modal').classList.add('active'); }
+function ouvrirBoussoleUniv() {
+    document.getElementById('univ-modal').classList.add('active');
+    try { if (window.majBandeauProfilInterets) window.majBandeauProfilInterets(); } catch (e) {}
+}
 function fermerBoussoleUniv() { document.getElementById('univ-modal').classList.remove('active'); }
 
 // L'Atelier de l'Élan n'a volontairement aucun formulaire préalable (contrairement à
@@ -6856,7 +6859,13 @@ const hg = document.getElementById('univ-hg').value || "0";
     setTimeout(() => {
         const inputField = document.getElementById('arene-user-input');
         if(inputField) {
-            inputField.value = "Analyse mon profil, indique-moi mes chances et propose-moi des formations adaptées.";
+            let texteDemande = "Analyse mon profil, indique-moi mes chances et propose-moi des formations adaptées.";
+            const pi = window.__profilInterets;   // résultat du test de centres d'intérêt (mémoire de la page seulement)
+            if (pi && pi.noms && pi.noms.length) {
+                texteDemande += " Mon test de centres d'intérêt a fait ressortir : " +
+                    pi.noms.map((n, i) => n + " (" + pi.codes[i] + ")").join(", ") + ".";
+            }
+            inputField.value = texteDemande;
             sendAreneMessage();
         }
     }, 800);
