@@ -1774,6 +1774,11 @@ body.dark-theme .btn-attachment:hover { color: #60A5FA; }
     z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
 }
 .modal-overlay.active { opacity: 1; pointer-events: auto; display: flex; }
+.modal-overlay.active { animation: modalVoileIn .3s ease both; }
+.modal-overlay.active .modal-content { animation: modalContenuIn .38s cubic-bezier(.22,.8,.3,1) both; }
+@keyframes modalVoileIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalContenuIn { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .modal-overlay.active, .modal-overlay.active .modal-content { animation: none; } }
 .modal-content {
     position: relative; max-width: 400px; width: 90%; text-align: center;
     max-height: 92vh; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain;
