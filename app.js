@@ -6652,7 +6652,9 @@ function calculerMO() {
     const adviceDisplay = document.getElementById('mo-advice-display');
 
     scoreDisplay.textContent = mo;
-    window.__moResultat = mo;   // mémoire de la page seulement : sert à préparer la phrase pour l'assistant
+    window.__moResultat = mo;
+    window.__mo3e = { mo: mo, frAn: frAn, frBepc: frBepc, mathAn: mathAn, mathBepc: mathBepc, pcAn: pcAn, pcBepc: pcBepc,
+        angAn: angAn, angBepc: angBepc, poidsL: poidsLitteraire, poidsS: poidsScientifique };   // mémoire de la page seulement
 
     const moisActuel = new Date().getMonth();
     const estPeriodePostBepc = (moisActuel >= 6 && moisActuel <= 8);
@@ -6701,7 +6703,9 @@ function calculerMO() {
         }
     }
 
-    adviceDisplay.innerHTML = conseil + directiveCognitive + actionHTML;
+    const boutonAnalyse = `<button onclick="analyseOrientation3e()" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">🧭 Analyse personnalisée par le Conseiller</button>
+<span style="display:block;font-size:0.8em;color:#6B7280;margin-top:6px;font-style:normal;">Il tient compte de tes moyennes et, si tu l'as passé, de ton test de centres d'intérêt.</span>`;
+    adviceDisplay.innerHTML = conseil + directiveCognitive + boutonAnalyse + actionHTML;
     resultContainer.style.display = "block";
 }
 
@@ -6818,6 +6822,72 @@ function invoquerLaboratoire() {
     preparerArene('sciences', `Le Laboratoire est actif. Protocole : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre }, true);
 }
 
+// Carte sous la réponse du Conseiller : rouvre le résultat du test (à partager) ou propose de le passer.
+function ajouterCarteProfilArene(ctx) {
+    const hist = document.getElementById('arene-chat-history');
+    if (!hist || document.getElementById('carte-profil-interets')) return;
+    const pi = window.__profilInterets;
+    const aProfil = pi && pi.ctx === ctx && pi.noms && pi.noms.length;
+    const carte = document.createElement('div');
+    carte.id = 'carte-profil-interets';
+    carte.className = 'message system-message';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.style.cssText = 'margin-top:8px;padding:9px 14px;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer;background:' + (ctx === 'bac' ? '#14B8A6' : '#F59E0B') + ';';
+    if (aProfil) {
+        carte.appendChild(document.createTextNode("🎯 Ton profil d'intérêts : "));
+        const s = document.createElement('strong'); s.textContent = pi.noms.join(', '); carte.appendChild(s);
+        carte.appendChild(document.createElement('br'));
+        b.textContent = 'Voir mon résultat et le partager';
+        b.onclick = () => { if (window.afficherMonProfilInterets) window.afficherMonProfilInterets(); };
+    } else {
+        carte.appendChild(document.createTextNode("🎯 Tu n'as pas encore passé le test de centres d'intérêt : il affinerait ce conseil. Une fois terminé, relance l'analyse."));
+        carte.appendChild(document.createElement('br'));
+        b.textContent = "Découvrir mes centres d'intérêt";
+        b.onclick = () => { if (window.ouvrirCentresInteret) window.ouvrirCentresInteret(ctx); };
+    }
+    carte.appendChild(b);
+    hist.appendChild(carte);
+}
+
+// ❖ Boussole d'Orientation (3e) : analyse PERSONNALISÉE par le Conseiller (mode « 3e (BEPC) »).
+function analyseOrientation3e() {
+    const d = window.__mo3e;
+    if (!d) { alert("Calcule d'abord ta moyenne d'orientation."); return; }
+    fermerBoussole();
+    const moy = (an, bepc) => (an > 0 && bepc > 0) ? ((an + bepc) / 2).toFixed(2) : String(an || bepc || 0);
+    const inputs = {
+        serie_bac: "3e (BEPC)",
+        date_naissance: "Non renseignée",
+        note_maths: moy(d.mathAn, d.mathBepc),
+        note_francais: moy(d.frAn, d.frBepc),
+        note_philo: "0",
+        note_pc: moy(d.pcAn, d.pcBepc),
+        note_svt: "0",
+        note_hg: "0",
+        moyenne_bac: d.mo
+    };
+    preparerArene('conseiller', "Le Conseiller analyse ta moyenne d'orientation de 3e... Que souhaites-tu savoir sur ton passage en Seconde ?", inputs);
+    let msg = "Je suis en 3e (BEPC). Analyse mon profil et conseille-moi sur mon orientation en Seconde. " +
+        "Ma moyenne d'orientation est " + d.mo + ". " +
+        "Français : année " + d.frAn + ", BEPC " + d.frBepc + ". " +
+        "Mathématiques : année " + d.mathAn + ", BEPC " + d.mathBepc + ". " +
+        "Physique-Chimie : année " + d.pcAn + ", BEPC " + d.pcBepc + ". " +
+        "Anglais : année " + d.angAn + ", BEPC " + d.angBepc.toFixed(1) + ". " +
+        "Pôle littéraire (français et anglais) : " + d.poidsL + " ; pôle scientifique (maths et physique-chimie) : " + d.poidsS + ".";
+    const pi = window.__profilInterets;
+    if (pi && pi.ctx === 'bepc' && pi.noms && pi.noms.length) {
+        msg += " Mon test de centres d'intérêt a fait ressortir : " + pi.noms.map((n, i) => n + " (" + pi.codes[i] + ")").join(", ") + ".";
+    }
+    setTimeout(() => {
+        const inputField = document.getElementById('arene-user-input');
+        if (inputField) {
+            inputField.value = msg;
+            Promise.resolve(sendAreneMessage()).then(() => ajouterCarteProfilArene('bepc')).catch(() => {});
+        }
+    }, 800);
+}
+
 function invoquerConseiller() {
     const serie = document.getElementById('univ-serie').value;
 
@@ -6862,30 +6932,13 @@ const hg = document.getElementById('univ-hg').value || "0";
         if(inputField) {
             let texteDemande = "Analyse mon profil, indique-moi mes chances et propose-moi des formations adaptées.";
             const pi = window.__profilInterets;   // résultat du test de centres d'intérêt (mémoire de la page seulement)
-            if (pi && pi.noms && pi.noms.length) {
+            if (pi && pi.ctx === 'bac' && pi.noms && pi.noms.length) {
                 texteDemande += " Mon test de centres d'intérêt a fait ressortir : " +
                     pi.noms.map((n, i) => n + " (" + pi.codes[i] + ")").join(", ") + ".";
             }
             inputField.value = texteDemande;
             // ❖ Sous la réponse du Conseiller : retour direct au résultat du test (partage SMS/WhatsApp).
-            Promise.resolve(sendAreneMessage()).then(() => {
-                const pi2 = window.__profilInterets;
-                if (!pi2 || !pi2.noms || !pi2.noms.length) return;
-                const hist = document.getElementById('arene-chat-history');
-                if (!hist || document.getElementById('carte-profil-interets')) return;
-                const carte = document.createElement('div');
-                carte.id = 'carte-profil-interets';
-                carte.className = 'message system-message';
-                carte.innerHTML = "🎯 Ton profil d'intérêts : <strong></strong><br>";
-                carte.querySelector('strong').textContent = pi2.noms.join(', ');
-                const b = document.createElement('button');
-                b.type = 'button';
-                b.textContent = 'Voir mon résultat et le partager';
-                b.style.cssText = 'margin-top:8px;padding:9px 14px;background:#14B8A6;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer;';
-                b.onclick = () => { if (window.afficherMonProfilInterets) window.afficherMonProfilInterets(); };
-                carte.appendChild(b);
-                hist.appendChild(carte);
-            }).catch(() => {});
+            Promise.resolve(sendAreneMessage()).then(() => ajouterCarteProfilArene('bac')).catch(() => {});
         }
     }, 800);
 }

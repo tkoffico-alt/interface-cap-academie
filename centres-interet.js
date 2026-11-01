@@ -229,6 +229,11 @@
         var res = partage ? { score: null, dominants: partage, homogene: false }
             : (memo ? { score: memo.score, dominants: memo.codes, homogene: !!memo.homogene } : calculer());
         resCourant = res;
+        if (!partage && !memo) {   // profil gardé en mémoire de la page seulement (jamais enregistré, jamais envoyé seul)
+            window.__profilInterets = { ctx: contexte, codes: res.dominants.slice(),
+                noms: res.dominants.map(function (c) { return DIMENSIONS[c].nom; }),
+                score: res.score, homogene: res.homogene };
+        }
         var html = croix() + '<div style="text-align:center;font-size:2.2rem">✨</div>' +
             (partage
                 ? '<h2>Résultat du test de votre enfant</h2>' +
@@ -296,9 +301,6 @@
         else if (action === 'rep') repondre(parseInt(cible.getAttribute('data-val'), 10));
         else if (action === 'retour') { if (index > 0) { index--; ecranQuestion(); } }
         else if (action === 'conseiller') {
-            var r = calculer();   // profil gardé en mémoire de la page seulement (jamais enregistré)
-            window.__profilInterets = { codes: r.dominants.slice(), noms: r.dominants.map(function (c) { return DIMENSIONS[c].nom; }),
-                score: r.score, homogene: r.homogene };
             fermer();
             if (typeof ouvrirBoussoleUniv === 'function') ouvrirBoussoleUniv();
         }
@@ -323,7 +325,8 @@
 
     // Réouvre le résultat déjà obtenu (bouton sous la réponse du Conseiller), pour le partager.
     window.afficherMonProfilInterets = function () {
-        if (window.__profilInterets) ouvrir('bac', null, window.__profilInterets);
+        var p = window.__profilInterets;
+        if (p) ouvrir(p.ctx === 'bepc' ? 'bepc' : 'bac', null, p);
     };
 
     // Bandeau « profil pris en compte » dans le formulaire du Conseiller Universitaire.
@@ -331,7 +334,7 @@
         var el = document.getElementById('univ-profil-ci');
         if (!el) return;
         var p = window.__profilInterets;
-        if (!p || !p.noms || !p.noms.length) { el.style.display = 'none'; return; }
+        if (!p || p.ctx !== 'bac' || !p.noms || !p.noms.length) { el.style.display = 'none'; return; }
         el.textContent = '✅ Ton profil d\'intérêts sera pris en compte par le Conseiller : ' + p.noms.join(', ') + '.';
         el.style.display = 'block';
     };
