@@ -225,13 +225,6 @@
         else secours();
     }
 
-    function phraseAssistant(res) {
-        var mo = window.__moResultat ? 'Ma moyenne d\'orientation est ' + window.__moResultat + '. ' : '';
-        var noms = res.dominants.map(function (c) { return DIMENSIONS[c].nom + ' (' + c + ')'; }).join(', ');
-        return 'Je voudrais de l\'aide pour mon orientation après le BEPC. ' + mo +
-            'Mon test de centres d\'intérêt a fait ressortir : ' + noms + '.';
-    }
-
     function ecranResultat(partage, memo) {
         var res = partage ? { score: null, dominants: partage, homogene: false }
             : (memo ? { score: memo.score, dominants: memo.codes, homogene: !!memo.homogene } : calculer());
@@ -272,9 +265,6 @@
         }
         html += '<p class="ci-note">Ce test donne des pistes pour réfléchir ; il ne décide pas de ton avenir, et tes goûts évolueront. ' +
             'Parles-en avec tes parents, tes professeurs et ton conseiller d\'orientation, et vérifie toujours les conditions d\'accès auprès des sources officielles.</p>' +
-            (contexte === 'bac' ? '' :
-                '<button class="ci-btn" type="button" data-ci="phrase">💬 Copier ma phrase pour l\'assistant d\'orientation</button>' +
-                '<p class="ci-note" style="margin-top:6px">Colle-la dans ton Espace Élève : l\'assistant s\'en servira avec ta moyenne d\'orientation.</p>') +
             '<button class="ci-btn ci-vert" type="button" data-ci="parents">📲 Envoyer à mes parents (WhatsApp)</button>' +
             '<button class="ci-btn ci-vert" type="button" data-ci="copier">🔗 Copier le lien (SMS, e-mail…)</button>' +
             '<button class="ci-btn ci-gris" type="button" data-ci="refaire">↺ Refaire le test</button>' +
@@ -313,7 +303,6 @@
             if (typeof ouvrirBoussoleUniv === 'function') ouvrirBoussoleUniv();
         }
         else if (action === 'copier') { copierTexte(lienResultat(resCourant || calculer()), cible, '✅ Lien copié'); }
-        else if (action === 'phrase') { copierTexte(phraseAssistant(resCourant || calculer()), cible, '✅ Phrase copiée : colle-la dans ton Espace Élève'); }
         else if (action === 'parents') {
             var res = resCourant || calculer();
             window.open('https://wa.me/?text=' + encodeURIComponent(texteParents(res)), '_blank', 'noopener');
