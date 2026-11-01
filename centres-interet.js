@@ -112,6 +112,7 @@
     var overlay = null, boite = null;
     var reponses = [];   // reponses[i] = 1..4 (jamais conservées après fermeture)
     var index = 0;
+    var resCourant = null;   // résultat actuellement affiché (pour WhatsApp / copie du lien)
     var contexte = 'bepc';   // 'bepc' (Boussole 3e) ou 'bac' (Boussole Universitaire)
 
     function creer() {
@@ -200,12 +201,41 @@
         // Pas d'emoji ici : certains navigateurs les affichent en « � » dans le lien WhatsApp.
         var noms = res.dominants.map(function (c) { return DIMENSIONS[c].nom; }).join(', ');
         return "Voici ce que mon test d'intérêts EdukaTchat a fait ressortir : " + noms + ". " +
-            "Ce sont des pistes pour réfléchir, pas un diagnostic. Voir le résultat : https://edukatchat.org/?ci=" + res.dominants.join('') + "&c=" + contexte;
+            "Ce sont des pistes pour réfléchir, pas un diagnostic. Voir le résultat : " + lienResultat(res);
     }
 
     // partage = tableau de codes (ex. ['I','E']) quand la page est ouverte depuis le lien envoyé à un parent.
-    function ecranResultat(partage) {
-        var res = partage ? { score: null, dominants: partage, homogene: false } : calculer();
+    // memo = profil déjà calculé (réouverture depuis la réponse du Conseiller), sans refaire le test.
+    function lienResultat(res) {
+        return 'https://edukatchat.org/?ci=' + res.dominants.join('') + '&c=' + contexte;
+    }
+
+    function copierTexte(texte, bouton, libelleOk) {
+        var ancien = bouton.textContent;
+        function ok() { bouton.textContent = libelleOk; setTimeout(function () { bouton.textContent = ancien; }, 2200); }
+        function secours() {
+            try {
+                var ta = document.createElement('textarea');
+                ta.value = texte; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                ok();
+            } catch (e) { bouton.textContent = 'Copie impossible : sélectionne et copie à la main'; }
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(ok, secours);
+        else secours();
+    }
+
+    function phraseAssistant(res) {
+        var mo = window.__moResultat ? 'Ma moyenne d\'orientation est ' + window.__moResultat + '. ' : '';
+        var noms = res.dominants.map(function (c) { return DIMENSIONS[c].nom + ' (' + c + ')'; }).join(', ');
+        return 'Je voudrais de l\'aide pour mon orientation après le BEPC. ' + mo +
+            'Mon test de centres d\'intérêt a fait ressortir : ' + noms + '.';
+    }
+
+    function ecranResultat(partage, memo) {
+        var res = partage ? { score: null, dominants: partage, homogene: false }
+            : (memo ? { score: memo.score, dominants: memo.codes, homogene: !!memo.homogene } : calculer());
+        resCourant = res;
         var html = croix() + '<div style="text-align:center;font-size:2.2rem">✨</div>' +
             (partage
                 ? '<h2>Résultat du test de votre enfant</h2>' +
@@ -236,13 +266,17 @@
             boite.innerHTML = html;
             return;
         }
-        if (contexte === 'bac') {
+        if (contexte === 'bac' && !memo) {
             html += '<button class="ci-btn" type="button" data-ci="conseiller">🎓 Continuer avec le Conseiller Universitaire</button>' +
                 '<p class="ci-note" style="margin-top:6px">Étape suivante : tu saisis tes notes, et le Conseiller tient compte de ce profil.</p>';
         }
         html += '<p class="ci-note">Ce test donne des pistes pour réfléchir ; il ne décide pas de ton avenir, et tes goûts évolueront. ' +
             'Parles-en avec tes parents, tes professeurs et ton conseiller d\'orientation, et vérifie toujours les conditions d\'accès auprès des sources officielles.</p>' +
+            (contexte === 'bac' ? '' :
+                '<button class="ci-btn" type="button" data-ci="phrase">💬 Copier ma phrase pour l\'assistant d\'orientation</button>' +
+                '<p class="ci-note" style="margin-top:6px">Colle-la dans ton Espace Élève : l\'assistant s\'en servira avec ta moyenne d\'orientation.</p>') +
             '<button class="ci-btn ci-vert" type="button" data-ci="parents">📲 Envoyer à mes parents (WhatsApp)</button>' +
+            '<button class="ci-btn ci-vert" type="button" data-ci="copier">🔗 Copier le lien (SMS, e-mail…)</button>' +
             '<button class="ci-btn ci-gris" type="button" data-ci="refaire">↺ Refaire le test</button>' +
             '<button class="ci-lien" type="button" data-ci="fermer" style="display:block;margin:12px auto 0">Fermer</button>';
         boite.innerHTML = html;
@@ -273,27 +307,35 @@
         else if (action === 'retour') { if (index > 0) { index--; ecranQuestion(); } }
         else if (action === 'conseiller') {
             var r = calculer();   // profil gardé en mémoire de la page seulement (jamais enregistré)
-            window.__profilInterets = { codes: r.dominants.slice(), noms: r.dominants.map(function (c) { return DIMENSIONS[c].nom; }) };
+            window.__profilInterets = { codes: r.dominants.slice(), noms: r.dominants.map(function (c) { return DIMENSIONS[c].nom; }),
+                score: r.score, homogene: r.homogene };
             fermer();
             if (typeof ouvrirBoussoleUniv === 'function') ouvrirBoussoleUniv();
         }
+        else if (action === 'copier') { copierTexte(lienResultat(resCourant || calculer()), cible, '✅ Lien copié'); }
+        else if (action === 'phrase') { copierTexte(phraseAssistant(resCourant || calculer()), cible, '✅ Phrase copiée : colle-la dans ton Espace Élève'); }
         else if (action === 'parents') {
-            var res = calculer();
+            var res = resCourant || calculer();
             window.open('https://wa.me/?text=' + encodeURIComponent(texteParents(res)), '_blank', 'noopener');
         }
     }
 
-    function ouvrir(ctx, partage) {
+    function ouvrir(ctx, partage, memo) {
         contexte = (ctx === 'bac') ? 'bac' : 'bepc';
         creer();
         boite.className = 'glass-card modal-content ci-boite' + (contexte === 'bac' ? ' ci-bac' : '');
         boite.removeEventListener('click', clic);
         boite.addEventListener('click', clic);
-        if (partage) ecranResultat(partage); else ecranIntro();
+        if (partage || memo) ecranResultat(partage, memo); else ecranIntro();
         overlay.classList.add('active');
     }
 
-    window.ouvrirCentresInteret = function (ctx) { ouvrir(ctx, null); };
+    window.ouvrirCentresInteret = function (ctx) { ouvrir(ctx, null, null); };
+
+    // Réouvre le résultat déjà obtenu (bouton sous la réponse du Conseiller), pour le partager.
+    window.afficherMonProfilInterets = function () {
+        if (window.__profilInterets) ouvrir('bac', null, window.__profilInterets);
+    };
 
     // Bandeau « profil pris en compte » dans le formulaire du Conseiller Universitaire.
     window.majBandeauProfilInterets = function () {

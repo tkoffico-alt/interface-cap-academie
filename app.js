@@ -6652,6 +6652,7 @@ function calculerMO() {
     const adviceDisplay = document.getElementById('mo-advice-display');
 
     scoreDisplay.textContent = mo;
+    window.__moResultat = mo;   // mémoire de la page seulement : sert à préparer la phrase pour l'assistant
 
     const moisActuel = new Date().getMonth();
     const estPeriodePostBepc = (moisActuel >= 6 && moisActuel <= 8);
@@ -6866,7 +6867,25 @@ const hg = document.getElementById('univ-hg').value || "0";
                     pi.noms.map((n, i) => n + " (" + pi.codes[i] + ")").join(", ") + ".";
             }
             inputField.value = texteDemande;
-            sendAreneMessage();
+            // ❖ Sous la réponse du Conseiller : retour direct au résultat du test (partage SMS/WhatsApp).
+            Promise.resolve(sendAreneMessage()).then(() => {
+                const pi2 = window.__profilInterets;
+                if (!pi2 || !pi2.noms || !pi2.noms.length) return;
+                const hist = document.getElementById('arene-chat-history');
+                if (!hist || document.getElementById('carte-profil-interets')) return;
+                const carte = document.createElement('div');
+                carte.id = 'carte-profil-interets';
+                carte.className = 'message system-message';
+                carte.innerHTML = "🎯 Ton profil d'intérêts : <strong></strong><br>";
+                carte.querySelector('strong').textContent = pi2.noms.join(', ');
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = 'Voir mon résultat et le partager';
+                b.style.cssText = 'margin-top:8px;padding:9px 14px;background:#14B8A6;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer;';
+                b.onclick = () => { if (window.afficherMonProfilInterets) window.afficherMonProfilInterets(); };
+                carte.appendChild(b);
+                hist.appendChild(carte);
+            }).catch(() => {});
         }
     }, 800);
 }
