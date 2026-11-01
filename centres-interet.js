@@ -255,7 +255,8 @@
         }
         html += '<div class="ci-carte" style="background:#EFF6FF;border-color:#BFDBFE"><h3>🌍 Et à l\'étranger ?</h3>' +
             '<p>Des formations dans ces domaines existent aussi dans d\'autres pays (France, Canada, Maroc, et bien d\'autres), y compris dans des établissements réputés. ' +
-            'Si cela vous intéresse, renseignez-vous tôt auprès des organismes officiels (par exemple Campus France Côte d\'Ivoire pour la France) : les démarches, les dates et les conditions changent chaque année.</p></div>';
+            'Si cela vous intéresse, renseignez-vous tôt auprès des organismes officiels (par exemple Campus France Côte d\'Ivoire pour la France) : les démarches, les dates et les conditions changent chaque année.</p>' +
+            '<p><a href="/etudes-etranger.html" target="_blank" rel="noopener" style="font-weight:700;color:#1D4ED8">Où se renseigner (organismes officiels) →</a></p></div>';
         if (partage) {
             html += '<p class="ci-note">Ce test donne des pistes pour réfléchir ; il ne décide pas de l\'avenir de votre enfant, et ses goûts évolueront. ' +
                 'Échangez-en avec lui, avec ses professeurs et son conseiller d\'orientation, et vérifiez toujours les conditions d\'accès auprès des sources officielles.</p>' +
