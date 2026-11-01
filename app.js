@@ -6829,8 +6829,10 @@ const hg = document.getElementById('univ-hg').value || "0";
     const moyenne = document.getElementById('univ-moyenne').value;
 
     // ✦ CE QUI CHANGE : L'alerte exige désormais la date de naissance ✦
-    if (!serie || !dateNaissance || !moyenne) {
-        alert("L'algorithme requiert au moins votre série, votre date de naissance et votre moyenne."); return;
+    // ❖ 01/11/2026 : la date de naissance est FACULTATIVE (elle ne sert qu'au filtre d'âge des
+    // universités publiques ; absente, le Conseiller le signale sans rien supposer).
+    if (!serie || !moyenne) {
+        alert("L'algorithme requiert au moins votre série et votre moyenne."); return;
     }
 
     // ✦ L'accès est désormais libre pour tous les bacheliers ✦
@@ -6838,7 +6840,7 @@ const hg = document.getElementById('univ-hg').value || "0";
 
     const inputs = {
         serie_bac: serie,
-        date_naissance: dateNaissance,
+        date_naissance: dateNaissance || "Non renseignée",
         note_maths: maths,
         note_francais: francais,
         note_philo: philo,

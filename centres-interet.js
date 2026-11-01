@@ -16,37 +16,43 @@
             emoji: '🔧', nom: 'Le bâtisseur',
             texte: "Tu aimes le concret : réparer, construire, manipuler, travailler dehors ou avec des machines.",
             domaines: "mécanique, électricité, bâtiment et travaux publics, agriculture, énergie, électronique",
-            pistes: "les filières techniques et professionnelles ; la Seconde C ouvre aussi vers l'ingénierie."
+            pistes: "les filières techniques et professionnelles ; la Seconde C ouvre aussi vers l'ingénierie.",
+            pistesBac: "les filières techniques et d'ingénierie (BTS, écoles d'ingénieurs, instituts techniques) en électricité, mécanique, génie civil, énergie ou agronomie."
         },
         I: {
             emoji: '🔬', nom: 'Le chercheur',
             texte: "Tu es curieux : tu veux comprendre comment les choses marchent, tester, résoudre des problèmes difficiles.",
             domaines: "sciences, médecine et pharmacie, ingénierie, informatique, recherche, agronomie",
-            pistes: "la Seconde C (scientifique), qui ouvre ensuite aux séries scientifiques."
+            pistes: "la Seconde C (scientifique), qui ouvre ensuite aux séries scientifiques.",
+            pistesBac: "les filières scientifiques, de santé, d'ingénierie, d'informatique ou de recherche, à l'université ou en école spécialisée."
         },
         A: {
             emoji: '🎨', nom: 'Le créatif',
             texte: "Tu as besoin de t'exprimer : écrire, dessiner, chanter, jouer, inventer, avoir ton propre style.",
             domaines: "lettres et langues, journalisme et communication, arts et musique, audiovisuel, design",
-            pistes: "la Seconde A (littéraire) ; les métiers d'art ont aussi des écoles spécialisées."
+            pistes: "la Seconde A (littéraire) ; les métiers d'art ont aussi des écoles spécialisées.",
+            pistesBac: "les lettres, langues, communication, journalisme, arts et audiovisuel, à l'université ou en école spécialisée."
         },
         S: {
             emoji: '🤝', nom: "L'aidant",
             texte: "Tu aimes les autres : aider, expliquer, écouter, soigner, travailler en équipe.",
             domaines: "enseignement, santé, travail social, psychologie, droit, accompagnement",
-            pistes: "la Seconde A pour l'enseignement, le droit ou le travail social ; la Seconde C pour les métiers de la santé."
+            pistes: "la Seconde A pour l'enseignement, le droit ou le travail social ; la Seconde C pour les métiers de la santé.",
+            pistesBac: "les filières d'enseignement, de santé, de droit, de psychologie et de travail social."
         },
         E: {
             emoji: '🚀', nom: 'Le meneur',
             texte: "Tu aimes prendre des initiatives : convaincre, diriger, organiser, lancer des projets.",
             domaines: "commerce et marketing, gestion, entrepreneuriat, droit, management, communication",
-            pistes: "la Seconde A ou la Seconde C selon le métier visé ; les filières de gestion et de commerce."
+            pistes: "la Seconde A ou la Seconde C selon le métier visé ; les filières de gestion et de commerce.",
+            pistesBac: "les filières de commerce, de gestion, de droit, de marketing et de management, à l'université ou en école de commerce."
         },
         C: {
             emoji: '📊', nom: "L'organisateur",
             texte: "Tu aimes que les choses soient claires et en ordre : classer, calculer, suivre des règles, gérer avec soin.",
             domaines: "comptabilité, banque et assurance, administration, statistiques, logistique, secrétariat",
-            pistes: "les filières de gestion et de comptabilité ; la Seconde A ou C pour l'économie et la finance."
+            pistes: "les filières de gestion et de comptabilité ; la Seconde A ou C pour l'économie et la finance.",
+            pistesBac: "les filières de comptabilité, de gestion, de banque et d'assurance, d'administration et de statistiques."
         }
     };
     var ORDRE = ['R', 'I', 'A', 'S', 'E', 'C'];
@@ -78,7 +84,7 @@
         '.ci-boite h2{color:#0F172A;margin:0 0 6px;text-align:center}' +
         '.ci-fermer{position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.7rem;line-height:1;cursor:pointer;color:#0F172A}' +
         '.ci-sous{color:#475569;font-size:.92rem;text-align:center;margin:0 0 14px;line-height:1.45}' +
-        '.ci-liste{margin:0 0 16px;padding-left:20px;color:#334155;font-size:.92rem;line-height:1.55}' +
+        '.ci-liste{margin:0 0 16px;padding-left:20px;color:#334155;font-size:.92rem;line-height:1.55;text-align:left}' +
         '.ci-barre{height:8px;background:#E2E8F0;border-radius:99px;overflow:hidden;margin:6px 0 4px}' +
         '.ci-barre>span{display:block;height:100%;background:linear-gradient(90deg,#F59E0B,#EF4444);border-radius:99px;transition:width .3s}' +
         '.ci-compteur{font-size:.82rem;color:#64748B;text-align:right;margin:0 0 14px}' +
@@ -102,6 +108,7 @@
     var overlay = null, boite = null;
     var reponses = [];   // reponses[i] = 1..4 (jamais conservées après fermeture)
     var index = 0;
+    var contexte = 'bepc';   // 'bepc' (Boussole 3e) ou 'bac' (Boussole Universitaire)
 
     function creer() {
         if (overlay) return;
@@ -186,7 +193,8 @@
     }
 
     function texteParents(res) {
-        var noms = res.dominants.map(function (c) { return DIMENSIONS[c].emoji + ' ' + DIMENSIONS[c].nom; }).join(', ');
+        // Pas d'emoji ici : certains navigateurs les affichent en « � » dans le lien WhatsApp.
+        var noms = res.dominants.map(function (c) { return DIMENSIONS[c].nom; }).join(', ');
         return "Voici ce que mon test d'intérêts EdukaTchat a fait ressortir : " + noms + ". " +
             "Ce sont des pistes pour réfléchir, pas un diagnostic. https://edukatchat.org";
     }
@@ -206,7 +214,14 @@
                 '<div class="ci-barre" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
                 '<p>' + d.texte + '</p>' +
                 '<p><strong>Des domaines qui peuvent te plaire :</strong> ' + d.domaines + '.</p>' +
-                '<p><strong>Pour y réfléchir au lycée :</strong> ' + d.pistes + '</p></div>';
+                '<p><strong>' + (contexte === 'bac' ? 'Pour y réfléchir après le BAC :' : 'Pour y réfléchir au lycée :') + '</strong> ' +
+                (contexte === 'bac' ? d.pistesBac : d.pistes) + '</p></div>';
+        }
+        html += '<div class="ci-carte" style="background:#EFF6FF;border-color:#BFDBFE"><h3>🌍 Et à l\'étranger ?</h3>' +
+            '<p>Des formations dans ces domaines existent aussi dans d\'autres pays (France, Canada, Maroc, et bien d\'autres), y compris dans des établissements réputés. ' +
+            'Si cela vous intéresse, renseignez-vous tôt auprès des organismes officiels (par exemple Campus France Côte d\'Ivoire pour la France) : les démarches, les dates et les conditions changent chaque année.</p></div>';
+        if (contexte === 'bac') {
+            html += '<button class="ci-btn" type="button" data-ci="conseiller" style="background:#14B8A6">🎓 Voir mes chances avec le Conseiller Universitaire</button>';
         }
         html += '<p class="ci-note">Ce test donne des pistes pour réfléchir ; il ne décide pas de ton avenir, et tes goûts évolueront. ' +
             'Parles-en avec tes parents, tes professeurs et ton conseiller d\'orientation, et vérifie toujours les conditions d\'accès auprès des sources officielles.</p>' +
@@ -239,13 +254,15 @@
         else if (action === 'commencer' || action === 'refaire') demarrer();
         else if (action === 'rep') repondre(parseInt(cible.getAttribute('data-val'), 10));
         else if (action === 'retour') { if (index > 0) { index--; ecranQuestion(); } }
+        else if (action === 'conseiller') { fermer(); if (typeof ouvrirBoussoleUniv === 'function') ouvrirBoussoleUniv(); }
         else if (action === 'parents') {
             var res = calculer();
             window.open('https://wa.me/?text=' + encodeURIComponent(texteParents(res)), '_blank', 'noopener');
         }
     }
 
-    window.ouvrirCentresInteret = function () {
+    window.ouvrirCentresInteret = function (ctx) {
+        contexte = (ctx === 'bac') ? 'bac' : 'bepc';
         creer();
         boite.removeEventListener('click', clic);
         boite.addEventListener('click', clic);

@@ -1978,9 +1978,9 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.48"></script>
+    <script src="app.js?v=3.49"></script>
     <script src="visite-guidee.js?v=4"></script>
-    <script src="centres-interet.js?v=1"></script>
+    <script src="centres-interet.js?v=2"></script>
 
     <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
         <!-- Le Canal de Communication -->
@@ -2075,7 +2075,7 @@
                 </select>
             </div>
             <div style="flex: 1;">
-                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Date de naissance :</label>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Date de naissance <span style="font-weight: normal; color: #64748B;">(facultatif)</span> :</label>
                 <input type="date" id="univ-date-naissance" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8; color: #0F172A; font-family: inherit;">
             </div>
         </div>
@@ -2112,6 +2112,11 @@
         </div>
         <div style="text-align: center;">
             <button onclick="invoquerConseiller()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #14B8A6; color: white; border: none; border-radius: 4px; cursor: pointer; transition: 0.3s;">Lancer l'Analyse</button>
+        </div>
+        <p style="text-align: center; font-size: 0.78em; color: #64748B; margin: 8px 0 0;">La date de naissance sert seulement à vérifier la limite d'âge d'accès aux universités publiques. Tu peux la laisser vide.</p>
+        <div style="margin-top: 18px; padding: 14px; border-radius: 10px; background: rgba(20,184,166,0.12); text-align: center;">
+            <p style="margin: 0 0 10px; color: #0F172A; font-size: 0.92em; line-height: 1.45;">Tu hésites encore sur ta filière&nbsp;? <strong>12 questions, 2 minutes.</strong></p>
+            <button type="button" onclick="fermerBoussoleUniv(); ouvrirCentresInteret('bac')" style="padding: 10px 16px; background-color: #14B8A6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">🎯 Découvrir mes centres d'intérêt</button>
         </div>
     </div>
 </div>
