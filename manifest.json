@@ -1,7 +1,7 @@
 {
   "name": "EdukaTchat",
   "short_name": "EdukaTchat",
-  "description": "Le seul répétiteur qui suit ton cahier de texte",
+  "description": "L'IA qui fait réfléchir, sans tricher",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
