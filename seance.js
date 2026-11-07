@@ -122,6 +122,9 @@
       $('jeu-position').textContent = 'Question ' + q.position + ' sur ' + q.total;
       $('jeu-mode').textContent = q.mode === 'examen' ? 'Examen' : 'Devoir';
       $('jeu-barre').style.width = Math.round(100 * (q.position - 1) / q.total) + '%';
+      var support = (etat.info && etat.info.texte_support) || '';
+      $('jeu-texte-corps').textContent = support;
+      $('jeu-texte').classList.toggle('cache', !support);
       $('jeu-question').innerHTML = rendreTexte(q.question);
       var zone = $('jeu-options'); zone.textContent = '';
       var lettres = ['A', 'B', 'C', 'D'];

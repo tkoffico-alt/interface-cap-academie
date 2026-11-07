@@ -156,7 +156,7 @@
     var msg = $('gen-msg'); msg.textContent = '';
     if (!$('c-chapitre').value.trim()) { msg.textContent = 'Indiquez d’abord le chapitre.'; return; }
     var b = $('btn-generer'); b.disabled = true; b.textContent = 'Génération en cours… (jusqu’à 1 minute)';
-    appel('/generer', { chapitre: $('c-chapitre').value.trim(), matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim(), nb: 15, extrait: $('c-extrait').value }).then(function (res) {
+    appel('/generer', { chapitre: $('c-chapitre').value.trim(), matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim(), nb: 15, extrait: $('c-extrait').value || $('c-texte').value }).then(function (res) {
       b.disabled = false; b.textContent = '✨ Générer 15 questions avec l’IA';
       if (!res.ok) { msg.textContent = messageErreur(res); return; }
       etat.questions = etat.questions.concat(res.donnees.questions).slice(0, 40);
@@ -171,7 +171,7 @@
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
   function viderFormulaire() {
-    ['c-titre', 'c-matiere', 'c-classe', 'c-chapitre', 'c-extrait', 'c-roster'].forEach(function (id) { $(id).value = ''; });
+    ['c-titre', 'c-matiere', 'c-classe', 'c-chapitre', 'c-extrait', 'c-texte', 'c-roster'].forEach(function (id) { $(id).value = ''; });
     $('c-mode').value = 'devoir'; $('c-duree').value = '45';
     etat.questions = []; etat.rosterCopie = null; $('roster-apercu').textContent = ''; $('btn-vider-roster').classList.add('cache');
     $('gen-msg').textContent = '';
@@ -192,7 +192,7 @@
       titre: $('c-titre').value.trim(), matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim(),
       chapitre: $('c-chapitre').value.trim(), mode: $('c-mode').value, duree_question: parseInt($('c-duree').value, 10),
       ouvre_le: $('c-ouvre').value, ferme_le: $('c-ferme').value, nb_questions: parseInt($('c-nb').value, 10) || 10,
-      questions: etat.questions, roster: liste.map(function (e) { return e.affiche; })
+      texte_support: $('c-texte').value, questions: etat.questions, roster: liste.map(function (e) { return e.affiche; })
     };
     var b = $('btn-creer'); b.disabled = true; b.textContent = 'Création…';
     appel('', corps).then(function (res) {
@@ -218,6 +218,7 @@
       viderFormulaire();
       $('c-titre').value = (d.titre + ' (2)').slice(0, 80); $('c-matiere').value = d.matiere || ''; $('c-classe').value = d.classe || '';
       $('c-chapitre').value = d.chapitre || ''; $('c-mode').value = d.mode; $('c-duree').value = String(d.duree_question);
+      $('c-texte').value = d.texte_support || '';
       etat.questions = d.questions;
       var local = listeLocale(code);
       etat.rosterCopie = local.length ? local : d.roster.map(function (n) { return { matricule: '', nomComplet: n, affiche: n }; });

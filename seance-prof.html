@@ -83,6 +83,9 @@
 
       <div class="carte">
         <h2>Questions</h2>
+        <label for="c-texte">Texte ou document support (facultatif : affiché aux élèves pendant la séance)</label>
+        <textarea id="c-texte" maxlength="4000" style="min-height:120px" placeholder="Collez ici le texte à lire (français, histoire, anglais, SVT…). Les élèves le verront au-dessus des questions. 4000 caractères au maximum."></textarea>
+        <p class="doux">Si ce champ est rempli et que « Extrait de votre leçon » est vide, l'IA s'appuie sur ce texte pour écrire les questions.</p>
         <label for="c-extrait">Extrait de votre leçon (facultatif : l'IA s'en servira)</label>
         <textarea id="c-extrait" maxlength="3000" style="min-height:100px" placeholder="Collez ici un passage de votre leçon, ou laissez vide pour suivre le programme."></textarea>
         <button type="button" id="btn-generer" class="btn btn-sec">✨ Générer 15 questions avec l'IA</button>
@@ -162,6 +165,6 @@
   <footer class="pied">EdukaTchat — évaluer autrement.</footer>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" defer></script>
-<script src="seance-prof.js?v=3" defer></script>
+<script src="seance-prof.js?v=4" defer></script>
 </body>
 </html>
