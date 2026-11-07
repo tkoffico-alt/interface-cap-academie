@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   var API = 'https://api.edukatchat.org/api/seances';
-  var etat = { sceau: '', questions: [], code: '', tableau: null, rosterCopie: null };
+  var etat = { sceau: '', sections: [], questions: [], code: '', tableau: null, rosterCopie: null };
 
   function $(id) { return document.getElementById(id); }
   function lire(c) { try { return localStorage.getItem(c) || ''; } catch (e) { return ''; } }
@@ -88,6 +88,7 @@
 
   /* ---------- Questions ---------- */
   function majNb() {
+    var blocNb = $('bloc-nb'); if (blocNb) blocNb.style.display = etat.sections.length ? 'none' : '';
     var n = etat.questions.length, sel = $('c-nb'), valeur = parseInt(sel.value, 10) || 10;
     var maxi = Math.min(30, Math.max(n, 5));
     sel.textContent = '';
@@ -112,11 +113,60 @@
   }
   var apercus = [];
   window.addEventListener('load', function () { apercus.forEach(function (f) { f(); }); });
+  function dessinerSections() {
+    var zone = $('liste-sections'); zone.textContent = '';
+    etat.sections.forEach(function (sec, i) {
+      var ligne = el('div', 'ligne-opt'); ligne.style.cssText = 'display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px';
+      var nom = el('input'); nom.type = 'text'; nom.maxLength = 30; nom.value = sec.nom; nom.placeholder = 'Nom (ex. Vocabulaire)';
+      nom.setAttribute('aria-label', 'Nom de la section ' + (i + 1)); nom.style.flex = '1 1 150px';
+      nom.addEventListener('input', function () { sec.nom = nom.value; });
+      nom.addEventListener('change', function () {
+        var nouveau = nom.value.trim();
+        etat.questions.forEach(function (q) { if (sec.prec && q.section === sec.prec) q.section = nouveau; });
+        sec.prec = nouveau; dessinerQuestions();
+      });
+      var nb = el('input'); nb.type = 'number'; nb.min = '1'; nb.max = '15'; nb.value = String(sec.nb); nb.style.width = '70px';
+      nb.setAttribute('aria-label', 'Questions par élève dans la section ' + (i + 1));
+      nb.addEventListener('input', function () { sec.nb = Math.min(15, Math.max(1, parseInt(nb.value, 10) || 1)); });
+      var gen = el('button', 'btn btn-sec', '✨ Générer'); gen.type = 'button';
+      gen.addEventListener('click', function () { genererSection(i, gen); });
+      var ret = el('button', 'lien-discret', 'Retirer'); ret.type = 'button';
+      ret.addEventListener('click', function () {
+        etat.questions.forEach(function (q) { if (q.section === sec.nom.trim()) q.section = ''; });
+        etat.sections.splice(i, 1); dessinerSections(); dessinerQuestions();
+      });
+      ligne.appendChild(nom); ligne.appendChild(el('span', 'doux', 'questions par élève :')); ligne.appendChild(nb); ligne.appendChild(gen); ligne.appendChild(ret);
+      zone.appendChild(ligne);
+    });
+  }
+  function genererSection(i, b) {
+    var sec = etat.sections[i], msg = $('gen-msg'); msg.textContent = '';
+    if (!sec.nom.trim()) { msg.textContent = 'Donnez d’abord un nom à la section.'; return; }
+    if (!$('c-chapitre').value.trim()) { msg.textContent = 'Indiquez d’abord le chapitre.'; return; }
+    var ancien = b.textContent; b.disabled = true; b.textContent = 'Génération…';
+    appel('/generer', { chapitre: ($('c-chapitre').value.trim() + ' — ' + sec.nom.trim()).slice(0, 120), matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim(),
+      nb: Math.min(25, Math.max(6, 2 * sec.nb)), extrait: $('c-extrait').value || $('c-texte').value }).then(function (res) {
+      b.disabled = false; b.textContent = ancien;
+      if (!res.ok) { msg.textContent = messageErreur(res); return; }
+      var nouvelles = res.donnees.questions.map(function (q) { q.section = sec.nom.trim(); return q; });
+      etat.questions = etat.questions.concat(nouvelles).slice(0, 40);
+      dessinerQuestions();
+      msg.textContent = nouvelles.length + ' questions générées pour « ' + sec.nom.trim() + ' » : relisez-les avant de lancer la séance.';
+    });
+  }
   function dessinerQuestions() {
     var zone = $('liste-questions'); zone.textContent = ''; apercus = [];
     etat.questions.forEach(function (q, i) {
       var bloc = el('div', 'q-edit');
       bloc.appendChild(el('div', 'doux', 'Question ' + (i + 1) + ' · source : ' + (q.source === 'ia' ? 'IA (à vérifier)' : 'enseignant')));
+      if (etat.sections.length) {
+        var selSec = el('select'); selSec.setAttribute('aria-label', 'Section de la question ' + (i + 1));
+        var o0 = el('option', '', '(aucune section : question non utilisée)'); o0.value = ''; selSec.appendChild(o0);
+        etat.sections.forEach(function (sec) { if (sec.nom.trim()) { var o = el('option', '', sec.nom.trim()); o.value = sec.nom.trim(); selSec.appendChild(o); } });
+        selSec.value = q.section || '';
+        selSec.addEventListener('change', function () { q.section = selSec.value; });
+        bloc.appendChild(selSec);
+      }
       var t = el('textarea'); t.value = q.question; t.maxLength = 300; t.setAttribute('aria-label', 'Énoncé de la question ' + (i + 1));
       t.addEventListener('input', function () { q.question = t.value; });
       bloc.appendChild(t);
@@ -171,9 +221,9 @@
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
   function viderFormulaire() {
-    ['c-titre', 'c-matiere', 'c-classe', 'c-chapitre', 'c-extrait', 'c-texte', 'c-roster'].forEach(function (id) { $(id).value = ''; });
+    ['c-titre', 'c-matiere', 'c-classe', 'c-chapitre', 'c-extrait', 'c-texte', 'c-ecrit', 'c-roster'].forEach(function (id) { $(id).value = ''; });
     $('c-mode').value = 'devoir'; $('c-duree').value = '45';
-    etat.questions = []; etat.rosterCopie = null; $('roster-apercu').textContent = ''; $('btn-vider-roster').classList.add('cache');
+    etat.questions = []; etat.sections = []; etat.rosterCopie = null; $('roster-apercu').textContent = ''; $('btn-vider-roster').classList.add('cache');
     $('gen-msg').textContent = '';
   }
   function ouvrirCreation() {
@@ -181,6 +231,7 @@
     $('c-ouvre').value = dateLocale(new Date(maintenant.getTime() + 10 * 60000));
     $('c-ferme').value = dateLocale(new Date(maintenant.getTime() + 48 * 3600 * 1000));
     $('creation-msg').textContent = '';
+    dessinerSections();
     dessinerQuestions();
     ecran('creation');
   }
@@ -192,7 +243,8 @@
       titre: $('c-titre').value.trim(), matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim(),
       chapitre: $('c-chapitre').value.trim(), mode: $('c-mode').value, duree_question: parseInt($('c-duree').value, 10),
       ouvre_le: $('c-ouvre').value, ferme_le: $('c-ferme').value, nb_questions: parseInt($('c-nb').value, 10) || 10,
-      texte_support: $('c-texte').value, questions: etat.questions, roster: liste.map(function (e) { return e.affiche; })
+      texte_support: $('c-texte').value, consigne_ecrite: $('c-ecrit').value, questions: etat.questions,
+      sections: etat.sections.filter(function (x) { return x.nom.trim(); }).map(function (x) { return { nom: x.nom.trim(), nb: x.nb }; }), roster: liste.map(function (e) { return e.affiche; })
     };
     var b = $('btn-creer'); b.disabled = true; b.textContent = 'Création…';
     appel('', corps).then(function (res) {
@@ -218,7 +270,8 @@
       viderFormulaire();
       $('c-titre').value = (d.titre + ' (2)').slice(0, 80); $('c-matiere').value = d.matiere || ''; $('c-classe').value = d.classe || '';
       $('c-chapitre').value = d.chapitre || ''; $('c-mode').value = d.mode; $('c-duree').value = String(d.duree_question);
-      $('c-texte').value = d.texte_support || '';
+      $('c-texte').value = d.texte_support || ''; $('c-ecrit').value = d.consigne_ecrite || '';
+      etat.sections = (d.sections || []).map(function (x) { return { nom: x.nom, nb: x.nb, prec: x.nom }; });
       etat.questions = d.questions;
       var local = listeLocale(code);
       etat.rosterCopie = local.length ? local : d.roster.map(function (n) { return { matricule: '', nomComplet: n, affiche: n }; });
@@ -359,6 +412,10 @@
     $('t-dupliquer').addEventListener('click', function () { dupliquer(etat.code); });
     $('btn-annuler').addEventListener('click', afficherListe);
     $('btn-generer').addEventListener('click', generer);
+    $('btn-ajouter-section').addEventListener('click', function () {
+      if (etat.sections.length >= 6) return;
+      etat.sections.push({ nom: '', nb: 3, prec: '' }); dessinerSections(); dessinerQuestions();
+    });
     $('btn-ajouter-q').addEventListener('click', function () {
       if (etat.questions.length >= 40) return;
       etat.questions.push({ question: '', options: ['', '', '', ''], bonne: 0, explication: '', source: 'enseignant' }); dessinerQuestions();

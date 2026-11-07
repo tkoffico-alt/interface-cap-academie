@@ -122,6 +122,9 @@
       $('jeu-position').textContent = 'Question ' + q.position + ' sur ' + q.total;
       $('jeu-mode').textContent = q.mode === 'examen' ? 'Examen' : 'Devoir';
       $('jeu-barre').style.width = Math.round(100 * (q.position - 1) / q.total) + '%';
+      var secNom = q.section || '';
+      $('jeu-section').textContent = secNom ? 'Section : ' + secNom : '';
+      $('jeu-section').classList.toggle('cache', !secNom);
       var support = (etat.info && etat.info.texte_support) || '';
       $('jeu-texte-corps').textContent = support;
       $('jeu-texte').classList.toggle('cache', !support);
@@ -181,6 +184,13 @@
   }
 
   /* ---------- Résultat ---------- */
+  function ajouterConsigne(corps) {
+    var c = etat.info && etat.info.consigne_ecrite;
+    if (!c) return;
+    corps.appendChild(el('h2', '', '✍️ Production écrite'));
+    var p = el('p'); p.style.whiteSpace = 'pre-wrap'; p.textContent = c; corps.appendChild(p);
+    corps.appendChild(el('p', 'doux', 'À rédiger sur ton cahier ou sur une feuille : elle n’est pas notée ici, ton enseignant la corrigera.'));
+  }
   function afficherResultat() {
     arreterChrono();
     appel(code + '/resultat', 'POST', { appareil: etat.appareil }).then(function (res) {
@@ -191,12 +201,14 @@
       if (!d.disponible) {
         corps.appendChild(el('p', '', 'Tu as répondu à toutes les questions. Bravo !'));
         corps.appendChild(el('p', 'doux', 'En mode examen, la note et la correction apparaissent à la fermeture de la séance, le ' + quand(d.ferme_le) + '. Reviens sur cette page à ce moment-là.'));
+        ajouterConsigne(corps);
         $('btn-fin-actualiser').classList.remove('cache');
         ecran('fin'); return;
       }
       attendreKatex().then(function () {
         corps.appendChild(el('div', 'score-grand', d.score + ' / ' + d.total));
         if (d.moyenne_classe != null) corps.appendChild(el('p', 'doux', 'Moyenne de la classe : ' + String(d.moyenne_classe).replace('.', ',') + ' / ' + d.total + ' (' + d.nb_termines + ' élèves).'));
+        ajouterConsigne(corps);
         corps.appendChild(el('h2', '', 'Ma correction'));
         d.correction.forEach(function (c, n) {
           var bloc = el('div', 'corr');

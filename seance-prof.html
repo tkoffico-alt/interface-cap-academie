@@ -91,11 +91,20 @@
         <button type="button" id="btn-generer" class="btn btn-sec">✨ Générer 15 questions avec l'IA</button>
         <p class="doux" style="margin-top:8px">L'IA peut se tromper : relisez chaque question, corrigez-la ou supprimez-la avant de lancer la séance.</p>
         <p id="gen-msg" class="erreur-msg" role="alert"></p>
+        <h3 style="margin:18px 0 4px;font-size:1rem">Sections du devoir (facultatif)</h3>
+        <p class="doux">Pour imposer une structure (ex. Vocabulaire : 4 questions, puis Compréhension : 6), créez des sections. Chaque élève reçoit, dans l'ordre des sections, le nombre de questions indiqué, tirées au hasard dans chaque section. Le bouton « ✨ Générer » d'une section demande à l'IA des questions pour cette section.</p>
+        <div id="liste-sections"></div>
+        <button type="button" id="btn-ajouter-section" class="btn btn-sec">+ Ajouter une section</button>
         <div id="liste-questions"></div>
         <button type="button" id="btn-ajouter-q" class="btn btn-sec">+ Ajouter une question</button>
-        <label for="c-nb">Nombre de questions posées à chaque élève</label>
-        <select id="c-nb"></select>
-        <p class="doux">Chaque élève reçoit un tirage différent, dans un ordre différent, avec les choix mélangés.</p>
+        <div id="bloc-nb">
+          <label for="c-nb">Nombre de questions posées à chaque élève</label>
+          <select id="c-nb"></select>
+          <p class="doux">Chaque élève reçoit un tirage différent, dans un ordre différent, avec les choix mélangés.</p>
+        </div>
+        <label for="c-ecrit">Consigne de production écrite (facultatif : affichée à la fin du quiz)</label>
+        <textarea id="c-ecrit" maxlength="1500" style="min-height:90px" placeholder="Ex. : Rédige un paragraphe argumenté de 12 lignes sur le sujet du texte. À faire sur ton cahier."></textarea>
+        <p class="doux">Cette partie n'est pas notée par EdukaTchat : l'élève la rédige sur papier et vous la corrigez (par exemple avec l'outil « Corriger des copies »).</p>
       </div>
 
       <div class="carte">
@@ -165,6 +174,6 @@
   <footer class="pied">EdukaTchat — évaluer autrement.</footer>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" defer></script>
-<script src="seance-prof.js?v=4" defer></script>
+<script src="seance-prof.js?v=5" defer></script>
 </body>
 </html>
