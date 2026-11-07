@@ -105,6 +105,7 @@
         <label for="c-ecrit">Consigne de production écrite (facultatif : affichée à la fin du quiz)</label>
         <textarea id="c-ecrit" maxlength="1500" style="min-height:90px" placeholder="Ex. : Rédige un paragraphe argumenté de 12 lignes sur le sujet du texte. À faire sur ton cahier."></textarea>
         <p class="doux">Cette partie n'est pas notée par EdukaTchat : l'élève la rédige sur papier et vous la corrigez (par exemple avec l'outil « Corriger des copies »).</p>
+        <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:8px"><input type="checkbox" id="c-photo" style="margin-top:4px;min-width:20px;min-height:20px"><span>Permettre à l'élève d'envoyer une <b>photo de sa copie</b> à la fin du quiz (facultatif pour l'élève). Les photos sont réduites avant l'envoi, visibles par vous seul dans le tableau des résultats, et supprimées 7 jours après leur envoi.</span></label>
       </div>
 
       <div class="carte">
@@ -148,6 +149,12 @@
         <p class="doux" id="t-resume"></p>
         <div style="overflow-x:auto"><table class="tableau" id="t-table"></table></div>
         <p id="t-absents" class="doux" style="margin-top:10px"></p>
+        <p id="t-photo-note" class="doux cache" style="margin-top:10px"></p>
+        <div id="t-photo-zone" class="cache" style="margin:12px 0">
+          <p id="t-photo-titre" class="doux"></p>
+          <img id="t-photo-img" alt="Photo de la copie" style="max-width:100%;border:1px solid #cbd5e1;border-radius:8px">
+          <div><button type="button" id="t-photo-fermer" class="btn btn-sec" style="margin-top:8px">Fermer la photo</button></div>
+        </div>
         <button type="button" id="t-export" class="btn">⬇️ Exporter pour mon tableur (CSV)</button>
         <details style="margin-top:12px">
           <summary class="doux">Associer les matricules de ma classe (liste collée sur cet appareil)</summary>
@@ -174,8 +181,6 @@
   <footer class="pied">EdukaTchat — évaluer autrement.</footer>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" defer></script>
-<script src="seance-prof.js?v=5" defer></script>
+<script src="seance-prof.js?v=6" defer></script>
 </body>
 </html>
-
-<!-- relance deploiement sections v5 -->

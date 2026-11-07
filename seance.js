@@ -184,12 +184,81 @@
   }
 
   /* ---------- Résultat ---------- */
-  function ajouterConsigne(corps) {
+  /* Réduit la photo avant l'envoi (≈ 150-250 Ko au lieu de plusieurs Mo) : ménage les données mobiles de l'élève. */
+  function reduirePhoto(fichier) {
+    return new Promise(function (resolve, reject) {
+      var lecteur = new FileReader();
+      lecteur.onerror = function () { reject(); };
+      lecteur.onload = function () {
+        var img = new Image();
+        img.onerror = function () { reject(); };
+        img.onload = function () {
+          var essais = [[1500, 0.72], [1300, 0.62], [1100, 0.55], [900, 0.5]];
+          for (var i = 0; i < essais.length; i++) {
+            var ratio = Math.min(1, essais[i][0] / Math.max(img.width, img.height));
+            var cv = document.createElement('canvas');
+            cv.width = Math.max(1, Math.round(img.width * ratio)); cv.height = Math.max(1, Math.round(img.height * ratio));
+            var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
+            cx.drawImage(img, 0, 0, cv.width, cv.height);
+            var url = cv.toDataURL('image/jpeg', essais[i][1]);
+            if (url.length * 0.75 <= 300000 || i === essais.length - 1) { resolve(url); return; }
+          }
+        };
+        img.src = lecteur.result;
+      };
+      lecteur.readAsDataURL(fichier);
+    });
+  }
+  function blocPhoto(corps, d) {
+    if (!(etat.info && etat.info.copie_photo)) return;
+    var bloc = el('div'); bloc.style.marginTop = '14px';
+    bloc.appendChild(el('h2', '', '📷 Envoyer ma copie en photo (facultatif)'));
+    var info = el('p', 'doux', d && d.copie_envoyee
+      ? 'Ta copie a été envoyée ✓ Tu peux en envoyer une autre pour la remplacer.'
+      : 'Quand tu as fini sur ton cahier : prends ta feuille en photo, bien à plat et bien éclairée. La photo est réduite avant l’envoi et supprimée automatiquement 7 jours après.');
+    bloc.appendChild(info);
+    var champ = document.createElement('input'); champ.type = 'file'; champ.accept = 'image/*'; champ.style.display = 'none';
+    var choisir = el('button', 'btn btn-sec', d && d.copie_envoyee ? 'Choisir une autre photo' : 'Choisir ou prendre une photo'); choisir.type = 'button';
+    var aper = document.createElement('img'); aper.alt = 'Aperçu de ta copie'; aper.style.cssText = 'display:none;max-width:100%;margin:10px 0;border:1px solid #cbd5e1;border-radius:8px';
+    var envoyer = el('button', 'btn', 'Envoyer cette photo'); envoyer.type = 'button'; envoyer.style.display = 'none'; envoyer.style.marginTop = '8px';
+    var msg = el('p', 'erreur-msg'); msg.setAttribute('role', 'alert');
+    var prete = '';
+    choisir.addEventListener('click', function () { champ.click(); });
+    champ.addEventListener('change', function () {
+      var f = champ.files && champ.files[0]; msg.textContent = ''; msg.style.color = '';
+      if (!f) return;
+      if (!/^image\//.test(f.type)) { msg.textContent = 'Choisis une photo (image).'; return; }
+      choisir.disabled = true; choisir.textContent = 'Préparation de la photo…';
+      reduirePhoto(f).then(function (url) {
+        prete = url; aper.src = url; aper.style.display = 'block'; envoyer.style.display = 'block';
+        choisir.disabled = false; choisir.textContent = 'Choisir une autre photo';
+      }, function () {
+        choisir.disabled = false; choisir.textContent = 'Choisir ou prendre une photo';
+        msg.textContent = 'Photo illisible. Essaie une autre photo.';
+      });
+    });
+    envoyer.addEventListener('click', function () {
+      if (!prete) return;
+      envoyer.disabled = true; envoyer.textContent = 'Envoi en cours…'; msg.textContent = ''; msg.style.color = '';
+      appel(code + '/copie', 'POST', { appareil: etat.appareil, image: prete }).then(function (res) {
+        envoyer.disabled = false; envoyer.textContent = 'Envoyer cette photo';
+        if (!res.ok) { msg.textContent = messageErreur(res); return; }
+        msg.style.color = 'var(--vrai-texte, #166534)';
+        msg.textContent = 'Ta copie a été envoyée à ton enseignant ✓';
+        info.textContent = 'Ta copie a été envoyée ✓ Tu peux en envoyer une autre pour la remplacer.';
+        envoyer.style.display = 'none'; aper.style.display = 'none'; prete = '';
+      });
+    });
+    bloc.appendChild(champ); bloc.appendChild(choisir); bloc.appendChild(aper); bloc.appendChild(envoyer); bloc.appendChild(msg);
+    corps.appendChild(bloc);
+  }
+  function ajouterConsigne(corps, d) {
     var c = etat.info && etat.info.consigne_ecrite;
     if (!c) return;
     corps.appendChild(el('h2', '', '✍️ Production écrite'));
     var p = el('p'); p.style.whiteSpace = 'pre-wrap'; p.textContent = c; corps.appendChild(p);
     corps.appendChild(el('p', 'doux', 'À rédiger sur ton cahier ou sur une feuille : elle n’est pas notée ici, ton enseignant la corrigera.'));
+    blocPhoto(corps, d);
   }
   function afficherResultat() {
     arreterChrono();
@@ -201,14 +270,14 @@
       if (!d.disponible) {
         corps.appendChild(el('p', '', 'Tu as répondu à toutes les questions. Bravo !'));
         corps.appendChild(el('p', 'doux', 'En mode examen, la note et la correction apparaissent à la fermeture de la séance, le ' + quand(d.ferme_le) + '. Reviens sur cette page à ce moment-là.'));
-        ajouterConsigne(corps);
+        ajouterConsigne(corps, d);
         $('btn-fin-actualiser').classList.remove('cache');
         ecran('fin'); return;
       }
       attendreKatex().then(function () {
         corps.appendChild(el('div', 'score-grand', d.score + ' / ' + d.total));
         if (d.moyenne_classe != null) corps.appendChild(el('p', 'doux', 'Moyenne de la classe : ' + String(d.moyenne_classe).replace('.', ',') + ' / ' + d.total + ' (' + d.nb_termines + ' élèves).'));
-        ajouterConsigne(corps);
+        ajouterConsigne(corps, d);
         corps.appendChild(el('h2', '', 'Ma correction'));
         d.correction.forEach(function (c, n) {
           var bloc = el('div', 'corr');

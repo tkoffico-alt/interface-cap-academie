@@ -222,7 +222,7 @@
   }
   function viderFormulaire() {
     ['c-titre', 'c-matiere', 'c-classe', 'c-chapitre', 'c-extrait', 'c-texte', 'c-ecrit', 'c-roster'].forEach(function (id) { $(id).value = ''; });
-    $('c-mode').value = 'devoir'; $('c-duree').value = '45';
+    $('c-mode').value = 'devoir'; $('c-duree').value = '45'; $('c-photo').checked = false;
     etat.questions = []; etat.sections = []; etat.rosterCopie = null; $('roster-apercu').textContent = ''; $('btn-vider-roster').classList.add('cache');
     $('gen-msg').textContent = '';
   }
@@ -243,7 +243,7 @@
       titre: $('c-titre').value.trim(), matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim(),
       chapitre: $('c-chapitre').value.trim(), mode: $('c-mode').value, duree_question: parseInt($('c-duree').value, 10),
       ouvre_le: $('c-ouvre').value, ferme_le: $('c-ferme').value, nb_questions: parseInt($('c-nb').value, 10) || 10,
-      texte_support: $('c-texte').value, consigne_ecrite: $('c-ecrit').value, questions: etat.questions,
+      texte_support: $('c-texte').value, consigne_ecrite: $('c-ecrit').value, copie_photo: !!$('c-photo').checked, questions: etat.questions,
       sections: etat.sections.filter(function (x) { return x.nom.trim(); }).map(function (x) { return { nom: x.nom.trim(), nb: x.nb }; }), roster: liste.map(function (e) { return e.affiche; })
     };
     var b = $('btn-creer'); b.disabled = true; b.textContent = 'Création…';
@@ -270,7 +270,7 @@
       viderFormulaire();
       $('c-titre').value = (d.titre + ' (2)').slice(0, 80); $('c-matiere').value = d.matiere || ''; $('c-classe').value = d.classe || '';
       $('c-chapitre').value = d.chapitre || ''; $('c-mode').value = d.mode; $('c-duree').value = String(d.duree_question);
-      $('c-texte').value = d.texte_support || ''; $('c-ecrit').value = d.consigne_ecrite || '';
+      $('c-texte').value = d.texte_support || ''; $('c-ecrit').value = d.consigne_ecrite || ''; $('c-photo').checked = !!d.copie_photo;
       etat.sections = (d.sections || []).map(function (x) { return { nom: x.nom, nb: x.nb, prec: x.nom }; });
       etat.questions = d.questions;
       var local = listeLocale(code);
@@ -317,6 +317,9 @@
   }
   function noteSur20(score, total) { return (score == null || !total) ? '' : (Math.round(score / total * 200) / 10); }
   function virgule(v) { return String(v).replace('.', ','); }
+  document.addEventListener('click', function (ev) {
+    if (ev.target && ev.target.id === 't-photo-fermer') { $('t-photo-zone').classList.add('cache'); }
+  });
   function dessinerTableau() {
     var d = etat.tableau, local = listeLocale(etat.code), parAffiche = {};
     local.forEach(function (l) { parAffiche[l.affiche.toLowerCase()] = l; });
@@ -330,7 +333,7 @@
     $('t-resume').textContent = d.eleves.length + ' élève(s) ont commencé, ' + termines + ' ont terminé' + (d.moyenne != null ? ' · moyenne ' + virgule(d.moyenne) + ' / ' + d.nb_questions : '') + '.';
     var t = $('t-table'); t.textContent = '';
     var entete = el('tr');
-    ['Élève'].concat(local.length ? ['Matricule'] : [], ['État', 'Score', 'Note /20', 'Temps moyen', '']).forEach(function (h) { entete.appendChild(el('th', '', h)); });
+    ['Élève'].concat(local.length ? ['Matricule'] : [], ['État', 'Score', 'Note /20', 'Temps moyen'], d.copie_photo ? ['Copie'] : [], ['']).forEach(function (h) { entete.appendChild(el('th', '', h)); });
     t.appendChild(entete);
     var eleves = d.eleves.slice();
     if (local.length) {
@@ -346,11 +349,25 @@
       tr.appendChild(el('td', '', e.score == null ? '—' : e.score + ' / ' + e.total));
       tr.appendChild(el('td', '', e.score == null ? '—' : virgule(noteSur20(e.score, e.total))));
       tr.appendChild(el('td', '', e.temps_moyen == null ? '—' : virgule(e.temps_moyen) + ' s'));
+      if (d.copie_photo) {
+        var tdC = el('td'), cp = d.copies && d.copies[e.nom];
+        if (cp) {
+          var bv = el('button', 'btn-petit', '📷 Voir'); bv.type = 'button';
+          bv.title = 'Envoyée le ' + quand(cp.cree_le) + ' · supprimée le ' + quand(cp.expire_le);
+          bv.addEventListener('click', function () { voirCopie(cp.id, e.nom, cp); });
+          tdC.appendChild(bv);
+        } else { tdC.textContent = '—'; }
+        tr.appendChild(tdC);
+      }
       var tdA = el('td'), b = el('button', 'btn-petit', 'Libérer'); b.type = 'button';
       b.title = 'Efface sa tentative : il pourra recommencer, ou un autre appareil pourra prendre ce nom';
       b.addEventListener('click', function () { if (confirm('Libérer le nom « ' + e.nom + ' » ? Sa tentative sera effacée.')) liberer(e.nom); });
       tdA.appendChild(b); tr.appendChild(tdA); t.appendChild(tr);
     });
+    var nCopies = d.copies ? Object.keys(d.copies).length : 0;
+    $('t-photo-note').classList.toggle('cache', !d.copie_photo);
+    $('t-photo-note').textContent = d.copie_photo ? ('Photos de copies reçues : ' + nCopies + ' · supprimées automatiquement ' + (d.copie_jours || 7) + ' jours après leur envoi (pensez à les corriger ou les enregistrer avant).') : '';
+    $('t-photo-zone').classList.add('cache');
     $('t-absents').textContent = d.absents.length
       ? 'Pas encore passés (' + d.absents.length + ') : ' + d.absents.map(function (n) { var l = parAffiche[n.toLowerCase()]; return l ? l.nomComplet : n; }).join(', ') : '';
     var r = $('t-ratees'); r.textContent = '';
@@ -363,6 +380,23 @@
     $('t-carte-signaux').classList.toggle('cache', !d.signaux.length);
     d.signaux.forEach(function (x) { s.appendChild(el('li', 'membre', x)); });
     $('t-msg').textContent = '';
+  }
+  function voirCopie(id, nom, cp) {
+    $('t-msg').textContent = '';
+    fetch(API + '/' + etat.code + '/copie/' + id + '/voir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ matricule: etat.sceau }) })
+      .then(function (r) {
+        if (!r.ok) return r.json().catch(function () { return {}; }).then(function (d) { throw new Error(typeof d.detail === 'string' ? d.detail : 'Photo indisponible.'); });
+        return r.blob();
+      })
+      .then(function (blob) {
+        var img = $('t-photo-img');
+        if (img.dataset.url) { URL.revokeObjectURL(img.dataset.url); }
+        var url = URL.createObjectURL(blob); img.dataset.url = url; img.src = url;
+        $('t-photo-titre').textContent = 'Copie de ' + nom + ' · envoyée le ' + quand(cp.cree_le) + ' · supprimée automatiquement le ' + quand(cp.expire_le) + '.';
+        $('t-photo-zone').classList.remove('cache');
+        $('t-photo-zone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      })
+      .catch(function (e) { $('t-msg').textContent = (e && e.message) || 'Photo indisponible.'; });
   }
   function liberer(nom) {
     appel('/' + etat.code + '/liberer', { nom: nom }).then(function (res) {
