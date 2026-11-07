@@ -167,7 +167,7 @@
           if (k === d.bonne) b.classList.add('juste');
           else if (k === i) b.classList.add('faux');
         });
-        $('jeu-explication').textContent = (d.correct ? '✅ Bravo ! ' : (i < 0 ? '⏱️ Pas de réponse. ' : '❌ Ce n’est pas la bonne réponse. ')) + (d.explication || '');
+        $('jeu-explication').innerHTML = rendreTexte((d.correct ? '✅ Bravo ! ' : (i < 0 ? '⏱️ Pas de réponse. ' : '❌ Ce n’est pas la bonne réponse. ')) + (d.explication || ''));
         $('jeu-explication').classList.remove('cache');
         var s = $('btn-suivant'); s.textContent = d.termine ? 'Voir mon résultat' : 'Question suivante'; s.classList.remove('cache');
         s.onclick = function () { if (d.termine) afficherResultat(); else continuer(); };

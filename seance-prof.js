@@ -94,8 +94,26 @@
     for (var k = 5; k <= maxi; k++) { var o = el('option', '', k + ' questions'); o.value = String(k); sel.appendChild(o); }
     sel.value = String(Math.min(Math.max(valeur, 5), maxi));
   }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  /* Aperçu des formules : même rendu que celui de l'élève (KaTeX, après échappement complet). */
+  function rendreTexte(s) {
+    s = String(s == null ? '' : s);
+    var ok = (typeof katex !== 'undefined');
+    var motif = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\$([^$\n]+?)\$|\\\(([\s\S]+?)\\\)/g;
+    var sortie = '', dernier = 0, m;
+    while ((m = motif.exec(s)) !== null) {
+      sortie += esc(s.slice(dernier, m.index));
+      var expr = m[1] || m[2] || m[3] || m[4];
+      if (ok) { try { sortie += katex.renderToString(expr, { displayMode: !!(m[1] || m[2]), throwOnError: false }); } catch (e) { sortie += esc(m[0]); } }
+      else { sortie += esc(m[0]); }
+      dernier = motif.lastIndex;
+    }
+    return sortie + esc(s.slice(dernier));
+  }
+  var apercus = [];
+  window.addEventListener('load', function () { apercus.forEach(function (f) { f(); }); });
   function dessinerQuestions() {
-    var zone = $('liste-questions'); zone.textContent = '';
+    var zone = $('liste-questions'); zone.textContent = ''; apercus = [];
     etat.questions.forEach(function (q, i) {
       var bloc = el('div', 'q-edit');
       bloc.appendChild(el('div', 'doux', 'Question ' + (i + 1) + ' · source : ' + (q.source === 'ia' ? 'IA (à vérifier)' : 'enseignant')));
@@ -115,6 +133,18 @@
       var ex = el('textarea'); ex.value = q.explication || ''; ex.maxLength = 300; ex.placeholder = 'Explication affichée à l’élève après sa réponse';
       ex.addEventListener('input', function () { q.explication = ex.value; });
       bloc.appendChild(ex);
+      var ap = el('div', 'doux'); ap.style.cssText = 'margin-top:8px;padding:8px 10px;border:1px dashed currentColor;border-radius:8px';
+      var majAp = function () {
+        var brut = q.question + ' ' + q.options.join(' ') + ' ' + (q.explication || '');
+        if (!/\$|\\\(|\\\[/.test(brut)) { ap.style.display = 'none'; return; }
+        ap.style.display = '';
+        var h = '<div><b>Aperçu élève</b></div><div>' + rendreTexte(q.question) + '</div>';
+        q.options.forEach(function (o, k) { h += '<div>' + ['A', 'B', 'C', 'D'][k] + '. ' + rendreTexte(o) + (q.bonne === k ? ' ✓' : '') + '</div>'; });
+        if (q.explication) h += '<div><i>' + rendreTexte(q.explication) + '</i></div>';
+        ap.innerHTML = h;
+      };
+      bloc.appendChild(ap); apercus.push(majAp); majAp();
+      bloc.addEventListener('input', majAp); bloc.addEventListener('change', majAp);
       var sup = el('button', 'lien-discret', 'Supprimer cette question'); sup.type = 'button';
       sup.addEventListener('click', function () { etat.questions.splice(i, 1); dessinerQuestions(); });
       bloc.appendChild(sup);
