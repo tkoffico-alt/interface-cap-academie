@@ -7907,7 +7907,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function ajouterBoutonCasier(actionsDiv, messageId, conversationId) {
     try {
         const sceau = localStorage.getItem('eduka_sceau') || '';
-        if (!messageId || !conversationId || sceau.indexOf('ELV-') !== 0) return;
+        if (!messageId || !conversationId || !sceau || sceau.indexOf('ENS-') === 0) return;
         const b = document.createElement('button');
         b.className = 'btn-action-doc';
         b.type = 'button';
