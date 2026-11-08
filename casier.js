@@ -153,6 +153,8 @@
       rendre(f.contenu, $('fiche-corps'));
       formules($('fiche-corps'));
       $('btn-supprimer').classList.toggle('cache', etat.courante.enAttente);
+      etat.courante.matiere = f.matiere || ''; etat.courante.titre = f.titre || '';
+      $('btn-reviser').classList.toggle('cache', etat.courante.enAttente || f.source !== 'fiche');
       preparerPartage(f.source === 'fiche');
       $('fiche-msg').textContent = '';
       ecran('fiche');
@@ -208,6 +210,13 @@
     etat.sceau = lire('eduka_sceau');
     if (!etat.sceau || etat.sceau.indexOf('ENS-') === 0) { erreur('🔒 Mon casier : réservé aux abonnés Premium', 'Avec l’abonnement Premium élève, tu ranges ici tes fiches et tes devoirs corrigés pour les retrouver quand tu veux. Ouvre EdukaTchat, entre ton code d’accès élève (ELV-…), puis reviens ici.'); return; }
     $('btn-retour-liste').addEventListener('click', chargerListe);
+    $('btn-reviser').addEventListener('click', function () {
+      var f = etat.courante; if (!f) return;
+      try {
+        localStorage.setItem('eduka_reviser', JSON.stringify({ matiere: f.matiere || '', titre: f.titre || '', contenu: String(f.contenu || '').slice(0, 6000) }));
+        window.location.href = 'index.html?reviser=1';
+      } catch (e) { $('fiche-msg').textContent = 'Impossible de lancer la révision sur cet appareil.'; }
+    });
     $('btn-copier').addEventListener('click', copier);
     $('btn-imprimer').addEventListener('click', function () { window.print(); });
     $('btn-supprimer').addEventListener('click', supprimer);

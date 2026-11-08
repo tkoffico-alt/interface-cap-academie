@@ -1232,6 +1232,7 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
 
         scrollToBottom('sas-chat-history');
         if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('sas');
+        try { lancerRevisionFiche(); } catch (e) { /* jamais bloquant */ }
     }
 }
 
@@ -5713,7 +5714,7 @@ async function sendSasMessage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                query: message + (/bilan|termine (la|cette) session|fin de (la |cette )?session/i.test(message) ? resumeResultatsEvaluations(avatarActif) : ''),
+                query: message + consommerContexteReviser() + (/bilan|termine (la|cette) session|fin de (la |cette )?session/i.test(message) ? resumeResultatsEvaluations(avatarActif) : ''),
                 conversation_id: sasConversationIds[avatarActif] || "",
                 matricule: sceau,
                 avatar: avatarActif,
@@ -7948,6 +7949,44 @@ async function rangerDansCasier(bouton) {
     }
     bouton.disabled = false;
 }
+
+// ❖ RÉVISION D'UNE FICHE DU CASIER (08/11/2026) : le bouton « Me réviser avec cette fiche » du casier ouvre le Sas
+// dans la matière de la fiche et lance une interrogation. Le texte de la fiche est joint à la question sans être affiché.
+function consommerContexteReviser() {
+    const c = window._contexteReviser || '';
+    window._contexteReviser = '';
+    return c;
+}
+
+function lancerRevisionFiche() {
+    const r = window._reviserFiche;
+    if (!r) return;
+    window._reviserFiche = null;
+    const champ = document.getElementById('sas-user-input');
+    if (!champ) return;
+    window._contexteReviser = '\n\n[CONSIGNE DE RÉVISION — ne la recopie pas] L\u2019élève veut réviser avec sa fiche ci-dessous. Interroge-le sur cette fiche : pose UNE seule question à la fois, de la plus simple à la plus difficile, puis attends sa réponse. Corrige avec bienveillance, explique en une ou deux phrases, puis pose la question suivante. Après 5 questions, fais un petit bilan (points acquis, points à revoir). Ne réécris pas la fiche.\n[FICHE DE L\u2019ÉLÈVE]\n' + String(r.contenu || '').slice(0, 6000);
+    champ.value = 'Interroge-moi sur ma fiche \u00ab ' + String(r.titre || 'de révision').slice(0, 80) + ' \u00bb, une question à la fois.';
+    setTimeout(function () { try { sendSasMessage(); } catch (e) { /* jamais bloquant */ } }, 300);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (new URLSearchParams(location.search).get('reviser') !== '1') return;
+        history.replaceState(null, '', location.pathname);
+        const brut = localStorage.getItem('eduka_reviser');
+        localStorage.removeItem('eduka_reviser');
+        const r = brut ? JSON.parse(brut) : null;
+        if (!r || !r.contenu) return;
+        const matieres = ['maths','physique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
+        window._reviserFiche = r;
+        setTimeout(function () {
+            if (!localStorage.getItem('eduka_sceau')) { window._reviserFiche = null; return; }
+            espaceActuel = 'eleve';
+            if (matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
+            else { openSpace('eleve'); }
+        }, 600);
+    } catch (e) { /* jamais bloquant */ }
+});
 
 document.addEventListener('fonctions-actives', function () {
     try {
