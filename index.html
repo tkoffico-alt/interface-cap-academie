@@ -157,6 +157,8 @@
             .menu-nav-item { padding: 4px 10px; }
         }
         .menu-nav-separateur { height: 1px; background-color: #E2E8F0; margin: 6px 4px; }
+        .menu-nav-titre { font-size: 0.68em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #64748B; padding: 4px 10px 2px; }
+        body.dark-theme .menu-nav-titre { color: #94A3B8; }
         body.dark-theme .menu-nav-separateur { background-color: #334155; }
 
         /* ❖ Les suggestions rapides : un élève qui ne sait pas quoi demander
@@ -1596,18 +1598,18 @@
                     <svg class="ico-menu" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path class="barre-haut" d="M4 6.5h16"/><path class="barre-milieu" d="M4 12h16"/><path class="barre-bas" d="M4 17.5h16"/></svg>
                 </button>
                 <div id="menu-navigation-panel" class="menu-navigation-panel">
-                    <button class="menu-nav-item" onclick="naviguerVers('home')">🏠 Retour à l'accueil</button>
+                    <button class="menu-nav-item" id="menu-nav-home" onclick="naviguerVers('home')">🏠 Retour à l'accueil</button>
                     <div class="menu-nav-separateur"></div>
                     <button class="menu-nav-item" id="menu-nav-sas" onclick="naviguerVers('sas')">🧭 Espace de Préparation</button>
                     <button class="menu-nav-item" id="menu-nav-eleve" onclick="naviguerVers('eleve')">🏛️ L'Académie EdukaTchat</button>
                     <button class="menu-nav-item" id="menu-nav-enseignant" onclick="naviguerVers('enseignant')">🔮 Espace Enseignant</button>
                     <div class="menu-nav-separateur"></div>
-                    <button class="menu-nav-item" onclick="naviguerVers('orateur')">🎙️ Atelier de l'Orateur</button>
-                    <button class="menu-nav-item" onclick="naviguerVers('philo')">🦉 Atelier de Philosophie</button>
-                    <button class="menu-nav-item" onclick="naviguerVers('sciences')">🧬 Atelier des Sciences</button>
-                    <button class="menu-nav-item" onclick="naviguerVers('elan')">🚀 Atelier de l'Élan</button>
+                    <button class="menu-nav-item" id="menu-nav-orateur" onclick="naviguerVers('orateur')">🎙️ Atelier de l'Orateur</button>
+                    <button class="menu-nav-item" id="menu-nav-philo" onclick="naviguerVers('philo')">🦉 Atelier de Philosophie</button>
+                    <button class="menu-nav-item" id="menu-nav-sciences" onclick="naviguerVers('sciences')">🧬 Atelier des Sciences</button>
+                    <button class="menu-nav-item" id="menu-nav-elan" onclick="naviguerVers('elan')">🚀 Atelier de l'Élan</button>
                     <div id="menu-nav-salle-bloc" style="display: none;">
-                        <div class="menu-nav-separateur"></div>
+                        <div class="menu-nav-separateur sep-interne"></div>
                         <a class="menu-nav-item" id="menu-nav-salle" href="salle.html" style="display: block; text-decoration: none;">👥 Salle d'étude <span class="badge-nouveau">Nouveau</span></a>
                     </div>
                     <div id="menu-nav-seance-bloc" style="display: none;">
@@ -1620,14 +1622,14 @@
                         <a class="menu-nav-item" id="menu-nav-casier" href="casier.html" style="display: block; text-decoration: none;">🗂️ Mon casier <span class="badge-nouveau">Nouveau</span></a>
                     </div>
                     <div class="menu-nav-separateur"></div>
-                    <button class="menu-nav-item" onclick="naviguerVers('boussole')">🧭 Boussole d'Orientation</button>
-                    <button class="menu-nav-item" onclick="naviguerVers('boussole-univ')">🎓 Boussole Universitaire</button>
-                    <button class="menu-nav-item" onclick="naviguerVers('parents')">🛡️ Espace Parents</button>
+                    <button class="menu-nav-item" id="menu-nav-boussole" onclick="naviguerVers('boussole')">🧭 Boussole d'Orientation</button>
+                    <button class="menu-nav-item" id="menu-nav-boussole-univ" onclick="naviguerVers('boussole-univ')">🎓 Boussole Universitaire</button>
+                    <button class="menu-nav-item" id="menu-nav-parents" onclick="naviguerVers('parents')">🛡️ Espace Parents</button>
                     <div class="menu-nav-separateur"></div>
-                    <a class="menu-nav-item" href="https://wa.me/2250142674315?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20sur%20EdukaTchat%20%3A%20" target="_blank" rel="noopener" style="display: block; text-decoration: none;">🆘 Besoin d'aide ?</a>
-                    <button class="menu-nav-item" onclick="donnerAvisWhatsApp()">💬 Donner mon avis</button>
+                    <a class="menu-nav-item" id="menu-nav-aide" href="https://wa.me/2250142674315?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20sur%20EdukaTchat%20%3A%20" target="_blank" rel="noopener" style="display: block; text-decoration: none;">🆘 Besoin d'aide ?</a>
+                    <button class="menu-nav-item" id="menu-nav-avis" onclick="donnerAvisWhatsApp()">💬 Donner mon avis</button>
                     <div id="menu-nav-deconnexion-bloc" style="display: none;">
-                        <div class="menu-nav-separateur"></div>
+                        <div class="menu-nav-separateur sep-interne"></div>
                         <button class="menu-nav-item" id="menu-nav-deconnexion" onclick="demanderDeconnexion()">🚪 Se déconnecter</button>
                     </div>
                 </div>
@@ -2001,7 +2003,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.61"></script>
+    <script src="app.js?v=3.62"></script>
     <script src="visite-guidee.js?v=4"></script>
     <script src="centres-interet.js?v=7"></script>
 

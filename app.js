@@ -353,7 +353,7 @@ function ouvrirFormulaireGuide(outil) {
 
 async function openSpace(space) {
     espaceActuel = space;
-    setTimeout(function () { try { majMenuOutilsEnseignant(); } catch (e) { /* menu */ } }, 0);
+    setTimeout(function () { try { majMenuOutilsEnseignant(); organiserMenuNavigation(); } catch (e) { /* menu */ } }, 0);
 
     if (space === 'eleve') {
         const codeAcces = localStorage.getItem('eduka_sceau');
@@ -1360,10 +1360,64 @@ function goHome() {
 // espaces protégés (Académie, Espace Enseignant) restent de toute façon
 // filtrés par le code d'accès, et un enseignant curieux qui explore le Sas
 // n'est pas un problème -- plutôt un bon ambassadeur du projet.
+// ❖ MENU CONTEXTUEL (08/11/2026) ❖ Même liste d'éléments, rangée selon l'espace où l'on se trouve :
+// élève (Préparation / Académie), enseignant, ou ordre d'origine (visiteur sans espace choisi).
+// On ne fait que DÉPLACER les éléments existants (mêmes ids, mêmes actions) ; un groupe dont tous les
+// éléments sont masqués n'est pas affiché.
+const MENU_NAV_DISPOSITIONS = {
+    eleve: [
+        ['Mon parcours', ['sas', 'casier-bloc', 'salle-bloc']],
+        ['Ateliers', ['orateur', 'philo', 'sciences', 'elan']],
+        ['Orientation', ['eleve', 'boussole', 'boussole-univ']],
+        ['Autres espaces', ['enseignant', 'parents']],
+        ['', ['aide', 'avis', 'deconnexion-bloc']]
+    ],
+    enseignant: [
+        ['Mon travail', ['enseignant', 'seance-bloc', 'biblio-bloc']],
+        ['Ateliers', ['orateur', 'philo', 'sciences', 'elan']],
+        ['Orientation', ['eleve', 'boussole', 'boussole-univ']],
+        ['Autres espaces', ['sas', 'parents']],
+        ['', ['aide', 'avis', 'deconnexion-bloc']]
+    ]
+};
+function organiserMenuNavigation() {
+    try {
+        const panel = document.getElementById('menu-navigation-panel');
+        if (!panel) return;
+        if (!panel._ordreInitial) panel._ordreInitial = Array.from(panel.children);
+        const ctx = (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant') ? 'enseignant'
+            : ((typeof espaceActuel !== 'undefined' && (espaceActuel === 'sas' || espaceActuel === 'eleve')) ? 'eleve' : 'defaut');
+        const dispo = MENU_NAV_DISPOSITIONS[ctx];
+        panel.querySelectorAll('.sep-interne').forEach(function (s) { s.style.display = dispo ? 'none' : ''; });
+        if (!dispo) { panel.replaceChildren.apply(panel, panel._ordreInitial); return; }
+        const sortie = [];
+        const accueil = document.getElementById('menu-nav-home');
+        if (accueil) sortie.push(accueil);
+        dispo.forEach(function (groupe) {
+            const elements = groupe[1].map(function (k) { return document.getElementById('menu-nav-' + k); }).filter(Boolean);
+            if (!elements.some(function (e) { return e.style.display !== 'none'; })) return;
+            const sep = document.createElement('div'); sep.className = 'menu-nav-separateur';
+            sortie.push(sep);
+            if (groupe[0]) { const t = document.createElement('div'); t.className = 'menu-nav-titre'; t.textContent = groupe[0]; sortie.push(t); }
+            elements.forEach(function (e) { sortie.push(e); });
+        });
+        // Les éléments non retenus pour cet espace restent dans le DOM (réserve masquée) : leurs ids restent trouvables.
+        let reserve = document.getElementById('menu-nav-reserve');
+        if (!reserve) { reserve = document.createElement('div'); reserve.id = 'menu-nav-reserve'; reserve.style.display = 'none'; }
+        panel._ordreInitial.forEach(function (n) {
+            if (n.id && sortie.indexOf(n) === -1) reserve.appendChild(n);
+        });
+        sortie.push(reserve);
+        panel.replaceChildren.apply(panel, sortie);
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+}
+
 function toggleMenuNavigation() {
     const panel = document.getElementById('menu-navigation-panel');
     const btn = document.getElementById('btn-menu-nav');
     if (!panel || !btn) return;
+    if (typeof majBoutonDeconnexion === 'function') majBoutonDeconnexion();
+    organiserMenuNavigation();
     const estOuvert = panel.classList.toggle('ouvert');
     btn.setAttribute('aria-expanded', estOuvert ? 'true' : 'false');
     if (estOuvert && typeof majBoutonDeconnexion === 'function') majBoutonDeconnexion();
@@ -7359,6 +7413,7 @@ document.addEventListener('fonctions-actives', function () {
         const bloc = document.getElementById('menu-nav-salle-bloc');
         if (bloc) bloc.style.display = (fonctionActive('salle') && !codeEnseignantPresent()) ? 'block' : 'none';
         majMenuOutilsEnseignant();
+        organiserMenuNavigation();
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 });
 
