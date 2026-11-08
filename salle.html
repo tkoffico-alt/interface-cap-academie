@@ -115,14 +115,16 @@
       <h1>Mes salles d'étude</h1>
       <p class="doux">Retrouve ici les salles que tu as ouvertes ou rejointes sur cet appareil.</p>
       <ul id="liste-salles" class="liste"></ul>
-      <button type="button" id="btn-nouvelle" class="btn">Créer une nouvelle salle</button>
+      <button type="button" id="btn-binome" class="btn">🤝 Étudier en binôme (2 personnes)</button>
+      <button type="button" id="btn-nouvelle" class="btn btn-sec">Créer une salle pour un groupe (jusqu'à 6)</button>
       <p class="doux" style="margin-top:14px">Pour rejoindre la salle d'un camarade, ouvre simplement le lien qu'il t'a envoyé.</p>
     </section>
 
     <!-- Création d'une salle (sans code dans l'adresse) -->
     <section id="ecran-creation" class="carte cache">
-      <h1>Créer une salle d'étude</h1>
+      <h1 id="creation-titre">Créer une salle d'étude</h1>
       <p class="doux">Prépare un devoir ou un examen avec tes camarades : un plan de révision commun, chacun coche ce qu'il a révisé, et vous vous encouragez. Pas de discussion libre.</p>
+      <div id="c-bloc-haut">
       <label for="c-titre" id="c-titre-label">Titre de la salle</label>
       <input type="text" id="c-titre" maxlength="60" placeholder="Ex. : Révision BEPC de maths">
       <label for="c-objectif">Objectif</label>
@@ -133,12 +135,15 @@
         <option value="expose">Un exposé</option>
         <option value="autre">Autre</option>
       </select>
+      </div>
       <label for="c-matiere">Matière</label>
       <input type="text" id="c-matiere" maxlength="40" placeholder="Ex. : Mathématiques">
+      <div id="c-bloc-classe">
       <label for="c-classe">Classe</label>
       <input type="text" id="c-classe" maxlength="20" placeholder="Ex. : 3e">
       <label for="c-date">Date de l'examen ou du rendu (facultatif)</label>
       <input type="date" id="c-date">
+      </div>
       <label for="c-chapitres" id="c-chap-label">Chapitres à réviser (un par ligne, de 1 à 12)</label>
       <textarea id="c-chapitres" placeholder="Calcul littéral&#10;Théorème de Thalès&#10;Statistiques"></textarea>
       <p class="doux" id="c-chap-aide" style="margin:6px 0 0"></p>
@@ -152,7 +157,7 @@
 
     <section id="ecran-cree" class="carte cache">
       <h1>Salle créée 🎉</h1>
-      <p>Envoie ce lien à tes camarades (2 à 6 personnes en tout) :</p>
+      <p id="cree-info">Envoie ce lien à tes camarades (2 à 6 personnes en tout) :</p>
       <div id="cree-lien" class="lien-boite"></div>
       <button type="button" id="btn-copier" class="btn btn-sec">Copier le lien</button>
       <a id="btn-whatsapp" class="btn" target="_blank" rel="noopener">Partager sur WhatsApp</a>
@@ -301,6 +306,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=11" defer></script>
+<script src="salle.js?v=12" defer></script>
 </body>
 </html>

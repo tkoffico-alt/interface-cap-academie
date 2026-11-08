@@ -98,7 +98,15 @@
   }
 
   /* ---------- Création ---------- */
-  function afficherCreation() {
+  function modeBinome(actif) {
+    etat.binome = !!actif;
+    ['c-bloc-haut', 'c-bloc-classe', 'btn-suggerer'].forEach(function (id) { $(id).classList.toggle('cache', !!actif); });
+    $('creation-titre').textContent = actif ? 'Étudier en binôme' : 'Créer une salle d\u2019étude';
+    $('cree-info').textContent = actif ? 'Envoie ce lien à ton camarade (2 personnes en tout) :' : 'Envoie ce lien à tes camarades (2 à 6 personnes en tout) :';
+    if (actif) $('c-objectif').value = 'autre';
+  }
+  function afficherCreation(binome) {
+    modeBinome(binome === true);
     var sceau = lire('eduka_sceau');
     if (!sceau) { erreur('Créer une salle : réservé aux abonnés Premium', "Pour créer une salle, connecte-toi à EdukaTchat avec ton abonnement Premium. Pour rejoindre la salle d\u2019un camarade, ouvre le lien qu\u2019il t\u2019a envoyé : aucun abonnement n\u2019est nécessaire."); return; }
     $('c-pseudo').value = lire('eduka_salle_pseudo');
@@ -108,14 +116,15 @@
   function creer() {
     var msg = $('creation-msg'); msg.textContent = '';
     var chapitres = $('c-chapitres').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
-    if (!$('c-titre').value.trim()) { msg.textContent = 'Donne un titre à la salle.'; return; }
+    var titreSalle = etat.binome ? ('Binôme' + ($('c-matiere').value.trim() ? ' \u2014 ' + $('c-matiere').value.trim() : '')).slice(0, 60) : $('c-titre').value.trim();
+    if (!titreSalle) { msg.textContent = 'Donne un titre à la salle.'; return; }
     if (chapitres.length < 1 || chapitres.length > 12) { msg.textContent = 'Écris entre 1 et 12 lignes, une par partie ou par chapitre.'; return; }
     if (!$('c-pseudo').value.trim()) { msg.textContent = 'Choisis un pseudonyme.'; return; }
     var b = $('btn-creer'); b.disabled = true; b.textContent = 'Création…';
     appel('', 'POST', {
       matricule: lire('eduka_sceau'), appareil: etat.appareil, pseudo: $('c-pseudo').value.trim(),
-      titre: $('c-titre').value.trim(), matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim(),
-      objectif: $('c-objectif').value, date_cible: $('c-date').value, taches: chapitres
+      titre: titreSalle, matiere: $('c-matiere').value.trim(), classe: etat.binome ? '' : $('c-classe').value.trim(),
+      objectif: etat.binome ? 'autre' : $('c-objectif').value, date_cible: etat.binome ? '' : $('c-date').value, taches: chapitres, binome: !!etat.binome
     }).then(function (res) {
       b.disabled = false; b.textContent = 'Créer la salle';
       if (!res.ok) { msg.textContent = (res.statut === 404) ? "Cette fonction n'est pas disponible pour le moment." : messageErreur(res); return; }
@@ -531,7 +540,7 @@
 
   function charger() {
     ecran('chargement');
-    if (!code) { var l = salleMemorisees(); if (l.length) afficherListe(l); else afficherCreation(); return; }
+    if (!code) { var l = salleMemorisees(); afficherListe(l); return; }
     appel('/' + code + '/etat', 'POST', { appareil: etat.appareil }).then(function (res) {
       if (res.ok) { afficherSalle(res.donnees); demarrerSuivi(); return; }
       if (res.statut === 403) {   // pas encore membre : page d'accueil
@@ -553,7 +562,8 @@
     etat.appareil = identifiantAppareil();
     $('btn-creer').addEventListener('click', creer);
     $('c-objectif').addEventListener('change', adapterFormulaire);
-    $('btn-nouvelle').addEventListener('click', afficherCreation);
+    $('btn-nouvelle').addEventListener('click', function () { afficherCreation(false); });
+    $('btn-binome').addEventListener('click', function () { afficherCreation(true); });
     $('btn-rejoindre').addEventListener('click', function () { rejoindre(); demarrerSuivi(); });
     $('pseudo').addEventListener('keydown', function (e) { if (e.key === 'Enter') { rejoindre(); demarrerSuivi(); } });
     $('btn-expose').addEventListener('click', ouvrirExpose);
