@@ -258,6 +258,7 @@
       a2.href = 'https://edukatchat.org/defi.html?c=' + encodeURIComponent(x.code); a2.target = '_blank'; a2.rel = 'noopener';
       li2.appendChild(a2); ld.appendChild(li2);
     });
+    afficherFiches(d);
     $('carte-suivi').classList.toggle('cache', !d.est_createur);
     $('btn-expose').classList.toggle('cache', d.objectif !== 'expose');
     $('plan-titre').textContent = (d.objectif === 'expose') ? 'Les sections de l\u2019exposé' : 'Mon plan de révision';
@@ -364,6 +365,75 @@
       msg.textContent = 'Proposition de l\u2019IA : modifie-la comme tu veux avant de créer la salle.';
     });
   }
+  /* ---------- Fiches partagées (casier) ---------- */
+  var mesFichesChargees = false;
+  function estEleve() { return lire('eduka_sceau').indexOf('ELV-') === 0; }
+  function afficherFiches(d) {
+    var ul = $('liste-fiches-salle'); ul.textContent = '';
+    var fl = d.fiches || [];
+    $('fiches-vide').classList.toggle('cache', fl.length > 0);
+    fl.forEach(function (f) {
+      var li = el('li', 'membre');
+      var b = el('button', 'lien-discret', '📄 ' + f.titre + ' (par ' + f.pseudo + ')'); b.type = 'button';
+      b.addEventListener('click', function () { ouvrirFicheSalle(f); });
+      li.appendChild(b);
+      if (f.moi || d.est_createur) {
+        var r = el('button', 'lien-discret', 'Retirer'); r.type = 'button';
+        r.addEventListener('click', function () {
+          if (!confirm('Retirer cette fiche de la salle ?')) return;
+          appel('/' + code + '/fiche/retirer', 'POST', { appareil: etat.appareil, id: f.id }).then(function () { fermerFicheSalle(); actualiser(true); });
+        });
+        li.appendChild(r);
+      }
+      ul.appendChild(li);
+    });
+    chargerMesFiches(false);
+  }
+  function chargerMesFiches(force) {
+    if (!estEleve() || (mesFichesChargees && !force)) return;
+    mesFichesChargees = true;
+    fetch('https://api.edukatchat.org/api/casier/liste', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matricule: lire('eduka_sceau') }) }).then(function (r) { return r.json(); }).then(function (d) {
+      var sel = $('sf-choix'); sel.textContent = ''; var n = 0;
+      (d.fiches || []).forEach(function (f) {
+        if (f.source !== 'fiche') return;
+        var o = el('option', '', f.titre); o.value = f.id; sel.appendChild(o); n++;
+      });
+      $('zone-partage-fiche').classList.toggle('cache', n === 0);
+      $('sf-aide').classList.toggle('cache', n > 0);
+    }).catch(function () { mesFichesChargees = false; });
+  }
+  function partagerFiche() {
+    var msg = $('sf-msg'); msg.textContent = '';
+    var id = $('sf-choix').value; if (!id) return;
+    appel('/' + code + '/fiche/partager', 'POST', { appareil: etat.appareil, matricule: lire('eduka_sceau'), id: id }).then(function (res) {
+      if (!res.ok) { msg.textContent = messageErreur(res); return; }
+      msg.textContent = 'Fiche partagée ✓'; actualiser(true);
+    });
+  }
+  function fermerFicheSalle() { $('fiche-lue').classList.add('cache'); etat.ficheLue = null; }
+  function ouvrirFicheSalle(f) {
+    $('sf-msg').textContent = '';
+    appel('/' + code + '/fiche/lire', 'POST', { appareil: etat.appareil, id: f.id }).then(function (res) {
+      if (!res.ok) { $('sf-msg').textContent = messageErreur(res); return; }
+      var x = res.donnees; etat.ficheLue = { id: f.id, pseudo: x.pseudo, moi: !!f.moi };
+      $('fl-titre').textContent = x.titre;
+      $('fl-meta').textContent = ['Partagée par ' + x.pseudo, x.matiere].filter(Boolean).join(' · ');
+      if (window.EdukaRendu) { window.EdukaRendu.rendre(x.contenu, $('fl-corps')); window.EdukaRendu.formules($('fl-corps')); }
+      else { $('fl-corps').textContent = x.contenu; }
+      $('fl-prendre').classList.toggle('cache', !estEleve() || f.moi);
+      $('fl-merci').classList.toggle('cache', f.moi);
+      $('fiche-lue').classList.remove('cache');
+      $('fiche-lue').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  function prendreFiche() {
+    var fl = etat.ficheLue; if (!fl) return;
+    appel('/' + code + '/fiche/prendre', 'POST', { appareil: etat.appareil, matricule: lire('eduka_sceau'), id: fl.id }).then(function (res) {
+      $('sf-msg').textContent = res.ok ? (res.donnees.message || 'Ajoutée à ton casier ✓') : messageErreur(res);
+    });
+  }
+
   function posterDefi() {
     var msg = $('sd-msg'); msg.textContent = '';
     var m = $('sd-lien').value.toUpperCase().match(/[A-Z0-9]{8}(?![A-Z0-9])/);
@@ -503,6 +573,10 @@
     });
     $('consigne-enregistrer').addEventListener('click', enregistrerConsigne);
     $('sd-poster').addEventListener('click', posterDefi);
+    $('sf-partager').addEventListener('click', partagerFiche);
+    $('fl-fermer').addEventListener('click', fermerFicheSalle);
+    $('fl-prendre').addEventListener('click', prendreFiche);
+    $('fl-merci').addEventListener('click', function () { if (etat.ficheLue) { reagir(etat.ficheLue.pseudo, 'merci'); $('sf-msg').textContent = 'Merci envoyé à ' + etat.ficheLue.pseudo + ' ✓'; } });
     $('btn-suivi').addEventListener('click', voirSuivi);
     $('ps-fermer').addEventListener('click', fermerPanneaux);
     $('pe-fermer').addEventListener('click', fermerPanneaux);

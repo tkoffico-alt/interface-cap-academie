@@ -246,6 +246,28 @@
         <p id="sd-msg" class="erreur-msg" role="alert"></p>
       </div>
 
+      <div class="carte" id="carte-fiches">
+        <h2>📚 Fiches partagées</h2>
+        <p class="doux">Partage une fiche rangée dans ton casier : tes camarades peuvent la lire et l’ajouter à leur propre casier.</p>
+        <ul id="liste-fiches-salle" class="liste"></ul>
+        <p id="fiches-vide" class="doux cache">Aucune fiche partagée pour le moment.</p>
+        <div id="fiche-lue" class="cache">
+          <button type="button" id="fl-fermer" class="lien-discret">← Fermer la fiche</button>
+          <h3 id="fl-titre"></h3>
+          <p class="doux" id="fl-meta"></p>
+          <article id="fl-corps" class="fiche-corps"></article>
+          <button type="button" id="fl-prendre" class="btn btn-sec">📥 Ajouter à mon casier</button>
+          <button type="button" id="fl-merci" class="btn btn-sec">🙏 Dire merci</button>
+        </div>
+        <div id="zone-partage-fiche" class="cache">
+          <label for="sf-choix">Partager une de mes fiches</label>
+          <select id="sf-choix"></select>
+          <button type="button" id="sf-partager" class="btn btn-sec">Partager dans la salle</button>
+        </div>
+        <p id="sf-aide" class="doux cache">Pour partager une fiche, range-la d’abord dans ton casier : clique sur « 🗂️ Ranger » sous une réponse du Sas.</p>
+        <p id="sf-msg" class="erreur-msg" role="status"></p>
+      </div>
+
       <div id="carte-suivi" class="carte cache">
         <h2>📊 Suivi de la salle (créateur)</h2>
         <p class="doux">Qui a révisé quoi, et quand. Les échanges privés avec l'IA ne sont jamais visibles.</p>
@@ -278,6 +300,7 @@
 
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
-<script src="salle.js?v=10" defer></script>
+<script src="rendu-fiche.js?v=1" defer></script>
+<script src="salle.js?v=11" defer></script>
 </body>
 </html>
