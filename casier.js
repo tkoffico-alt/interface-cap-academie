@@ -45,12 +45,18 @@
   function cellules(ligne) { return ligne.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map(function (c) { return c.trim(); }); }
   function rendre(markdown, conteneur) {
     conteneur.textContent = '';
-    var lignes = String(markdown || '').split('\n');
+    var lignes = String(markdown || '').replace(/\\\[([\s\S]*?)\\\]/g, function (m, x) { return '\\[' + x.replace(/\s+/g, ' ').trim() + '\\]'; }).split('\n');
     var i = 0, liste = null, typeListe = '';
     function fermerListe() { liste = null; typeListe = ''; }
     while (i < lignes.length) {
       var l = lignes[i], t = l.trim();
       if (!t) { fermerListe(); i++; continue; }
+      if (t.indexOf('```') === 0) {
+        fermerListe(); var bloc = el('div', 'carte-devoir'); i++;
+        bloc.style.cssText = 'background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin:10px 0;';
+        while (i < lignes.length && lignes[i].trim().indexOf('```') !== 0) { var d = el('div', '', lignes[i] || ' '); d.style.whiteSpace = 'pre-wrap'; bloc.appendChild(d); i++; }
+        i++; conteneur.appendChild(bloc); continue;
+      }
       var m;
       if ((m = /^(#{1,4})\s+(.*)$/.exec(t))) { fermerListe(); var h = el('h' + Math.min(m[1].length + 1, 4)); inline(h, m[2]); conteneur.appendChild(h); i++; continue; }
       if (/^(-{3,}|\*{3,})$/.test(t)) { fermerListe(); conteneur.appendChild(el('hr')); i++; continue; }
@@ -73,6 +79,29 @@
       fermerListe();
       var p = el('p'); inline(p, t); conteneur.appendChild(p); i++;
     }
+  }
+
+  /* ---------- Formules mathématiques (KaTeX) ---------- */
+  var katexPret = null;
+  function chargerKatex(suite) {
+    if (window.renderMathInElement) { suite(); return; }
+    if (katexPret) { katexPret.push(suite); return; }
+    katexPret = [suite];
+    var base = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/';
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = base + 'katex.min.css'; document.head.appendChild(css);
+    var s1 = document.createElement('script'); s1.src = base + 'katex.min.js';
+    s1.onload = function () {
+      var s2 = document.createElement('script'); s2.src = base + 'contrib/auto-render.min.js';
+      s2.onload = function () { var l = katexPret; katexPret = null; l.forEach(function (f) { f(); }); };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  }
+  function formules(zone) {
+    if (!/\\\(|\\\[|\$\$/.test(zone.textContent)) return;
+    chargerKatex(function () {
+      try { window.renderMathInElement(zone, { delimiters: [{ left: '\\[', right: '\\]', display: true }, { left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }], throwOnError: false }); } catch (e) { /* texte brut conservé */ }
+    });
   }
 
   /* ---------- Liste ---------- */
@@ -122,6 +151,7 @@
       $('fiche-titre').textContent = f.titre;
       $('fiche-meta').textContent = [f.source === 'devoir_en_attente' ? 'Devoir à faire' : (f.source === 'devoir' ? 'Devoir' : 'Fiche'), f.matiere, f.date ? dateCourte(f.date) : ''].filter(Boolean).join(' · ');
       rendre(f.contenu, $('fiche-corps'));
+      formules($('fiche-corps'));
       $('btn-supprimer').classList.toggle('cache', etat.courante.enAttente);
       $('fiche-msg').textContent = '';
       ecran('fiche');

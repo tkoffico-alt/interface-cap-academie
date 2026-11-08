@@ -7842,7 +7842,8 @@ function ajouterBoutonCasier(actionsDiv, messageId, conversationId) {
         b.type = 'button';
         b.title = 'Ranger dans mon casier';
         b.setAttribute('aria-label', 'Ranger dans mon casier');
-        b.textContent = '\uD83D\uDDC2\uFE0F';
+        b.textContent = '\uD83D\uDDC2\uFE0F Ranger';
+        b.style.cssText = 'width:auto;height:auto;padding:4px 12px;border-radius:999px;background:#FEF3C7;color:#92400E;border:1px solid #F59E0B;font-weight:700;font-size:12px;cursor:pointer;';
         b.dataset.mid = messageId;
         b.dataset.conv = conversationId;
         b.addEventListener('click', function () { rangerDansCasier(b); });
@@ -7864,7 +7865,7 @@ async function rangerDansCasier(bouton) {
         const d = await rep.json().catch(function () { return {}; });
         if (rep.ok) {
             bouton.dataset.fait = '1';
-            bouton.textContent = '\u2705';
+            bouton.textContent = '\u2705 Rang\u00e9';
             bouton.title = 'Rangé dans ton casier \u2014 clique pour l\u2019ouvrir';
         } else {
             bouton.textContent = ancien;
