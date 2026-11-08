@@ -7324,6 +7324,11 @@ window.addEventListener('appinstalled', () => {
 // Le serveur dit quelles fonctions en chantier (ex. « defi ») sont visibles pour
 // CE Sceau (voir FONCTIONS_EN_TEST dans gateway/main.py). Tant que la réponse n'est
 // pas « true », la fonction n'existe pas dans la page. Échec réseau = tout fermé.
+function codeEnseignantPresent() {
+    try {
+        return /^ENS-/.test(localStorage.getItem('eduka_sceau') || '') || /^ENS-/.test(localStorage.getItem('eduka_sceau_enseignant') || '');
+    } catch (e) { return false; }
+}
 window.fonctionsActives = {};
 function fonctionActive(nom) {
     return !!(window.fonctionsActives && window.fonctionsActives[nom]);
@@ -7351,7 +7356,7 @@ document.addEventListener('DOMContentLoaded', chargerFonctionsActives);
 document.addEventListener('fonctions-actives', function () {
     try {
         const bloc = document.getElementById('menu-nav-salle-bloc');
-        if (bloc) bloc.style.display = fonctionActive('salle') ? 'block' : 'none';
+        if (bloc) bloc.style.display = (fonctionActive('salle') && !codeEnseignantPresent()) ? 'block' : 'none';
         const blocSeance = document.getElementById('menu-nav-seance-bloc');
         if (blocSeance) blocSeance.style.display = fonctionActive('seance') ? 'block' : 'none';
         const blocBiblio = document.getElementById('menu-nav-biblio-bloc');
@@ -7881,7 +7886,7 @@ async function rangerDansCasier(bouton) {
 document.addEventListener('fonctions-actives', function () {
     try {
         const bloc = document.getElementById('menu-nav-casier-bloc');
-        const sceau = localStorage.getItem('eduka_sceau') || '';
-        if (bloc) bloc.style.display = sceau.indexOf('ELV-') === 0 ? 'block' : 'none';
+        // Vitrine : le casier est visible pour tous les élèves (accès libre compris) ; sans code ELV-, sa page explique qu'il est réservé aux abonnés. Masqué pour un enseignant.
+        if (bloc) bloc.style.display = codeEnseignantPresent() ? 'none' : 'block';
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 });
