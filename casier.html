@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2563EB">
+<title>Mon casier — EdukaTchat</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<script>
+(function () {
+  var sombre = false;
+  try {
+    var choix = localStorage.getItem('eduka_theme');
+    sombre = (choix === 'dark') || (!choix && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) {}
+  if (sombre) document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<link rel="stylesheet" href="seance.css?v=3">
+<style>.page{animation:pageIn .35s cubic-bezier(.22,.8,.3,1) both}main>*,.page main section,.page main .carte{animation:pageIn .4s cubic-bezier(.22,.8,.3,1) both}@view-transition{navigation:auto}@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.page,main>*,.page main section,.page main .carte{animation:none}}</style>
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <a class="marque" id="btn-retour-app" href="https://edukatchat.org/">← Retour à EdukaTchat</a>
+    <span class="doux">🗂️ Mon casier</span>
+  </header>
+  <main aria-live="polite">
+    <section id="ecran-chargement" class="carte centre"><p>Chargement…</p></section>
+
+    <section id="ecran-erreur" class="carte cache">
+      <h1 id="erreur-titre"></h1>
+      <p id="erreur-texte"></p>
+    </section>
+
+    <section id="ecran-liste" class="carte cache">
+      <h1>Mon casier</h1>
+      <p class="doux">Ici, tu ranges les fiches et les devoirs que EdukaTchat te donne, pour les retrouver quand tu veux. Pour ranger une fiche : clique sur 🗂️ sous sa réponse dans le Sas.</p>
+
+      <div id="bloc-afaire" class="cache">
+        <h2>📝 Devoirs à faire</h2>
+        <ul id="liste-afaire" class="liste"></ul>
+      </div>
+
+      <h2>🗂️ Mes fiches et devoirs rangés</h2>
+      <p id="liste-vide" class="doux cache">Ton casier est vide pour le moment.</p>
+      <ul id="liste-fiches" class="liste"></ul>
+      <p id="liste-compteur" class="doux" style="margin-top:10px;"></p>
+    </section>
+
+    <section id="ecran-fiche" class="carte cache">
+      <div class="no-print">
+        <button type="button" id="btn-retour-liste" class="lien-discret">← Retour à mon casier</button>
+        <h1 id="fiche-titre"></h1>
+        <p class="doux" id="fiche-meta"></p>
+      </div>
+      <article id="fiche-corps" class="fiche-corps"></article>
+      <div class="no-print">
+        <button type="button" id="btn-copier" class="btn btn-sec">Copier le texte</button>
+        <button type="button" id="btn-imprimer" class="btn btn-sec">Imprimer / Enregistrer en PDF</button>
+        <button type="button" id="btn-supprimer" class="lien-discret">Retirer de mon casier</button>
+        <p id="fiche-msg" class="erreur-msg" role="status"></p>
+      </div>
+    </section>
+  </main>
+  <footer class="pied no-print">EdukaTchat™ — Propriété Intellectuelle Exclusive</footer>
+</div>
+<script src="casier.js?v=1"></script>
+</body>
+</html>

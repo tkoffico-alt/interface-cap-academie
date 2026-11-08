@@ -5740,6 +5740,7 @@ async function sendSasMessage() {
                             const dataObj = JSON.parse(payload);
                             if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
                                 texteIntegralSas += (dataObj.answer || "");
+                                if (dataObj.message_id) window._eduMsgIdSas = dataObj.message_id;
                                 // On ne remplace la bulle animée que lorsqu'il y a
                                 // vraiment quelque chose à montrer.
                                 if (texteIntegralSas.length > 0) {
@@ -5792,6 +5793,8 @@ async function sendSasMessage() {
             ajouterBoutonsPrononciationInline(botLoadingDiv);
         }
 
+        const midSas = window._eduMsgIdSas || ""; window._eduMsgIdSas = "";
+        const convSas = sasConversationIds[avatarActif] || "";
         if (botLoadingDiv.textContent.length > 50) {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'message-actions';
@@ -5800,6 +5803,7 @@ async function sendSasMessage() {
                 <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
             `;
             botLoadingDiv.appendChild(actionsDiv);
+            ajouterBoutonCasier(actionsDiv, midSas, convSas);
         }
         saveChatHistory('sas');
 
@@ -7824,4 +7828,59 @@ function installerSelecteurPhoto(idInput) {
 document.addEventListener('DOMContentLoaded', () => {
     installerSelecteurPhoto('planning-photo-input');
     installerSelecteurPhoto('pre-abo-photo-input');
+});
+
+
+// ❖ CASIER DE FICHES (08/11/2026) : bouton « Ranger dans mon casier » sous les réponses du Sas.
+// Le navigateur n'envoie que les identifiants du message : le texte est relu côté serveur.
+function ajouterBoutonCasier(actionsDiv, messageId, conversationId) {
+    try {
+        const sceau = localStorage.getItem('eduka_sceau') || '';
+        if (!messageId || !conversationId || sceau.indexOf('ELV-') !== 0) return;
+        const b = document.createElement('button');
+        b.className = 'btn-action-doc';
+        b.type = 'button';
+        b.title = 'Ranger dans mon casier';
+        b.setAttribute('aria-label', 'Ranger dans mon casier');
+        b.textContent = '\uD83D\uDDC2\uFE0F';
+        b.dataset.mid = messageId;
+        b.dataset.conv = conversationId;
+        b.addEventListener('click', function () { rangerDansCasier(b); });
+        actionsDiv.appendChild(b);
+    } catch (e) { /* le bouton ne doit jamais gêner la conversation */ }
+}
+
+async function rangerDansCasier(bouton) {
+    if (bouton.dataset.fait === '1') { window.location.href = 'casier.html'; return; }
+    const ancien = bouton.textContent;
+    bouton.disabled = true;
+    bouton.textContent = '\u2026';
+    try {
+        const rep = await fetch('https://api.edukatchat.org/api/casier/enregistrer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: localStorage.getItem('eduka_sceau') || '', conversation_id: bouton.dataset.conv, message_id: bouton.dataset.mid })
+        });
+        const d = await rep.json().catch(function () { return {}; });
+        if (rep.ok) {
+            bouton.dataset.fait = '1';
+            bouton.textContent = '\u2705';
+            bouton.title = 'Rangé dans ton casier \u2014 clique pour l\u2019ouvrir';
+        } else {
+            bouton.textContent = ancien;
+            alert(typeof d.detail === 'string' ? d.detail : 'Impossible de ranger cette r\u00e9ponse pour le moment.');
+        }
+    } catch (e) {
+        bouton.textContent = ancien;
+        alert('Connexion impossible. R\u00e9essaie dans un instant.');
+    }
+    bouton.disabled = false;
+}
+
+document.addEventListener('fonctions-actives', function () {
+    try {
+        const bloc = document.getElementById('menu-nav-casier-bloc');
+        const sceau = localStorage.getItem('eduka_sceau') || '';
+        if (bloc) bloc.style.display = sceau.indexOf('ELV-') === 0 ? 'block' : 'none';
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 });
