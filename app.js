@@ -7965,7 +7965,14 @@ function proposerFicheRevision(bulle) {
     const dernier = Array.from(histo.querySelectorAll('.user-message')).pop();
     if (dernier && /fiche|interroge-moi|quiz/i.test(dernier.textContent || '')) return;
     const cle = 'eduka_fiche_proposee_' + (sasConversationIds[avatarActif] || avatarActif);
-    try { if (sessionStorage.getItem(cle)) return; sessionStorage.setItem(cle, '1'); } catch (e) { return; }
+    // Deux invitations au maximum : après 4 questions, puis une seconde fois après 10.
+    try {
+        const deja = parseInt(sessionStorage.getItem(cle) || '0', 10);
+        if (deja >= 2) return;
+        if (deja === 1 && nbQuestions < 10) return;
+        sessionStorage.setItem(cle, String(deja + 1));
+    } catch (e) { return; }
+    histo.querySelectorAll('.proposition-fiche').forEach(function (x) { x.remove(); });
     const bloc = document.createElement('div');
     bloc.className = 'proposition-fiche';
     bloc.style.cssText = 'margin-top:10px;padding:10px 14px;border-radius:12px;background:#ECFDF5;border:1px solid #6EE7B7;color:#065F46;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
