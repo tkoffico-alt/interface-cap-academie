@@ -116,7 +116,7 @@
       <p class="doux">Retrouve ici les salles que tu as ouvertes ou rejointes sur cet appareil.</p>
       <ul id="liste-salles" class="liste"></ul>
       <button type="button" id="btn-binome" class="btn">🤝 Étudier en binôme (2 personnes)</button>
-      <button type="button" id="btn-nouvelle" class="btn btn-sec">Créer une salle pour un groupe (jusqu'à 6)</button>
+      <button type="button" id="btn-nouvelle" class="btn btn-sec">Créer une salle pour un groupe (jusqu'à 4)</button>
       <p class="doux" style="margin-top:14px">Pour rejoindre la salle d'un camarade, ouvre simplement le lien qu'il t'a envoyé.</p>
     </section>
 
@@ -152,12 +152,12 @@
       <input type="text" id="c-pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Awa">
       <p id="creation-msg" class="erreur-msg" role="alert"></p>
       <button type="button" id="btn-creer" class="btn">Créer la salle</button>
-      <p class="doux" style="margin-top:14px">Réservé aux abonnés Premium. Jusqu'à 6 personnes, sans compte pour les camarades. La salle reste ouverte jusqu'à la date de l'examen (5 mois au maximum) ; le créateur peut la prolonger.</p>
+      <p class="doux" style="margin-top:14px">Réservé aux abonnés Premium. Jusqu'à 4 personnes, sans compte pour les camarades. La salle reste ouverte jusqu'à la date de l'examen (5 mois au maximum) ; le créateur peut la prolonger.</p>
     </section>
 
     <section id="ecran-cree" class="carte cache">
       <h1>Salle créée 🎉</h1>
-      <p id="cree-info">Envoie ce lien à tes camarades (2 à 6 personnes en tout) :</p>
+      <p id="cree-info">Envoie ce lien à tes camarades (2 à 4 personnes en tout) :</p>
       <div id="cree-lien" class="lien-boite"></div>
       <button type="button" id="btn-copier" class="btn btn-sec">Copier le lien</button>
       <a id="btn-whatsapp" class="btn" target="_blank" rel="noopener">Partager sur WhatsApp</a>
@@ -306,6 +306,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=12" defer></script>
+<script src="salle.js?v=13" defer></script>
 </body>
 </html>

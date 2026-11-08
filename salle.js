@@ -102,7 +102,7 @@
     etat.binome = !!actif;
     ['c-bloc-haut', 'c-bloc-classe', 'btn-suggerer'].forEach(function (id) { $(id).classList.toggle('cache', !!actif); });
     $('creation-titre').textContent = actif ? 'Étudier en binôme' : 'Créer une salle d\u2019étude';
-    $('cree-info').textContent = actif ? 'Envoie ce lien à ton camarade (2 personnes en tout) :' : 'Envoie ce lien à tes camarades (2 à 6 personnes en tout) :';
+    $('cree-info').textContent = actif ? 'Envoie ce lien à ton camarade (2 personnes en tout) :' : 'Envoie ce lien à tes camarades (2 à 4 personnes en tout) :';
     if (actif) $('c-objectif').value = 'autre';
   }
   function afficherCreation(binome) {
