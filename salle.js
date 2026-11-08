@@ -12,14 +12,9 @@
 
   function $(id) { return document.getElementById(id); }
   function lire(cle) { try { return localStorage.getItem(cle) || ''; } catch (e) { return ''; } }
-  // Code Premium utilisable pour créer une salle : élève (ELV-) ou enseignant (ENS-), quel que soit l'endroit où il est mémorisé.
-  function sceauSalle() {
-    var e = lire('eduka_sceau'), p = lire('eduka_sceau_enseignant');
-    if (/^(ELV|ENS)-/.test(e)) return e;
-    if (/^ENS-/.test(p)) return p;
-    return e || p;
-  }
-  function estPremium() { return /^(ELV|ENS)-/.test(sceauSalle()); }
+  // Code utilisé pour créer une salle : celui de l'élève (ELV-) ou du Créateur. Un code enseignant (ENS-) ne crée pas de salle.
+  function sceauSalle() { return lire('eduka_sceau'); }
+  function estPremium() { var c = sceauSalle(); return !!c && !/^ENS-/.test(c); }
   function ecrire(cle, valeur) { try { localStorage.setItem(cle, valeur); } catch (e) { /* indisponible */ } }
   function el(balise, classe, texte) {
     var e = document.createElement(balise);

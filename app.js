@@ -353,6 +353,7 @@ function ouvrirFormulaireGuide(outil) {
 
 async function openSpace(space) {
     espaceActuel = space;
+    setTimeout(function () { try { majMenuOutilsEnseignant(); } catch (e) { /* menu */ } }, 0);
 
     if (space === 'eleve') {
         const codeAcces = localStorage.getItem('eduka_sceau');
@@ -7357,12 +7358,22 @@ document.addEventListener('fonctions-actives', function () {
     try {
         const bloc = document.getElementById('menu-nav-salle-bloc');
         if (bloc) bloc.style.display = (fonctionActive('salle') && !codeEnseignantPresent()) ? 'block' : 'none';
-        const blocSeance = document.getElementById('menu-nav-seance-bloc');
-        if (blocSeance) blocSeance.style.display = fonctionActive('seance') ? 'block' : 'none';
-        const blocBiblio = document.getElementById('menu-nav-biblio-bloc');
-        if (blocBiblio) blocBiblio.style.display = fonctionActive('bibliotheque') ? 'block' : 'none';
+        majMenuOutilsEnseignant();
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 });
+
+// Vitrine enseignant (08/11/2026) : « Séances de classe » et « Ma bibliothèque » sont montrés à un code ENS-
+// (ou au Créateur) ; dans l'Espace Enseignant ils sont aussi montrés sans code, quand le serveur ouvre ces
+// fonctions au public (clés *_vitrine) : la page explique alors qu'ils sont réservés aux enseignants abonnés.
+function majMenuOutilsEnseignant() {
+    try {
+        const dansEns = (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant');
+        const blocSeance = document.getElementById('menu-nav-seance-bloc');
+        if (blocSeance) blocSeance.style.display = (fonctionActive('seance') || (dansEns && fonctionActive('seance_vitrine'))) ? 'block' : 'none';
+        const blocBiblio = document.getElementById('menu-nav-biblio-bloc');
+        if (blocBiblio) blocBiblio.style.display = (fonctionActive('bibliotheque') || (dansEns && fonctionActive('bibliotheque_vitrine'))) ? 'block' : 'none';
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+}
 
 
 // ❖ SE DÉCONNECTER (31/10/2026) : efface le(s) Code(s) et ce qui est propre à l'appareil, puis recharge.
