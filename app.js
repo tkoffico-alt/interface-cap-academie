@@ -5860,6 +5860,7 @@ async function sendSasMessage() {
             `;
             botLoadingDiv.appendChild(actionsDiv);
             ajouterBoutonCasier(actionsDiv, midSas, convSas);
+            try { proposerFicheRevision(botLoadingDiv); } catch (e) { /* jamais bloquant */ }
         }
         saveChatHistory('sas');
 
@@ -7952,6 +7953,40 @@ async function rangerDansCasier(bouton) {
 
 // ❖ RÉVISION D'UNE FICHE DU CASIER (08/11/2026) : le bouton « Me réviser avec cette fiche » du casier ouvre le Sas
 // dans la matière de la fiche et lance une interrogation. Le texte de la fiche est joint à la question sans être affiché.
+// ❖ Invitation à garder l'essentiel (08/11/2026) : après quelques échanges, une fois par conversation, on propose
+// à l'élève abonné de transformer la leçon en fiche de révision rangeable dans son casier.
+function proposerFicheRevision(bulle) {
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    if (!sceau || sceau.indexOf('ENS-') === 0) return;
+    const histo = document.getElementById('sas-chat-history');
+    if (!histo) return;
+    const nbQuestions = histo.querySelectorAll('.user-message').length;
+    if (nbQuestions < 4) return;
+    const dernier = Array.from(histo.querySelectorAll('.user-message')).pop();
+    if (dernier && /fiche|interroge-moi|quiz/i.test(dernier.textContent || '')) return;
+    const cle = 'eduka_fiche_proposee_' + (sasConversationIds[avatarActif] || avatarActif);
+    try { if (sessionStorage.getItem(cle)) return; sessionStorage.setItem(cle, '1'); } catch (e) { return; }
+    const bloc = document.createElement('div');
+    bloc.className = 'proposition-fiche';
+    bloc.style.cssText = 'margin-top:10px;padding:10px 14px;border-radius:12px;background:#ECFDF5;border:1px solid #6EE7B7;color:#065F46;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+    const t = document.createElement('span');
+    t.textContent = 'Tu veux garder l\u2019essentiel de cette leçon ?';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '\uD83D\uDCDD Faire ma fiche de révision';
+    b.style.cssText = 'padding:5px 12px;border-radius:999px;border:1px solid #10B981;background:#10B981;color:#fff;font-weight:700;font-size:12px;cursor:pointer;';
+    b.addEventListener('click', function () {
+        const champ = document.getElementById('sas-user-input');
+        if (!champ) return;
+        champ.value = "Fais-moi une fiche de révision de la leçon que nous venons de voir : l\u2019essentiel, les définitions ou formules, les erreurs à éviter et un exemple. Elle doit tenir sur une page, pour que je la range dans mon casier.";
+        bloc.remove();
+        sendSasMessage();
+    });
+    bloc.appendChild(t);
+    bloc.appendChild(b);
+    bulle.appendChild(bloc);
+}
+
 function consommerContexteReviser() {
     const c = window._contexteReviser || '';
     window._contexteReviser = '';
