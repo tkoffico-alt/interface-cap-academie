@@ -12,6 +12,14 @@
 
   function $(id) { return document.getElementById(id); }
   function lire(cle) { try { return localStorage.getItem(cle) || ''; } catch (e) { return ''; } }
+  // Code Premium utilisable pour créer une salle : élève (ELV-) ou enseignant (ENS-), quel que soit l'endroit où il est mémorisé.
+  function sceauSalle() {
+    var e = lire('eduka_sceau'), p = lire('eduka_sceau_enseignant');
+    if (/^(ELV|ENS)-/.test(e)) return e;
+    if (/^ENS-/.test(p)) return p;
+    return e || p;
+  }
+  function estPremium() { return /^(ELV|ENS)-/.test(sceauSalle()); }
   function ecrire(cle, valeur) { try { localStorage.setItem(cle, valeur); } catch (e) { /* indisponible */ } }
   function el(balise, classe, texte) {
     var e = document.createElement(balise);
@@ -94,6 +102,9 @@
       var a = el('a', 'membre-nom', '👥 ' + x.titre); a.href = '?c=' + encodeURIComponent(x.code);
       li.appendChild(a); ul.appendChild(li);
     });
+    var prem = estPremium();
+    ['btn-binome', 'btn-nouvelle'].forEach(function (id) { $(id).classList.toggle('cache', !prem); });
+    $('bloc-premium').classList.toggle('cache', prem);
     ecran('liste');
   }
 
@@ -107,8 +118,8 @@
   }
   function afficherCreation(binome) {
     modeBinome(binome === true);
-    var sceau = lire('eduka_sceau');
-    if (!sceau) { erreur('Créer une salle : réservé aux abonnés Premium', "Pour créer une salle, connecte-toi à EdukaTchat avec ton abonnement Premium. Pour rejoindre la salle d\u2019un camarade, ouvre le lien qu\u2019il t\u2019a envoyé : aucun abonnement n\u2019est nécessaire."); return; }
+    var sceau = sceauSalle();
+    if (!estPremium()) { erreur('Créer une salle : réservé aux abonnés Premium', "Pour créer une salle, connecte-toi à EdukaTchat avec ton abonnement Premium. Pour rejoindre la salle d\u2019un camarade, ouvre le lien qu\u2019il t\u2019a envoyé : aucun abonnement n\u2019est nécessaire."); return; }
     $('c-pseudo').value = lire('eduka_salle_pseudo');
     adapterFormulaire();
     ecran('creation');
@@ -122,7 +133,7 @@
     if (!$('c-pseudo').value.trim()) { msg.textContent = 'Choisis un pseudonyme.'; return; }
     var b = $('btn-creer'); b.disabled = true; b.textContent = 'Création…';
     appel('', 'POST', {
-      matricule: lire('eduka_sceau'), appareil: etat.appareil, pseudo: $('c-pseudo').value.trim(),
+      matricule: sceauSalle(), appareil: etat.appareil, pseudo: $('c-pseudo').value.trim(),
       titre: titreSalle, matiere: $('c-matiere').value.trim(), classe: etat.binome ? '' : $('c-classe').value.trim(),
       objectif: etat.binome ? 'autre' : $('c-objectif').value, date_cible: etat.binome ? '' : $('c-date').value, taches: chapitres, binome: !!etat.binome
     }).then(function (res) {
@@ -344,7 +355,7 @@
   function relire(i) {
     var b = $('ps-relire'), zone = $('ps-relecture'); $('ps-msg').textContent = '';
     b.disabled = true; b.textContent = 'Relecture en cours…';
-    appel('/' + code + '/section/relire', 'POST', { appareil: etat.appareil, index: i, matricule: lire('eduka_sceau') }).then(function (res) {
+    appel('/' + code + '/section/relire', 'POST', { appareil: etat.appareil, index: i, matricule: sceauSalle() }).then(function (res) {
       b.disabled = false; b.textContent = '🔍 Demander une relecture (IA)';
       if (!res.ok) { $('ps-msg').textContent = messageErreur(res); return; }
       var r = res.donnees; zone.textContent = '';
@@ -366,7 +377,7 @@
     var msg = $('creation-msg'); msg.textContent = '';
     if (!$('c-titre').value.trim()) { msg.textContent = 'Écris d\u2019abord le titre ou le thème.'; return; }
     var b = $('btn-suggerer'); b.disabled = true; b.textContent = 'Réflexion…';
-    appel('/suggerer', 'POST', { matricule: lire('eduka_sceau'), objectif: $('c-objectif').value, titre: $('c-titre').value.trim(),
+    appel('/suggerer', 'POST', { matricule: sceauSalle(), objectif: $('c-objectif').value, titre: $('c-titre').value.trim(),
       matiere: $('c-matiere').value.trim(), classe: $('c-classe').value.trim() }).then(function (res) {
       b.disabled = false; b.textContent = '💡 Suggérer des parties (IA, facultatif)';
       if (!res.ok) { msg.textContent = messageErreur(res); return; }
@@ -376,7 +387,7 @@
   }
   /* ---------- Fiches partagées (casier) ---------- */
   var mesFichesChargees = false;
-  function estEleve() { return lire('eduka_sceau').indexOf('ELV-') === 0; }
+  function estEleve() { return sceauSalle().indexOf('ELV-') === 0; }
   function afficherFiches(d) {
     var ul = $('liste-fiches-salle'); ul.textContent = '';
     var fl = d.fiches || [];
@@ -402,7 +413,7 @@
     if (!estEleve() || (mesFichesChargees && !force)) return;
     mesFichesChargees = true;
     fetch('https://api.edukatchat.org/api/casier/liste', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ matricule: lire('eduka_sceau') }) }).then(function (r) { return r.json(); }).then(function (d) {
+      body: JSON.stringify({ matricule: sceauSalle() }) }).then(function (r) { return r.json(); }).then(function (d) {
       var sel = $('sf-choix'); sel.textContent = ''; var n = 0;
       (d.fiches || []).forEach(function (f) {
         if (f.source !== 'fiche') return;
@@ -415,7 +426,7 @@
   function partagerFiche() {
     var msg = $('sf-msg'); msg.textContent = '';
     var id = $('sf-choix').value; if (!id) return;
-    appel('/' + code + '/fiche/partager', 'POST', { appareil: etat.appareil, matricule: lire('eduka_sceau'), id: id }).then(function (res) {
+    appel('/' + code + '/fiche/partager', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), id: id }).then(function (res) {
       if (!res.ok) { msg.textContent = messageErreur(res); return; }
       msg.textContent = 'Fiche partagée ✓'; actualiser(true);
     });
@@ -438,7 +449,7 @@
   }
   function prendreFiche() {
     var fl = etat.ficheLue; if (!fl) return;
-    appel('/' + code + '/fiche/prendre', 'POST', { appareil: etat.appareil, matricule: lire('eduka_sceau'), id: fl.id }).then(function (res) {
+    appel('/' + code + '/fiche/prendre', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), id: fl.id }).then(function (res) {
       $('sf-msg').textContent = res.ok ? (res.donnees.message || 'Ajoutée à ton casier ✓') : messageErreur(res);
     });
   }
