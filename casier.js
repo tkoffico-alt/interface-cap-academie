@@ -153,6 +153,7 @@
       rendre(f.contenu, $('fiche-corps'));
       formules($('fiche-corps'));
       $('btn-supprimer').classList.toggle('cache', etat.courante.enAttente);
+      preparerPartage(f.source === 'fiche');
       $('fiche-msg').textContent = '';
       ecran('fiche');
     });
@@ -173,6 +174,34 @@
     });
   }
 
+  /* ---------- Partage dans une salle d'étude (salles mémorisées sur cet appareil) ---------- */
+  function sallesMemorisees() {
+    try { var l = JSON.parse(lire('eduka_salles') || '[]'); return Array.isArray(l) ? l.filter(function (x) { return x && x.code; }) : []; } catch (e) { return []; }
+  }
+  function preparerPartage(estFiche) {
+    var zone = $('zone-partage'), aide = $('p-aide');
+    zone.classList.add('cache'); aide.classList.add('cache');
+    if (!estFiche) return;
+    var salles = sallesMemorisees();
+    if (!salles.length) { aide.classList.remove('cache'); return; }
+    var sel = $('p-salle'); sel.textContent = '';
+    salles.forEach(function (s) { var o = el('option', '', s.titre || s.code); o.value = s.code; sel.appendChild(o); });
+    zone.classList.remove('cache');
+  }
+  function partagerSalle() {
+    var f = etat.courante; var msg = $('fiche-msg'); msg.textContent = '';
+    var code = $('p-salle').value;
+    if (!f || !f.id || !code) return;
+    fetch('https://api.edukatchat.org/api/salles/' + encodeURIComponent(code) + '/fiche/partager', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matricule: etat.sceau, appareil: lire('eduka_appareil_defi'), id: f.id })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        msg.textContent = r.ok ? 'Fiche partagée dans la salle ✓' : (typeof d.detail === 'string' ? d.detail : 'Partage impossible pour le moment.');
+      });
+    }).catch(function () { msg.textContent = 'Connexion impossible. Réessaie dans un instant.'; });
+  }
+
   function demarrer() {
     var retour = $('btn-retour-app');
     try { if (document.referrer && new URL(document.referrer).origin === location.origin) retour.addEventListener('click', function (e) { e.preventDefault(); history.back(); }); } catch (e) {}
@@ -182,6 +211,7 @@
     $('btn-copier').addEventListener('click', copier);
     $('btn-imprimer').addEventListener('click', function () { window.print(); });
     $('btn-supprimer').addEventListener('click', supprimer);
+    $('btn-partager-salle').addEventListener('click', partagerSalle);
     chargerListe();
   }
   document.addEventListener('DOMContentLoaded', demarrer);

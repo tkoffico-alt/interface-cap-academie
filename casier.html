@@ -59,6 +59,12 @@
       <div class="no-print">
         <button type="button" id="btn-copier" class="btn btn-sec">Copier le texte</button>
         <button type="button" id="btn-imprimer" class="btn btn-sec">Imprimer / Enregistrer en PDF</button>
+        <div id="zone-partage" class="cache">
+          <label for="p-salle">Partager cette fiche dans une salle d’étude</label>
+          <select id="p-salle"></select>
+          <button type="button" id="btn-partager-salle" class="btn btn-sec">👥 Partager dans cette salle</button>
+        </div>
+        <p id="p-aide" class="doux cache">Pour partager cette fiche avec des camarades, <a href="salle.html">crée une salle d’étude ou rejoins celle d’un camarade</a> : elle apparaîtra ensuite ici.</p>
         <button type="button" id="btn-supprimer" class="lien-discret">Retirer de mon casier</button>
         <p id="fiche-msg" class="erreur-msg" role="status"></p>
       </div>
@@ -66,6 +72,6 @@
   </main>
   <footer class="pied no-print">EdukaTchat™ — Propriété Intellectuelle Exclusive</footer>
 </div>
-<script src="casier.js?v=2"></script>
+<script src="casier.js?v=3"></script>
 </body>
 </html>
