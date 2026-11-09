@@ -7918,13 +7918,26 @@ function memoriserPointDeDepart() {
         if ((espaceActuel === 'eleve' || espaceActuel === 'sas') && avatarActif) {
             localStorage.setItem('eduka_retour', JSON.stringify({ espace: espaceActuel, avatar: avatarActif, t: Date.now() }));
         } else {
-            localStorage.removeItem('eduka_retour');
+            // Enseignant : on retient l'espace (et la catégorie) pour le retour depuis Séances de classe / Ma bibliothèque.
+            const appVue = document.getElementById('app-view');
+            const tabs = document.getElementById('teacher-tabs-container');
+            const chooser = document.getElementById('teacher-categorie-chooser');
+            if (appVue && appVue.style.display === 'flex' && tabs && tabs.style.display !== 'none') {
+                const instit = ['forge_primaire', 'cabinet_primaire'].some(function (id) {
+                    const t = document.getElementById('tab-' + id); return t && t.classList.contains('active');
+                });
+                localStorage.setItem('eduka_retour', JSON.stringify({ espace: 'enseignant', categorie: instit ? 'instituteur' : 'professeur', t: Date.now() }));
+            } else if (appVue && appVue.style.display === 'flex' && chooser && chooser.style.display === 'flex') {
+                localStorage.setItem('eduka_retour', JSON.stringify({ espace: 'enseignant', categorie: null, t: Date.now() }));
+            } else {
+                localStorage.removeItem('eduka_retour');
+            }
         }
     } catch (e) { /* jamais bloquant */ }
 }
 document.addEventListener('click', function (e) {
     try {
-        const a = e.target && e.target.closest ? e.target.closest('a[href="casier.html"], a[href="salle.html"], a[href="bibliotheque.html"], a[href="seance.html"]') : null;
+        const a = e.target && e.target.closest ? e.target.closest('a[href="casier.html"], a[href="salle.html"], a[href="bibliotheque.html"], a[href="seance.html"], a[href="seance-prof.html"]') : null;
         if (a) memoriserPointDeDepart();
     } catch (err) { /* jamais bloquant */ }
 }, true);
@@ -8148,6 +8161,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const r = brut ? JSON.parse(brut) : null;
         const retirer = function () { try { const e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); } catch (x) { /* ignoré */ } };
         setTimeout(retirer, 8000);
+        // Enseignant : retour dans son espace (et sa catégorie).
+        if (r && r.espace === 'enseignant' && (Date.now() - (r.t || 0) < 6 * 3600 * 1000) && localStorage.getItem('eduka_sceau_enseignant')) {
+            setTimeout(function () {
+                try {
+                    entrerDansEspaceEnseignant();
+                    if (r.categorie) choisirCategorieEnseignant(r.categorie);
+                } catch (x) { /* jamais bloquant */ }
+                setTimeout(retirer, 700);
+            }, 600);
+            return;
+        }
         const matieres = ['maths','physique','informatique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
         // Valable 6 heures, et seulement avec un code d'accès (sinon : accueil normal).
         if (!r || !r.avatar || !(Date.now() - (r.t || 0) < 6 * 3600 * 1000) || !localStorage.getItem('eduka_sceau') || matieres.indexOf(r.avatar) === -1) { retirer(); return; }

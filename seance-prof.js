@@ -439,7 +439,7 @@
       return;
     }
     $('btn-retour-app').addEventListener('click', function (e) {
-      try { if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) { e.preventDefault(); history.back(); } } catch (err) { /* lien normal */ }
+      try { if (localStorage.getItem('eduka_retour')) { e.preventDefault(); window.location.href = 'index.html?retour=1'; return; } if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) { e.preventDefault(); history.back(); } } catch (err) { /* lien normal */ }
     });
     $('btn-nouvelle').addEventListener('click', function () { viderFormulaire(); ouvrirCreation(); });
     $('btn-vider-roster').addEventListener('click', function () { etat.rosterCopie = null; $('roster-apercu').textContent = ''; $('btn-vider-roster').classList.add('cache'); });
