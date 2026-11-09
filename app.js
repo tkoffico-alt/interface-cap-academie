@@ -5861,7 +5861,7 @@ async function sendSasMessage() {
                 <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
             `;
             botLoadingDiv.appendChild(actionsDiv);
-            ajouterBoutonCasier(actionsDiv, midSas, convSas);
+            if (!window._rappelEnCours) ajouterBoutonCasier(actionsDiv, midSas, convSas); // pas de « Ranger » sur les questions d'un mini-quiz de rappel
             try { proposerFicheRevision(botLoadingDiv); } catch (e) { /* jamais bloquant */ }
             try { traiterScoreRappel(botLoadingDiv); } catch (e) { /* jamais bloquant */ }
         }
@@ -7967,6 +7967,8 @@ function proposerFicheRevision(bulle) {
     if (nbQuestions < 4) return;
     const dernier = Array.from(histo.querySelectorAll('.user-message')).pop();
     if (dernier && /fiche|interroge-moi|quiz/i.test(dernier.textContent || '')) return;
+    // Pas d'invitation dans une conversation de révision d'une fiche (mini-quiz de rappel ou « Me réviser avec cette fiche »).
+    if (window._rappelEnCours || Array.from(histo.querySelectorAll('.user-message')).some(function (m) { return /^\s*Interroge-moi (en 3 questions )?sur ma fiche/i.test(m.textContent || ''); })) return;
     const cle = 'eduka_fiche_proposee_' + (sasConversationIds[avatarActif] || avatarActif);
     // Deux invitations au maximum : après 4 questions, puis une seconde fois après 10.
     try {
