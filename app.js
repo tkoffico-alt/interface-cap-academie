@@ -8021,11 +8021,25 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!r || !r.contenu) return;
         const matieres = ['maths','physique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
         window._reviserFiche = r;
+        // Écran d'attente : cache l'accueil pendant le passage vers le Sas (évite le clignotement).
+        let voile = null;
+        try {
+            voile = document.createElement('div');
+            voile.id = 'voile-reviser';
+            voile.setAttribute('style', 'position:fixed;inset:0;z-index:99999;background:#F8FAFC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:inherit;color:#334155;text-align:center;padding:24px;');
+            voile.innerHTML = '<div style="font-size:42px;">\uD83E\uDDE0</div><div style="font-size:18px;font-weight:600;">Je pr\u00E9pare ta r\u00E9vision\u2026</div>';
+            document.body.appendChild(voile);
+        } catch (e) { voile = null; }
+        const retirerVoile = function () { try { if (voile && voile.parentNode) voile.parentNode.removeChild(voile); } catch (e) { /* ignoré */ } };
+        setTimeout(retirerVoile, 8000); // sécurité : le voile ne reste jamais bloqué
         setTimeout(function () {
-            if (!localStorage.getItem('eduka_sceau')) { window._reviserFiche = null; return; }
-            espaceActuel = 'eleve';
-            if (matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
-            else { openSpace('eleve'); }
+            if (!localStorage.getItem('eduka_sceau')) { window._reviserFiche = null; retirerVoile(); return; }
+            try {
+                espaceActuel = 'eleve';
+                if (matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
+                else { openSpace('eleve'); }
+            } catch (e) { /* jamais bloquant */ }
+            setTimeout(retirerVoile, 700);
         }, 600);
     } catch (e) { /* jamais bloquant */ }
 });
