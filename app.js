@@ -8018,19 +8018,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const brut = localStorage.getItem('eduka_reviser');
         localStorage.removeItem('eduka_reviser');
         const r = brut ? JSON.parse(brut) : null;
-        if (!r || !r.contenu) return;
+        if (!r || !r.contenu) { const e0 = document.getElementById('voile-reviser-css'); if (e0 && e0.parentNode) e0.parentNode.removeChild(e0); return; }
         const matieres = ['maths','physique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
         window._reviserFiche = r;
-        // Écran d'attente : cache l'accueil pendant le passage vers le Sas (évite le clignotement).
-        let voile = null;
-        try {
-            voile = document.createElement('div');
-            voile.id = 'voile-reviser';
-            voile.setAttribute('style', 'position:fixed;inset:0;z-index:99999;background:#F8FAFC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:inherit;color:#334155;text-align:center;padding:24px;');
-            voile.innerHTML = '<div style="font-size:42px;">\uD83E\uDDE0</div><div style="font-size:18px;font-weight:600;">Je pr\u00E9pare ta r\u00E9vision\u2026</div>';
-            document.body.appendChild(voile);
-        } catch (e) { voile = null; }
-        const retirerVoile = function () { try { if (voile && voile.parentNode) voile.parentNode.removeChild(voile); } catch (e) { /* ignoré */ } };
+        // Écran d'attente (posé par index.html dès le premier affichage) : retiré une fois le Sas ouvert.
+        const retirerVoile = function () { try { const e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); } catch (e) { /* ignoré */ } };
         setTimeout(retirerVoile, 8000); // sécurité : le voile ne reste jamais bloqué
         setTimeout(function () {
             if (!localStorage.getItem('eduka_sceau')) { window._reviserFiche = null; retirerVoile(); return; }
