@@ -135,31 +135,107 @@
     $('liste-compteur').textContent = etat.fiches.length ? (etat.fiches.length + ' rangé(s) sur ' + etat.maximum + ' possibles.' + (donnees && donnees.maitrisees ? ' · ✅ ' + donnees.maitrisees + ' fiche(s) maîtrisée(s)' : '')) : '';
     ecran('liste');
   }
+  /* ---------- Copie sur l'appareil (lecture hors connexion, 09/11/2026) ----------
+     Les fiches déjà ouvertes (et celles récupérées discrètement en arrière-plan) restent lisibles sans réseau.
+     Tout ce qui demande l'assistant ou le serveur (réviser, ranger, supprimer, partager) attend le retour du réseau. */
+  var CLE_HC = 'eduka_casier_hc';
+  function lireCopie() {
+    try {
+      var c = JSON.parse(localStorage.getItem(CLE_HC) || 'null');
+      if (c && c.sceau === etat.sceau && c.fiches) return c;
+    } catch (e) { /* copie illisible : ignorée */ }
+    return { sceau: etat.sceau, liste: null, fiches: {} };
+  }
+  function ecrireCopie(c) {
+    try { localStorage.setItem(CLE_HC, JSON.stringify(c)); } catch (e) { /* stockage plein : sans gravité */ }
+  }
+  function memoriserFiche(id, f) {
+    if (!id || !f || !f.contenu) return;
+    var c = lireCopie();
+    c.fiches[id] = { titre: f.titre, source: f.source, matiere: f.matiere, date: f.date, contenu: f.contenu };
+    ecrireCopie(c);
+  }
+  function memoriserListe(donnees) {
+    var c = lireCopie();
+    c.liste = donnees;
+    var gardees = {};
+    (donnees.fiches || []).forEach(function (f) { if (c.fiches[f.id]) gardees[f.id] = c.fiches[f.id]; });
+    c.fiches = gardees; // une fiche retirée du casier disparaît aussi de l'appareil
+    ecrireCopie(c);
+  }
+  function bandeauHorsConnexion(afficher) {
+    var b = $('bandeau-hc');
+    if (!afficher) { if (b) b.classList.add('cache'); return; }
+    if (!b) {
+      b = el('div', '', '📴 Tu es hors connexion : tu peux relire les fiches déjà enregistrées sur cet appareil. Pour réviser, ranger ou supprimer, reconnecte-toi.');
+      b.id = 'bandeau-hc';
+      b.style.cssText = 'margin:0 0 12px;padding:10px 14px;border-radius:12px;background:#FEF3C7;border:1px solid #FCD34D;color:#78350F;font-size:0.92em;';
+      var u = $('liste-fiches'); u.parentNode.insertBefore(b, u);
+    }
+    b.classList.remove('cache');
+  }
+  // Récupère en douceur (une par une, 20 au plus) les fiches du casier pas encore présentes sur l'appareil.
+  function precharger() {
+    var c = lireCopie();
+    var manquantes = (etat.fiches || []).filter(function (f) { return !c.fiches[f.id]; }).slice(0, 20);
+    (function suite() {
+      var f = manquantes.shift();
+      if (!f) return;
+      appel('/lire', { id: f.id }).then(function (res) {
+        if (res.ok) memoriserFiche(f.id, res.donnees);
+        if (res.statut === 0) return; // plus de réseau : on s'arrête
+        setTimeout(suite, 400);
+      });
+    })();
+  }
   function chargerListe() {
     ecran('chargement');
     appel('/liste').then(function (res) {
-      if (!res.ok) { erreur('Casier indisponible', messageErreur(res)); return; }
-      etat.fiches = res.donnees.fiches || []; etat.maximum = res.donnees.maximum || 60;
-      afficherListe(res.donnees);
+      if (res.ok) {
+        etat.fiches = res.donnees.fiches || []; etat.maximum = res.donnees.maximum || 60;
+        memoriserListe(res.donnees);
+        bandeauHorsConnexion(false);
+        afficherListe(res.donnees);
+        precharger();
+        return;
+      }
+      var copie = res.statut === 0 ? lireCopie() : null;
+      if (copie && copie.liste) {
+        etat.fiches = copie.liste.fiches || []; etat.maximum = copie.liste.maximum || 60;
+        var horsDevoirs = Object.assign({}, copie.liste, { devoirs_en_attente: [] }); // un devoir à faire a besoin du serveur
+        afficherListe(horsDevoirs);
+        bandeauHorsConnexion(true);
+        return;
+      }
+      erreur('Casier indisponible', messageErreur(res));
     });
   }
 
   /* ---------- Fiche ---------- */
+  function afficherFiche(f, corps, horsConnexion) {
+    etat.courante = { id: corps.id, contenu: f.contenu, enAttente: !!corps.devoir_matiere };
+    $('fiche-titre').textContent = f.titre;
+    $('fiche-meta').textContent = [f.source === 'devoir_en_attente' ? 'Devoir à faire' : (f.source === 'devoir' ? 'Devoir' : 'Fiche'), f.matiere, f.date ? dateCourte(f.date) : ''].filter(Boolean).join(' · ');
+    rendre(f.contenu, $('fiche-corps'));
+    formules($('fiche-corps'));
+    $('btn-supprimer').classList.toggle('cache', etat.courante.enAttente || horsConnexion);
+    etat.courante.matiere = f.matiere || ''; etat.courante.titre = f.titre || '';
+    $('btn-reviser').classList.toggle('cache', etat.courante.enAttente || f.source !== 'fiche' || horsConnexion);
+    preparerPartage(f.source === 'fiche' && !horsConnexion);
+    $('fiche-msg').textContent = horsConnexion ? '📴 Hors connexion : lecture seule. Reconnecte-toi pour réviser avec cette fiche.' : '';
+    ecran('fiche');
+  }
   function ouvrir(corps) {
     ecran('chargement');
     appel('/lire', corps).then(function (res) {
-      if (!res.ok) { erreur('Introuvable', messageErreur(res)); return; }
-      var f = res.donnees; etat.courante = { id: corps.id, contenu: f.contenu, enAttente: !!corps.devoir_matiere };
-      $('fiche-titre').textContent = f.titre;
-      $('fiche-meta').textContent = [f.source === 'devoir_en_attente' ? 'Devoir à faire' : (f.source === 'devoir' ? 'Devoir' : 'Fiche'), f.matiere, f.date ? dateCourte(f.date) : ''].filter(Boolean).join(' · ');
-      rendre(f.contenu, $('fiche-corps'));
-      formules($('fiche-corps'));
-      $('btn-supprimer').classList.toggle('cache', etat.courante.enAttente);
-      etat.courante.matiere = f.matiere || ''; etat.courante.titre = f.titre || '';
-      $('btn-reviser').classList.toggle('cache', etat.courante.enAttente || f.source !== 'fiche');
-      preparerPartage(f.source === 'fiche');
-      $('fiche-msg').textContent = '';
-      ecran('fiche');
+      if (res.ok) {
+        if (corps.id) memoriserFiche(corps.id, res.donnees);
+        afficherFiche(res.donnees, corps, false);
+        return;
+      }
+      var copie = (res.statut === 0 && corps.id) ? lireCopie().fiches[corps.id] : null;
+      if (copie) { afficherFiche(copie, corps, true); return; }
+      erreur('Introuvable', res.statut === 0 ? 'Tu es hors connexion et cet élément n’est pas encore enregistré sur cet appareil. Reconnecte-toi pour l’ouvrir.' : messageErreur(res));
     });
   }
   function copier() {
