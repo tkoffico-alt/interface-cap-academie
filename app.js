@@ -1232,7 +1232,9 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
 
         scrollToBottom('sas-chat-history');
         if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('sas');
+        const revisionLancee = !!window._reviserFiche;
         try { lancerRevisionFiche(); } catch (e) { /* jamais bloquant */ }
+        if (!revisionLancee) { try { afficherRappelsRevision(); } catch (e) { /* jamais bloquant */ } }
     }
 }
 
@@ -5861,6 +5863,7 @@ async function sendSasMessage() {
             botLoadingDiv.appendChild(actionsDiv);
             ajouterBoutonCasier(actionsDiv, midSas, convSas);
             try { proposerFicheRevision(botLoadingDiv); } catch (e) { /* jamais bloquant */ }
+            try { traiterScoreRappel(botLoadingDiv); } catch (e) { /* jamais bloquant */ }
         }
         saveChatHistory('sas');
 
@@ -7992,6 +7995,96 @@ function proposerFicheRevision(bulle) {
     bloc.appendChild(t);
     bloc.appendChild(b);
     bulle.appendChild(bloc);
+}
+
+// ❖ RÉVISION ESPACÉE (09/11/2026) : à l'entrée dans le Sas, un bandeau propose les fiches du casier à revoir aujourd'hui
+// (celles des matières au programme de demain d'abord). Un clic lance un mini-quiz de 3 questions ; le score
+// (« Score : X/3 » écrit par l'agent) programme le rappel suivant côté serveur.
+const MATIERES_RAPPEL = ['maths','physique','informatique','svt','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
+
+function appelRappels(chemin, corps) {
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    return fetch('https://api.edukatchat.org' + chemin, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ matricule: sceau }, corps || {}))
+    }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, donnees: d }; });
+    }).catch(function () { return { ok: false, donnees: {} }; });
+}
+
+function afficherRappelsRevision() {
+    const ancien = document.getElementById('bandeau-rappels');
+    if (ancien) ancien.remove();
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    // Pas de code, ou code enseignant : pas de casier. Le serveur tranche pour le reste (ELV- valide ou code Créateur).
+    if (!sceau || sceau.indexOf('ENS-') === 0) return;
+    const matiere = MATIERES_RAPPEL.indexOf(avatarActif) !== -1 ? avatarActif : '';
+    appelRappels('/api/casier/rappels', { matiere: matiere }).then(function (res) {
+        const d = res.donnees || {};
+        if (!res.ok || d.status !== 'success' || !d.a_revoir || !d.a_revoir.length) return;
+        const conteneur = document.getElementById('container-sas-custom');
+        const histo = document.getElementById('sas-chat-history');
+        if (!conteneur || !histo || document.getElementById('bandeau-rappels')) return;
+        const bandeau = document.createElement('div');
+        bandeau.id = 'bandeau-rappels';
+        bandeau.style.cssText = 'margin:8px 12px 0;padding:10px 14px;border-radius:14px;background:#F5F3FF;border:1px solid #C4B5FD;color:#4C1D95;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+        const t = document.createElement('span');
+        t.style.fontWeight = '700';
+        const n = d.total || d.a_revoir.length;
+        t.textContent = '🧠 ' + n + (n > 1 ? ' fiches à revoir aujourd’hui' : ' fiche à revoir aujourd’hui');
+        bandeau.appendChild(t);
+        d.a_revoir.slice(0, 3).forEach(function (f) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            const titre = String(f.titre || 'Fiche');
+            b.textContent = (f.demain ? '⭐ ' : '') + (titre.length > 34 ? titre.slice(0, 33) + '…' : titre);
+            b.title = f.demain ? 'Cette matière est au programme de demain' : 'Réviser cette fiche en 3 questions';
+            b.style.cssText = 'padding:5px 12px;border-radius:999px;border:1px solid #7C3AED;background:#7C3AED;color:#fff;font-weight:700;font-size:12px;cursor:pointer;';
+            b.addEventListener('click', function () { lancerRappelFiche(f.id, titre); });
+            bandeau.appendChild(b);
+        });
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.textContent = '×';
+        x.title = 'Plus tard';
+        x.setAttribute('aria-label', 'Masquer');
+        x.style.cssText = 'margin-left:auto;border:none;background:transparent;color:#6D28D9;font-size:18px;cursor:pointer;line-height:1;';
+        x.addEventListener('click', function () { bandeau.remove(); });
+        bandeau.appendChild(x);
+        conteneur.insertBefore(bandeau, histo);
+    });
+}
+
+function lancerRappelFiche(id, titre) {
+    const champ = document.getElementById('sas-user-input');
+    if (!champ) return;
+    appelRappels('/api/casier/lire', { id: id }).then(function (res) {
+        const d = res.donnees || {};
+        if (!res.ok || !d.contenu) return;
+        const b = document.getElementById('bandeau-rappels');
+        if (b) b.remove();
+        window._rappelEnCours = { id: id };
+        window._contexteReviser = '\n\n[CONSIGNE DE RAPPEL — ne la recopie pas] L’élève révise sa fiche ci-dessous avec un mini-quiz. Pose-lui EXACTEMENT 3 questions courtes sur cette fiche, UNE SEULE à la fois, et attends sa réponse avant de passer à la suivante. Après chaque réponse, corrige en une ou deux phrases, avec bienveillance. Après la 3e réponse, termine par une phrase d’encouragement, puis écris sur une ligne seule, exactement : Score : X/3 (X = nombre de bonnes réponses, entre 0 et 3). N’écris jamais cette ligne avant la fin.\n\nFICHE :\n' + String(d.contenu || '').slice(0, 6000);
+        champ.value = 'Interroge-moi en 3 questions sur ma fiche « ' + titre.slice(0, 80) + ' ».';
+        sendSasMessage();
+    });
+}
+
+function traiterScoreRappel(bulle) {
+    const r = window._rappelEnCours;
+    if (!r) return;
+    const m = /Score\s*:\s*([0-3])\s*\/\s*3/i.exec(bulle.textContent || '');
+    if (!m) return;
+    window._rappelEnCours = null;
+    appelRappels('/api/casier/rappel_resultat', { id: r.id, score: parseInt(m[1], 10) }).then(function (res) {
+        const d = res.donnees || {};
+        if (!res.ok || d.status !== 'success') return;
+        const note = document.createElement('div');
+        note.style.cssText = 'margin-top:8px;font-size:12px;color:#6D28D9;font-weight:600;';
+        note.textContent = d.maitrisee ? '✅ Fiche maîtrisée, bravo !' : '⏰ Prochain rappel de cette fiche : ' + String(d.prochaine || '').split('-').reverse().join('/');
+        bulle.appendChild(note);
+    });
 }
 
 function consommerContexteReviser() {
