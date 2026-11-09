@@ -7943,6 +7943,19 @@ async function rangerDansCasier(bouton) {
             bouton.dataset.fait = '1';
             bouton.textContent = '\u2705 Rang\u00e9';
             bouton.title = 'Rangé dans ton casier \u2014 clique pour l\u2019ouvrir';
+            // ❖ Révision espacée : on dit à l'élève ce qui va se passer (sinon la fonction passe inaperçue).
+            try {
+                if (d.rappel_le && bouton.parentNode && bouton.parentNode.parentNode && !bouton.parentNode.parentNode.querySelector('.note-rappel')) {
+                    const note = document.createElement('div');
+                    note.className = 'note-rappel';
+                    note.style.cssText = 'text-align:right;font-size:12px;color:#6D28D9;font-weight:600;margin-top:4px;';
+                    const demain = new Date(); demain.setDate(demain.getDate() + 1);
+                    const jourDemain = demain.getFullYear() + '-' + String(demain.getMonth() + 1).padStart(2, '0') + '-' + String(demain.getDate()).padStart(2, '0');
+                    const quand = d.rappel_le === jourDemain ? 'demain' : 'le ' + String(d.rappel_le).split('-').reverse().join('/');
+                    note.textContent = '\u23F0 Je te la rappellerai ' + quand + ' pour la réviser en 3 questions.';
+                    bouton.parentNode.parentNode.appendChild(note);
+                }
+            } catch (e) { /* jamais bloquant */ }
         } else {
             bouton.textContent = ancien;
             alert(typeof d.detail === 'string' ? d.detail : 'Impossible de ranger cette r\u00e9ponse pour le moment.');

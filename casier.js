@@ -126,11 +126,13 @@
     var ul = $('liste-fiches'); ul.textContent = '';
     etat.fiches.forEach(function (f) {
       var type = f.source === 'devoir' ? '📝 Devoir' : '📄 Fiche';
-      var infos = [type, f.matiere, dateCourte(f.date)].filter(Boolean).join(' · ');
+      var rappel = '';
+      if (f.source !== 'devoir') { rappel = f.maitrisee ? '✅ maîtrisée' : (f.rappel ? '⏰ rappel le ' + String(f.rappel).slice(5).split('-').reverse().join('/') : ''); }
+      var infos = [type, f.matiere, dateCourte(f.date), rappel].filter(Boolean).join(' · ');
       ul.appendChild(ligne(f.titre, infos, 'Ouvrir', function () { ouvrir({ id: f.id }); }));
     });
     $('liste-vide').classList.toggle('cache', etat.fiches.length > 0);
-    $('liste-compteur').textContent = etat.fiches.length ? (etat.fiches.length + ' rangé(s) sur ' + etat.maximum + ' possibles.') : '';
+    $('liste-compteur').textContent = etat.fiches.length ? (etat.fiches.length + ' rangé(s) sur ' + etat.maximum + ' possibles.' + (donnees && donnees.maitrisees ? ' · ✅ ' + donnees.maitrisees + ' fiche(s) maîtrisée(s)' : '')) : '';
     ecran('liste');
   }
   function chargerListe() {
