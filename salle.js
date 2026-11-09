@@ -578,6 +578,7 @@
     // sinon on ouvre simplement EdukaTchat.
     $('btn-retour-app').addEventListener('click', function (e) {
       try {
+        if (localStorage.getItem('eduka_retour')) { e.preventDefault(); window.location.href = 'index.html?retour=1'; return; }
         if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
           e.preventDefault(); history.back();
         }

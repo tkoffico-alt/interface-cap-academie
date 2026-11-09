@@ -7504,6 +7504,8 @@ document.addEventListener('click', function (e) {
 (function () {
     function memoriserRetour() {
         try {
+            // Élève dans une matière : le point de départ est déjà retenu par memoriserPointDeDepart (retour via index.html?retour=1).
+            if (localStorage.getItem('eduka_retour')) { sessionStorage.removeItem('eduka_retour'); return; }
             let etat = null;
             const appVue = document.getElementById('app-view');
             if (appVue && appVue.style.display === 'flex') {
@@ -7922,7 +7924,7 @@ function memoriserPointDeDepart() {
 }
 document.addEventListener('click', function (e) {
     try {
-        const a = e.target && e.target.closest ? e.target.closest('a[href="casier.html"]') : null;
+        const a = e.target && e.target.closest ? e.target.closest('a[href="casier.html"], a[href="salle.html"], a[href="bibliotheque.html"], a[href="seance.html"]') : null;
         if (a) memoriserPointDeDepart();
     } catch (err) { /* jamais bloquant */ }
 }, true);

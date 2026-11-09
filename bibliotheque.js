@@ -197,7 +197,7 @@
 
   function demarrer() {
     var retour = $('btn-retour-app');
-    try { if (document.referrer && new URL(document.referrer).origin === location.origin) retour.addEventListener('click', function (e) { e.preventDefault(); history.back(); }); } catch (e) {}
+    try { if (localStorage.getItem('eduka_retour')) { retour.addEventListener('click', function (e) { e.preventDefault(); window.location.href = 'index.html?retour=1'; }); } else if (document.referrer && new URL(document.referrer).origin === location.origin) retour.addEventListener('click', function (e) { e.preventDefault(); history.back(); }); } catch (e) {}
     etat.sceau = lire('eduka_sceau_enseignant') || lire('eduka_sceau');
     if (!etat.sceau) { erreur('Code enseignant nécessaire', 'Ouvrez EdukaTchat, entrez votre code d’accès enseignant (ENS-…), puis revenez ici.'); return; }
     $('filtre-matiere').addEventListener('change', afficherListe);
