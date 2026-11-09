@@ -7,10 +7,11 @@
     /* Révision depuis le casier : écran d'attente posé dès le premier affichage (avant le chargement de la page), retiré par app.js. */
     (function () {
         try {
-            if (!/[?&]reviser=1(&|$)/.test(location.search)) return;
+            var retour = /[?&]retour=1(&|$)/.test(location.search);
+            if (!/[?&]reviser=1(&|$)/.test(location.search) && !(retour && localStorage.getItem('eduka_retour'))) return;
             var st = document.createElement('style');
             st.id = 'voile-reviser-css';
-            st.textContent = 'body::before{content:"\\1F9E0  Je pr\\E9pare ta r\\E9vision\\2026";position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#F8FAFC;color:#334155;display:flex;align-items:center;justify-content:center;font:600 18px system-ui,sans-serif;text-align:center;}';
+            st.textContent = 'body::before{content:"' + (retour ? '\\1F4D6  Je te ram\\E8ne \\E0  ta mati\\E8re\\2026' : '\\1F9E0  Je pr\\E9pare ta r\\E9vision\\2026') + '";position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#F8FAFC;color:#334155;display:flex;align-items:center;justify-content:center;font:600 18px system-ui,sans-serif;text-align:center;}';
             document.head.appendChild(st);
             setTimeout(function () { var e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); }, 9000);
         } catch (e) { /* jamais bloquant */ }
@@ -2022,7 +2023,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.73"></script>
+    <script src="app.js?v=3.74"></script>
     <script src="visite-guidee.js?v=4"></script>
     <script src="centres-interet.js?v=7"></script>
 

@@ -7909,6 +7909,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ❖ CASIER DE FICHES (08/11/2026) : bouton « Ranger dans mon casier » sous les réponses du Sas.
 // Le navigateur n'envoie que les identifiants du message : le texte est relu côté serveur.
+// ❖ POINT DE DÉPART (09/11/2026) : avant d'ouvrir le casier, on retient l'espace et la matière de l'élève ;
+// le lien « Retour à EdukaTchat » du casier le ramène là (index.html?retour=1) au lieu de l'accueil.
+function memoriserPointDeDepart() {
+    try {
+        if ((espaceActuel === 'eleve' || espaceActuel === 'sas') && avatarActif) {
+            localStorage.setItem('eduka_retour', JSON.stringify({ espace: espaceActuel, avatar: avatarActif, t: Date.now() }));
+        } else {
+            localStorage.removeItem('eduka_retour');
+        }
+    } catch (e) { /* jamais bloquant */ }
+}
+document.addEventListener('click', function (e) {
+    try {
+        const a = e.target && e.target.closest ? e.target.closest('a[href="casier.html"]') : null;
+        if (a) memoriserPointDeDepart();
+    } catch (err) { /* jamais bloquant */ }
+}, true);
+
 function ajouterBoutonCasier(actionsDiv, messageId, conversationId) {
     try {
         const sceau = localStorage.getItem('eduka_sceau') || '';
@@ -7928,7 +7946,7 @@ function ajouterBoutonCasier(actionsDiv, messageId, conversationId) {
 }
 
 async function rangerDansCasier(bouton) {
-    if (bouton.dataset.fait === '1') { window.location.href = 'casier.html'; return; }
+    if (bouton.dataset.fait === '1') { memoriserPointDeDepart(); window.location.href = 'casier.html'; return; }
     const ancien = bouton.textContent;
     bouton.disabled = true;
     bouton.textContent = '\u2026';
@@ -8118,6 +8136,28 @@ function lancerRevisionFiche() {
     champ.value = 'Interroge-moi sur ma fiche \u00ab ' + String(r.titre || 'de révision').slice(0, 80) + ' \u00bb, une question à la fois.';
     setTimeout(function () { try { sendSasMessage(); } catch (e) { /* jamais bloquant */ } }, 300);
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (new URLSearchParams(location.search).get('retour') !== '1') return;
+        history.replaceState(null, '', location.pathname);
+        const brut = localStorage.getItem('eduka_retour');
+        localStorage.removeItem('eduka_retour');
+        const r = brut ? JSON.parse(brut) : null;
+        const retirer = function () { try { const e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); } catch (x) { /* ignoré */ } };
+        setTimeout(retirer, 8000);
+        const matieres = ['maths','physique','informatique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
+        // Valable 6 heures, et seulement avec un code d'accès (sinon : accueil normal).
+        if (!r || !r.avatar || !(Date.now() - (r.t || 0) < 6 * 3600 * 1000) || !localStorage.getItem('eduka_sceau') || matieres.indexOf(r.avatar) === -1) { retirer(); return; }
+        setTimeout(function () {
+            try {
+                espaceActuel = (r.espace === 'sas') ? 'sas' : 'eleve';
+                entrerDansLeChat(r.avatar);
+            } catch (x) { /* jamais bloquant */ }
+            setTimeout(retirer, 700);
+        }, 600);
+    } catch (e) { /* jamais bloquant */ }
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     try {

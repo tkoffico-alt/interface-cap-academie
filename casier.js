@@ -208,7 +208,15 @@
 
   function demarrer() {
     var retour = $('btn-retour-app');
-    try { if (document.referrer && new URL(document.referrer).origin === location.origin) retour.addEventListener('click', function (e) { e.preventDefault(); history.back(); }); } catch (e) {}
+    // Retour : vers la matière d'où l'élève est venu (point de départ retenu par le site) ; sinon page précédente ; sinon accueil.
+    try {
+      retour.addEventListener('click', function (e) {
+        var depart = null;
+        try { depart = localStorage.getItem('eduka_retour'); } catch (x) {}
+        if (depart) { e.preventDefault(); window.location.href = 'index.html?retour=1'; return; }
+        try { if (document.referrer && new URL(document.referrer).origin === location.origin) { e.preventDefault(); history.back(); } } catch (x) {}
+      });
+    } catch (e) {}
     etat.sceau = lire('eduka_sceau');
     if (!etat.sceau || etat.sceau.indexOf('ENS-') === 0) { erreur('🔒 Mon casier : réservé aux abonnés Premium', 'Avec l’abonnement Premium élève, tu ranges ici tes fiches et tes devoirs corrigés pour les retrouver quand tu veux. Ouvre EdukaTchat, entre ton code d’accès élève (ELV-…), puis reviens ici.'); return; }
     $('btn-retour-liste').addEventListener('click', chargerListe);
