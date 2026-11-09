@@ -15,7 +15,14 @@
 // style.css pour forcer les appareils déjà installés à récupérer la
 // nouvelle version (sinon ils resteraient sur une version mise en cache).
 
-const CACHE_VERSION = 'edukatchat-shell-v218';
+const CACHE_VERSION = 'edukatchat-shell-v219';
+
+// ❖ Images (schémas, illustrations) : cache d'abord (09/11/2026), pour économiser les données mobiles de l'élève —
+// un schéma déjà vu ne se retélécharge plus et reste visible hors connexion. Cache SÉPARÉ de la coquille
+// (il survit aux changements de CACHE_VERSION). ⚠️ Si une image est REMPLACÉE sous le même nom de fichier,
+// incrémenter IMG_CACHE (ex. v1 → v2) pour que les appareils la récupèrent. Au plus IMG_MAX images gardées.
+const IMG_CACHE = 'edukatchat-images-v1';
+const IMG_MAX = 150;
 
 const FICHIERS_COQUILLE = [
     '/',
@@ -46,7 +53,7 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((noms) => Promise.all(
             noms
-                .filter((nom) => nom !== CACHE_VERSION)
+                .filter((nom) => nom !== CACHE_VERSION && nom !== IMG_CACHE)
                 .map((nom) => caches.delete(nom))
         ))
     );
@@ -59,6 +66,25 @@ self.addEventListener('fetch', (event) => {
     // Ne jamais intercepter les appels API / cross-origin (chat, sceau, etc.)
     // -- toujours réseau, jamais de cache, pour rester 100% dynamique.
     if (url.origin !== self.location.origin || url.pathname.includes('/api/') || url.pathname.includes('verifier-sceau')) {
+        return;
+    }
+
+    if (event.request.method === 'GET' && url.pathname.indexOf('/images/illustrations/') === 0) {
+        event.respondWith(
+            caches.open(IMG_CACHE).then((cache) =>
+                cache.match(event.request).then((trouvee) => {
+                    if (trouvee) return trouvee;
+                    return fetch(event.request).then((reponse) => {
+                        if (reponse && reponse.ok) {
+                            cache.put(event.request, reponse.clone()).then(() => cache.keys()).then((cles) => {
+                                if (cles.length > IMG_MAX) return cache.delete(cles[0]); // la plus ancienne
+                            }).catch(() => {});
+                        }
+                        return reponse;
+                    });
+                })
+            )
+        );
         return;
     }
 
