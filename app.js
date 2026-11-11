@@ -1770,7 +1770,7 @@ function nettoyerValeurChampCreuseFiche(valeur) {
 // littéralement.
 function nettoyerLigneTableauFiche(ligne) {
     if (/^\s*\|.*\|\s*$/.test(ligne)) {
-        const cellules = ligne.split('|').map(c => c.trim()).filter(Boolean);
+        const cellules = ligne.replace(/\\\|/g, '\uE000').split('|').map(c => c.trim().replace(/\uE000/g, '|')).filter(Boolean);
         return cellules.join('  —  ');
     }
     return ligne;
@@ -1849,7 +1849,8 @@ function texteVersHtmlLegerFiche(bloc) {
     const { texte: sansGraph, jetons: jetonsGraph } = extraireEtRendreGraphique(bloc);
     const { texte: sansABC, jetons: jetonsABC } = extraireEtRendreABC(sansGraph);
     const { texte: blocProtege, images } = extraireImagesFicheSures(sansABC);
-    const echappe = echapperHTMLFiche(blocProtege);
+    // \| (barre de valeur absolue échappée par le modèle) : jeton neutre pendant le découpage des tableaux, restitué en | à la fin
+    const echappe = echapperHTMLFiche(blocProtege).replace(/\\\|/g, '\uE000');
     const paragraphes = echappe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
 
     // ❖ Le modèle produit souvent des listes "aérées" : une puce isolée
@@ -1906,7 +1907,7 @@ function texteVersHtmlLegerFiche(bloc) {
             return '<ul>' + b.lignes.map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('') + '</ul>';
         }
         return `<p>${b.lignes.join('<br>')}</p>`;
-    }).filter(Boolean).join('');
+    }).filter(Boolean).join('').replace(/\uE000/g, '|');
 
     const htmlAvecImages = images.length ? reinjecterImagesFiche(html, images) : html;
     const htmlAvecABC = jetonsABC.length ? reinjecterABC(htmlAvecImages, jetonsABC) : htmlAvecImages;
@@ -2443,7 +2444,7 @@ const ETIQUETTES_DEFAUT_DEROULEMENT_FICHE = [
 ];
 
 function decouperCellulesTableauFiche(ligne) {
-    return ligne.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+    return ligne.trim().replace(/\\\|/g, '\uE000').replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim().replace(/\uE000/g, '|'));
 }
 
 function normaliserTableauDeroulementFiche(texte) {
