@@ -221,7 +221,7 @@
     var t = el('p', '', '👀 Aperçu : voici ce que vous retrouverez avec un abonnement enseignant. Les fiches ci-dessous sont fictives et les boutons sont désactivés.');
     t.style.margin = '0 0 10px';
     var a = el('a', 'btn', 'Découvrir l’abonnement enseignant'); a.href = 'index.html?abo=enseignant';
-    var v = el('p', 'doux', ''); v.style.margin = '10px 0 0'; var lv = el('a', '', 'Voir aussi un aperçu des Séances de classe →'); lv.href = 'seance-prof.html'; lv.style.color = '#2563EB'; v.appendChild(lv);
+    var v = el('p', 'doux', ''); v.style.margin = '10px 0 0'; var lv = el('a', '', 'Voir aussi un aperçu des Séances de classe →'); lv.href = 'seance-prof.html'; lv.style.color = '#2563EB'; v.appendChild(lv); v.appendChild(document.createTextNode(' · ')); var le = el('a', '', '🎁 Essai gratuit de la semaine'); le.href = 'essai-enseignant.html'; le.style.color = '#2563EB'; v.appendChild(le);
     b.appendChild(t); b.appendChild(a); b.appendChild(v);
     var main = document.querySelector('main'); if (main && main.parentNode) main.parentNode.insertBefore(b, main);
   }
