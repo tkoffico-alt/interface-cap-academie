@@ -21,6 +21,7 @@
   }
   function erreur(titre, texte) { $('erreur-titre').textContent = titre; $('erreur-texte').textContent = texte; ecran('erreur'); }
   function appel(chemin, corps) {
+    if (etat.apercu) return Promise.resolve({ ok: false, statut: 0, donnees: {} }); // aperçu : aucun appel au serveur
     var corpsComplet = Object.assign({ matricule: etat.sceau }, corps || {});
     return fetch(API + chemin, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpsComplet) }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, statut: r.status, donnees: d }; });
@@ -288,6 +289,7 @@
 
   /* ---------- Liste ---------- */
   function afficherListe() {
+    if (etat.apercu) { listeDemo(); return; }
     ecran('chargement');
     appel('/mes-seances').then(function (res) {
       if (!res.ok) { erreur('Séances de classe', messageErreur(res)); return; }
@@ -309,6 +311,7 @@
 
   /* ---------- Tableau ---------- */
   function ouvrirTableau(code) {
+    if (etat.apercu) { etat.code = 'EXEMPLE'; etat.tableau = tableauDemo(); dessinerTableau(); ecran('tableau'); griserDemo(); return; }
     etat.code = code; ecran('chargement');
     appel('/' + code + '/tableau').then(function (res) {
       if (!res.ok) { erreur('Tableau indisponible', messageErreur(res)); return; }
@@ -431,17 +434,89 @@
     dessinerTableau();
   }
 
+  /* ---------- Aperçu pour l'enseignant non abonné (11/11/2026) ----------
+     Mêmes écrans que la vraie page, remplis d'exemples fictifs ; tout est grisé sauf la navigation. Aucun appel au serveur. */
+  function bandeauDemo() {
+    var b = el('div', 'carte'); b.id = 'bandeau-apercu'; b.style.borderLeft = '5px solid #F59E0B';
+    var t = el('p', '', '👀 Aperçu : voici ce que vous pourrez faire avec un abonnement enseignant. Les exemples ci-dessous sont fictifs et les boutons sont désactivés.');
+    t.style.margin = '0 0 10px';
+    var a = el('a', 'btn', 'Découvrir l’abonnement enseignant'); a.href = 'index.html?abo=enseignant';
+    b.appendChild(t); b.appendChild(a);
+    var page = document.querySelector('.page'); if (page) page.insertBefore(b, $('prof-corps'));
+  }
+  function griserDemo() {
+    if (!etat.apercu) return;
+    var gardes = { 'btn-retour-liste': 1, 'btn-annuler': 1, 'btn-nouvelle': 1 };
+    var champs = document.querySelectorAll('#prof-corps button, #prof-corps input, #prof-corps textarea, #prof-corps select');
+    Array.prototype.forEach.call(champs, function (e) {
+      if (gardes[e.id] || e.classList.contains('ok-demo')) return;
+      e.disabled = true;
+      if (e.tagName === 'BUTTON') e.title = 'Disponible avec l’abonnement enseignant';
+    });
+  }
+  function tableauDemo() {
+    var m = new Date();
+    var eleves = [
+      { nom: 'Awa K.', statut: 'termine', repondu: 10, total: 10, score: 9, temps_moyen: 21.4 },
+      { nom: 'Yao M.', statut: 'termine', repondu: 10, total: 10, score: 7, temps_moyen: 27 },
+      { nom: 'Fatou D.', statut: 'termine', repondu: 10, total: 10, score: 8, temps_moyen: 24.5 },
+      { nom: 'Ibrahim S.', statut: 'termine', repondu: 10, total: 10, score: 5, temps_moyen: 31.2 },
+      { nom: 'Mariam C.', statut: 'termine', repondu: 10, total: 10, score: 6, temps_moyen: 29.8 },
+      { nom: 'Kevin A.', statut: 'termine', repondu: 10, total: 10, score: 10, temps_moyen: 3.8 },
+      { nom: 'Grace T.', statut: 'en_cours', repondu: 4, total: 10, score: null, temps_moyen: null },
+      { nom: 'Serge N.', statut: 'en_cours', repondu: 7, total: 10, score: null, temps_moyen: null }
+    ];
+    return {
+      titre: 'Contrôle — Le théorème de Thalès (exemple)', etat: 'ouverte', mode: 'devoir',
+      ouvre_le: dateLocale(new Date(m.getTime() - 20 * 3600 * 1000)), ferme_le: dateLocale(new Date(m.getTime() + 28 * 3600 * 1000)),
+      nb_questions: 10, lien: 'https://edukatchat.org/seance.html?c=EXEMPLE', moyenne: 7.5, copie_photo: false, copies: {},
+      eleves: eleves, absents: ['Koffi Y.', 'Mariam T.'],
+      questions_ratees: [
+        { question: 'Quand peut-on appliquer la réciproque du théorème de Thalès ?', pct_reussite: 33, nb: 18 },
+        { question: 'Dans un agrandissement de rapport 3, par combien l’aire est-elle multipliée ?', pct_reussite: 50, nb: 18 },
+        { question: 'Quel rapport est égal à AM/AB quand (MN) est parallèle à (BC) ?', pct_reussite: 61, nb: 18 }
+      ],
+      signaux: ['Kevin A. a terminé ses 10 questions en 38 secondes : réponse très rapide, à apprécier par vous.']
+    };
+  }
+  function listeDemo() {
+    var m = new Date(), ul = $('liste-seances'); ul.textContent = '';
+    var li = el('li', 'membre');
+    li.appendChild(el('span', 'membre-nom', 'Contrôle — Le théorème de Thalès (exemple) — Mathématiques 3e'));
+    li.appendChild(el('span', 'membre-score', quand(dateLocale(new Date(m.getTime() - 20 * 3600 * 1000))) + ' → ' + quand(dateLocale(new Date(m.getTime() + 28 * 3600 * 1000)))));
+    var b = el('button', 'btn-petit ok-demo', 'Ouvrir'); b.type = 'button';
+    b.addEventListener('click', function () { ouvrirTableau('EXEMPLE'); });
+    var b2 = el('button', 'btn-petit', 'Dupliquer'); b2.type = 'button';
+    li.appendChild(b); li.appendChild(b2); ul.appendChild(li);
+    ecran('liste'); griserDemo();
+  }
+  function remplirCreationDemo() {
+    $('c-titre').value = 'Contrôle — Le théorème de Thalès'; $('c-matiere').value = 'Mathématiques'; $('c-classe').value = '3e';
+    $('c-chapitre').value = 'Le théorème de Thalès';
+    etat.questions = [{
+      question: 'Dans le triangle ABC, M est sur [AB] et N sur [AC], avec (MN) parallèle à (BC). Quel rapport est égal à AM/AB ?',
+      options: ['AN/AC', 'MN/AB', 'AN/NC', 'BC/MN'], bonne: 0, explication: 'Thalès : AM/AB = AN/AC = MN/BC.', source: 'ia'
+    }, {
+      question: 'Quand peut-on appliquer la réciproque du théorème de Thalès ?',
+      options: ['Quand deux rapports de longueurs sont égaux et que les points sont alignés dans le même ordre', 'Quand deux droites se coupent', 'Quand un triangle est rectangle', 'Jamais'], bonne: 0,
+      explication: 'On compare deux rapports et on vérifie l’alignement et l’ordre des points.', source: 'ia'
+    }];
+    dessinerQuestions();
+    $('creation-msg').textContent = 'Aperçu : avec l’abonnement, l’IA écrit les questions de votre chapitre, vous les relisez, puis vous lancez la séance.';
+    $('creation-msg').style.color = 'inherit';
+    griserDemo();
+  }
+
   /* ---------- Démarrage ---------- */
   function init() {
     etat.sceau = lire('eduka_sceau_enseignant') || lire('eduka_sceau');
-    if (!etat.sceau) {
-      erreur('Réservé aux enseignants', 'Connectez-vous d’abord à l’Espace Enseignants d’EdukaTchat avec votre code ENS-, puis revenez sur cette page.');
-      return;
-    }
+    // Sans code enseignant : aperçu en lecture seule (exemples fictifs, aucun appel au serveur, actions grisées).
+    etat.apercu = !etat.sceau;
+    if (etat.apercu) bandeauDemo();
     $('btn-retour-app').addEventListener('click', function (e) {
       try { if (localStorage.getItem('eduka_retour')) { e.preventDefault(); window.location.href = 'index.html?retour=1'; return; } if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) { e.preventDefault(); history.back(); } } catch (err) { /* lien normal */ }
     });
-    $('btn-nouvelle').addEventListener('click', function () { viderFormulaire(); ouvrirCreation(); });
+    $('btn-nouvelle').addEventListener('click', function () { viderFormulaire(); ouvrirCreation(); if (etat.apercu) remplirCreationDemo(); });
     $('btn-vider-roster').addEventListener('click', function () { etat.rosterCopie = null; $('roster-apercu').textContent = ''; $('btn-vider-roster').classList.add('cache'); });
     $('t-dupliquer').addEventListener('click', function () { dupliquer(etat.code); });
     $('btn-annuler').addEventListener('click', afficherListe);

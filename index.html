@@ -1778,6 +1778,22 @@
                         <p>Conseil pédagogique, situations-problèmes, élèves en difficulté.</p>
                         <span class="sas-atelier-entrer">Entrer →</span>
                     </div>
+                    <!-- ❖ Mes outils (11/11/2026) : accès directs, visibles à côté des ateliers (secondaire). Affichés par majMenuOutilsEnseignant() (app.js). -->
+                    <div id="sas-outils-prof" class="sas-outils-groupe" style="display: none;">
+                        <div class="sas-outils-titre">Mes outils</div>
+                        <a id="sas-outil-seance" class="categorie-card sas-atelier-card sas-atelier-seance" href="seance-prof.html" style="display: none;">
+                            <div class="sas-atelier-icone">📝</div>
+                            <h3>Séance de classe</h3>
+                            <p>Un quiz cliquable pour toute la classe, corrigé automatiquement.</p>
+                            <span class="sas-atelier-entrer">Ouvrir →</span>
+                        </a>
+                        <a id="sas-outil-biblio" class="categorie-card sas-atelier-card sas-atelier-biblio" href="bibliotheque.html" style="display: none;">
+                            <div class="sas-atelier-icone">📚</div>
+                            <h3>Ma bibliothèque</h3>
+                            <p>Retrouvez, relisez et imprimez toutes vos fiches enregistrées.</p>
+                            <span class="sas-atelier-entrer">Ouvrir →</span>
+                        </a>
+                    </div>
                 </div>
                 <div id="sas-ateliers-instituteur" class="sas-ateliers-groupe">
                     <div class="categorie-card sas-atelier-card sas-atelier-vert" onclick="switchTeacherTool('forge_primaire')">
@@ -2030,7 +2046,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.79"></script>
+    <script src="app.js?v=3.81"></script>
     <script src="visite-guidee.js?v=4"></script>
     <script src="centres-interet.js?v=7"></script>
 

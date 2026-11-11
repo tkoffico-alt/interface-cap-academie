@@ -530,6 +530,7 @@ function afficherSasAteliersEnseignant(categorie) {
     if (prof) prof.style.display = categorie === 'instituteur' ? 'none' : 'flex';
     if (inst) inst.style.display = categorie === 'instituteur' ? 'flex' : 'none';
     if (sas) sas.style.display = 'flex';
+    if (typeof majMenuOutilsEnseignant === 'function') majMenuOutilsEnseignant();
     if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('choix_atelier');
 }
 
@@ -7455,6 +7456,15 @@ function majMenuOutilsEnseignant() {
         if (blocSeance) blocSeance.style.display = (fonctionActive('seance') || (dansEns && fonctionActive('seance_vitrine'))) ? 'block' : 'none';
         const blocBiblio = document.getElementById('menu-nav-biblio-bloc');
         if (blocBiblio) blocBiblio.style.display = (fonctionActive('bibliotheque') || (dansEns && fonctionActive('bibliotheque_vitrine'))) ? 'block' : 'none';
+        // Mêmes règles pour les cartes « Mes outils » du Sas des ateliers (Espace Enseignant, secondaire).
+        const voirSeance = fonctionActive('seance') || (dansEns && fonctionActive('seance_vitrine'));
+        const voirBiblio = fonctionActive('bibliotheque') || (dansEns && fonctionActive('bibliotheque_vitrine'));
+        const carteSeance = document.getElementById('sas-outil-seance');
+        const carteBiblio = document.getElementById('sas-outil-biblio');
+        const groupeOutils = document.getElementById('sas-outils-prof');
+        if (carteSeance) carteSeance.style.display = voirSeance ? '' : 'none';
+        if (carteBiblio) carteBiblio.style.display = voirBiblio ? '' : 'none';
+        if (groupeOutils) groupeOutils.style.display = (voirSeance || voirBiblio) ? 'flex' : 'none';
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 }
 
@@ -8241,4 +8251,14 @@ document.addEventListener('fonctions-actives', function () {
         // Vitrine : le casier est visible pour tous les élèves (accès libre compris) ; sans code ELV-, sa page explique qu'il est réservé aux abonnés. Masqué pour un enseignant.
         if (bloc) bloc.style.display = codeEnseignantPresent() ? 'none' : 'block';
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+});
+
+// Aperçu enseignant (11/11/2026) : le lien « Découvrir l'abonnement » des pages Séance de classe / Ma bibliothèque
+// (sans code) revient ici avec ?abo=enseignant et ouvre la fenêtre d'abonnement enseignant.
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (new URLSearchParams(location.search).get('abo') !== 'enseignant') return;
+        history.replaceState(null, '', location.pathname);
+        setTimeout(function () { try { ouvrirEnseignantAboModal(); } catch (e) { /* jamais bloquant */ } }, 500);
+    } catch (e) { /* jamais bloquant */ }
 });

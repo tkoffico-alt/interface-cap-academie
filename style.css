@@ -2287,6 +2287,13 @@ body.dark-theme .graphique-fiche {
 .sas-atelier-lecons { --sas-couleur: #7C3AED; --sas-couleur2: #A855F7; }
 .sas-atelier-cabinet { --sas-couleur: #0D9488; --sas-couleur2: #14B8A6; }
 .sas-atelier-vert { --sas-couleur: #059669; --sas-couleur2: #34D399; }
+/* ❖ Mes outils (11/11/2026) : Séance de classe et Ma bibliothèque, sous les ateliers de l'Espace Enseignant (secondaire). */
+.sas-outils-groupe { flex-basis: 100%; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+.sas-outils-titre { flex-basis: 100%; text-align: center; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #94A3B8; margin-top: .4rem; }
+a.sas-atelier-card { text-decoration: none; display: block; color: inherit; }
+.sas-atelier-seance { --sas-couleur: #EA580C; --sas-couleur2: #F59E0B; }
+.sas-atelier-biblio { --sas-couleur: #0284C7; --sas-couleur2: #38BDF8; }
+@media (max-width: 700px) { .sas-outils-groupe { flex-direction: column; flex-wrap: nowrap; gap: .75rem; } a.sas-atelier-card { display: grid; } }
 body.dark-theme .sas-atelier-card { background: #1E293B; border-color: #334155; }
 body.dark-theme .sas-atelier-card h3 { color: #F1F5F9; }
 body.dark-theme .sas-atelier-card p { color: #94A3B8; }

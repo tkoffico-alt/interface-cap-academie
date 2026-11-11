@@ -20,6 +20,7 @@
   }
   function erreur(titre, texte) { $('erreur-titre').textContent = titre; $('erreur-texte').textContent = texte; ecran('erreur'); }
   function appel(chemin, corps) {
+    if (etat.apercu) return Promise.resolve({ ok: false, statut: 0, donnees: {} }); // aperçu : aucun appel au serveur
     var complet = Object.assign({ matricule: etat.sceau }, corps || {});
     return fetch(API + chemin, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(complet) }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, statut: r.status, donnees: d }; });
@@ -142,7 +143,7 @@
       var infos = [NOMS_OUTILS[f.outil] || f.outil, matiereDe(f), f.classe, dateCourte(f.cree_le)].filter(Boolean).join(' · ');
       corps.appendChild(el('div', 'tache-info', infos));
       li.appendChild(corps);
-      var b = el('button', 'btn-petit', 'Ouvrir'); b.type = 'button';
+      var b = el('button', 'btn-petit ok-demo', 'Ouvrir'); b.type = 'button';
       b.addEventListener('click', function () { ouvrirFiche(f.id); });
       li.appendChild(b); ul.appendChild(li);
     });
@@ -150,6 +151,7 @@
     ecran('liste');
   }
   function chargerListe() {
+    if (etat.apercu) { etat.fiches = FICHES_DEMO; etat.maximum = 150; remplirFiltre(); afficherListe(); griserDemo(); return; }
     ecran('chargement');
     appel('/liste').then(function (res) {
       if (!res.ok) { erreur('Bibliothèque indisponible', messageErreur(res)); return; }
@@ -160,6 +162,16 @@
 
   /* ---------- Fiche ---------- */
   function ouvrirFiche(id) {
+    if (etat.apercu) {
+      var d = FICHES_DEMO.filter(function (x) { return x.id === id; })[0]; if (!d) return;
+      etat.courante = d;
+      $('fiche-titre').textContent = d.titre;
+      $('fiche-meta').textContent = [NOMS_OUTILS[d.outil] || d.outil, d.matiere, d.classe, 'exemple fictif'].filter(Boolean).join(' · ');
+      rendre(d.contenu, $('fiche-corps'));
+      $('btn-reutiliser').textContent = '✏️ Réutiliser dans ' + (NOMS_OUTILS_COURTS[d.outil] || 'l’atelier');
+      $('zone-renommer').classList.add('cache'); $('fiche-msg').textContent = '';
+      ecran('fiche'); griserDemo(); return;
+    }
     ecran('chargement');
     appel('/lire', { id: id }).then(function (res) {
       if (!res.ok) { erreur('Fiche introuvable', messageErreur(res)); return; }
@@ -195,11 +207,41 @@
     });
   }
 
+  /* ---------- Aperçu pour l'enseignant non abonné (11/11/2026) ---------- */
+  var FICHES_DEMO = [
+    { id: 'demo1', outil: 'forge', titre: 'Mathématiques — Le théorème de Thalès (fiche de leçon)', matiere: 'Mathématiques', classe: '3e', cree_le: '2026-10-12',
+      contenu: '# Le théorème de Thalès\n\n**Compétence visée :** résoudre une situation-problème en utilisant le théorème de Thalès.\n\n## Objectifs\n- Reconnaître une configuration de Thalès.\n- Écrire l’égalité de trois rapports.\n- Calculer une longueur inconnue.\n\n## Déroulement\n| Étape | Durée | Activité |\n| --- | --- | --- |\n| Situation de départ | 10 min | Mesurer la hauteur d’un arbre avec son ombre |\n| Découverte | 15 min | Les élèves conjecturent l’égalité des rapports |\n| Application | 20 min | Trois exercices progressifs |\n\n*Exemple fictif : vos fiches réelles sont générées par l’IA à partir de votre chapitre.*' },
+    { id: 'demo2', outil: 'atelier', titre: 'Français — Évaluation : le récit au passé', matiere: 'Français', classe: '4e', cree_le: '2026-10-20',
+      contenu: '# Évaluation : le récit au passé\n\n**Durée :** 1 heure\n\n## Partie 1 : Compréhension (8 points)\n1. Relevez les verbes conjugués à l’imparfait dans le texte.\n2. Quelle est la valeur de l’imparfait dans la phrase 3 ?\n\n## Partie 2 : Production écrite (12 points)\nRacontez, en quinze lignes, une journée de marché en utilisant le passé simple et l’imparfait.\n\n*Exemple fictif : le barème et le corrigé sont fournis avec la vraie fiche.*' },
+    { id: 'demo3', outil: 'cabinet', titre: 'Conseil pédagogique — Élève distrait en cours', matiere: '', classe: '6e', cree_le: '2026-11-02',
+      contenu: '# Élève distrait en cours\n\n## Pistes à essayer\n- Placer l’élève près du tableau et alterner les questions orales.\n- Découper la tâche en étapes courtes avec un petit retour après chacune.\n- Valoriser chaque progrès, même minime.\n\n*Exemple fictif : le Cabinet adapte ses conseils à votre classe et à votre situation.*' }
+  ];
+  function bandeauDemo() {
+    var b = el('div', 'carte'); b.id = 'bandeau-apercu'; b.style.borderLeft = '5px solid #F59E0B';
+    var t = el('p', '', '👀 Aperçu : voici ce que vous retrouverez avec un abonnement enseignant. Les fiches ci-dessous sont fictives et les boutons sont désactivés.');
+    t.style.margin = '0 0 10px';
+    var a = el('a', 'btn', 'Découvrir l’abonnement enseignant'); a.href = 'index.html?abo=enseignant';
+    b.appendChild(t); b.appendChild(a);
+    var main = document.querySelector('main'); if (main && main.parentNode) main.parentNode.insertBefore(b, main);
+  }
+  function griserDemo() {
+    if (!etat.apercu) return;
+    var gardes = { 'btn-retour-liste': 1, 'filtre-matiere': 1 };
+    var champs = document.querySelectorAll('main button, main input, main textarea, main select');
+    Array.prototype.forEach.call(champs, function (e) {
+      if (gardes[e.id] || e.classList.contains('ok-demo')) return;
+      e.disabled = true;
+      if (e.tagName === 'BUTTON') e.title = 'Disponible avec l’abonnement enseignant';
+    });
+  }
+
   function demarrer() {
     var retour = $('btn-retour-app');
     try { if (localStorage.getItem('eduka_retour')) { retour.addEventListener('click', function (e) { e.preventDefault(); window.location.href = 'index.html?retour=1'; }); } else if (document.referrer && new URL(document.referrer).origin === location.origin) retour.addEventListener('click', function (e) { e.preventDefault(); history.back(); }); } catch (e) {}
     etat.sceau = lire('eduka_sceau_enseignant') || lire('eduka_sceau');
-    if (!etat.sceau) { erreur('Code enseignant nécessaire', 'Ouvrez EdukaTchat, entrez votre code d’accès enseignant (ENS-…), puis revenez ici.'); return; }
+    // Sans code enseignant : aperçu en lecture seule (exemples fictifs, aucun appel au serveur, actions grisées).
+    etat.apercu = !etat.sceau;
+    if (etat.apercu) bandeauDemo();
     $('filtre-matiere').addEventListener('change', afficherListe);
     $('btn-retour-liste').addEventListener('click', chargerListe);
     $('btn-copier').addEventListener('click', copier);
