@@ -824,6 +824,10 @@
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
             transform: translateY(-1px);
         }
+        /* ❖ Raccourcis élèves (11/11/2026) : pilule avec icône + petit libellé (texte masqué sur très petit écran). */
+        .btn-icon-groupe.btn-raccourci { width: auto; padding: 0 0.7rem; gap: 0.35rem; border-radius: 999px; text-decoration: none; }
+        .btn-raccourci-texte { font-size: 0.78rem; font-weight: 600; line-height: 1; }
+        @media (max-width: 340px) { .btn-raccourci-texte { display: none; } .btn-icon-groupe.btn-raccourci { padding: 0; width: 38px; } }
         body.dark-theme .btn-icon-groupe:hover {
             background-color: rgba(255, 255, 255, 0.12);
             color: #F8FAFC;
@@ -1661,6 +1665,9 @@
                  Enseignant. "Retour" reste seul et distinct : c'est une
                  action de sortie, pas un réglage. -->
             <div class="toolbar-outils">
+                <!-- ❖ Raccourcis élèves (11/11/2026) : mêmes pages que le menu ; affichés par majRaccourcisEleve() (app.js). -->
+                <a id="btn-raccourci-casier" class="btn-icon-groupe btn-raccourci" href="casier.html" style="display: none;" title="Mon casier" aria-label="Mon casier"><span aria-hidden="true">🗂️</span><span class="btn-raccourci-texte">Casier</span></a>
+                <a id="btn-raccourci-salle" class="btn-icon-groupe btn-raccourci" href="salle.html" style="display: none;" title="Salle d'étude" aria-label="Salle d'étude"><span aria-hidden="true">👥</span><span class="btn-raccourci-texte">Salle</span></a>
                 <button id="btn-theme" class="btn-icon-groupe btn-theme-toggle" onclick="toggleTheme()" title="Changer de thème" aria-label="Changer de thème">
                     🌙
                 </button>
@@ -2023,7 +2030,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.76"></script>
+    <script src="app.js?v=3.77"></script>
     <script src="visite-guidee.js?v=4"></script>
     <script src="centres-interet.js?v=7"></script>
 

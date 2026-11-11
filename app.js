@@ -468,6 +468,7 @@ function entrerDansEspaceEnseignant() {
     document.getElementById('teacher-tabs-container').style.display = 'none';
     const btnMatieresEnseignant = document.getElementById('btn-matieres');
     if (btnMatieresEnseignant) btnMatieresEnseignant.style.display = 'none';
+    if (typeof majRaccourcisEleve === 'function') majRaccourcisEleve();
     document.getElementById('teacher-categorie-chooser').style.display = 'flex';
     masquerSasAteliersEnseignant();
 }
@@ -1196,6 +1197,7 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
     if (btnMatieres) {
         btnMatieres.style.display = (espaceActuel === 'eleve' || espaceActuel === 'sas') ? 'flex' : 'none';
     }
+    if (typeof majRaccourcisEleve === 'function') majRaccourcisEleve();
 
     if(espaceActuel === 'sas' || espaceActuel === 'eleve') {
         document.getElementById('container-sas-custom').classList.add('active');
@@ -1353,6 +1355,7 @@ function goHome() {
     masquerChooserCategorieEnseignant();
     const btnMatieresAccueil = document.getElementById('btn-matieres');
     if (btnMatieresAccueil) btnMatieresAccueil.style.display = 'none';
+    if (typeof majRaccourcisEleve === 'function') majRaccourcisEleve();
 }
 
 // ❖ LE MENU DE NAVIGATION (remplace le simple bouton "Retour") : chaque
@@ -1383,6 +1386,25 @@ const MENU_NAV_DISPOSITIONS = {
         ['', ['aide', 'avis', 'deconnexion-bloc']]
     ]
 };
+// Raccourcis élèves (11/11/2026) : « Mon casier » et « Salle d'étude » en boutons visibles dans la barre d'outils,
+// à côté du thème et du plein écran (les enfants ne pensent pas toujours à ouvrir le menu). Ils suivent exactement
+// la même règle que les entrées du menu (blocs menu-nav-casier-bloc / menu-nav-salle-bloc : fonction ouverte par
+// le serveur, visibles aussi pour l'accès libre, la page explique alors « réservé aux abonnés ») et disparaissent
+// dans l'Espace Enseignant.
+function majRaccourcisEleve() {
+    try {
+        const enseignant = codeEnseignantPresent() || (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant');
+        [['btn-raccourci-casier', 'menu-nav-casier-bloc'], ['btn-raccourci-salle', 'menu-nav-salle-bloc']].forEach(function (c) {
+            const bouton = document.getElementById(c[0]);
+            const bloc = document.getElementById(c[1]);
+            if (!bouton) return;
+            const ouvert = !!bloc && bloc.style.display !== 'none';
+            bouton.style.display = (!enseignant && ouvert) ? 'flex' : 'none';
+        });
+    } catch (e) { /* la barre d'outils ne doit jamais gêner l'application */ }
+}
+document.addEventListener('fonctions-actives', function () { majRaccourcisEleve(); });
+
 function organiserMenuNavigation() {
     try {
         const panel = document.getElementById('menu-navigation-panel');
