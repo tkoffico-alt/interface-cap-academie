@@ -1394,12 +1394,13 @@ const MENU_NAV_DISPOSITIONS = {
 function majRaccourcisEleve() {
     try {
         const enseignant = codeEnseignantPresent() || (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant');
-        [['btn-raccourci-casier', 'menu-nav-casier-bloc'], ['btn-raccourci-salle', 'menu-nav-salle-bloc']].forEach(function (c) {
+        // Les règles sont recalculées ici (et non lues dans le menu) : au retour du casier / de la salle, l'espace
+        // s'ouvre avant que le serveur ait répondu, et le menu n'est pas encore à jour (bug vu le 11/11/2026).
+        const regles = [['btn-raccourci-casier', true], ['btn-raccourci-salle', fonctionActive('salle')]];
+        regles.forEach(function (c) {
             const bouton = document.getElementById(c[0]);
-            const bloc = document.getElementById(c[1]);
             if (!bouton) return;
-            const ouvert = !!bloc && bloc.style.display !== 'none';
-            bouton.style.display = (!enseignant && ouvert) ? 'flex' : 'none';
+            bouton.style.display = (!enseignant && c[1]) ? 'flex' : 'none';
         });
     } catch (e) { /* la barre d'outils ne doit jamais gêner l'application */ }
 }

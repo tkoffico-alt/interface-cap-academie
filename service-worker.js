@@ -15,7 +15,7 @@
 // style.css pour forcer les appareils déjà installés à récupérer la
 // nouvelle version (sinon ils resteraient sur une version mise en cache).
 
-const CACHE_VERSION = 'edukatchat-shell-v220';
+const CACHE_VERSION = 'edukatchat-shell-v221';
 
 // ❖ Images (schémas, illustrations) : cache d'abord (09/11/2026), pour économiser les données mobiles de l'élève —
 // un schéma déjà vu ne se retélécharge plus et reste visible hors connexion. Cache SÉPARÉ de la coquille
