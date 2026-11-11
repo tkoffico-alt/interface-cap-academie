@@ -13,6 +13,9 @@
   button,a.btn{display:inline-block;background:#3b82f6;color:#fff;border:0;border-radius:10px;padding:.75rem 1.2rem;font-size:1rem;cursor:pointer;text-decoration:none;margin:.3rem}
   a.btn.vert{background:#10b981}
   .petit{font-size:.85rem;color:#64748b}
+  .enfant{border:1px solid #d1fae5;border-radius:12px;padding:.6rem .8rem;margin:.6rem 0;background:#f0fdf4;text-align:left}
+  .enfant b{display:block;margin-bottom:.2rem}
+  .enfant .code{font-size:1.4rem;margin:.4rem 0;padding:.5rem}
 </style>
 </head>
 <body>
@@ -32,6 +35,16 @@
     return;
   }
   var essais = 0;
+  function afficherFamille(enfants, fin){
+    var cartes = enfants.map(function(e){
+      return '<div class="enfant"><b>' + esc(e.prenom) + '</b><div class="code">' + esc(e.sceau) + '</div></div>';
+    }).join('');
+    boite.innerHTML = '<h1>✅ Paiement confirmé — merci !</h1>' +
+      '<p>Voici le Code d\'accès de chaque enfant :</p>' + cartes +
+      '<p>Valables jusqu\'au <b>' + esc(fin) + '</b>.<br>Chaque enfant entre son propre code dans l\'Espace Élève sur EdukaTchat.</p>' +
+      '<a class="btn vert" href="/">Aller sur EdukaTchat</a>' +
+      '<p class="petit">Notez bien chaque code avec le prénom de l\'enfant : il sert aussi de clé pour son Carnet de progression. Les codes vous sont aussi envoyés par WhatsApp.</p>';
+  }
   function afficher(sceau, fin){
     var esp = sceau.indexOf('ENS-') === 0 ? 'l\'Espace Enseignant' : 'l\'Espace Élève (Académie / Espace de Préparation)';
     boite.innerHTML = '<h1>✅ Paiement confirmé — merci !</h1>' +
@@ -48,7 +61,7 @@
   function interroger(){
     essais++;
     fetch(API + '?reference=' + encodeURIComponent(ref)).then(function(r){return r.json();}).then(function(d){
-      if(d.status === 'success'){ afficher(d.sceau, d.date_fin); return; }
+      if(d.status === 'success'){ if(d.enfants && d.enfants.length > 1){ afficherFamille(d.enfants, d.date_fin); } else { afficher(d.sceau, d.date_fin); } return; }
       if(d.status === 'error'){ fin(); return; }
       if(essais < 20){ setTimeout(interroger, 3000); } else { fin(); }
     }).catch(function(){ if(essais < 20){ setTimeout(interroger, 3000); } else { fin(); } });
