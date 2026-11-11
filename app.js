@@ -8196,8 +8196,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         const matieres = ['maths','physique','informatique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
-        // Valable 6 heures, et seulement avec un code d'accès (sinon : accueil normal).
-        if (!r || !r.avatar || !(Date.now() - (r.t || 0) < 6 * 3600 * 1000) || !localStorage.getItem('eduka_sceau') || matieres.indexOf(r.avatar) === -1) { retirer(); return; }
+        // Valable 6 heures. L'Académie (espace « eleve ») exige un code d'accès ; l'Espace de Préparation (« sas », accès libre)
+        // n'en demande pas : le quota gratuit reste compté côté serveur (11/11/2026 : l'accès libre revenait à l'accueil).
+        const codeOuSas = !!localStorage.getItem('eduka_sceau') || (r && r.espace === 'sas');
+        if (!r || !r.avatar || !(Date.now() - (r.t || 0) < 6 * 3600 * 1000) || !codeOuSas || matieres.indexOf(r.avatar) === -1) { retirer(); return; }
         setTimeout(function () {
             try {
                 espaceActuel = (r.espace === 'sas') ? 'sas' : 'eleve';
