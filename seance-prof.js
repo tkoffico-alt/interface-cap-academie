@@ -441,7 +441,8 @@
     var t = el('p', '', '👀 Aperçu : voici ce que vous pourrez faire avec un abonnement enseignant. Les exemples ci-dessous sont fictifs et les boutons sont désactivés.');
     t.style.margin = '0 0 10px';
     var a = el('a', 'btn', 'Découvrir l’abonnement enseignant'); a.href = 'index.html?abo=enseignant';
-    b.appendChild(t); b.appendChild(a);
+    var v = el('p', 'doux', ''); v.style.margin = '10px 0 0'; var lv = el('a', '', 'Voir aussi un aperçu de Ma bibliothèque →'); lv.href = 'bibliotheque.html'; lv.style.color = '#2563EB'; v.appendChild(lv);
+    b.appendChild(t); b.appendChild(a); b.appendChild(v);
     var page = document.querySelector('.page'); if (page) page.insertBefore(b, $('prof-corps'));
   }
   function griserDemo() {
