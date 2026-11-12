@@ -1538,8 +1538,20 @@
                         <p style="margin: 0; font-size: 0.8em; color: #991B1B; font-weight: bold; line-height: 1.4;">🚨 IMPORTANT : utilisez EXACTEMENT le même numéro WhatsApp ici et à l'étape de paiement Paystack juste après. Un numéro différent empêchera le rattachement automatique de l'emploi du temps au compte (le paiement, lui, aboutira normalement).</p>
                     </div>
 
+                    <div id="pre-abo-choix-mode" style="display:flex; gap:8px; margin-bottom:12px;">
+                        <button type="button" id="btn-mode-seul" onclick="preAboChoisirMode('seul')" style="flex:1; padding:9px 6px; border-radius:8px; font-weight:700; font-size:0.82em; cursor:pointer; background:#1D4ED8; color:#fff; border:1px solid #1E3A8A;">👤 Un enfant</button>
+                        <button type="button" id="btn-mode-famille" onclick="preAboChoisirMode('famille')" style="flex:1; padding:9px 6px; border-radius:8px; font-weight:700; font-size:0.82em; cursor:pointer; background:#F1F5F9; color:#334155; border:1px solid #CBD5E1;">👨‍👩‍👧 Plusieurs enfants<br><span style="font-weight:400; font-size:0.9em;">tarif famille</span></button>
+                    </div>
                     <input type="text" id="pre-abo-telephone" placeholder="Numéro WhatsApp du parent" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
                     <input type="text" id="pre-abo-nom-eleve" placeholder="Nom et prénoms de l'élève" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <div id="pre-abo-famille" style="display:none; text-align:left; margin-bottom:10px;">
+                        <p style="margin:0 0 8px 0; font-size:0.78em; color:#1E3A8A; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px; padding:8px; line-height:1.45;">👨‍👩‍👧 <strong>Tarif famille</strong> (abonnement d'un mois, un seul paiement) : 1er enfant 5 000 FCFA, 2ᵉ enfant 4 250 FCFA (−15 %), 3ᵉ enfant et suivants 3 750 FCFA (−25 %). Chaque enfant reçoit son propre code d'accès, et les rapports de séance arrivent sur le même numéro WhatsApp.</p>
+                        <div id="pre-abo-enfants-sup"></div>
+                        <button type="button" id="btn-pre-abo-ajout-enfant" onclick="preAboAjouterEnfant()" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #93C5FD; border-radius:8px; padding:6px 10px; cursor:pointer; font-size:0.8em;">+ Ajouter un enfant</button>
+                        <p id="pre-abo-prix-famille" style="margin:8px 0 0 0; font-size:0.8em; color:#065F46; font-weight:700;"></p>
+                        <p style="margin:4px 0 0 0; font-size:0.72em; color:#6B7280;">Montant estimé : le tarif exact tient aussi compte des enfants déjà abonnés avec ce numéro.</p>
+                    </div>
+                    <p id="pre-abo-label-photo" style="margin:0 0 4px 0; font-size:0.78em; color:#4B5563; text-align:left;">📸 Photo de l'emploi du temps de l'élève (obligatoire)</p>
                     <input type="file" id="pre-abo-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 10px; font-size: 0.8em;">
                     <select id="pre-abo-duree" style="width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
                         <option value="mensuel">1 mois — 5 000 FCFA</option>
@@ -1547,6 +1559,7 @@
                         <option value="semestriel">6 mois — 25 000 FCFA (−17 %)</option>
                         <option value="annuel">12 mois — 48 000 FCFA (−20 %)</option>
                     </select>
+                    <p id="pre-abo-note-tarif" style="margin:-4px 0 10px 0; font-size:0.72em; color:#6B7280; text-align:left;">Un autre enfant est déjà abonné avec ce numéro ? Le tarif famille s'applique automatiquement à l'abonnement d'un mois (−15 % pour le 2ᵉ enfant, −25 % à partir du 3ᵉ).</p>
                     <p style="margin: 0 0 8px 0; color:#92400E; background:#FEF3C7; border-radius:8px; padding:6px 8px; font-size:0.75em; text-align:left;">📸 Photo nette, bien droite, toute la page visible, sans ombre ni reflet. Vous pourrez corriger avant de payer.</p>
                     <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Lire la photo</button>
                     <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0 0 10px 0; min-height: 16px;"></p>
@@ -2047,7 +2060,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.82"></script>
+    <script src="app.js?v=3.83"></script>
     <script src="visite-guidee.js?v=4"></script>
     <script src="centres-interet.js?v=7"></script>
 

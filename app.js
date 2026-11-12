@@ -720,7 +720,7 @@ const LIEN_PAIEMENT_PAYSTACK = "https://paystack.shop/pay/edukatchat-eleves-pare
 
 // ❖ Caisse EdukaTchat (08/10/2026) : le serveur calcule le montant et appelle
 // Paystack (aucun e-mail demandé) ; on redirige vers l'URL renvoyée.
-async function ouvrirPaiementAbonnement(donnees, feedback) {
+async function ouvrirPaiementAbonnement(donnees, feedback, repli) {
     try {
         const r = await fetch('https://api.edukatchat.org/api/paiement/initialiser', {
             method: 'POST',
@@ -731,6 +731,11 @@ async function ouvrirPaiementAbonnement(donnees, feedback) {
         if (d.status === 'success' && d.url) {
             window.location.href = d.url;
             return true;
+        }
+        // ❖ 12/11/2026 : si seul le calcul du tarif famille échoue (lecture du registre), on ne bloque
+        // pas le parent : on relance le paiement au tarif normal d'un enfant.
+        if (repli && /calculer le tarif/i.test(d.message || '')) {
+            return await ouvrirPaiementAbonnement(repli, feedback);
         }
         feedback.textContent = d.message || "Une erreur est survenue.";
         feedback.style.color = "#F87171";
@@ -760,6 +765,113 @@ async function payerAbonnementEnseignant() {
     if (!ok) bouton.disabled = false;
 }
 
+// =======================================================================
+// ❖ PAIEMENT FAMILLE : PLUSIEURS ENFANTS (12/11/2026, étape 4 du plan fratrie) ❖
+// Mode « Un enfant » (comportement d'avant, avec tarif famille automatique si le numéro a déjà
+// un enfant abonné) ou « Plusieurs enfants » (2 à 5, un seul paiement, un code par enfant).
+// Photo d'emploi du temps : obligatoire pour le 1er enfant (lue avant paiement), les autres
+// l'ajoutent plus tard depuis leur propre espace. Les prix ci-dessous sont un MIROIR de
+// REMISE_FRATRIE_POURCENT du serveur (gateway/main.py) : à tenir à jour ensemble.
+// =======================================================================
+let preAboMode = 'seul';
+const PRIX_FRATRIE_FCFA = [5000, 4250, 3750]; // 1er, 2e, 3e enfant et suivants
+const PRE_ABO_MAX_ENFANTS = 5;
+const STYLE_MODE_ACTIF = 'flex:1; padding:9px 6px; border-radius:8px; font-weight:700; font-size:0.82em; cursor:pointer; background:#1D4ED8; color:#fff; border:1px solid #1E3A8A;';
+const STYLE_MODE_INACTIF = 'flex:1; padding:9px 6px; border-radius:8px; font-weight:700; font-size:0.82em; cursor:pointer; background:#F1F5F9; color:#334155; border:1px solid #CBD5E1;';
+
+function preAboChoisirMode(mode) {
+    preAboMode = (mode === 'famille') ? 'famille' : 'seul';
+    const fam = preAboMode === 'famille';
+    const el = (id) => document.getElementById(id);
+    if (el('btn-mode-seul')) el('btn-mode-seul').style.cssText = fam ? STYLE_MODE_INACTIF : STYLE_MODE_ACTIF;
+    if (el('btn-mode-famille')) el('btn-mode-famille').style.cssText = fam ? STYLE_MODE_ACTIF : STYLE_MODE_INACTIF;
+    if (el('pre-abo-famille')) el('pre-abo-famille').style.display = fam ? 'block' : 'none';
+    if (el('pre-abo-duree')) el('pre-abo-duree').style.display = fam ? 'none' : '';
+    if (el('pre-abo-note-tarif')) el('pre-abo-note-tarif').style.display = fam ? 'none' : '';
+    if (el('pre-abo-nom-eleve')) el('pre-abo-nom-eleve').placeholder = fam ? "Nom et prénoms du 1er enfant" : "Nom et prénoms de l'élève";
+    if (el('pre-abo-label-photo')) el('pre-abo-label-photo').textContent = fam
+        ? "📸 Photo de l'emploi du temps du 1er enfant (obligatoire). Pour les autres enfants, elle s'ajoute plus tard depuis leur espace."
+        : "📸 Photo de l'emploi du temps de l'élève (obligatoire)";
+    if (fam && document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-sup').length === 0) preAboAjouterEnfant();
+    preAboMajPrixFamille();
+}
+
+function preAboNumeroterEnfants() {
+    document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-nom').forEach((inp, i) => {
+        inp.placeholder = 'Nom et prénoms du ' + (i + 2) + 'ᵉ enfant';
+    });
+    const bouton = document.getElementById('btn-pre-abo-ajout-enfant');
+    const n = document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-sup').length;
+    if (bouton) bouton.style.display = (n + 1 >= PRE_ABO_MAX_ENFANTS) ? 'none' : '';
+}
+
+function preAboAjouterEnfant() {
+    const zone = document.getElementById('pre-abo-enfants-sup');
+    if (!zone) return;
+    if (zone.querySelectorAll('.pre-abo-enfant-sup').length + 1 >= PRE_ABO_MAX_ENFANTS) return;
+    const st = 'padding:8px; border-radius:5px; border:1px solid #D1D5DB; font-size:0.85em;';
+    zone.insertAdjacentHTML('beforeend',
+        '<div class="pre-abo-enfant-sup" style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">' +
+        '<input type="text" class="pre-abo-enfant-nom" placeholder="Nom et prénoms" style="' + st + ' flex:1; min-width:0;">' +
+        '<button type="button" onclick="preAboSupprimerEnfant(this)" title="Retirer cet enfant" style="background:#FEE2E2; color:#B91C1C; border:none; border-radius:6px; padding:7px 10px; cursor:pointer;">✕</button>' +
+        '</div>');
+    preAboNumeroterEnfants();
+    preAboMajPrixFamille();
+}
+
+function preAboSupprimerEnfant(bouton) {
+    const ligne = bouton.closest('.pre-abo-enfant-sup');
+    if (ligne) ligne.remove();
+    preAboNumeroterEnfants();
+    preAboMajPrixFamille();
+}
+
+function preAboMajPrixFamille() {
+    const p = document.getElementById('pre-abo-prix-famille');
+    if (!p) return;
+    const n = 1 + document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-sup').length;
+    const prix = [];
+    for (let i = 0; i < n; i++) prix.push(PRIX_FRATRIE_FCFA[Math.min(i, PRIX_FRATRIE_FCFA.length - 1)]);
+    const total = prix.reduce((s, x) => s + x, 0);
+    const f = (x) => x.toLocaleString('fr-FR').replace(/ /g, ' ');
+    p.textContent = 'Total estimé : ' + f(total) + ' FCFA pour ' + n + ' enfant' + (n > 1 ? 's' : '') + ' (' + prix.map(f).join(' + ') + ')';
+}
+
+function preAboNomNormalise(s) {
+    return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' ');
+}
+
+// Renvoie { enfants:[{prenom, nom}], erreur } ; le 1er enfant est le champ « nom de l'élève ».
+function preAboEnfantsFamille(nomPremier) {
+    const noms = [String(nomPremier || '').trim()];
+    document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-nom').forEach(i => noms.push(i.value.trim()));
+    if (noms.some(n => !n)) return { enfants: [], erreur: "Renseignez le nom de chaque enfant, ou retirez la ligne vide avec ✕." };
+    if (noms.length < 2) return { enfants: [], erreur: "Ajoutez au moins un deuxième enfant, ou choisissez « Un enfant »." };
+    if (noms.length > PRE_ABO_MAX_ENFANTS) return { enfants: [], erreur: "Maximum " + PRE_ABO_MAX_ENFANTS + " enfants par paiement famille." };
+    const cles = noms.map(preAboNomNormalise);
+    if (new Set(cles).size < cles.length) return { enfants: [], erreur: "Deux enfants ont le même nom : ajoutez le nom de famille pour les différencier." };
+    const enfants = noms.map(n => { const m = n.split(/\s+/); return { prenom: m[0], nom: m.slice(1).join(' ') }; });
+    return { enfants: enfants, erreur: null };
+}
+
+async function preAboOuvrirPaiement(nomEleve, telephone, feedback) {
+    if (preAboMode === 'famille') {
+        const rf = preAboEnfantsFamille(nomEleve);
+        if (rf.erreur) { feedback.textContent = rf.erreur; feedback.style.color = '#F59E0B'; return false; }
+        return await ouvrirPaiementAbonnement({ profil: 'eleve', duree: 'mensuel', fratrie: true, telephone: telephone, enfants: rf.enfants }, feedback);
+    }
+    const mots = nomEleve.split(/\s+/);
+    const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
+    const donnees = { profil: 'eleve', duree: duree, prenom: mots[0], nom: mots.slice(1).join(' ') || mots[0], telephone: telephone };
+    if (duree === 'mensuel') {
+        // Tarif famille automatique si ce numéro a déjà un enfant abonné (calcul côté serveur).
+        const repli = Object.assign({}, donnees);
+        return await ouvrirPaiementAbonnement(Object.assign({}, donnees, { fratrie: true }), feedback, repli);
+    }
+    return await ouvrirPaiementAbonnement(donnees, feedback);
+}
+
 // ❖ RELECTURE DU PLANNING PAR LE PARENT AVANT PAIEMENT (27/10/2026) ❖
 function preAboAfficherRelecture(creneaux) { relectureAfficher('pre-abo', creneaux); }
 function preAboAjouterLigne() { relectureAjouter('pre-abo'); }
@@ -787,6 +899,10 @@ async function preAboValiderEtPayer() {
         feedback.style.color = "#F59E0B";
         return;
     }
+    if (preAboMode === 'famille') {
+        const rf = preAboEnfantsFamille(nomEleve);
+        if (rf.erreur) { feedback.textContent = rf.erreur; feedback.style.color = "#F59E0B"; return; }
+    }
     if (bouton) bouton.disabled = true;
     try {
         const response = await fetch('https://api.edukatchat.org/api/planning/pre_abonnement_valider', {
@@ -798,9 +914,7 @@ async function preAboValiderEtPayer() {
         if (data.status === 'success') {
             feedback.textContent = "✔ Emploi du temps validé. Ouverture du paiement...";
             feedback.style.color = "#10B981";
-            const mots = nomEleve.split(/\s+/);
-            const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
-            const ok = await ouvrirPaiementAbonnement({ profil: 'eleve', duree, prenom: mots[0], nom: mots.slice(1).join(' ') || mots[0], telephone }, feedback);
+            const ok = await preAboOuvrirPaiement(nomEleve, telephone, feedback);
             if (!ok && bouton) bouton.disabled = false;
         } else {
             feedback.textContent = data.message || 'Une erreur est survenue.';
@@ -830,6 +944,10 @@ async function envoyerPhotoPreAbonnement() {
         feedback.textContent = "Le nom de l'élève est requis.";
         feedback.style.color = "#F59E0B";
         return;
+    }
+    if (preAboMode === 'famille') {
+        const rf = preAboEnfantsFamille(nomEleve);
+        if (rf.erreur) { feedback.textContent = rf.erreur; feedback.style.color = "#F59E0B"; return; }
     }
     if (!inputFichier || !inputFichier.files || inputFichier.files.length === 0) {
         feedback.textContent = "Choisis d'abord une photo.";
@@ -863,9 +981,7 @@ async function envoyerPhotoPreAbonnement() {
             feedback.textContent = `✔ ${data.message}`;
             feedback.style.color = "#10B981";
             feedback.textContent = "✔ Photo reçue. Ouverture du paiement...";
-            const mots = nomEleve.split(/\s+/);
-            const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
-            const ok = await ouvrirPaiementAbonnement({ profil: 'eleve', duree, prenom: mots[0], nom: mots.slice(1).join(' ') || mots[0], telephone }, feedback);
+            const ok = await preAboOuvrirPaiement(nomEleve, telephone, feedback);
             if (!ok) bouton.disabled = false;
         } else {
             feedback.textContent = data.message || "Une erreur est survenue.";
