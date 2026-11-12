@@ -794,6 +794,7 @@ function preAboChoisirMode(mode) {
         : "📸 Photo de l'emploi du temps de l'élève (obligatoire)";
     if (fam && document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-sup').length === 0) preAboAjouterEnfant();
     preAboMajPrixFamille();
+    preAboPlanifierApercu();
 }
 
 function preAboNumeroterEnfants() {
@@ -834,8 +835,55 @@ function preAboMajPrixFamille() {
     for (let i = 0; i < n; i++) prix.push(PRIX_FRATRIE_FCFA[Math.min(i, PRIX_FRATRIE_FCFA.length - 1)]);
     const total = prix.reduce((s, x) => s + x, 0);
     const f = (x) => x.toLocaleString('fr-FR').replace(/ /g, ' ');
+    preAboPlanifierApercu();
     p.textContent = 'Total estimé : ' + f(total) + ' FCFA pour ' + n + ' enfant' + (n > 1 ? 's' : '') + ' (' + prix.map(f).join(' + ') + ')';
 }
+
+// ❖ 12/11/2026 : aperçu du VRAI tarif (serveur, lecture seule) dès que le numéro et le nom sont saisis.
+// En cas d'erreur ou de numéro incomplet, on n'affiche rien (le prix de base reste visible).
+let preAboApercuMinuteur = null;
+let preAboApercuSeq = 0;
+function preAboPlanifierApercu() {
+    clearTimeout(preAboApercuMinuteur);
+    preAboApercuMinuteur = setTimeout(preAboApercuTarif, 700);
+}
+async function preAboApercuTarif() {
+    const zone = document.getElementById('pre-abo-prix-reel');
+    const zoneFam = document.getElementById('pre-abo-prix-famille');
+    const tel = (document.getElementById('pre-abo-telephone') || {}).value || '';
+    const premier = ((document.getElementById('pre-abo-nom-eleve') || {}).value || '').trim();
+    const fam = preAboMode === 'famille';
+    const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
+    if (zone) zone.style.display = 'none';
+    if (tel.replace(/\D/g, '').length < 10 || !premier || (!fam && duree !== 'mensuel')) { return; }
+    const noms = [premier];
+    if (fam) document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-nom').forEach(i => { if (i.value.trim()) noms.push(i.value.trim()); });
+    const seq = ++preAboApercuSeq;
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/paiement/apercu_tarif', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telephone: tel, noms: noms })
+        });
+        const d = await r.json();
+        if (seq !== preAboApercuSeq || d.status !== 'success' || !Array.isArray(d.enfants) || !d.enfants.length) return;
+        const f = (x) => x.toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ');
+        if (fam) {
+            if (zoneFam && d.enfants.length === noms.length) zoneFam.textContent = 'Total à payer : ' + f(d.total) + ' FCFA pour ' + noms.length + ' enfants (' + d.enfants.map(e => f(e.montant)).join(' + ') + ')';
+        } else if (zone) {
+            const e = d.enfants[0];
+            const rg = e.rang === 1 ? '' : ' (' + e.rang + (e.rang === 2 ? 'ᵉ' : 'ᵉ') + ' enfant du numéro' + (e.rang === 2 ? ', −15 %' : ', −25 %') + ')';
+            zone.textContent = 'Tarif pour cet élève : ' + f(e.montant) + ' FCFA' + rg;
+            zone.style.display = 'block';
+        }
+    } catch (err) { /* silencieux : le prix de base reste affiché */ }
+}
+document.addEventListener('input', function (ev) {
+    const t = ev.target;
+    if (t && (t.id === 'pre-abo-telephone' || t.id === 'pre-abo-nom-eleve' || (t.classList && t.classList.contains('pre-abo-enfant-nom')))) preAboPlanifierApercu();
+});
+document.addEventListener('change', function (ev) {
+    if (ev.target && ev.target.id === 'pre-abo-duree') preAboPlanifierApercu();
+});
 
 function preAboNomNormalise(s) {
     return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
