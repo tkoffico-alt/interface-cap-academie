@@ -859,7 +859,8 @@ async function preAboOuvrirPaiement(nomEleve, telephone, feedback) {
     if (preAboMode === 'famille') {
         const rf = preAboEnfantsFamille(nomEleve);
         if (rf.erreur) { feedback.textContent = rf.erreur; feedback.style.color = '#F59E0B'; return false; }
-        return await ouvrirPaiementAbonnement({ profil: 'eleve', duree: 'mensuel', fratrie: true, telephone: telephone, enfants: rf.enfants }, feedback);
+        // Le serveur exige aussi prénom/nom au premier niveau (ceux du 1er enfant) avant d'examiner la liste.
+        return await ouvrirPaiementAbonnement({ profil: 'eleve', duree: 'mensuel', fratrie: true, telephone: telephone, prenom: rf.enfants[0].prenom, nom: rf.enfants[0].nom || rf.enfants[0].prenom, enfants: rf.enfants }, feedback);
     }
     const mots = nomEleve.split(/\s+/);
     const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
