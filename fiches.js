@@ -164,6 +164,7 @@
     // Sans code mémorisé dans ce navigateur, l'application demandera le code d'abonné élève avant d'envoyer la question.
     try {
       var titre = courante.fiche || courante.legende || courante.theme || 'ce schéma';
+      if (titre === titre.toUpperCase()) titre = titre.charAt(0) + titre.slice(1).toLowerCase();   // fiches enregistrées en capitales
       localStorage.setItem('eduka_schema', JSON.stringify({
         matiere: AVATAR[courante.matiere] || courante.matiere,
         niveau: nomNiveau(courante.niveau),
