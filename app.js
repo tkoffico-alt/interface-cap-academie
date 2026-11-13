@@ -8436,12 +8436,13 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(retirerVoile, 8000);
         const matieres = ['maths','physique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
         const sceau = localStorage.getItem('eduka_sceau') || '';
-        if (!r || !r.titre || !sceau || sceau.indexOf('ENS-') === 0 || (Date.now() - (r.t || 0) > 3600 * 1000)) { retirerVoile(); return; }
+        if (!r || !r.titre || (Date.now() - (r.t || 0) > 3600 * 1000)) { retirerVoile(); return; }
         window._schemaEnAttente = r;
         setTimeout(function () {
             try {
                 espaceActuel = 'eleve';
-                if (matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
+                // Sans code d'abonné mémorisé : l'application demande le code (fenêtre habituelle), puis la matière ; la question part ensuite.
+                if (sceau && sceau.indexOf('ENS-') !== 0 && matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
                 else { openSpace('eleve'); }
             } catch (e) { /* jamais bloquant */ }
             setTimeout(retirerVoile, 700);
@@ -8453,6 +8454,8 @@ function lancerQuestionSchema() {
     const r = window._schemaEnAttente;
     if (!r) return;
     window._schemaEnAttente = null;
+    if (espaceActuel !== 'eleve') return;   // réservé aux abonnés : jamais envoyée depuis l'accès libre
+    if (Date.now() - (r.t || 0) > 15 * 60 * 1000) return;   // question trop ancienne : on ne l'envoie plus
     const champ = document.getElementById('sas-user-input');
     if (!champ) return;
     champ.value = 'Explique-moi ce schéma : \u00ab ' + String(r.titre).slice(0, 110) + ' \u00bb' + (r.niveau ? ' (' + r.niveau + ')' : '') + ', étape par étape.';

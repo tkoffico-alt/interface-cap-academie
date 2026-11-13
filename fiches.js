@@ -161,11 +161,7 @@
     var sceau = '';
     try { sceau = localStorage.getItem('eduka_sceau') || ''; } catch (e) {}
     if (!courante) return;
-    if (!sceau || sceau.indexOf('ENS-') === 0) {
-      msg.innerHTML = '🔒 Cette fonction est réservée aux abonnés Premium. <a href="https://edukatchat.org/">Découvrir l\'abonnement</a>';
-      msg.style.display = 'block';
-      return;
-    }
+    // Sans code mémorisé dans ce navigateur, l'application demandera le code d'abonné élève avant d'envoyer la question.
     try {
       var titre = courante.fiche || courante.legende || courante.theme || 'ce schéma';
       localStorage.setItem('eduka_schema', JSON.stringify({
