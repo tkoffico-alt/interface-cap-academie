@@ -1543,14 +1543,14 @@ function goHome() {
 // éléments sont masqués n'est pas affiché.
 const MENU_NAV_DISPOSITIONS = {
     eleve: [
-        ['Mon parcours', ['sas', 'casier-bloc', 'salle-bloc']],
+        ['Mon parcours', ['sas', 'fiches', 'casier-bloc', 'salle-bloc']],
         ['Ateliers', ['orateur', 'philo', 'sciences', 'elan']],
         ['Orientation', ['eleve', 'boussole', 'boussole-univ']],
         ['Autres espaces', ['enseignant', 'parents']],
         ['', ['aide', 'avis', 'deconnexion-bloc']]
     ],
     enseignant: [
-        ['Mon travail', ['enseignant', 'seance-bloc', 'biblio-bloc']],
+        ['Mon travail', ['enseignant', 'seance-bloc', 'biblio-bloc', 'fiches']],
         ['Ateliers', ['orateur', 'philo', 'sciences', 'elan']],
         ['Orientation', ['eleve', 'boussole', 'boussole-univ']],
         ['Autres espaces', ['sas', 'parents']],
@@ -1567,7 +1567,7 @@ function majRaccourcisEleve() {
         const enseignant = codeEnseignantPresent() || (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant');
         // Les règles sont recalculées ici (et non lues dans le menu) : au retour du casier / de la salle, l'espace
         // s'ouvre avant que le serveur ait répondu, et le menu n'est pas encore à jour (bug vu le 11/11/2026).
-        const regles = [['btn-raccourci-casier', true], ['btn-raccourci-salle', fonctionActive('salle')]];
+        const regles = [['btn-raccourci-fiches', true], ['btn-raccourci-casier', true], ['btn-raccourci-salle', fonctionActive('salle')]];
         regles.forEach(function (c) {
             const bouton = document.getElementById(c[0]);
             if (!bouton) return;

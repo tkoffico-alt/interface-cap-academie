@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /casier.html
+Disallow: /salle.html
+Disallow: /seance.html
+Disallow: /seance-prof.html
+Disallow: /bibliotheque.html
+Disallow: /carnet.html
+Disallow: /merci.html
+Disallow: /emploi-du-temps.html
+Disallow: /essai-enseignant.html
+Disallow: /defi.html
+
+Sitemap: https://edukatchat.org/sitemap.xml
