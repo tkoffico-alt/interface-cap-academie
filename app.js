@@ -451,6 +451,9 @@ async function openSpace(space) {
 // le Code d'accès validé) de la
 // décision d'accès elle-même (openSpace ci-dessus).
 function entrerDansEspaceEnseignant() {
+    // 13/11/2026 : mémorise l'espace (retour depuis une page Séance/Bibliothèque : openSpace() n'est pas rappelé, les raccourcis disparaissaient).
+    espaceActuel = 'enseignant';
+    try { majMenuOutilsEnseignant(); } catch (e) { /* ignoré */ }
     document.getElementById('home-view').style.display = 'none';
     document.getElementById('app-view').style.display = 'flex';
 

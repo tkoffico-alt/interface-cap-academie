@@ -768,3 +768,5 @@ Philosophie 27/10/2026: methode 05_methode_dissertation_commentaire (+ bar emes 
 - 12/11/2026 : aperçu du vrai tarif sous le menu de durée. Serveur : POST /api/paiement/apercu_tarif (lecture seule, 60/jour/IP, renvoie rang+montant, pas de noms). Page : app.js v3.85 (preAboApercuTarif, anti-rebond 700 ms), SW v231. Prix de base inchangé si le serveur ne répond pas.
 
 - 13/11/2026 : raccourcis enseignants « Séance » et « Biblio » dans la barre d outils (a cote du thème/plein écran), Espace Enseignant seulement, règles = celles du menu (majMenuOutilsEnseignant). app.js v3.86, SW v232.
+
+- 13/11/2026 : correctif raccourcis enseignants : entrerDansEspaceEnseignant() fixe espaceActuel=enseignant (au retour de seance-prof/bibliotheque, openSpace n est pas rappelé). app.js v3.87, SW v233.
