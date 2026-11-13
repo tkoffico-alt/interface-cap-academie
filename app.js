@@ -7631,6 +7631,11 @@ function majMenuOutilsEnseignant() {
         if (carteSeance) carteSeance.style.display = voirSeance ? '' : 'none';
         if (carteBiblio) carteBiblio.style.display = voirBiblio ? '' : 'none';
         if (groupeOutils) groupeOutils.style.display = (voirSeance || voirBiblio) ? 'flex' : 'none';
+        // Raccourcis de la barre d'outils (13/11/2026) : seulement dans l'Espace Enseignant, mêmes règles que le menu.
+        const rs = document.getElementById('btn-raccourci-seance');
+        const rb = document.getElementById('btn-raccourci-biblio');
+        if (rs) rs.style.display = (dansEns && voirSeance) ? 'flex' : 'none';
+        if (rb) rb.style.display = (dansEns && voirBiblio) ? 'flex' : 'none';
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 }
 
