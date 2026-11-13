@@ -8,7 +8,7 @@
     (function () {
         try {
             var retour = /[?&]retour=1(&|$)/.test(location.search);
-            if (!/[?&]reviser=1(&|$)/.test(location.search) && !(retour && localStorage.getItem('eduka_retour'))) return;
+            if (!/[?&](reviser|schema)=1(&|$)/.test(location.search) && !(retour && localStorage.getItem('eduka_retour'))) return;
             var st = document.createElement('style');
             st.id = 'voile-reviser-css';
             st.textContent = 'body::before{content:"' + (retour ? '\\1F4D6  Je te ram\\E8ne \\E0  ta mati\\E8re\\2026' : '\\1F9E0  Je pr\\E9pare ta r\\E9vision\\2026') + '";position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#F8FAFC;color:#334155;display:flex;align-items:center;justify-content:center;font:600 18px system-ui,sans-serif;text-align:center;}';

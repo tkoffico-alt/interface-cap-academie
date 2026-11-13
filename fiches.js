@@ -143,7 +143,10 @@
 
   /* Agrandissement */
   var boite = document.getElementById('f-boite');
+  var courante = null;
   function ouvrir(im) {
+    courante = im;
+    document.getElementById('f-boite-msg').style.display = 'none';
     document.getElementById('f-boite-img').src = im.url;
     document.getElementById('f-boite-img').alt = im.legende || '';
     document.getElementById('f-boite-legende').textContent = im.legende || im.fiche || '';
@@ -151,6 +154,32 @@
     document.getElementById('f-fermer').focus();
   }
   function fermer() { boite.classList.remove('ouverte'); }
+  /* « Demander à l'assistant » : réservé aux abonnés Premium élèves (code ELV-). Le serveur revérifie le code à l'envoi. */
+  var AVATAR = { physique: 'physique', chimie: 'physique', 'physique-chimie': 'physique', histoire: 'histoire_geo', geographie: 'histoire_geo', arts_plastiques: 'arts_plastiques' };
+  document.getElementById('f-assistant').addEventListener('click', function () {
+    var msg = document.getElementById('f-boite-msg');
+    var sceau = '';
+    try { sceau = localStorage.getItem('eduka_sceau') || ''; } catch (e) {}
+    if (!courante) return;
+    if (!sceau || sceau.indexOf('ENS-') === 0) {
+      msg.innerHTML = '🔒 Cette fonction est réservée aux abonnés Premium. <a href="https://edukatchat.org/">Découvrir l\'abonnement</a>';
+      msg.style.display = 'block';
+      return;
+    }
+    try {
+      var titre = courante.fiche || courante.legende || courante.theme || 'ce schéma';
+      localStorage.setItem('eduka_schema', JSON.stringify({
+        matiere: AVATAR[courante.matiere] || courante.matiere,
+        niveau: nomNiveau(courante.niveau),
+        titre: String(titre).slice(0, 120),
+        t: Date.now()
+      }));
+      window.location.href = 'index.html?schema=1';
+    } catch (e) {
+      msg.textContent = 'Impossible d\'ouvrir l\'assistant sur cet appareil.';
+      msg.style.display = 'block';
+    }
+  });
   document.getElementById('f-fermer').addEventListener('click', fermer);
   boite.addEventListener('click', function (e) { if (e.target === boite) fermer(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fermer(); });

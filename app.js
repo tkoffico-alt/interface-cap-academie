@@ -1405,7 +1405,9 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
         if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('sas');
         const revisionLancee = !!window._reviserFiche;
         try { lancerRevisionFiche(); } catch (e) { /* jamais bloquant */ }
-        if (!revisionLancee) { try { afficherRappelsRevision(); } catch (e) { /* jamais bloquant */ } }
+        const schemaLance = !!window._schemaEnAttente;
+        try { lancerQuestionSchema(); } catch (e) { /* jamais bloquant */ }
+        if (!revisionLancee && !schemaLance) { try { afficherRappelsRevision(); } catch (e) { /* jamais bloquant */ } }
     }
 }
 
@@ -8418,6 +8420,44 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 600);
     } catch (e) { /* jamais bloquant */ }
 });
+
+// ❖ 13/11/2026 : « Demander à l'assistant » depuis la page publique Fiches et schémas (fiches.html).
+// Réservé aux abonnés Premium (code ELV- dans le navigateur ; le serveur revérifie à l'envoi du message).
+// Même principe que la révision depuis le casier : on ouvre le chat de la bonne matière et on envoie la question.
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (new URLSearchParams(location.search).get('schema') !== '1') return;
+        history.replaceState(null, '', location.pathname);
+        const brut = localStorage.getItem('eduka_schema');
+        localStorage.removeItem('eduka_schema');
+        let r = null;
+        try { r = brut ? JSON.parse(brut) : null; } catch (e) { r = null; }
+        const retirerVoile = function () { try { const e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); } catch (x) { /* ignoré */ } };
+        setTimeout(retirerVoile, 8000);
+        const matieres = ['maths','physique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
+        const sceau = localStorage.getItem('eduka_sceau') || '';
+        if (!r || !r.titre || !sceau || sceau.indexOf('ENS-') === 0 || (Date.now() - (r.t || 0) > 3600 * 1000)) { retirerVoile(); return; }
+        window._schemaEnAttente = r;
+        setTimeout(function () {
+            try {
+                espaceActuel = 'eleve';
+                if (matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
+                else { openSpace('eleve'); }
+            } catch (e) { /* jamais bloquant */ }
+            setTimeout(retirerVoile, 700);
+        }, 600);
+    } catch (e) { /* jamais bloquant */ }
+});
+
+function lancerQuestionSchema() {
+    const r = window._schemaEnAttente;
+    if (!r) return;
+    window._schemaEnAttente = null;
+    const champ = document.getElementById('sas-user-input');
+    if (!champ) return;
+    champ.value = 'Explique-moi ce schéma : \u00ab ' + String(r.titre).slice(0, 110) + ' \u00bb' + (r.niveau ? ' (' + r.niveau + ')' : '') + ', étape par étape.';
+    setTimeout(function () { try { sendSasMessage(); } catch (e) { /* jamais bloquant */ } }, 300);
+}
 
 document.addEventListener('fonctions-actives', function () {
     try {
