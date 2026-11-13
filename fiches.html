@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2563EB">
+<title>Fiches et schémas par chapitre — EdukaTchat</title>
+<meta name="description" content="Schémas légendés et fiches-formules du collège et du lycée, classés par matière, niveau et chapitre : maths, physique-chimie, SVT, histoire-géographie, langues. Gratuit, sans compte.">
+<link rel="icon" type="image/png" href="favicon.png">
+<script>
+(function () {
+  var sombre = false;
+  try {
+    var choix = localStorage.getItem('eduka_theme');
+    sombre = (choix === 'dark') || (!choix && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) {}
+  if (sombre) document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<link rel="stylesheet" href="seance.css?v=3">
+<style>
+  .f-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+  .f-grille-img { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .f-choix { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 76px; padding: 10px;
+    border: 1px solid var(--bord); border-radius: 12px; background: var(--option); color: inherit; font: inherit; font-weight: 700; text-align: center; cursor: pointer; }
+  .f-choix small { font-weight: 400; color: var(--doux); }
+  .f-choix:hover, .f-choix:focus-visible { border-color: var(--primaire); outline: none; }
+  .f-choix[disabled] { opacity: .5; cursor: default; }
+  .f-chemin { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 6px; }
+  .f-chapitre { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 10px 14px;
+    border: 1px solid var(--bord); border-radius: 12px; background: var(--option); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .f-chapitre:hover, .f-chapitre:focus-visible { border-color: var(--primaire); outline: none; }
+  .f-chapitre span:last-child { color: var(--doux); font-size: .85rem; white-space: nowrap; }
+  .f-vignette { margin: 0; border: 1px solid var(--bord); border-radius: 12px; overflow: hidden; background: #fff; cursor: zoom-in; }
+  .f-vignette img { display: block; width: 100%; height: auto; }
+  .f-vignette figcaption { padding: 8px 10px; font-size: .85rem; background: var(--carte); color: var(--doux); }
+  .f-relecture { display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: .75rem; font-weight: 700; }
+  .f-formule { margin-top: 10px; border: 1px solid var(--bord); border-radius: 12px; padding: 4px 12px; }
+  .f-formule summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+  .f-formule pre { white-space: pre-wrap; word-break: break-word; font: inherit; font-size: .92rem; margin: 6px 0 10px; }
+  .f-boite { position: fixed; inset: 0; z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 14px; background: rgba(15,23,42,.88); }
+  .f-boite.ouverte { display: flex; }
+  .f-boite img { max-width: 100%; max-height: 80vh; background: #fff; border-radius: 10px; }
+  .f-boite p { color: #fff; margin: 0; text-align: center; max-width: 720px; }
+  .f-boite .f-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .f-boite .btn { width: auto; margin-top: 0; }
+  .f-cta { margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--option); }
+  .f-cta a.btn { text-decoration: none; }
+  @media print {
+    body.f-impression > .page { display: none !important; }
+    body.f-impression .f-boite { position: static; display: flex; background: #fff; }
+    body.f-impression .f-boite .f-actions, body.f-impression .f-boite p { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <a class="marque" href="https://edukatchat.org/">← EdukaTchat</a>
+    <span class="doux">📖 Fiches et schémas</span>
+  </header>
+  <main aria-live="polite">
+    <section class="carte">
+      <h1>Fiches et schémas par chapitre</h1>
+      <p class="doux">Des schémas légendés et des fiches-formules, classés par matière, niveau et chapitre. Gratuit, sans compte.</p>
+      <div id="f-chemin" class="f-chemin"></div>
+      <div id="f-contenu"><p class="doux">Chargement…</p></div>
+    </section>
+    <section class="carte f-cta">
+      <strong>Une question sur un schéma ou un chapitre ?</strong>
+      <p class="doux">L'assistant EdukaTchat t'explique, étape par étape, et te propose des exercices.</p>
+      <a class="btn" href="https://edukatchat.org/">Poser ma question à l'assistant</a>
+    </section>
+  </main>
+  <footer class="pied no-print">EdukaTchat™ — Propriété Intellectuelle Exclusive · © edukatchat.org</footer>
+</div>
+<div id="f-boite" class="f-boite" role="dialog" aria-modal="true" aria-label="Schéma agrandi">
+  <img id="f-boite-img" alt="">
+  <p id="f-boite-legende"></p>
+  <div class="f-actions">
+    <button type="button" class="btn" id="f-imprimer">Imprimer</button>
+    <button type="button" class="btn btn-sec" id="f-fermer" style="background:#fff;">Fermer</button>
+  </div>
+</div>
+<script src="fiches.js?v=1"></script>
+</body>
+</html>
