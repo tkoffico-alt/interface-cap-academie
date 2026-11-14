@@ -24,7 +24,7 @@
     ['2nde', 'Seconde'], ['1ere', 'Première'], ['terminale', 'Terminale']
   ];
   // Matières du collège dont les schémas attendent encore la relecture d'un enseignant.
-  var A_RELIRE = { maths: ['6e', '5e', '4e', '3e'], histoire: ['6e', '5e', '4e', '3e'], geographie: ['6e', '5e', '4e', '3e'] };
+  var A_RELIRE = { maths: ['6e', '5e', '4e', '3e'], histoire: ['6e', '5e', '4e', '3e', '2nde', '1ere', 'terminale'], geographie: ['6e', '5e', '4e', '3e', '2nde', '1ere', 'terminale'] };
 
   var images = [], formules = [];
   var etat = { matiere: '', niveau: '', chapitre: '' };
