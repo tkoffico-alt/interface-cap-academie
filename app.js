@@ -2094,6 +2094,19 @@ function separerTraceEtTitreSuivant(segment) {
     const paragraphes = segment.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
     if (paragraphes.length === 0) return { trace: '', titreSuivant: '' };
     if (paragraphes.length === 1) return { trace: paragraphes[0], titreSuivant: '' };
+    // ❖ 14/11/2026 : plusieurs titres consécutifs (« Séance 2 — … » puis « I. Constat… », ou « III. Vérification… »
+    // puis « Activité 1 — … ») : tous sont réunis dans le titre de la phase suivante, au lieu de rester collés
+    // en texte brut à la fin de la trace écrite précédente.
+    const reTitreEtape = /^(?:S[ée]ance\s+\d+|Activit[ée]\s+\d+|[IVX]{1,4}\.)\s*\S/i;
+    let debutTitres = paragraphes.length;
+    while (debutTitres > 1 && paragraphes[debutTitres - 1].length <= 110 && !paragraphes[debutTitres - 1].includes('\n')
+           && reTitreEtape.test(paragraphes[debutTitres - 1]) && !/[.!?]$/.test(paragraphes[debutTitres - 1])) debutTitres--;
+    if (paragraphes.length - debutTitres >= 2) {
+        return {
+            trace: paragraphes.slice(0, debutTitres).join('\n\n'),
+            titreSuivant: paragraphes.slice(debutTitres).join(' — ')
+        };
+    }
     const dernier = paragraphes[paragraphes.length - 1];
     if (dernier.length <= 80 && !dernier.includes('\n')) {
         return { trace: paragraphes.slice(0, -1).join('\n\n'), titreSuivant: dernier.replace(/^[-•\s]+/, '') };
