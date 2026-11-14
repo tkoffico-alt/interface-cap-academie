@@ -1567,11 +1567,11 @@ function majRaccourcisEleve() {
         const enseignant = codeEnseignantPresent() || (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant');
         // Les règles sont recalculées ici (et non lues dans le menu) : au retour du casier / de la salle, l'espace
         // s'ouvre avant que le serveur ait répondu, et le menu n'est pas encore à jour (bug vu le 11/11/2026).
-        const regles = [['btn-raccourci-fiches', true], ['btn-raccourci-casier', true], ['btn-raccourci-salle', fonctionActive('salle')]];
+        const regles = [['btn-raccourci-fiches', true, true], ['btn-raccourci-casier', true], ['btn-raccourci-salle', fonctionActive('salle')]];   // 3e valeur : aussi visible pour l'enseignant
         regles.forEach(function (c) {
             const bouton = document.getElementById(c[0]);
             if (!bouton) return;
-            bouton.style.display = (!enseignant && c[1]) ? 'flex' : 'none';
+            bouton.style.display = ((!enseignant || c[2]) && c[1]) ? 'flex' : 'none';
         });
     } catch (e) { /* la barre d'outils ne doit jamais gêner l'application */ }
 }
