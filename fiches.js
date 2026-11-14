@@ -3,6 +3,19 @@
   'use strict';
   var API = 'https://api.edukatchat.org/api';
 
+  /* Retour à l'espace de travail : si l'élève est venu de sa matière (point de départ retenu par le site, comme pour le casier
+     et la bibliothèque), les liens vers EdukaTchat le ramènent là-bas ; sinon, comportement habituel (page d'accueil). */
+  (function () {
+    var liens = document.querySelectorAll('a[href="https://edukatchat.org/"]');
+    for (var i = 0; i < liens.length; i++) {
+      liens[i].addEventListener('click', function (e) {
+        try {
+          if (localStorage.getItem('eduka_retour')) { e.preventDefault(); window.location.href = 'index.html?retour=1'; }
+        } catch (x) { /* jamais bloquant */ }
+      });
+    }
+  })();
+
   var MATIERES = [
     { cle: 'maths', nom: 'Mathématiques', icone: '📐', sets: ['maths'] },
     { cle: 'physique', nom: 'Physique-Chimie', icone: '⚗️', sets: ['physique', 'chimie', 'physique-chimie'] },
