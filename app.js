@@ -8159,7 +8159,7 @@ function memoriserPointDeDepart() {
 }
 document.addEventListener('click', function (e) {
     try {
-        const a = e.target && e.target.closest ? e.target.closest('a[href="casier.html"], a[href="salle.html"], a[href="bibliotheque.html"], a[href="seance.html"], a[href="seance-prof.html"]') : null;
+        const a = e.target && e.target.closest ? e.target.closest('a[href="casier.html"], a[href="fiches.html"], a[href="salle.html"], a[href="bibliotheque.html"], a[href="seance.html"], a[href="seance-prof.html"]') : null;
         if (a) memoriserPointDeDepart();
     } catch (err) { /* jamais bloquant */ }
 }, true);
