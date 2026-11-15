@@ -344,7 +344,14 @@
     if (!x.a_corriges) return;
     var zone = el('div', 'zone-corriges'); c.appendChild(zone);
     if (x.corriges_ouverts) {
-      if (window.EdukaRendu) window.EdukaRendu.rendre(x.corriges, zone); else zone.textContent = x.corriges;
+      var corps = el('div', 'corriges-corps');
+      if (window.EdukaRendu) window.EdukaRendu.rendre(x.corriges, corps); else corps.textContent = x.corriges;
+      var bm = el('button', 'btn-petit', '🙈 Masquer les corrigés'); bm.type = 'button';
+      bm.addEventListener('click', function () {
+        var cache = corps.classList.toggle('cache');
+        bm.textContent = cache ? '👁 Afficher les corrigés' : '🙈 Masquer les corrigés';
+      });
+      zone.appendChild(bm); zone.appendChild(corps);
       return;
     }
     var h = el('h2', 'sec sec-corriges', 'Corrigés'); zone.appendChild(h);
