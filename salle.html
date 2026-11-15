@@ -77,6 +77,20 @@
   .sec-corriges { --c: #64748B; --b: rgba(100,116,139,.15); } .sec-corriges::before { content: '✅ '; }
   .tache-info .btn-fiche { background: #2563EB; border-color: #1D4ED8; color: #FFFFFF; font-weight: 700; }
   .tache-info .btn-generer { background: #F59E0B; border-color: #D97706; color: #1F2937; font-weight: 700; }
+  .sec-reponses { --c: #DB2777; --b: rgba(219,39,119,.12); } .sec-reponses::before { content: '✍️ '; }
+  .rep-exo { margin: 10px 0 14px; }
+  .rep-titre { font-weight: 700; margin-bottom: 6px; }
+  .rep-choix { display: flex; flex-wrap: wrap; gap: 8px; }
+  .rep-btn { font-size: 0.95rem; }
+  .rep-btn:disabled { opacity: 0.75; cursor: default; }
+  .rep-btn.rep-juste { background: #16A34A; border-color: #15803D; color: #FFFFFF; opacity: 1; font-weight: 700; }
+  .rep-btn.rep-faux { background: #DC2626; border-color: #B91C1C; color: #FFFFFF; opacity: 1; font-weight: 700; }
+  .rep-verdict { margin: 6px 0 0; font-weight: 600; }
+  .rep-valide { padding: 8px 12px; border-radius: 10px; background: rgba(22,163,74,.16); font-weight: 700; }
+  .rep-grille-titre { margin: 14px 0 6px; }
+  .rep-cell { text-align: center; }
+  .rep-moi { font-weight: 700; }
+  .rep-aide { margin: 6px 0; padding: 8px 12px; border-radius: 10px; background: rgba(217,119,6,.14); }
   .corriges-verrou { padding: 10px 12px; border-radius: 10px; background: rgba(100,116,139,.15); font-weight: 600; }
   .tache-info { font-size: 0.85rem; color: var(--doux); }
   .btn-petit { min-height: 44px; min-width: 44px; padding: 6px 10px; border: 1px solid var(--bord); border-radius: 10px; background: var(--option);
@@ -332,6 +346,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=22" defer></script>
+<script src="salle.js?v=23" defer></script>
 </body>
 </html>

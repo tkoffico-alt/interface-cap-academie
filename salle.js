@@ -333,7 +333,7 @@
   }
   function habillerFiche(c) {
     var classes = { 'a retenir': 'sec-retenir', 'vocabulaire': 'sec-vocab', 'exemple': 'sec-exemple', 'erreurs a eviter': 'sec-erreurs',
-      'astuce': 'sec-astuce', 'exercices': 'sec-exos', 'corriges': 'sec-corriges' };
+      'astuce': 'sec-astuce', 'exercices': 'sec-exos', 'corriges': 'sec-corriges', 'mes reponses': 'sec-reponses' };
     Array.prototype.forEach.call(c.querySelectorAll('h2, h3'), function (h) {
       var cle = h.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
       if (classes[cle]) h.classList.add('sec', classes[cle]);
@@ -355,7 +355,7 @@
       return;
     }
     var h = el('h2', 'sec sec-corriges', 'Corrigés'); zone.appendChild(h);
-    zone.appendChild(el('p', 'corriges-verrou', '🔒 Les corrigés s\u2019ouvrent quand tous les membres ont coché ce chapitre (' + x.nb_faits + ' sur ' + x.nb_membres + '). Fais les exercices seul, puis coche le chapitre.'));
+    zone.appendChild(el('p', 'corriges-verrou', (x.nb_exercices ? '🔒 Les corrigés s\u2019ouvrent quand tous les membres ont répondu à tous les exercices.' : '🔒 Les corrigés s\u2019ouvrent quand tous les membres ont coché ce chapitre (' + x.nb_faits + ' sur ' + x.nb_membres + '). Fais les exercices seul, puis coche le chapitre.')));
     if (x.peut_ouvrir_corriges) {
       var b = el('button', 'btn-petit', 'Ouvrir les corrigés maintenant (créateur)'); b.type = 'button';
       b.addEventListener('click', function () {
@@ -368,7 +368,63 @@
       zone.appendChild(b);
     }
   }
-  function ouvrirChapitre(i) {
+  function repondre(i, exo, choix) {
+    $('pc-msg').textContent = '';
+    appel('/' + code + '/contenu/repondre', 'POST', { appareil: etat.appareil, index: i, exo: exo, choix: choix }).then(function (res) {
+      if (!res.ok) { $('pc-msg').textContent = messageErreur(res); return; }
+      ouvrirChapitre(i, true); actualiser(true);
+    });
+  }
+  /* Mes réponses (résultat cliqué parmi 4 propositions, une seule tentative) + grille du groupe. */
+  function afficherReponses(c, x, i) {
+    var ex = x.exercices || [];
+    if (!ex.length) return;
+    var zone = el('div', 'zone-reponses'); c.appendChild(zone);
+    zone.appendChild(el('h2', 'sec sec-reponses', 'Mes réponses'));
+    zone.appendChild(el('p', 'tache-info', 'Fais d\u2019abord les exercices sur papier, puis clique sur le résultat que tu as trouvé. Une seule tentative par exercice.'));
+    ex.forEach(function (e) {
+      var bloc = el('div', 'rep-exo');
+      bloc.appendChild(el('div', 'rep-titre', 'Exercice ' + e.n));
+      var ligne = el('div', 'rep-choix');
+      e.propositions.forEach(function (p) {
+        var b = el('button', 'btn-petit rep-btn', p); b.type = 'button';
+        if (e.ma_reponse) {
+          b.disabled = true;
+          if (p === e.ma_reponse.choix) b.classList.add(e.ma_reponse.juste ? 'rep-juste' : 'rep-faux');
+        } else {
+          b.addEventListener('click', function () { repondre(i, e.exo, p); });
+        }
+        ligne.appendChild(b);
+      });
+      bloc.appendChild(ligne);
+      if (e.ma_reponse) bloc.appendChild(el('p', 'rep-verdict', e.ma_reponse.juste ? '✅ Bonne réponse !' : ('❌ Pas tout à fait.' + (e.ma_reponse.indice ? ' ' + e.ma_reponse.indice : ''))));
+      zone.appendChild(bloc);
+    });
+    if (x.ma_validation) zone.appendChild(el('p', 'rep-valide', '🎯 Chapitre validé : bravo !'));
+    else zone.appendChild(el('p', 'tache-info', 'Pour valider le chapitre : au moins ' + x.seuil + ' bonne(s) réponse(s) sur ' + x.nb_exercices + '.'));
+    /* Grille du groupe : qui a réussi quoi (tous les membres de la salle la voient). */
+    zone.appendChild(el('h3', 'rep-grille-titre', 'Le groupe'));
+    var tab = el('table', 'tableau-suivi rep-grille'), tete = el('tr');
+    tete.appendChild(el('th', '', 'Élève'));
+    ex.forEach(function (e) { tete.appendChild(el('th', '', 'Ex. ' + e.n)); });
+    tete.appendChild(el('th', '', 'Score'));
+    tab.appendChild(tete);
+    (x.grille || []).forEach(function (g) {
+      var tr = el('tr');
+      tr.appendChild(el('td', g.moi ? 'rep-moi' : '', g.pseudo + (g.moi ? ' (moi)' : '')));
+      g.resultats.forEach(function (r) { tr.appendChild(el('td', 'rep-cell', r === null ? '⏳' : (r ? '✅' : '❌'))); });
+      tr.appendChild(el('td', 'rep-cell', g.score + ' / ' + x.nb_exercices));
+      tab.appendChild(tr);
+    });
+    var env = el('div', 'tableau-defil'); env.appendChild(tab); zone.appendChild(env);
+    (x.aides || []).forEach(function (a) {
+      zone.appendChild(el('p', 'rep-aide', '🤝 Exercice ' + a.n + ' : ' + a.ont_rate.join(', ') + ' a eu du mal ; ' + a.ont_reussi.join(', ') + ' l\u2019a réussi et peut expliquer.'));
+    });
+    var br = el('button', 'btn-petit', '🔄 Actualiser la grille'); br.type = 'button';
+    br.addEventListener('click', function () { ouvrirChapitre(i, true); });
+    zone.appendChild(br);
+  }
+  function ouvrirChapitre(i, sansDefilement) {
     $('plan-msg').textContent = '';
     appel('/' + code + '/contenu/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
       if (!res.ok) { $('plan-msg').textContent = messageErreur(res); return; }
@@ -377,12 +433,12 @@
       etat.chapitreLu = i;
       $('pc-titre').textContent = x.titre;
       $('pc-meta').textContent = 'Fiche préparée par l\u2019assistant à la demande du créateur. Vérifie-la avec ton cours.';
-      if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); afficherCorriges($('pc-corps'), x, i); habillerFiche($('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
+      if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); afficherReponses($('pc-corps'), x, i); afficherCorriges($('pc-corps'), x, i); habillerFiche($('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
       else { $('pc-corps').textContent = x.texte; }
       $('pc-msg').textContent = '';
       $('pc-regenerer').classList.toggle('cache', !x.peut_regenerer);
       $('panneau-chapitre').classList.remove('cache');
-      $('panneau-chapitre').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (!sansDefilement) $('panneau-chapitre').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
   function compter() { $('ps-compteur').textContent = $('ps-texte').value.length + ' / 3000 caractères'; }
@@ -692,7 +748,7 @@
     $('pc-fermer').addEventListener('click', fermerPanneaux);
     $('pc-regenerer').addEventListener('click', function () {
       if (etat.chapitreLu === undefined || etat.chapitreLu === null) return;
-      if (!confirm('Régénérer la fiche de ce chapitre ? La fiche actuelle sera remplacée et tu ne pourras plus la régénérer.')) return;
+      if (!confirm('Régénérer la fiche de ce chapitre ? La fiche et les réponses déjà données seront remplacées, et tu ne pourras plus la régénérer.')) return;
       genererFiche(etat.chapitreLu, true, null);
     });
     $('ps-texte').addEventListener('input', compter);
