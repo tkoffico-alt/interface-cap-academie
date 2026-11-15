@@ -90,12 +90,22 @@
     l.unshift({ code: c, titre: String(titre || '').slice(0, 60) });
     ecrire('eduka_salles', JSON.stringify(l.slice(0, 8)));
   }
+  function oublierSalle(c) {
+    var l = salleMemorisees().filter(function (x) { return x && x.code !== c; });
+    ecrire('eduka_salles', JSON.stringify(l));
+  }
   function afficherListe(l) {
     var ul = $('liste-salles'); ul.textContent = '';
     l.forEach(function (x) {
       var li = el('li', 'membre');
       var a = el('a', 'membre-nom', '👥 ' + x.titre); a.href = '?c=' + encodeURIComponent(x.code);
-      li.appendChild(a); ul.appendChild(li);
+      li.appendChild(a);
+      var bR = el('button', 'btn-petit', 'Retirer'); bR.type = 'button';
+      bR.setAttribute('aria-label', 'Retirer cette salle de ma liste');
+      bR.addEventListener('click', function () {
+        if (confirm('Retirer cette salle de ta liste ? (Elle n\u2019est pas supprimée pour les autres.)')) { oublierSalle(x.code); afficherListe(salleMemorisees()); }
+      });
+      li.appendChild(bR); ul.appendChild(li);
     });
     var prem = estPremium();
     ['btn-binome', 'btn-nouvelle'].forEach(function (id) { $(id).classList.toggle('cache', !prem); });
@@ -213,11 +223,11 @@
       if (d.objectif !== 'expose') {
         var actF = el('div', 'tache-info');
         if (t.fiche) {
-          var bf = el('button', 'btn-petit', '📖 Fiche du chapitre'); bf.type = 'button';
+          var bf = el('button', 'btn-petit btn-fiche', '📖 Fiche du chapitre'); bf.type = 'button';
           bf.addEventListener('click', function () { ouvrirChapitre(i); });
           actF.appendChild(bf);
         } else if (d.est_createur && estEleve()) {
-          var bg = el('button', 'btn-petit', '✨ Générer la fiche'); bg.type = 'button';
+          var bg = el('button', 'btn-petit btn-generer', '✨ Générer la fiche'); bg.type = 'button';
           bg.addEventListener('click', function () { genererFiche(i, false, bg); });
           actF.appendChild(bg);
         }
@@ -321,6 +331,25 @@
       actualiser(true).then(function () { ouvrirChapitre(i); });
     });
   }
+  function habillerFiche(c) {
+    var classes = { 'a retenir': 'sec-retenir', 'vocabulaire': 'sec-vocab', 'exemple': 'sec-exemple', 'erreurs a eviter': 'sec-erreurs',
+      'astuce': 'sec-astuce', 'exercices': 'sec-exos', 'corriges': 'sec-corriges' };
+    var corr = null;
+    Array.prototype.forEach.call(c.querySelectorAll('h2, h3'), function (h) {
+      var cle = h.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+      if (classes[cle]) { h.classList.add('sec', classes[cle]); if (cle === 'corriges') corr = h; }
+    });
+    if (!corr) return;
+    var boite = el('div', 'corriges cache'), n = corr.nextSibling;
+    while (n) { var suite = n.nextSibling; boite.appendChild(n); n = suite; }
+    corr.textContent = 'Corrigés (essaie d\u2019abord seul !)';
+    var bt = el('button', 'btn-petit', '👁 Voir les corrigés'); bt.type = 'button';
+    bt.addEventListener('click', function () {
+      var ouvert = boite.classList.toggle('cache');
+      bt.textContent = ouvert ? '👁 Voir les corrigés' : '🙈 Masquer les corrigés';
+    });
+    c.appendChild(bt); c.appendChild(boite);
+  }
   function ouvrirChapitre(i) {
     $('plan-msg').textContent = '';
     appel('/' + code + '/contenu/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
@@ -330,7 +359,7 @@
       etat.chapitreLu = i;
       $('pc-titre').textContent = x.titre;
       $('pc-meta').textContent = 'Fiche préparée par l\u2019assistant à la demande du créateur. Vérifie-la avec ton cours.';
-      if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
+      if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); habillerFiche($('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
       else { $('pc-corps').textContent = x.texte; }
       $('pc-msg').textContent = '';
       $('pc-regenerer').classList.toggle('cache', !x.peut_regenerer);
@@ -557,7 +586,7 @@
     return appel('/' + code + '/etat', 'POST', { appareil: etat.appareil }).then(function (res) {
       if (res.ok) { afficherSalle(res.donnees); return true; }
       if (res.statut === 403) { return false; }
-      if (res.statut === 410 || res.statut === 404) { erreur('Salle terminée', messageErreur(res)); return true; }
+      if (res.statut === 410 || res.statut === 404) { oublierSalle(code); erreur('Salle terminée', messageErreur(res)); return true; }
       if (!silencieux) $('salle-msg').textContent = messageErreur(res);
       return true;
     });
@@ -583,7 +612,7 @@
     corps = corps || {}; corps.appareil = etat.appareil;
     appel('/' + code + '/' + nom, 'POST', corps).then(function (res) {
       if (!res.ok) { message(messageErreur(res)); return; }
-      if (nom === 'quitter' || nom === 'fermer') { erreur(nom === 'quitter' ? 'Tu as quitté la salle' : 'Salle fermée', 'À bientôt sur EdukaTchat !'); return; }
+      if (nom === 'quitter' || nom === 'fermer') { oublierSalle(code); erreur(nom === 'quitter' ? 'Tu as quitté la salle' : 'Salle fermée', 'À bientôt sur EdukaTchat !'); return; }
       message(ok || ''); actualiser(true);
     });
   }
@@ -600,6 +629,7 @@
         });
         return;
       }
+      if (res.statut === 410 || res.statut === 404) oublierSalle(code);
       erreur(res.statut === 410 ? 'Salle terminée' : 'Salle introuvable', messageErreur(res));
     });
   }

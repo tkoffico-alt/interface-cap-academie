@@ -66,6 +66,18 @@
   .tache input[type="checkbox"] { flex-shrink: 0; width: 26px; height: 26px; margin-top: 2px; accent-color: var(--juste-bord); cursor: pointer; }
   .tache-corps { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .tache-nom { font-weight: 600; }
+  /* 15/11/2026 : fiche de chapitre en couleurs, pour se repérer d'un coup d'œil */
+  .fiche-corps h2.sec { padding: 6px 10px; border-radius: 8px; border-left: 5px solid var(--c); background: var(--b); font-size: 1.05rem; }
+  .sec-retenir { --c: #2563EB; --b: rgba(37,99,235,.13); } .sec-retenir::before { content: '🎯 '; }
+  .sec-vocab { --c: #7C3AED; --b: rgba(124,58,237,.13); } .sec-vocab::before { content: '🔤 '; }
+  .sec-exemple { --c: #16A34A; --b: rgba(22,163,74,.13); } .sec-exemple::before { content: '✏️ '; }
+  .sec-erreurs { --c: #DC2626; --b: rgba(220,38,38,.12); } .sec-erreurs::before { content: '⚠️ '; }
+  .sec-astuce { --c: #D97706; --b: rgba(217,119,6,.14); } .sec-astuce::before { content: '💡 '; }
+  .sec-exos { --c: #0D9488; --b: rgba(13,148,136,.14); } .sec-exos::before { content: '📝 '; }
+  .sec-corriges { --c: #64748B; --b: rgba(100,116,139,.15); } .sec-corriges::before { content: '✅ '; }
+  .btn-fiche { border-color: #2563EB; color: #1D4ED8; background: rgba(37,99,235,.10); font-weight: 700; }
+  .btn-generer { border-color: #D97706; color: #B45309; background: rgba(217,119,6,.12); font-weight: 700; }
+  :root[data-theme="dark"] .btn-fiche { color: #93C5FD; } :root[data-theme="dark"] .btn-generer { color: #FCD34D; }
   .tache-info { font-size: 0.85rem; color: var(--doux); }
   .btn-petit { min-height: 44px; min-width: 44px; padding: 6px 10px; border: 1px solid var(--bord); border-radius: 10px; background: var(--option);
                color: var(--texte); font: inherit; font-size: 0.85rem; cursor: pointer; }
@@ -320,6 +332,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=19" defer></script>
+<script src="salle.js?v=20" defer></script>
 </body>
 </html>
