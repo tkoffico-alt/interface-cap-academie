@@ -209,7 +209,17 @@
         <h2 id="plan-titre">Mon plan de révision</h2>
         <p class="doux" id="plan-aide">Coche un chapitre quand tu l'as révisé. Si tu bloques, demande de l'aide : tes camarades le verront.</p>
         <ul id="liste-plan" class="liste"></ul>
+        <p id="plan-msg" class="erreur-msg" role="alert"></p>
         <button type="button" id="btn-expose" class="btn btn-sec cache">📄 Voir l'exposé complet</button>
+      </div>
+
+      <div id="panneau-chapitre" class="carte cache">
+        <h2 id="pc-titre"></h2>
+        <p class="doux" id="pc-meta"></p>
+        <article id="pc-corps" class="fiche-corps"></article>
+        <p id="pc-msg" class="erreur-msg" role="alert"></p>
+        <button type="button" id="pc-regenerer" class="btn btn-sec cache">🔄 Régénérer la fiche (une seule fois)</button>
+        <button type="button" id="pc-fermer" class="btn btn-sec">Fermer</button>
       </div>
 
       <div id="panneau-section" class="carte cache">
@@ -310,6 +320,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=16" defer></script>
+<script src="salle.js?v=17" defer></script>
 </body>
 </html>

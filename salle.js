@@ -210,6 +210,19 @@
         bulle.appendChild(document.createTextNode(t.commentaire));
         corps.appendChild(bulle);
       }
+      if (d.objectif !== 'expose') {
+        var actF = el('div', 'tache-info');
+        if (t.fiche) {
+          var bf = el('button', 'btn-petit', '📖 Fiche du chapitre'); bf.type = 'button';
+          bf.addEventListener('click', function () { ouvrirChapitre(i); });
+          actF.appendChild(bf);
+        } else if (d.est_createur && estEleve()) {
+          var bg = el('button', 'btn-petit', '✨ Générer la fiche'); bg.type = 'button';
+          bg.addEventListener('click', function () { genererFiche(i, false, bg); });
+          actF.appendChild(bg);
+        }
+        if (actF.childNodes.length) corps.appendChild(actF);
+      }
       if (d.objectif === 'expose') {
         var act = el('div', 'tache-info');
         if (!t.auteur) {
@@ -294,7 +307,37 @@
       actualiser(true).then(function () { if (res.ok) ouvrirSection(i); });
     });
   }
-  function fermerPanneaux() { $('panneau-section').classList.add('cache'); $('panneau-expose').classList.add('cache'); }
+  function fermerPanneaux() { $('panneau-section').classList.add('cache'); $('panneau-expose').classList.add('cache'); $('panneau-chapitre').classList.add('cache'); }
+
+  /* ---------- Fiche de chapitre générée par l'assistant (créateur Premium ; lue par tous les membres) ---------- */
+  function genererFiche(i, regenerer, bouton) {
+    var msg = $('plan-msg'); msg.textContent = '';
+    var avant = bouton ? bouton.textContent : '';
+    if (bouton) { bouton.disabled = true; bouton.textContent = '⏳ L\u2019assistant prépare la fiche… (environ 30 secondes)'; }
+    if (regenerer) $('pc-msg').textContent = 'L\u2019assistant prépare une nouvelle fiche… (environ 30 secondes)';
+    appel('/' + code + '/contenu/generer', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), index: i, regenerer: !!regenerer }).then(function (res) {
+      if (bouton) { bouton.disabled = false; bouton.textContent = avant; }
+      if (!res.ok) { (regenerer ? $('pc-msg') : msg).textContent = messageErreur(res); return; }
+      actualiser(true).then(function () { ouvrirChapitre(i); });
+    });
+  }
+  function ouvrirChapitre(i) {
+    $('plan-msg').textContent = '';
+    appel('/' + code + '/contenu/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
+      if (!res.ok) { $('plan-msg').textContent = messageErreur(res); return; }
+      var x = res.donnees;
+      fermerPanneaux();
+      etat.chapitreLu = i;
+      $('pc-titre').textContent = x.titre;
+      $('pc-meta').textContent = 'Fiche préparée par l\u2019assistant à la demande du créateur. Vérifie-la avec ton cours.';
+      if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
+      else { $('pc-corps').textContent = x.texte; }
+      $('pc-msg').textContent = '';
+      $('pc-regenerer').classList.toggle('cache', !x.peut_regenerer);
+      $('panneau-chapitre').classList.remove('cache');
+      $('panneau-chapitre').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
   function compter() { $('ps-compteur').textContent = $('ps-texte').value.length + ' / 3000 caractères'; }
   function ouvrirSection(i) {
     fermerPanneaux(); $('ps-msg').textContent = '';
@@ -597,6 +640,12 @@
     $('btn-suivi').addEventListener('click', voirSuivi);
     $('ps-fermer').addEventListener('click', fermerPanneaux);
     $('pe-fermer').addEventListener('click', fermerPanneaux);
+    $('pc-fermer').addEventListener('click', fermerPanneaux);
+    $('pc-regenerer').addEventListener('click', function () {
+      if (etat.chapitreLu === undefined || etat.chapitreLu === null) return;
+      if (!confirm('Régénérer la fiche de ce chapitre ? La fiche actuelle sera remplacée et tu ne pourras plus la régénérer.')) return;
+      genererFiche(etat.chapitreLu, true, null);
+    });
     $('ps-texte').addEventListener('input', compter);
     $('btn-actualiser').addEventListener('click', function () { message(''); actualiser(); });
     $('btn-partager').addEventListener('click', function () { copier(lienSalle(code), $('salle-msg'), 'Lien copié : envoie-le à ton camarade.'); });
