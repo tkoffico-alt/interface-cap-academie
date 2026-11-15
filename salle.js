@@ -65,7 +65,7 @@
   function lienSalle(c) { return 'https://edukatchat.org/salle.html?c=' + c; }
 
   function copier(texte, messageEl, ok) {
-    function fin(bon) { if (messageEl) { messageEl.textContent = bon ? ok : 'Copie impossible : sélectionne le lien et copie-le à la main.'; } }
+    function fin(bon) { if (messageEl) { messageEl.style.color = bon ? '#15803d' : ''; messageEl.textContent = bon ? ok : 'Copie impossible : sélectionne le lien et copie-le à la main.'; } }
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(texte).then(function () { fin(true); }, function () { fin(false); }); return; }
     } catch (e) { /* repli ci-dessous */ }
@@ -328,10 +328,10 @@
 
   /* ---------- Fiche de chapitre générée par l'assistant (créateur Premium ; lue par tous les membres) ---------- */
   function genererFiche(i, regenerer, bouton) {
-    var msg = $('plan-msg'); msg.textContent = '';
+    var msg = $('plan-msg'); msg.textContent = ''; msg.style.color = '';
     var avant = bouton ? bouton.textContent : '';
     if (bouton) { bouton.disabled = true; bouton.textContent = '⏳ L\u2019assistant prépare la fiche… (environ 30 secondes)'; }
-    if (regenerer) $('pc-msg').textContent = 'L\u2019assistant prépare une nouvelle fiche… (environ 30 secondes)';
+    $('pc-msg').style.color = ''; if (regenerer) $('pc-msg').textContent = 'L\u2019assistant prépare une nouvelle fiche… (environ 30 secondes)';
     appel('/' + code + '/contenu/generer', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), index: i, regenerer: !!regenerer }).then(function (res) {
       if (bouton) { bouton.disabled = false; bouton.textContent = avant; }
       if (!res.ok) { (regenerer ? $('pc-msg') : msg).textContent = messageErreur(res); return; }
@@ -378,7 +378,7 @@
     }
   }
   function repondre(i, exo, choix) {
-    $('pc-msg').textContent = '';
+    $('pc-msg').style.color = ''; $('pc-msg').textContent = '';
     appel('/' + code + '/contenu/repondre', 'POST', { appareil: etat.appareil, index: i, exo: exo, choix: choix }).then(function (res) {
       if (!res.ok) { $('pc-msg').textContent = messageErreur(res); return; }
       ouvrirChapitre(i, true); actualiser(true);
@@ -436,7 +436,7 @@
   /* Paquets de chapitre : le créateur partage une fiche (et ses exercices) par code, un autre créateur l'importe. */
   function partagerPaquet() {
     var i = etat.chapitreLu; if (i === undefined || i === null) return;
-    $('pc-msg').textContent = '';
+    $('pc-msg').style.color = ''; $('pc-msg').textContent = '';
     appel('/' + code + '/contenu/exporter', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
       if (!res.ok) { $('pc-msg').textContent = messageErreur(res); return; }
       copier(res.donnees.paquet, $('pc-msg'), 'Code du paquet : ' + res.donnees.paquet + ' (copié). Valable jusqu\u2019au ' + res.donnees.expire_le.slice(8) + '/' + res.donnees.expire_le.slice(5, 7) + '. Donne-le au créateur d\u2019une autre salle.');
@@ -448,12 +448,12 @@
     message('');
     appel('/' + code + '/contenu/importer', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), index: i, paquet: saisie }).then(function (res) {
       if (!res.ok) { $('plan-msg').textContent = messageErreur(res); return; }
-      $('plan-msg').textContent = 'Paquet importé ✓' + (res.donnees.matiere ? ' (' + res.donnees.matiere + (res.donnees.classe ? ', ' + res.donnees.classe : '') + ')' : '') + '. Vérifie que la fiche correspond bien à ce chapitre.';
+      $('plan-msg').style.color = '#15803d'; $('plan-msg').textContent = 'Paquet importé ✓' + (res.donnees.matiere ? ' (' + res.donnees.matiere + (res.donnees.classe ? ', ' + res.donnees.classe : '') + ')' : '') + '. Vérifie que la fiche correspond bien à ce chapitre.';
       actualiser(true);
     });
   }
   function ouvrirChapitre(i, sansDefilement) {
-    $('plan-msg').textContent = '';
+    $('plan-msg').style.color = ''; $('plan-msg').textContent = '';
     appel('/' + code + '/contenu/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
       if (!res.ok) { $('plan-msg').textContent = messageErreur(res); return; }
       var x = res.donnees;
@@ -463,7 +463,7 @@
       $('pc-meta').textContent = (etat.donnees && etat.donnees.objectif === 'expose') ? 'Fiche de départ préparée par l\u2019assistant : des idées et des pistes, pas un texte à recopier. Rédige ta partie avec tes propres mots.' : 'Fiche préparée par l\u2019assistant à la demande du créateur. Vérifie-la avec ton cours.';
       if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); afficherReponses($('pc-corps'), x, i); afficherCorriges($('pc-corps'), x, i); habillerFiche($('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
       else { $('pc-corps').textContent = x.texte; }
-      $('pc-msg').textContent = '';
+      $('pc-msg').style.color = ''; $('pc-msg').textContent = '';
       $('pc-regenerer').classList.toggle('cache', !x.peut_regenerer);
       $('pc-partager').classList.toggle('cache', !x.est_createur);
       $('panneau-chapitre').classList.remove('cache');
@@ -707,7 +707,7 @@
       return true;
     });
   }
-  function message(texte) { $('salle-msg').textContent = texte || ''; }
+  function message(texte) { $('salle-msg').style.color = ''; $('salle-msg').textContent = texte || ''; }
   function cocher(i, fait) {
     appel('/' + code + '/cocher', 'POST', { appareil: etat.appareil, index: i, fait: fait }).then(function (res) {
       if (!res.ok) message(messageErreur(res)); actualiser(true);
