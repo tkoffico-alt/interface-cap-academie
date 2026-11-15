@@ -5418,6 +5418,7 @@ async function televerserImageChat(chatHistoryId, contexte, sceau, fichier) {
         formData.append('fichier', fichier);
         formData.append('contexte', contexte);
         formData.append('matricule', sceau);
+        if (contexte === 'sas') formData.append('conversation_id', sasConversationIds[avatarActif] || '');
 
         const response = await fetch('https://api.edukatchat.org/api/chat/televerser_image', {
             method: 'POST',
