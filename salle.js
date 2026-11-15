@@ -544,6 +544,140 @@
       zone.classList.remove('cache');
     });
   }
+  /* Quiz de l'auteur : l'auteur écrit (ou fait proposer) 1 à 3 questions ; ses camarades y répondent ; il voit ce qui a été mal compris. */
+  function quizSection(i, r, mienne) {
+    var zone = $('ps-quiz'); zone.textContent = '';
+    var redige = r.auteur && (r.texte || '').trim();
+    if (!redige) { zone.classList.add('cache'); return; }
+    appel('/' + code + '/section/quiz/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
+      if (!res.ok) { zone.classList.add('cache'); return; }
+      var x = res.donnees; zone.textContent = '';
+      if (mienne) { quizAuteur(i, x, zone, r); }
+      else if (x.existe) { quizMembre(i, x, zone); }
+      else { zone.classList.add('cache'); return; }
+      zone.classList.remove('cache');
+    });
+  }
+  function quizMembre(i, x, zone) {
+    zone.appendChild(el('h3', null, '🎯 Quiz de l’auteur'));
+    zone.appendChild(el('p', 'doux', 'As-tu bien compris cette section ? Une seule tentative par question.'));
+    var score = el('p', null); var nbRep = 0, nbJuste = 0;
+    function majScore() { score.textContent = nbRep ? ('Ton score : ' + nbJuste + ' / ' + x.questions.length + (nbRep < x.questions.length ? ' (questions répondues : ' + nbRep + ')' : '')) : ''; }
+    x.questions.forEach(function (q, qi) {
+      zone.appendChild(el('div', 'quiz-q', (qi + 1) + '. ' + q.q));
+      var boutons = [], info = el('p', 'erreur-msg'); info.setAttribute('role', 'status');
+      function figer(choix, juste, bonne) {
+        boutons.forEach(function (b) {
+          b.disabled = true;
+          if (b.textContent === bonne) b.classList.add('bon');
+          else if (b.textContent === choix && !juste) b.classList.add('mauvais');
+        });
+        info.style.color = juste ? '#15803d' : '#b91c1c'; info.textContent = juste ? 'Bravo, c’est la bonne réponse ✓' : 'Raté. La bonne réponse : ' + bonne;
+      }
+      q.options.forEach(function (o) {
+        var b = el('button', 'btn-petit quiz-opt', o); b.type = 'button'; boutons.push(b);
+        b.addEventListener('click', function () {
+          boutons.forEach(function (z) { z.disabled = true; });
+          appel('/' + code + '/section/quiz/repondre', 'POST', { appareil: etat.appareil, index: i, question: qi, choix: o }).then(function (r2) {
+            if (!r2.ok) { boutons.forEach(function (z) { z.disabled = false; }); info.style.color = ''; info.textContent = messageErreur(r2); return; }
+            nbRep++; if (r2.donnees.juste) nbJuste++; figer(o, r2.donnees.juste, r2.donnees.bonne); majScore();
+          });
+        });
+        zone.appendChild(b);
+      });
+      zone.appendChild(info);
+      if (q.ma_reponse) { nbRep++; if (q.ma_reponse.juste) nbJuste++; figer(q.ma_reponse.choix, q.ma_reponse.juste, q.ma_reponse.bonne); }
+    });
+    zone.appendChild(score); majScore();
+  }
+  function quizAuteur(i, x, zone, r) {
+    zone.appendChild(el('h3', null, '🎯 Ton quiz pour le groupe'));
+    zone.appendChild(el('p', 'doux', 'Écris 1 à 3 questions à 4 propositions pour vérifier que tes camarades ont compris ta section. Les questions portent sur ton texte enregistré.'));
+    var qs = (x.existe ? x.questions : []).map(function (q) { return { q: q.q, options: q.options.slice(), bonne: q.bonne }; });
+    if (x.existe) {
+      var bilan = el('div', 'quiz-edit');
+      bilan.appendChild(el('strong', null, '📊 Résultats du groupe'));
+      x.stats.forEach(function (st, qi) {
+        var t = (qi + 1) + '. ' + x.questions[qi].q + ' — ';
+        if (!st.repondants) t += 'pas encore de réponse.';
+        else if (!st.detail) t += st.repondants + ' réponse reçue ; le détail s’affiche à partir de ' + x.min + ' réponses (anonymat).';
+        else t += st.justes + ' / ' + st.repondants + ' ont juste.';
+        bilan.appendChild(el('p', null, t));
+        if (st.detail && st.erreurs && st.erreurs.length) bilan.appendChild(el('p', 'doux', 'Erreur la plus fréquente : « ' + st.erreurs[0].texte + ' » (' + st.erreurs[0].nb + ' fois). Cette partie mérite d’être réexpliquée.'));
+      });
+      zone.appendChild(bilan);
+    }
+    var conteneur = el('div'); zone.appendChild(conteneur);
+    var msg = el('p', 'erreur-msg'); msg.setAttribute('role', 'status');
+    function lireSaisie() {
+      var blocs = conteneur.querySelectorAll('.quiz-edit'), out = [];
+      blocs.forEach(function (bl) {
+        var champs = bl.querySelectorAll('input[type="text"]'), radios = bl.querySelectorAll('input[type="radio"]'), bonne = -1;
+        radios.forEach(function (rd, k) { if (rd.checked) bonne = k; });
+        out.push({ q: champs[0].value, options: [champs[1].value, champs[2].value, champs[3].value, champs[4].value], bonne: bonne });
+      });
+      return out;
+    }
+    function rendre() {
+      conteneur.textContent = '';
+      qs.forEach(function (q, qi) {
+        var bl = el('div', 'quiz-edit');
+        bl.appendChild(el('strong', null, 'Question ' + (qi + 1)));
+        var cq = el('input'); cq.type = 'text'; cq.maxLength = 160; cq.placeholder = 'Ta question'; cq.value = q.q; cq.setAttribute('aria-label', 'Question ' + (qi + 1)); bl.appendChild(cq);
+        bl.appendChild(el('div', 'doux', 'Coche le rond devant la bonne réponse.'));
+        for (var k = 0; k < 4; k++) {
+          var lig = el('div', 'quiz-prop'); var rd = el('input'); rd.type = 'radio'; rd.name = 'bq' + qi; rd.checked = (q.bonne === k);
+          rd.setAttribute('aria-label', 'Bonne réponse : proposition ' + (k + 1)); lig.appendChild(rd);
+          var ci = el('input'); ci.type = 'text'; ci.maxLength = 80; ci.placeholder = 'Proposition ' + (k + 1); ci.value = q.options[k] || ''; lig.appendChild(ci);
+          bl.appendChild(lig);
+        }
+        var ret = el('button', 'btn-petit', '🗑️ Retirer cette question'); ret.type = 'button';
+        ret.addEventListener('click', function () { qs = lireSaisie(); qs.splice(qi, 1); rendre(); });
+        bl.appendChild(ret); conteneur.appendChild(bl);
+      });
+    }
+    rendre();
+    var actions = el('div', 'quiz-actions'); zone.appendChild(actions);
+    var ajout = el('button', 'btn-petit', '➕ Ajouter une question'); ajout.type = 'button';
+    ajout.addEventListener('click', function () { qs = lireSaisie(); if (qs.length >= 3) { msg.style.color = ''; msg.textContent = '3 questions au maximum.'; return; } qs.push({ q: '', options: ['', '', '', ''], bonne: -1 }); rendre(); });
+    actions.appendChild(ajout);
+    if (estEleve()) {
+      var ia = el('button', 'btn-petit', '💡 Proposer des questions (IA)'); ia.type = 'button';
+      ia.addEventListener('click', function () {
+        if (qs.length && lireSaisie().some(function (q) { return q.q.trim(); }) && !confirm('Remplacer tes questions actuelles par la proposition de l’IA ?')) return;
+        ia.disabled = true; msg.style.color = ''; msg.textContent = 'L’assistant lit ta section… (environ 30 secondes)';
+        appel('/' + code + '/section/quiz/suggerer', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), index: i }).then(function (r2) {
+          ia.disabled = false;
+          if (!r2.ok) { msg.textContent = messageErreur(r2); return; }
+          qs = r2.donnees.questions.map(function (q) { return { q: q.q, options: q.options.slice(), bonne: q.bonne }; });
+          rendre(); msg.style.color = '#15803d'; msg.textContent = 'Proposition de l’IA : relis, corrige si besoin, puis enregistre le quiz.';
+        });
+      });
+      actions.appendChild(ia);
+    }
+    var sauv = el('button', 'btn', x.existe ? 'Mettre à jour le quiz' : 'Enregistrer le quiz'); sauv.type = 'button';
+    sauv.addEventListener('click', function () {
+      msg.style.color = ''; msg.textContent = '';
+      var saisie = lireSaisie();
+      if (!saisie.length) { msg.textContent = 'Ajoute au moins une question.'; return; }
+      appel('/' + code + '/section/quiz/enregistrer', 'POST', { appareil: etat.appareil, index: i, questions: saisie }).then(function (r2) {
+        if (!r2.ok) { msg.textContent = messageErreur(r2); return; }
+        quizSection(i, r, true);
+      });
+    });
+    zone.appendChild(msg); zone.appendChild(sauv);
+    if (x.existe) {
+      var sup = el('button', 'btn-petit', '🗑️ Supprimer le quiz'); sup.type = 'button';
+      sup.addEventListener('click', function () {
+        if (!confirm('Supprimer ton quiz et les réponses reçues ?')) return;
+        appel('/' + code + '/section/quiz/enregistrer', 'POST', { appareil: etat.appareil, index: i, questions: [] }).then(function (r2) {
+          if (!r2.ok) { msg.textContent = messageErreur(r2); return; }
+          quizSection(i, r, true);
+        });
+      });
+      zone.appendChild(sup);
+    }
+  }
   function ouvrirSection(i) {
     fermerPanneaux(); $('ps-msg').style.color = ''; $('ps-msg').textContent = '';
     appel('/' + code + '/section/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
@@ -585,6 +719,7 @@
       };
       compter();
       retoursSection(i, r, mienne);
+      quizSection(i, r, mienne);
       $('panneau-section').classList.remove('cache');
       $('panneau-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
