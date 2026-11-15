@@ -224,16 +224,19 @@
         bulle.appendChild(document.createTextNode(t.commentaire));
         corps.appendChild(bulle);
       }
-      if (d.objectif !== 'expose') {
-        var actF = el('div', 'tache-info');
+      {
+        var actF = el('div', 'tache-info'), exp = (d.objectif === 'expose');
         if (t.fiche) {
-          var bf = el('button', 'btn-petit btn-fiche', '📖 Fiche du chapitre'); bf.type = 'button';
+          var bf = el('button', 'btn-petit btn-fiche', (exp ? '📖 Fiche de départ' : '📖 Fiche du chapitre')); bf.type = 'button';
           bf.addEventListener('click', function () { ouvrirChapitre(i); });
           actF.appendChild(bf);
         } else if (d.est_createur && estEleve()) {
-          var bg = el('button', 'btn-petit btn-generer', '✨ Générer la fiche'); bg.type = 'button';
+          var bg = el('button', 'btn-petit btn-generer', (exp ? '✨ Générer la fiche de départ' : '✨ Générer la fiche')); bg.type = 'button';
           bg.addEventListener('click', function () { genererFiche(i, false, bg); });
           actF.appendChild(bg);
+          var bi = el('button', 'btn-petit', '📥 Importer un paquet'); bi.type = 'button';
+          bi.addEventListener('click', function () { importerPaquet(i); });
+          actF.appendChild(bi);
         }
         if (actF.childNodes.length) corps.appendChild(actF);
       }
@@ -337,7 +340,9 @@
   }
   function habillerFiche(c) {
     var classes = { 'a retenir': 'sec-retenir', 'vocabulaire': 'sec-vocab', 'exemple': 'sec-exemple', 'erreurs a eviter': 'sec-erreurs',
-      'astuce': 'sec-astuce', 'exercices': 'sec-exos', 'corriges': 'sec-corriges', 'mes reponses': 'sec-reponses' };
+      'astuce': 'sec-astuce', 'exercices': 'sec-exos', 'corriges': 'sec-corriges', 'mes reponses': 'sec-reponses',
+      'idees cles': 'sec-retenir', 'plan conseille pour ta partie': 'sec-exemple', 'pieges a eviter': 'sec-erreurs',
+      'pistes de recherche': 'sec-exos', "astuce pour l'oral": 'sec-astuce' };
     Array.prototype.forEach.call(c.querySelectorAll('h2, h3'), function (h) {
       var cle = h.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
       if (classes[cle]) h.classList.add('sec', classes[cle]);
@@ -428,6 +433,25 @@
     br.addEventListener('click', function () { ouvrirChapitre(i, true); });
     zone.appendChild(br);
   }
+  /* Paquets de chapitre : le créateur partage une fiche (et ses exercices) par code, un autre créateur l'importe. */
+  function partagerPaquet() {
+    var i = etat.chapitreLu; if (i === undefined || i === null) return;
+    $('pc-msg').textContent = '';
+    appel('/' + code + '/contenu/exporter', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
+      if (!res.ok) { $('pc-msg').textContent = messageErreur(res); return; }
+      copier(res.donnees.paquet, $('pc-msg'), 'Code du paquet : ' + res.donnees.paquet + ' (copié). Valable jusqu\u2019au ' + res.donnees.expire_le.slice(8) + '/' + res.donnees.expire_le.slice(5, 7) + '. Donne-le au créateur d\u2019une autre salle.');
+    });
+  }
+  function importerPaquet(i) {
+    var saisie = window.prompt('Colle ici le code du paquet (8 caractères) donné par un autre créateur :');
+    if (!saisie) return;
+    message('');
+    appel('/' + code + '/contenu/importer', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), index: i, paquet: saisie }).then(function (res) {
+      if (!res.ok) { $('plan-msg').textContent = messageErreur(res); return; }
+      $('plan-msg').textContent = 'Paquet importé ✓' + (res.donnees.matiere ? ' (' + res.donnees.matiere + (res.donnees.classe ? ', ' + res.donnees.classe : '') + ')' : '') + '. Vérifie que la fiche correspond bien à ce chapitre.';
+      actualiser(true);
+    });
+  }
   function ouvrirChapitre(i, sansDefilement) {
     $('plan-msg').textContent = '';
     appel('/' + code + '/contenu/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
@@ -436,11 +460,12 @@
       fermerPanneaux();
       etat.chapitreLu = i;
       $('pc-titre').textContent = x.titre;
-      $('pc-meta').textContent = 'Fiche préparée par l\u2019assistant à la demande du créateur. Vérifie-la avec ton cours.';
+      $('pc-meta').textContent = (etat.donnees && etat.donnees.objectif === 'expose') ? 'Fiche de départ préparée par l\u2019assistant : des idées et des pistes, pas un texte à recopier. Rédige ta partie avec tes propres mots.' : 'Fiche préparée par l\u2019assistant à la demande du créateur. Vérifie-la avec ton cours.';
       if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); afficherReponses($('pc-corps'), x, i); afficherCorriges($('pc-corps'), x, i); habillerFiche($('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
       else { $('pc-corps').textContent = x.texte; }
       $('pc-msg').textContent = '';
       $('pc-regenerer').classList.toggle('cache', !x.peut_regenerer);
+      $('pc-partager').classList.toggle('cache', !x.est_createur);
       $('panneau-chapitre').classList.remove('cache');
       if (!sansDefilement) $('panneau-chapitre').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -768,6 +793,7 @@
     $('ps-fermer').addEventListener('click', fermerPanneaux);
     $('pe-fermer').addEventListener('click', fermerPanneaux);
     $('pc-fermer').addEventListener('click', fermerPanneaux);
+    $('pc-partager').addEventListener('click', partagerPaquet);
     $('pc-regenerer').addEventListener('click', function () {
       if (etat.chapitreLu === undefined || etat.chapitreLu === null) return;
       if (!confirm('Régénérer la fiche de ce chapitre ? La fiche et les réponses déjà données seront remplacées, et tu ne pourras plus la régénérer.')) return;
