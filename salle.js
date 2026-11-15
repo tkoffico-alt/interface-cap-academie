@@ -906,6 +906,7 @@
       var gen = $('pj-generer'), reg = $('pj-regenerer');
       gen.classList.toggle('cache', !(x.est_createur && !x.existe && estEleve() && x.nb_sections_redigees > 0));
       reg.classList.toggle('cache', !(x.est_createur && x.peut_regenerer && estEleve()));
+      reg.textContent = '🔄 Mettre à jour les questions (' + (x.nouvelles_sections || 0) + ' nouvelle' + ((x.nouvelles_sections || 0) > 1 ? 's' : '') + ' section' + ((x.nouvelles_sections || 0) > 1 ? 's' : '') + ' rédigée' + ((x.nouvelles_sections || 0) > 1 ? 's' : '') + ')';
       function lancer(regenerer) {
         gen.disabled = reg.disabled = true; msg.style.color = ''; msg.textContent = 'L’assistant lit votre exposé… (environ 30 secondes)';
         appel('/' + code + '/jury/generer', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), regenerer: regenerer }).then(function (r2) {
@@ -915,7 +916,7 @@
         });
       }
       gen.onclick = function () { lancer(false); };
-      reg.onclick = function () { if (confirm('Régénérer les questions ? Les actuelles seront remplacées (une seule fois possible).')) lancer(true); };
+      reg.onclick = function () { if (confirm('Mettre à jour les questions du jury à partir des sections rédigées depuis ? Les questions actuelles seront remplacées.')) lancer(true); };
       $('panneau-jury').classList.remove('cache');
       $('panneau-jury').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
