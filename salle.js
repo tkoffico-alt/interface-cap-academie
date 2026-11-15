@@ -38,6 +38,10 @@
   }
 
   function ecran(nom) {
+    etat.ecranCourant = nom;
+    // Le lien du haut ramène d'abord au seuil de la salle d'étude ; il ne quitte l'espace salle que depuis le seuil.
+    var lien = document.getElementById('btn-retour-app');
+    if (lien) lien.textContent = (nom === 'liste' || nom === 'chargement') ? '\u2190 Retour à EdukaTchat' : '\u2190 Retour aux salles d\u2019étude';
     ['chargement', 'erreur', 'liste', 'creation', 'cree', 'accueil', 'salle'].forEach(function (n) {
       $('ecran-' + n).classList.toggle('cache', n !== nom);
     });
@@ -725,6 +729,11 @@
     // Retour à l'application : on revient à la page d'où l'on vient (l'espace de départ),
     // sinon on ouvre simplement EdukaTchat.
     $('btn-retour-app').addEventListener('click', function (e) {
+      if (etat.ecranCourant && etat.ecranCourant !== 'liste' && etat.ecranCourant !== 'chargement') {
+        e.preventDefault();
+        if (code) { window.location.href = 'salle.html'; return; }   // dans une salle : retour au seuil
+        afficherListe(salleMemorisees()); return;                       // création : retour au seuil sans recharger
+      }
       try {
         if (localStorage.getItem('eduka_retour')) { e.preventDefault(); window.location.href = 'index.html?retour=1'; return; }
         if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
