@@ -306,6 +306,7 @@
     afficherFiches(d);
     $('carte-suivi').classList.toggle('cache', !d.est_createur);
     $('btn-expose').classList.toggle('cache', d.objectif !== 'expose');
+    $('btn-jury').classList.toggle('cache', d.objectif !== 'expose');
     $('plan-titre').textContent = (d.objectif === 'expose') ? 'Les sections de l\u2019exposé' : 'Mon plan de révision';
     $('plan-aide').textContent = (d.objectif === 'expose')
       ? 'Prends une section, rédige-la et dépose-la ; coche-la quand elle est terminée. Tout le monde peut lire les sections des autres.'
@@ -324,7 +325,7 @@
       actualiser(true).then(function () { if (res.ok) ouvrirSection(i); });
     });
   }
-  function fermerPanneaux() { $('panneau-section').classList.add('cache'); $('panneau-expose').classList.add('cache'); $('panneau-chapitre').classList.add('cache'); }
+  function fermerPanneaux() { $('panneau-section').classList.add('cache'); $('panneau-expose').classList.add('cache'); $('panneau-chapitre').classList.add('cache'); $('panneau-jury').classList.add('cache'); }
 
   /* ---------- Fiche de chapitre générée par l'assistant (créateur Premium ; lue par tous les membres) ---------- */
   function genererFiche(i, regenerer, bouton) {
@@ -879,6 +880,46 @@
     });
   }
   function echapperHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  /* Questions du jury : l'IA prépare les questions probables de l'enseignant sur l'exposé ; chacun s'entraîne puis regarde la réponse conseillée. */
+  function ouvrirJury() {
+    fermerPanneaux();
+    var msg = $('pj-msg'); msg.style.color = ''; msg.textContent = '';
+    appel('/' + code + '/jury/lire', 'POST', { appareil: etat.appareil }).then(function (res) {
+      if (!res.ok) { message(messageErreur(res)); return; }
+      var x = res.donnees, zone = $('pj-contenu'); zone.textContent = '';
+      if (!x.existe) {
+        zone.appendChild(el('p', 'doux', x.est_createur
+          ? (x.nb_sections_redigees ? 'Les questions n’ont pas encore été préparées. L’assistant va lire l’exposé tel qu’il est rédigé : mieux vaut attendre que la plupart des sections soient écrites.' : 'Rédigez d’abord au moins une section de l’exposé : l’assistant s’appuie sur ce qui est écrit.')
+          : 'Le créateur de la salle n’a pas encore préparé les questions du jury.'));
+      }
+      x.questions.forEach(function (q, k) {
+        var carte = el('div', 'jury-q');
+        carte.appendChild(el('strong', null, (k + 1) + '. ' + q.question));
+        var rep = el('div', 'jury-rep cache');
+        rep.appendChild(el('div', null, '✅ ' + q.reponse));
+        if (q.conseil) rep.appendChild(el('div', 'doux', '💡 ' + q.conseil));
+        var voir = el('button', 'btn-petit', '👀 Voir la réponse conseillée'); voir.type = 'button';
+        voir.addEventListener('click', function () { var ouvert = rep.classList.toggle('cache'); voir.textContent = ouvert ? '👀 Voir la réponse conseillée' : '🙈 Masquer la réponse'; });
+        carte.appendChild(el('div')); carte.lastChild.style.marginTop = '8px'; carte.lastChild.appendChild(voir);
+        carte.appendChild(rep); zone.appendChild(carte);
+      });
+      var gen = $('pj-generer'), reg = $('pj-regenerer');
+      gen.classList.toggle('cache', !(x.est_createur && !x.existe && estEleve() && x.nb_sections_redigees > 0));
+      reg.classList.toggle('cache', !(x.est_createur && x.peut_regenerer && estEleve()));
+      function lancer(regenerer) {
+        gen.disabled = reg.disabled = true; msg.style.color = ''; msg.textContent = 'L’assistant lit votre exposé… (environ 30 secondes)';
+        appel('/' + code + '/jury/generer', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), regenerer: regenerer }).then(function (r2) {
+          gen.disabled = reg.disabled = false;
+          if (!r2.ok) { msg.textContent = messageErreur(r2); return; }
+          ouvrirJury();
+        });
+      }
+      gen.onclick = function () { lancer(false); };
+      reg.onclick = function () { if (confirm('Régénérer les questions ? Les actuelles seront remplacées (une seule fois possible).')) lancer(true); };
+      $('panneau-jury').classList.remove('cache');
+      $('panneau-jury').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
   function ouvrirExpose() {
     fermerPanneaux();
     appel('/' + code + '/expose', 'POST', { appareil: etat.appareil }).then(function (res) {
@@ -972,6 +1013,7 @@
     $('btn-rejoindre').addEventListener('click', function () { rejoindre(); demarrerSuivi(); });
     $('pseudo').addEventListener('keydown', function (e) { if (e.key === 'Enter') { rejoindre(); demarrerSuivi(); } });
     $('btn-expose').addEventListener('click', ouvrirExpose);
+    $('btn-jury').addEventListener('click', ouvrirJury);
     $('btn-suggerer').addEventListener('click', suggerer);
     // Retour à l'application : on revient à la page d'où l'on vient (l'espace de départ),
     // sinon on ouvre simplement EdukaTchat.
@@ -1001,6 +1043,7 @@
     $('btn-suivi').addEventListener('click', voirSuivi);
     $('ps-fermer').addEventListener('click', fermerPanneaux);
     $('pe-fermer').addEventListener('click', fermerPanneaux);
+    $('pj-fermer').addEventListener('click', fermerPanneaux);
     $('pc-fermer').addEventListener('click', fermerPanneaux);
     $('pc-partager').addEventListener('click', partagerPaquet);
     $('pc-regenerer').addEventListener('click', function () {

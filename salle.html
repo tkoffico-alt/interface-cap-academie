@@ -107,6 +107,8 @@
   .retour-ligne { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 0.92rem; }
   .retour-ligne .barre { flex: 1; margin: 0; }
   .retour-ligne > span:first-child { min-width: 44px; } .retour-ligne > span:last-child { min-width: 1.6em; text-align: right; }
+  .jury-q { margin: 12px 0; padding: 10px 12px; border-radius: 10px; background: var(--option); border: 1px solid var(--bord); }
+  .jury-q .jury-rep { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--expl-fond); white-space: pre-wrap; }
   .quiz-q { margin: 14px 0 6px; font-weight: 700; }
   .quiz-opt { display: block; width: 100%; margin: 6px 0; text-align: left; justify-content: flex-start; }
   .quiz-opt.bon { background: var(--juste-fond); border-color: var(--juste-bord); color: var(--juste-texte); font-weight: 700; }
@@ -260,6 +262,7 @@
         <ul id="liste-plan" class="liste"></ul>
         <p id="plan-msg" class="erreur-msg" role="alert"></p>
         <button type="button" id="btn-expose" class="btn btn-sec cache">📄 Voir l'exposé complet</button>
+        <button type="button" id="btn-jury" class="btn btn-sec cache">🎤 Questions du jury</button>
       </div>
 
       <div id="panneau-chapitre" class="carte cache">
@@ -295,6 +298,18 @@
         <button type="button" id="ps-relire" class="btn btn-sec cache">🔍 Demander une relecture (IA)</button>
         <button type="button" id="ps-liberer" class="btn btn-sec cache">Libérer cette section</button>
         <button type="button" id="ps-fermer" class="btn btn-sec">Fermer</button>
+      </div>
+
+      <div id="panneau-jury" class="carte cache">
+        <h2>🎤 Questions du jury</h2>
+        <p class="doux">Voici les questions que l'enseignant pourrait poser à la fin de votre exposé. Répondez-y à voix haute, chacun votre tour, avant de regarder la réponse conseillée.</p>
+        <div id="pj-contenu"></div>
+        <p id="pj-msg" class="erreur-msg" role="status"></p>
+        <div class="quiz-actions">
+          <button type="button" id="pj-generer" class="btn cache">✨ Préparer les questions du jury</button>
+          <button type="button" id="pj-regenerer" class="btn btn-sec cache">🔄 Régénérer (une seule fois)</button>
+        </div>
+        <button type="button" id="pj-fermer" class="btn btn-sec">Fermer</button>
       </div>
 
       <div id="panneau-expose" class="carte cache">
@@ -372,6 +387,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=31" defer></script>
+<script src="salle.js?v=32" defer></script>
 </body>
 </html>
