@@ -426,7 +426,7 @@
   }
   /* ---------- Fiches partagées (casier) ---------- */
   var mesFichesChargees = false;
-  function estEleve() { return sceauSalle().indexOf('ELV-') === 0; }
+  function estEleve() { return estPremium(); }   // ELV- ou code Créateur ; le serveur tranche
   function afficherFiches(d) {
     var ul = $('liste-fiches-salle'); ul.textContent = '';
     var fl = d.fiches || [];
