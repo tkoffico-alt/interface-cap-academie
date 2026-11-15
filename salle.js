@@ -626,6 +626,19 @@
       });
       zone.appendChild(t);
       var lg = el('ol', 'doux'); d.plan.forEach(function (p) { lg.appendChild(el('li', '', p)); }); zone.appendChild(lg);
+      (d.chapitres || []).forEach(function (ch, k) {
+        if (k === 0) zone.appendChild(el('h3', 'rep-grille-titre', 'Par chapitre (exercices à cliquer)'));
+        var carte = el('div', 'suivi-chap');
+        carte.appendChild(el('div', 'rep-titre', ch.titre));
+        carte.appendChild(el('p', 'tache-info', 'Validé : ' + ch.valides.length + ' sur ' + (ch.valides.length + ch.a_aider.length + ch.en_cours.length + ch.pas_commence.length) +
+          (ch.score_moyen !== null ? ' · Score moyen : ' + String(ch.score_moyen).replace('.', ',') + ' / ' + ch.nb_exercices : '') + ' · Seuil : ' + ch.seuil + ' / ' + ch.nb_exercices));
+        carte.appendChild(el('p', 'tache-info', ch.exercices.map(function (e) { return 'Ex. ' + e.n + ' : ' + e.reussis + '/' + e.repondus; }).join('  ·  ')));
+        if (ch.exercice_le_plus_rate) carte.appendChild(el('p', 'suivi-alerte', '⚠️ Exercice le plus raté : n°' + ch.exercice_le_plus_rate + ' — à reprendre ensemble.'));
+        if (ch.a_aider.length) carte.appendChild(el('p', 'suivi-alerte', '🤝 À aider : ' + ch.a_aider.join(', ')));
+        if (ch.en_cours.length) carte.appendChild(el('p', 'tache-info', '⏳ En cours : ' + ch.en_cours.join(', ')));
+        if (ch.pas_commence.length) carte.appendChild(el('p', 'tache-info', '💤 Pas encore commencé : ' + ch.pas_commence.join(', ')));
+        zone.appendChild(carte);
+      });
       var rediges = [];
       d.membres.forEach(function (m) { m.sections.forEach(function (s) { rediges.push(m.pseudo + ' : partie ' + (s.index + 1) + ', ' + s.nb_car + ' caractères'); }); });
       if (rediges.length) zone.appendChild(el('p', 'doux', 'Sections déposées — ' + rediges.join(' ; ')));
