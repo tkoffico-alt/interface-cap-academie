@@ -471,8 +471,81 @@
     });
   }
   function compter() { $('ps-compteur').textContent = $('ps-texte').value.length + ' / 3000 caractères'; }
+  /* Retours des camarades sur une section d'exposé : étoiles + puces ; l'auteur voit une synthèse anonyme. */
+  var RETOUR_FORTS = [['clair', '💡 Clair'], ['structure', '🧱 Bien structuré'], ['rythme', '⏱️ Bon rythme'], ['exemples', '📌 Bons exemples'], ['interessant', '✨ Intéressant']];
+  var RETOUR_PISTES = [['exemples', 'Ajouter des exemples'], ['court', 'Raccourcir'], ['structure', 'Mieux structurer'], ['simple', 'Simplifier le vocabulaire'], ['precis', 'Être plus précis']];
+  function libelleRetour(liste, cle) { for (var k = 0; k < liste.length; k++) { if (liste[k][0] === cle) return liste[k][1]; } return cle; }
+  function retoursSection(i, r, mienne) {
+    var zone = $('ps-retours'); zone.textContent = '';
+    var redige = r.auteur && (r.texte || '').trim();
+    if (!redige) { zone.classList.add('cache'); return; }
+    appel('/' + code + '/section/retours', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
+      if (!res.ok) { return; }
+      var x = res.donnees; zone.textContent = '';
+      if (x.est_auteur) {
+        zone.appendChild(el('h3', null, '⭐ Les retours de tes camarades'));
+        var sy = x.synthese;
+        if (!sy || !sy.assez) {
+          zone.appendChild(el('p', 'doux', (sy && sy.nb ? sy.nb + ' retour reçu. ' : 'Aucun retour pour le moment. ') + 'La synthèse s\u2019affiche à partir de ' + (sy ? sy.min : 2) + ' retours, pour que chacun reste anonyme.'));
+        } else {
+          zone.appendChild(el('p', null, 'Moyenne : ' + String(sy.moyenne).replace('.', ',') + ' / 5 (' + sy.nb + ' retours)'));
+          for (var n = 5; n >= 1; n--) {
+            var lig = el('div', 'retour-ligne'); lig.appendChild(el('span', null, n + ' ⭐'));
+            var barre = el('div', 'barre'); var sp = document.createElement('span'); sp.style.width = Math.round(100 * (sy.repartition[n] || 0) / sy.nb) + '%'; barre.appendChild(sp);
+            lig.appendChild(barre); lig.appendChild(el('span', null, String(sy.repartition[n] || 0))); zone.appendChild(lig);
+          }
+          var blocs = [['👍 Ce qui a plu', sy.forts, RETOUR_FORTS], ['🔧 Pour t\u2019améliorer', sy.pistes, RETOUR_PISTES]];
+          blocs.forEach(function (b) {
+            var cles = Object.keys(b[1]).sort(function (p, q) { return b[1][q] - b[1][p]; });
+            if (!cles.length) return;
+            zone.appendChild(el('p', null, b[0]));
+            cles.forEach(function (c) { zone.appendChild(el('div', 'retour-ligne', '• ' + libelleRetour(b[2], c) + ' — ' + b[1][c] + ' / ' + sy.nb)); });
+          });
+        }
+        zone.classList.remove('cache'); return;
+      }
+      if (mienne) { zone.classList.add('cache'); return; }
+      var mon = x.mon_retour || { note: 0, forts: [], pistes: [] };
+      var note = mon.note, forts = mon.forts.slice(), pistes = mon.pistes.slice();
+      zone.appendChild(el('h3', null, '⭐ Ton retour sur cette section'));
+      zone.appendChild(el('p', 'doux', 'Anonyme : l\u2019auteur ne verra qu\u2019une synthèse du groupe.'));
+      var rangE = el('div', 'rang'); zone.appendChild(rangE);
+      var etoiles = [];
+      function majEtoiles() { etoiles.forEach(function (b, k) { b.classList.toggle('actif', k < note); b.setAttribute('aria-pressed', k < note ? 'true' : 'false'); }); }
+      for (var k = 1; k <= 5; k++) {
+        (function (v) {
+          var b = el('button', 'btn-petit etoile', '★'); b.type = 'button'; b.setAttribute('aria-label', v + ' étoile' + (v > 1 ? 's' : ''));
+          b.addEventListener('click', function () { note = v; majEtoiles(); }); etoiles.push(b); rangE.appendChild(b);
+        })(k);
+      }
+      majEtoiles();
+      function puces(titre, liste, choisis) {
+        zone.appendChild(el('p', null, titre)); var rang = el('div', 'rang'); zone.appendChild(rang);
+        liste.forEach(function (c) {
+          var b = el('button', 'btn-petit puce', c[1]); b.type = 'button';
+          function maj() { var on = choisis.indexOf(c[0]) >= 0; b.classList.toggle('actif', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+          b.addEventListener('click', function () { var p = choisis.indexOf(c[0]); if (p >= 0) choisis.splice(p, 1); else choisis.push(c[0]); maj(); });
+          maj(); rang.appendChild(b);
+        });
+      }
+      puces('Ce qui t\u2019a plu (facultatif)', RETOUR_FORTS, forts);
+      puces('Ce qui pourrait être amélioré (facultatif)', RETOUR_PISTES, pistes);
+      var envoi = el('button', 'btn', mon.note ? 'Mettre à jour mon retour' : 'Envoyer mon retour'); envoi.type = 'button';
+      var msg = el('p', 'erreur-msg'); msg.setAttribute('role', 'status');
+      envoi.addEventListener('click', function () {
+        msg.style.color = ''; msg.textContent = '';
+        if (!note) { msg.textContent = 'Choisis d\u2019abord une note en cliquant sur les étoiles.'; return; }
+        appel('/' + code + '/section/retour', 'POST', { appareil: etat.appareil, index: i, note: note, forts: forts, pistes: pistes }).then(function (r2) {
+          if (!r2.ok) { msg.textContent = messageErreur(r2); return; }
+          msg.style.color = '#15803d'; msg.textContent = 'Merci, ton retour est envoyé ✓'; envoi.textContent = 'Mettre à jour mon retour';
+        });
+      });
+      zone.appendChild(msg); zone.appendChild(envoi);
+      zone.classList.remove('cache');
+    });
+  }
   function ouvrirSection(i) {
-    fermerPanneaux(); $('ps-msg').textContent = '';
+    fermerPanneaux(); $('ps-msg').style.color = ''; $('ps-msg').textContent = '';
     appel('/' + code + '/section/lire', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
       if (!res.ok) { message(messageErreur(res)); return; }
       var d = etat.donnees, r = res.donnees, mienne = (r.auteur === d.moi);
@@ -487,7 +560,7 @@
       $('ps-enregistrer').onclick = function () {
         $('ps-msg').textContent = '';
         appel('/' + code + '/section/deposer', 'POST', { appareil: etat.appareil, index: i, texte: $('ps-texte').value }).then(function (r2) {
-          $('ps-msg').textContent = r2.ok ? 'Section enregistrée ✓' : messageErreur(r2);
+          $('ps-msg').style.color = r2.ok ? '#15803d' : ''; $('ps-msg').textContent = r2.ok ? 'Section enregistrée ✓' : messageErreur(r2);
           if (r2.ok) actualiser(true);
         });
       };
@@ -511,6 +584,7 @@
         });
       };
       compter();
+      retoursSection(i, r, mienne);
       $('panneau-section').classList.remove('cache');
       $('panneau-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
