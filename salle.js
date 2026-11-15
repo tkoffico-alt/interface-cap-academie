@@ -412,7 +412,7 @@
     });
   }
   function suggerer() {
-    var msg = $('creation-msg'); msg.textContent = '';
+    var msg = $('creation-msg'); msg.textContent = ''; msg.style.color = '';
     if (!$('c-titre').value.trim()) { msg.textContent = 'Écris d\u2019abord le titre ou le thème.'; return; }
     var b = $('btn-suggerer'); b.disabled = true; b.textContent = 'Réflexion…';
     appel('/suggerer', 'POST', { matricule: sceauSalle(), objectif: $('c-objectif').value, titre: $('c-titre').value.trim(),
@@ -420,6 +420,7 @@
       b.disabled = false; b.textContent = '💡 Suggérer des parties (IA, facultatif)';
       if (!res.ok) { msg.textContent = messageErreur(res); return; }
       $('c-chapitres').value = res.donnees.parties.join('\n');
+      msg.style.color = '#15803d';
       msg.textContent = 'Proposition de l\u2019IA : modifie-la comme tu veux avant de créer la salle.';
     });
   }
