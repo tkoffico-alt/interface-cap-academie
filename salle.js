@@ -334,21 +334,32 @@
   function habillerFiche(c) {
     var classes = { 'a retenir': 'sec-retenir', 'vocabulaire': 'sec-vocab', 'exemple': 'sec-exemple', 'erreurs a eviter': 'sec-erreurs',
       'astuce': 'sec-astuce', 'exercices': 'sec-exos', 'corriges': 'sec-corriges' };
-    var corr = null;
     Array.prototype.forEach.call(c.querySelectorAll('h2, h3'), function (h) {
       var cle = h.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-      if (classes[cle]) { h.classList.add('sec', classes[cle]); if (cle === 'corriges') corr = h; }
+      if (classes[cle]) h.classList.add('sec', classes[cle]);
     });
-    if (!corr) return;
-    var boite = el('div', 'corriges cache'), n = corr.nextSibling;
-    while (n) { var suite = n.nextSibling; boite.appendChild(n); n = suite; }
-    corr.textContent = 'Corrigés (essaie d\u2019abord seul !)';
-    var bt = el('button', 'btn-petit', '👁 Voir les corrigés'); bt.type = 'button';
-    bt.addEventListener('click', function () {
-      var ouvert = boite.classList.toggle('cache');
-      bt.textContent = ouvert ? '👁 Voir les corrigés' : '🙈 Masquer les corrigés';
-    });
-    c.appendChild(bt); c.appendChild(boite);
+  }
+  /* Les corrigés ne sont envoyés par le serveur qu'une fois ouverts (tous les membres ont coché le chapitre, ou le créateur les ouvre). */
+  function afficherCorriges(c, x, i) {
+    if (!x.a_corriges) return;
+    var zone = el('div', 'zone-corriges'); c.appendChild(zone);
+    if (x.corriges_ouverts) {
+      if (window.EdukaRendu) window.EdukaRendu.rendre(x.corriges, zone); else zone.textContent = x.corriges;
+      return;
+    }
+    var h = el('h2', 'sec sec-corriges', 'Corrigés'); zone.appendChild(h);
+    zone.appendChild(el('p', 'corriges-verrou', '🔒 Les corrigés s\u2019ouvrent quand tous les membres ont coché ce chapitre (' + x.nb_faits + ' sur ' + x.nb_membres + '). Fais les exercices seul, puis coche le chapitre.'));
+    if (x.peut_ouvrir_corriges) {
+      var b = el('button', 'btn-petit', 'Ouvrir les corrigés maintenant (créateur)'); b.type = 'button';
+      b.addEventListener('click', function () {
+        if (!confirm('Ouvrir les corrigés pour tout le groupe, même si certains n\u2019ont pas fini ?')) return;
+        appel('/' + code + '/contenu/corriges', 'POST', { appareil: etat.appareil, index: i }).then(function (res) {
+          if (!res.ok) { $('pc-msg').textContent = messageErreur(res); return; }
+          ouvrirChapitre(i);
+        });
+      });
+      zone.appendChild(b);
+    }
   }
   function ouvrirChapitre(i) {
     $('plan-msg').textContent = '';
@@ -359,7 +370,7 @@
       etat.chapitreLu = i;
       $('pc-titre').textContent = x.titre;
       $('pc-meta').textContent = 'Fiche préparée par l\u2019assistant à la demande du créateur. Vérifie-la avec ton cours.';
-      if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); habillerFiche($('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
+      if (window.EdukaRendu) { window.EdukaRendu.rendre(x.texte, $('pc-corps')); afficherCorriges($('pc-corps'), x, i); habillerFiche($('pc-corps')); window.EdukaRendu.formules($('pc-corps')); }
       else { $('pc-corps').textContent = x.texte; }
       $('pc-msg').textContent = '';
       $('pc-regenerer').classList.toggle('cache', !x.peut_regenerer);
