@@ -216,7 +216,9 @@
     etat.courante = { id: corps.id, contenu: f.contenu, enAttente: !!corps.devoir_matiere };
     $('fiche-titre').textContent = f.titre;
     $('fiche-meta').textContent = [f.source === 'devoir_en_attente' ? 'Devoir à faire' : (f.source === 'devoir' ? 'Devoir' : 'Fiche'), f.matiere, f.date ? dateCourte(f.date) : ''].filter(Boolean).join(' · ');
-    rendre(f.contenu, $('fiche-corps'));
+    /* un devoir s'affiche dans un cadre (comme dans les fiches), le texte copié reste le texte brut */
+    var estDevoir = (f.source === 'devoir' || f.source === 'devoir_en_attente') && String(f.contenu || '').indexOf('```') < 0;
+    rendre(estDevoir ? '```\n' + f.contenu + '\n```' : f.contenu, $('fiche-corps'));
     formules($('fiche-corps'));
     $('btn-supprimer').classList.toggle('cache', etat.courante.enAttente || horsConnexion);
     etat.courante.matiere = f.matiere || ''; etat.courante.titre = f.titre || '';
