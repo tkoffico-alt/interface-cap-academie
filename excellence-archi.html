@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Salle d'Excellence — EdukaTchat</title>
+<style>
+:root{--bg:#f6f4ee;--carte:#fff;--txt:#1d2433;--doux:#6b7385;--or:#b8860b;--or2:#f3e3b0;--ok:#1f7a4d;--ko:#b3392f;--bord:#e2ddd0;--bleu:#1e3a6e}
+@media(prefers-color-scheme:dark){:root{--bg:#12161f;--carte:#1b2130;--txt:#e9ecf3;--doux:#98a1b5;--or:#e0b33f;--or2:#3a3320;--ok:#4fc08a;--ko:#ef7b70;--bord:#2b3348;--bleu:#8fb0ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+.page{max-width:620px;margin:0 auto;padding:16px 16px 60px}
+h1{font:700 1.5rem Georgia,serif;margin:8px 0 2px}h2{font:700 1.1rem Georgia,serif;margin:22px 0 8px}
+.sous{color:var(--doux);margin:0 0 14px;font-size:.92rem}
+.carte{background:var(--carte);border:1px solid var(--bord);border-radius:14px;padding:14px;margin:10px 0}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--bord);background:var(--carte);color:var(--txt);padding:10px 14px}
+button.prim{background:var(--bleu);color:#fff;border-color:var(--bleu)}button:disabled{opacity:.5;cursor:default}
+input,select,textarea{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid var(--bord);background:var(--bg);color:var(--txt)}
+.verrou{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin:6px 0}
+.verrou .ic{font-size:1.3rem;width:30px;text-align:center}.verrou small{display:block;color:var(--doux)}
+.verrou.valide{border-color:var(--ok)}.verrou.verrouille{opacity:.55;cursor:not-allowed}
+.palier{border-left:4px solid var(--or);padding-left:10px;margin-top:18px}.palier b{color:var(--or)}
+.bandeau{background:var(--or2);border:1px solid var(--or);border-radius:12px;padding:10px 12px;font-size:.9rem}
+.enonce{font-size:1.08rem;line-height:1.6}.indice{background:var(--or2);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:.95rem}
+.ok{color:var(--ok);font-weight:600}.ko{color:var(--ko);font-weight:600}
+.ligne{display:flex;gap:8px}.ligne input{flex:1}.cache{display:none}
+nav{display:flex;gap:6px;margin:10px 0}nav button{flex:1;font-size:.9rem;padding:8px 4px}nav button.on{background:var(--bleu);color:#fff;border-color:var(--bleu)}
+table{width:100%;border-collapse:collapse;font-size:.93rem}td,th{padding:6px 4px;border-bottom:1px solid var(--bord);text-align:left}
+</style></head><body><div class="page">
+<h1>🏛️ Salle d'Excellence</h1>
+<p class="sous">Mesure-toi à toi-même. Chaque verrou a TES chiffres : rien à copier, tout à comprendre.</p>
+<div id="app"></div></div>
+<script>
+const API=(window.SALLE_API||"https://api.edukatchat.org")+"/api/excellence";
+const $=s=>document.querySelector(s);
+function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function appareil(){try{let a=localStorage.getItem("eduka_appareil");if(!a||a.length<16){a=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now())+"-s";localStorage.setItem("eduka_appareil",a)}return a}catch(e){return window.__a||(window.__a=String(Math.random()).slice(2)+"abcdefghijkl")}}
+function matricule(){try{return localStorage.getItem("excellence_code")||""}catch(e){return window.__code||""}}
+function demanderCode(){$("#app").innerHTML=`<div class="carte"><b>🔐 Accès réservé</b><p class="sous">La Salle d'Excellence n'est pas encore ouverte au public. Entre ton code d'accès.</p>
+  <div class="ligne"><input id="code" type="password" autocomplete="off" placeholder="Code d'accès" onkeydown="if(event.key==='Enter')validerCode()"><button class="prim" onclick="validerCode()">Entrer</button></div></div>`}
+function validerCode(){const c=$("#code").value.trim();try{localStorage.setItem("excellence_code",c)}catch(e){window.__code=c}rendre()}
+async function appel(chemin,corps){
+  const r=await fetch(API+chemin,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign({appareil:appareil(),matricule:matricule()},corps||{}))});
+  let j={};try{j=await r.json()}catch(e){} if(!r.ok)throw new Error(j.detail||"Erreur "+r.status);return j}
+let etat={vue:"accueil"};
+function onglets(){const t=[["accueil","🔓 Verrous"],["honneur","🏆 Honneur"],["proposer","📷 Proposer"]];
+  return '<nav>'+t.map(([k,l])=>`<button class="${etat.vue===k?"on":""}" onclick="aller('${k}')">${l}</button>`).join("")+'</nav>'}
+function aller(v){etat.vue=v;rendre()}
+async function rendre(){
+  const el=$("#app");
+  try{
+    if(etat.vue==="defi")return rendreDefi();
+    if(etat.vue==="honneur")return rendreHonneur();
+    if(etat.vue==="proposer")return rendreProposer();
+    const c=await appel("/catalogue");etat.cat=c;
+    if(!c.pseudo){el.innerHTML=`<div class="carte"><b>Choisis ton pseudonyme</b><p class="sous">Il apparaîtra au tableau d'honneur. Pas de vrai nom.</p>
+      <div class="ligne"><input id="pseudo" maxlength="20" placeholder="Ton pseudonyme"><button class="prim" onclick="inscription()">Entrer</button></div><p id="err" class="ko"></p></div>`;return}
+    let h=onglets()+`<p class="sous">Bienvenue <b>${esc(c.pseudo)}</b> · ${c.nb_valides}/${c.nb_total} verrous franchis</p>`;
+    for(const m of c.matieres){h+=`<h2>${esc(m.nom)}</h2>`;
+      for(const p of m.paliers){h+=`<div class="palier"><b>Palier ${p.palier} — ${esc(p.nom)}</b>${p.termine?" ✅":""}`;
+        for(const d of p.defis){const ic={valide:"✅",ouvert:"🔓",verrouille:"🔒"}[d.statut];
+          h+=`<button class="verrou carte ${d.statut}" ${d.statut==="verrouille"?"disabled":""} onclick="ouvrir('${d.id}')"><span class="ic">${ic}</span><span><b>${esc(d.titre)}</b><small>Niveau ${esc(d.niveau)}${d.score!=null?" · score "+d.score:""}</small></span></button>`}
+        h+="</div>"}}
+    el.innerHTML=h}catch(e){if(e.message==="Introuvable.")return demanderCode();el.innerHTML=onglets()+`<div class="carte ko">${esc(e.message)}</div>`}}
+async function inscription(){try{await appel("/inscrire",{pseudo:$("#pseudo").value});rendre()}catch(e){$("#err").textContent=e.message}}
+async function ouvrir(id){try{etat.defi=await appel("/defi/ouvrir",{defi_id:id});etat.vue="defi";etat.retour=null;rendre()}catch(e){alert(e.message)}}
+function rendreDefi(){const d=etat.defi;let h=`<button onclick="aller('accueil')">← Retour</button><div class="carte"><small class="sous">${esc(d.titre)} · palier ${d.palier} · niveau ${esc(d.niveau)}</small><p class="enonce">${esc(d.enonce)}</p>`;
+  for(const i of d.indices_debloques)h+=`<div class="indice">💡 ${esc(i)}</div>`;
+  if(d.etat==="valide"){h+=`<p class="ok">✅ Verrou franchi — score ${d.score}</p><div class="indice">${esc(d.explication||"")}</div>`}
+  else{h+=`<div class="ligne"><input id="rep" inputmode="decimal" placeholder="Ta réponse${d.unite?" ("+esc(d.unite)+")":""}" onkeydown="if(event.key==='Enter')repondre()"><button class="prim" onclick="repondre()">Valider</button></div>
+    <p><button onclick="indice()" ${d.indices_debloques.length>=d.nb_indices_total?"disabled":""}>💡 Indice (−20 pts)</button></p><p id="msg"></p>`}
+  $("#app").innerHTML=h+"</div>"}
+async function indice(){try{const r=await appel("/defi/indice",{defi_id:etat.defi.id});etat.defi.indices_debloques.push(r.indice);rendreDefi()}catch(e){$("#msg").innerHTML=`<span class="ko">${esc(e.message)}</span>`}}
+async function repondre(){const v=$("#rep").value;if(!v.trim())return;
+  try{const r=await appel("/defi/repondre",{defi_id:etat.defi.id,reponse:v});
+    if(r.status==="juste"){etat.defi.etat="valide";etat.defi.score=r.score;etat.defi.explication=r.explication;rendreDefi();
+      $("#app").insertAdjacentHTML("beforeend",`<div class="bandeau">🎉 Verrou franchi ! Score ${r.score}/100 en ${Math.round(r.duree_s/60)} min.${r.suivant?` Prochain verrou : <b>${esc(r.suivant.titre)}</b>.`:" Tu as terminé cette matière !"}</div>`)}
+    else $("#msg").innerHTML=`<span class="ko">${esc(r.message)}</span>${r.bloque_s?` Pause de ${r.bloque_s} s.`:""}`}
+  catch(e){$("#msg").innerHTML=`<span class="ko">${esc(e.message)}</span>`}}
+async function rendreHonneur(){const r=await appel("/honneur");
+  let h=onglets()+"<h2>🏆 Tableau d'honneur</h2><div class='carte'><table><tr><th>#</th><th>Pseudo</th><th>Verrous</th><th>Points</th></tr>";
+  r.palmares.forEach((p,i)=>h+=`<tr><td>${i+1}</td><td>${esc(p.pseudo)}</td><td>${p.verrous}</td><td>${p.points}</td></tr>`);
+  h+="</table></div><h2>Derniers verrous franchis</h2><div class='carte'>";
+  r.recentes.forEach(x=>h+=`<div><b>${esc(x.pseudo)}</b> · ${esc(x.titre)} · ${x.score} pts <small class="sous">${esc(x.date)}</small></div>`);
+  $("#app").innerHTML=h+"</div>"}
+function rendreProposer(){$("#app").innerHTML=onglets()+`<h2>📷 Propose un exercice</h2><p class="sous">Un exercice que tu n'as pas su résoudre ? Envoie-le en photo. S'il est retenu, il devient un verrou signé de ton pseudonyme.</p>
+  <div class="carte"><select id="pm"><option value="maths">Mathématiques</option><option value="physique-chimie">Physique-Chimie</option></select><br><br>
+  <input id="pn" placeholder="Niveau (ex. Tle)" maxlength="20"><br><br><textarea id="pt" rows="2" maxlength="400" placeholder="Un mot d'explication (facultatif)"></textarea><br><br>
+  <input type="file" id="pf" accept="image/jpeg,image/png"><br><br><button class="prim" onclick="envoyerPhoto()">Envoyer</button><p id="pmsg"></p></div>`}
+async function envoyerPhoto(){const f=$("#pf").files[0];if(!f){$("#pmsg").textContent="Choisis une photo.";return}
+  const fd=new FormData();fd.append("photo",f);fd.append("appareil",appareil());fd.append("matricule",matricule());fd.append("matiere",$("#pm").value);fd.append("niveau",$("#pn").value);fd.append("message",$("#pt").value);
+  try{const r=await fetch(API+"/proposer",{method:"POST",body:fd});const j=await r.json();$("#pmsg").innerHTML=r.ok?`<span class="ok">${esc(j.message)}</span>`:`<span class="ko">${esc(j.detail)}</span>`}catch(e){$("#pmsg").textContent="Erreur réseau."}}
+rendre();
+</script></body></html>
