@@ -4,46 +4,107 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Salle d'Excellence — EdukaTchat</title>
 <style>
-:root{--bg:#f6f4ee;--carte:#fff;--txt:#1d2433;--doux:#6b7385;--or:#b8860b;--or2:#f3e3b0;--ok:#1f7a4d;--ko:#b3392f;--bord:#e2ddd0;--bleu:#1e3a6e}
-@media(prefers-color-scheme:dark){:root{--bg:#12161f;--carte:#1b2130;--txt:#e9ecf3;--doux:#98a1b5;--or:#e0b33f;--or2:#3a3320;--ok:#4fc08a;--ko:#ef7b70;--bord:#2b3348;--bleu:#8fb0ff}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
-.page{max-width:620px;margin:0 auto;padding:16px 16px 60px}
-h1{font:700 1.5rem Georgia,serif;margin:8px 0 2px}h2{font:700 1.1rem Georgia,serif;margin:22px 0 8px}
-.sous{color:var(--doux);margin:0 0 14px;font-size:.92rem}
-.carte{background:var(--carte);border:1px solid var(--bord);border-radius:14px;padding:14px;margin:10px 0}
-button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--bord);background:var(--carte);color:var(--txt);padding:10px 14px}
-button.prim{background:var(--bleu);color:#fff;border-color:var(--bleu)}button:disabled{opacity:.5;cursor:default}
-input,select,textarea{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid var(--bord);background:var(--bg);color:var(--txt)}
-.verrou{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin:6px 0}
-.verrou .ic{font-size:1.3rem;width:30px;text-align:center}.verrou small{display:block;color:var(--doux)}
-.verrou.valide{border-color:var(--ok)}.verrou.verrouille{opacity:.55;cursor:not-allowed}
-.palier{border-left:4px solid var(--or);padding-left:10px;margin-top:18px}.palier b{color:var(--or)}
-.bandeau{background:var(--or2);border:1px solid var(--or);border-radius:12px;padding:10px 12px;font-size:.9rem}
-.enonce{font-size:1.08rem;line-height:1.6}.indice{background:var(--or2);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:.95rem}
-.ok{color:var(--ok);font-weight:600}.ko{color:var(--ko);font-weight:600}
-.ligne{display:flex;gap:8px}.ligne input{flex:1}.cache{display:none}
-nav{display:flex;gap:6px;margin:10px 0}nav button{flex:1;font-size:.9rem;padding:8px 4px}nav button.on{background:var(--bleu);color:#fff;border-color:var(--bleu)}
-table{width:100%;border-collapse:collapse;font-size:.93rem}td,th{padding:6px 4px;border-bottom:1px solid var(--bord);text-align:left}
-</style></head><body><div class="page">
-<h1>🏛️ Salle d'Excellence</h1>
-<p class="sous">Mesure-toi à toi-même. Chaque verrou a TES chiffres : rien à copier, tout à comprendre.</p>
-<div id="app"></div></div>
+:root{
+  --papier:#f4f7fc; --carreau:#dde6f4; --marge:#d6455a;
+  --encre:#14264d; --encre-douce:#4f5f86; --trait:#c5d1e7; --feuille:#ffffff;
+  --valide:#0e7c66; --valide-fond:#e2f4ee; --faux:#b42337; --faux-fond:#fbe9ec;
+  --titre:Iowan Old Style,"Palatino Linotype",Palatino,Georgia,serif;
+  --texte:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media(prefers-color-scheme:dark){:root{
+  --papier:#0d1730; --carreau:#18274d; --marge:#e0606f;
+  --encre:#e9eefa; --encre-douce:#9aa9cc; --trait:#2b3b69; --feuille:#142150;
+  --valide:#52d0ae; --valide-fond:#10332f; --faux:#ff8393; --faux-fond:#3a1a27;}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--encre);font:16px/1.55 var(--texte);background-color:var(--papier);
+  background-image:linear-gradient(var(--carreau) 1px,transparent 1px),linear-gradient(90deg,var(--carreau) 1px,transparent 1px);
+  background-size:28px 28px;background-position:-1px -1px}
+.page{position:relative;max-width:640px;margin:0 auto;padding:22px 18px 90px 38px;min-height:100vh}
+.page::before{content:"";position:absolute;left:20px;top:0;bottom:0;width:2px;background:var(--marge);opacity:.8}
+h1{font:700 1.7rem/1.2 var(--titre);margin:6px 0 4px;letter-spacing:-.01em}
+h2{font:700 1.2rem/1.3 var(--titre);margin:0}
+.devise{margin:0 0 18px;color:var(--encre-douce);max-width:34em}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:3px solid var(--encre);outline-offset:2px;border-radius:4px}
+.onglets{display:flex;gap:2px;border-bottom:2px solid var(--trait);margin:4px 0 18px;overflow-x:auto}
+.onglets button{padding:8px 11px;min-height:44px;color:var(--encre-douce);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;font-weight:600}
+.onglets button[aria-selected=true]{color:var(--encre);border-bottom-color:var(--encre)}
+.onglets[aria-label] button{padding:8px 7px;font-size:.88rem}
+.onglets small{display:block;font-weight:400;opacity:.8;font-size:.78rem;line-height:1.1}
+.onglets button{text-align:center}
+.bilan{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+.bilan strong{font:700 2rem/1 var(--titre)}
+.bilan span{color:var(--encre-douce)}
+.palier{margin:26px 0 0}
+.palier-titre{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:6px}
+.palier-titre small{color:var(--encre-douce)}
+.chaine{list-style:none;margin:0;padding:0;position:relative}
+.chaine::before{content:"";position:absolute;left:15px;top:24px;bottom:24px;width:2px;background:var(--trait)}
+.chaine li{position:relative}
+.verrou{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:9px 6px 9px 0;min-height:58px}
+.noeud{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--papier);border:2px solid var(--trait);position:relative;z-index:1}
+.noeud svg{width:16px;height:16px}
+.ouvert .noeud{border-color:var(--encre);background:var(--feuille)}
+.valide .noeud{background:var(--valide);border-color:var(--valide);color:#fff}
+.verrouille{opacity:.62;cursor:not-allowed}
+.verrou b{display:block;font-weight:650}
+.verrou small{color:var(--encre-douce)}
+.ouvert:hover .verrou b,.ouvert .verrou:focus-visible b{text-decoration:underline;text-underline-offset:3px}
+.score{margin-left:auto;font:700 1.05rem var(--titre);color:var(--valide);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 20px;border-radius:8px;border:2px solid var(--encre);font-weight:650}
+.btn.plein{background:var(--encre);color:var(--papier)}
+.btn:disabled{opacity:.45;cursor:default}
+.lien{color:var(--encre-douce);text-decoration:underline;text-underline-offset:3px;min-height:44px;display:inline-flex;align-items:center}
+.sujet{background:var(--feuille);border:1px solid var(--trait);border-radius:4px;padding:18px 18px 20px;margin:12px 0 18px;box-shadow:3px 3px 0 var(--trait)}
+.meta{color:var(--encre-douce);font-size:.92rem;margin:0 0 8px}
+.enonce{font:1.2rem/1.65 var(--titre);margin:0}
+.reponse{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+.reponse label{display:block;width:100%;font-weight:600;margin-bottom:2px}
+.reponse input{flex:1;min-width:140px;font:1.3rem var(--titre);color:var(--encre);background:transparent;border:0;border-bottom:2px solid var(--encre);padding:8px 2px;border-radius:0}
+.reponse span{color:var(--encre-douce);padding-bottom:10px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.note{border-left:3px solid var(--encre-douce);padding:4px 0 4px 12px;margin:10px 0;font-style:italic}
+.retour-faux{background:var(--faux-fond);color:var(--faux);border-left:4px solid var(--faux);padding:10px 12px;margin:12px 0;font-weight:550}
+.corrige{background:var(--valide-fond);border-left:4px solid var(--valide);padding:12px 14px;margin:14px 0}
+.corrige b{display:block;margin-bottom:2px;color:var(--valide)}
+.gros{font:700 2.6rem/1 var(--titre);color:var(--valide)}
+.gros small{font-size:1.1rem;color:var(--encre-douce);font-weight:400}
+.champ{display:block;width:100%;font:inherit;color:var(--encre);background:var(--feuille);border:1px solid var(--trait);border-radius:6px;padding:11px 12px;margin:6px 0 14px}
+label.l{font-weight:600}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--trait)}
+th{color:var(--encre-douce);font-weight:600;font-size:.9rem}
+.rang{font:700 1.2rem var(--titre);width:2.2em}
+.vide{color:var(--encre-douce)}
+.erreur{color:var(--faux);font-weight:600}
+@media(max-width:480px){.page{padding-left:34px;padding-right:14px}.page::before{left:16px}h1{font-size:1.45rem}}
+</style></head><body><main class="page">
+<h1>Salle d'Excellence</h1>
+<p class="devise">Chaque verrou a tes propres chiffres : rien à recopier, tout à comprendre. Franchis-en un pour ouvrir le suivant.</p>
+<div id="app" aria-live="polite"></div></main>
 <script>
 const API=(window.SALLE_API||"https://api.edukatchat.org")+"/api/excellence";
 const $=s=>document.querySelector(s);
-function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const esc=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ICONES={
+  check:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>',
+  cadenas:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.2" y="7" width="9.6" height="6.6" rx="1.4"/><path d="M5.4 7V5.2a2.6 2.6 0 015.2 0V7"/></svg>',
+  ouvert:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.2" y="7" width="9.6" height="6.6" rx="1.4"/><path d="M5.4 7V5.2a2.6 2.6 0 015-.9"/></svg>'};
 function appareil(){try{let a=localStorage.getItem("eduka_appareil");if(!a||a.length<16){a=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now())+"-s";localStorage.setItem("eduka_appareil",a)}return a}catch(e){return window.__a||(window.__a=String(Math.random()).slice(2)+"abcdefghijkl")}}
 function matricule(){try{return localStorage.getItem("excellence_code")||""}catch(e){return window.__code||""}}
-function demanderCode(){$("#app").innerHTML=`<div class="carte"><b>🔐 Accès réservé</b><p class="sous">La Salle d'Excellence n'est pas encore ouverte au public. Entre ton code d'accès.</p>
-  <div class="ligne"><input id="code" type="password" autocomplete="off" placeholder="Code d'accès" onkeydown="if(event.key==='Enter')validerCode()"><button class="prim" onclick="validerCode()">Entrer</button></div></div>`}
-function validerCode(){const c=$("#code").value.trim();try{localStorage.setItem("excellence_code",c)}catch(e){window.__code=c}rendre()}
 async function appel(chemin,corps){
   const r=await fetch(API+chemin,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign({appareil:appareil(),matricule:matricule()},corps||{}))});
   let j={};try{j=await r.json()}catch(e){} if(!r.ok)throw new Error(j.detail||"Erreur "+r.status);return j}
-let etat={vue:"accueil"};
-function onglets(){const t=[["accueil","🔓 Verrous"],["honneur","🏆 Honneur"],["proposer","📷 Proposer"]];
-  return '<nav>'+t.map(([k,l])=>`<button class="${etat.vue===k?"on":""}" onclick="aller('${k}')">${l}</button>`).join("")+'</nav>'}
+let etat={vue:"accueil",mat:null};
+try{etat.mat=localStorage.getItem("excellence_matiere")}catch(e){}
 function aller(v){etat.vue=v;rendre()}
+function menu(){const t=[["accueil","Verrous"],["honneur","Honneur"],["proposer","Proposer"]];
+  return `<div class="onglets" role="tablist">`+t.map(([k,l])=>`<button role="tab" aria-selected="${etat.vue===k}" onclick="aller('${k}')">${l}</button>`).join("")+`</div>`}
+function demanderCode(){$("#app").innerHTML=`<div class="sujet"><h2>Accès réservé</h2><p class="meta">La Salle d'Excellence n'est pas encore ouverte à tous. Entre ton code d'accès pour continuer.</p>
+  <div class="reponse"><label for="code">Code d'accès</label><input id="code" type="password" autocomplete="off" onkeydown="if(event.key==='Enter')validerCode()"></div>
+  <button class="btn plein" onclick="validerCode()">Entrer</button></div>`}
+function validerCode(){const c=$("#code").value.trim();try{localStorage.setItem("excellence_code",c)}catch(e){window.__code=c}rendre()}
 async function rendre(){
   const el=$("#app");
   try{
@@ -51,42 +112,60 @@ async function rendre(){
     if(etat.vue==="honneur")return rendreHonneur();
     if(etat.vue==="proposer")return rendreProposer();
     const c=await appel("/catalogue");etat.cat=c;
-    if(!c.pseudo){el.innerHTML=`<div class="carte"><b>Choisis ton pseudonyme</b><p class="sous">Il apparaîtra au tableau d'honneur. Pas de vrai nom.</p>
-      <div class="ligne"><input id="pseudo" maxlength="20" placeholder="Ton pseudonyme"><button class="prim" onclick="inscription()">Entrer</button></div><p id="err" class="ko"></p></div>`;return}
-    let h=onglets()+`<p class="sous">Bienvenue <b>${esc(c.pseudo)}</b> · ${c.nb_valides}/${c.nb_total} verrous franchis</p>`;
-    for(const m of c.matieres){h+=`<h2>${esc(m.nom)}</h2>`;
-      for(const p of m.paliers){h+=`<div class="palier"><b>Palier ${p.palier} — ${esc(p.nom)}</b>${p.termine?" ✅":""}`;
-        for(const d of p.defis){const ic={valide:"✅",ouvert:"🔓",verrouille:"🔒"}[d.statut];
-          h+=`<button class="verrou carte ${d.statut}" ${d.statut==="verrouille"?"disabled":""} onclick="ouvrir('${d.id}')"><span class="ic">${ic}</span><span><b>${esc(d.titre)}</b><small>Niveau ${esc(d.niveau)}${d.score!=null?" · score "+d.score:""}</small></span></button>`}
-        h+="</div>"}}
-    el.innerHTML=h}catch(e){if(e.message==="Introuvable.")return demanderCode();el.innerHTML=onglets()+`<div class="carte ko">${esc(e.message)}</div>`}}
+    if(!c.pseudo){el.innerHTML=`<div class="sujet"><h2>Choisis ton pseudonyme</h2><p class="meta">Il apparaîtra au tableau d'honneur. Pas de vrai nom, et pas de numéro de téléphone.</p>
+      <div class="reponse"><label for="pseudo">Pseudonyme</label><input id="pseudo" maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')inscription()"></div>
+      <button class="btn plein" onclick="inscription()">Entrer dans la salle</button><p id="err" class="erreur" role="alert"></p></div>`;return}
+    if(!c.matieres.some(m=>m.cle===etat.mat))etat.mat=c.matieres[0].cle;
+    const compte=m=>m.paliers.reduce((a,p)=>a+p.defis.filter(d=>d.statut==="valide").length,0);
+    const total=m=>m.paliers.reduce((a,p)=>a+p.defis.length,0);
+    const m=c.matieres.find(x=>x.cle===etat.mat);
+    let h=menu()+`<p class="bilan"><strong>${c.nb_valides}/${c.nb_total}</strong><span>verrous franchis, ${esc(c.pseudo)}</span></p>`;
+    h+=`<div class="onglets" role="tablist" aria-label="Matière">`+c.matieres.map(x=>`<button role="tab" aria-selected="${x.cle===etat.mat}" onclick="choisirMatiere('${x.cle}')">${esc(x.nom)}<small>${compte(x)}/${total(x)}</small></button>`).join("")+`</div>`;
+    for(const p of m.paliers){
+      const nbv=p.defis.filter(d=>d.statut==="valide").length;
+      h+=`<section class="palier"><div class="palier-titre"><h2>Palier ${p.palier} : ${esc(p.nom)}</h2><small>${nbv}/${p.defis.length}</small></div><ul class="chaine">`;
+      for(const d of p.defis){const ic=d.statut==="valide"?ICONES.check:(d.statut==="ouvert"?ICONES.ouvert:ICONES.cadenas);
+        const etiquette=d.statut==="valide"?"franchi":d.statut==="ouvert"?"ouvert":"verrouillé";
+        h+=`<li class="${d.statut}"><button class="verrou" ${d.statut==="verrouille"?'disabled aria-disabled="true"':""} onclick="ouvrir('${d.id}')"><span class="noeud" aria-hidden="true">${ic}</span><span><b>${esc(d.titre)}</b><small>Niveau ${esc(d.niveau)}, ${etiquette}</small></span>${d.score!=null?`<span class="score">${d.score}/100</span>`:""}</button></li>`}
+      h+=`</ul></section>`}
+    el.innerHTML=h}catch(e){if(e.message==="Introuvable.")return demanderCode();el.innerHTML=menu()+`<p class="erreur">${esc(e.message)}</p>`}}
+function choisirMatiere(k){etat.mat=k;try{localStorage.setItem("excellence_matiere",k)}catch(e){}rendre()}
 async function inscription(){try{await appel("/inscrire",{pseudo:$("#pseudo").value});rendre()}catch(e){$("#err").textContent=e.message}}
-async function ouvrir(id){try{etat.defi=await appel("/defi/ouvrir",{defi_id:id});etat.vue="defi";etat.retour=null;rendre()}catch(e){alert(e.message)}}
-function rendreDefi(){const d=etat.defi;let h=`<button onclick="aller('accueil')">← Retour</button><div class="carte"><small class="sous">${esc(d.titre)} · palier ${d.palier} · niveau ${esc(d.niveau)}</small><p class="enonce">${esc(d.enonce)}</p>`;
-  for(const i of d.indices_debloques)h+=`<div class="indice">💡 ${esc(i)}</div>`;
-  if(d.etat==="valide"){h+=`<p class="ok">✅ Verrou franchi — score ${d.score}</p><div class="indice">${esc(d.explication||"")}</div>`}
-  else{h+=`<div class="ligne"><input id="rep" inputmode="decimal" placeholder="Ta réponse${d.unite?" ("+esc(d.unite)+")":""}" onkeydown="if(event.key==='Enter')repondre()"><button class="prim" onclick="repondre()">Valider</button></div>
-    <p><button onclick="indice()" ${d.indices_debloques.length>=d.nb_indices_total?"disabled":""}>💡 Indice (−20 pts)</button></p><p id="msg"></p>`}
-  $("#app").innerHTML=h+"</div>"}
-async function indice(){try{const r=await appel("/defi/indice",{defi_id:etat.defi.id});etat.defi.indices_debloques.push(r.indice);rendreDefi()}catch(e){$("#msg").innerHTML=`<span class="ko">${esc(e.message)}</span>`}}
+async function ouvrir(id){try{etat.defi=await appel("/defi/ouvrir",{defi_id:id});etat.vue="defi";rendre();window.scrollTo(0,0)}catch(e){alert(e.message)}}
+function rendreDefi(){const d=etat.defi,r=d.resultat;
+  let h=`<button class="lien" onclick="aller('accueil')">Retour aux verrous</button><div class="sujet"><p class="meta">${esc(d.titre)}, palier ${d.palier}, niveau ${esc(d.niveau)}</p><p class="enonce">${esc(d.enonce)}</p></div>`;
+  for(const i of d.indices_debloques)h+=`<p class="note">Indice : ${esc(i)}</p>`;
+  if(d.etat==="valide"){
+    h+=`<p class="gros">${d.score}<small> / 100</small></p><p class="meta">Verrou franchi${r&&r.duree_s?` en ${Math.max(1,Math.round(r.duree_s/60))} min`:""}.</p>`;
+    if(d.explication)h+=`<div class="corrige"><b>Corrigé</b>${esc(d.explication)}</div>`;
+    const suiv=r&&r.suivant;
+    h+=`<div class="actions">${suiv?`<button class="btn plein" onclick="ouvrir('${suiv.id}')">Verrou suivant : ${esc(suiv.titre)}</button>`:(r?`<p class="meta">Tu as terminé cette matière.</p>`:"")}<button class="btn" onclick="aller('accueil')">Retour aux verrous</button></div>`}
+  else{
+    h+=`<div class="reponse"><label for="rep">Ta réponse</label><input id="rep" inputmode="decimal" autocomplete="off" onkeydown="if(event.key==='Enter')repondre()">${d.unite?`<span>${esc(d.unite)}</span>`:""}</div>
+      <div class="actions"><button class="btn plein" onclick="repondre()">Valider</button><button class="btn" onclick="indice()" ${d.indices_debloques.length>=d.nb_indices_total?"disabled":""}>Indice (moins 20 points)</button></div><div id="msg" role="alert"></div>`}
+  $("#app").innerHTML=h}
+async function indice(){try{const r=await appel("/defi/indice",{defi_id:etat.defi.id});etat.defi.indices_debloques.push(r.indice);rendreDefi()}catch(e){$("#msg").innerHTML=`<p class="retour-faux">${esc(e.message)}</p>`}}
 async function repondre(){const v=$("#rep").value;if(!v.trim())return;
   try{const r=await appel("/defi/repondre",{defi_id:etat.defi.id,reponse:v});
-    if(r.status==="juste"){etat.defi.etat="valide";etat.defi.score=r.score;etat.defi.explication=r.explication;rendreDefi();
-      $("#app").insertAdjacentHTML("beforeend",`<div class="bandeau">🎉 Verrou franchi ! Score ${r.score}/100 en ${Math.round(r.duree_s/60)} min.${r.suivant?` Prochain verrou : <b>${esc(r.suivant.titre)}</b>.`:" Tu as terminé cette matière !"}</div>`)}
-    else $("#msg").innerHTML=`<span class="ko">${esc(r.message)}</span>${r.bloque_s?` Pause de ${r.bloque_s} s.`:""}`}
-  catch(e){$("#msg").innerHTML=`<span class="ko">${esc(e.message)}</span>`}}
+    if(r.status==="juste"){Object.assign(etat.defi,{etat:"valide",score:r.score,explication:r.explication,resultat:r});rendreDefi();window.scrollTo(0,0)}
+    else $("#msg").innerHTML=`<p class="retour-faux">${esc(r.message)}${r.bloque_s?` Pause de ${r.bloque_s} secondes avant le prochain essai.`:""}</p>`}
+  catch(e){$("#msg").innerHTML=`<p class="retour-faux">${esc(e.message)}</p>`}}
 async function rendreHonneur(){const r=await appel("/honneur");
-  let h=onglets()+"<h2>🏆 Tableau d'honneur</h2><div class='carte'><table><tr><th>#</th><th>Pseudo</th><th>Verrous</th><th>Points</th></tr>";
-  r.palmares.forEach((p,i)=>h+=`<tr><td>${i+1}</td><td>${esc(p.pseudo)}</td><td>${p.verrous}</td><td>${p.points}</td></tr>`);
-  h+="</table></div><h2>Derniers verrous franchis</h2><div class='carte'>";
-  r.recentes.forEach(x=>h+=`<div><b>${esc(x.pseudo)}</b> · ${esc(x.titre)} · ${x.score} pts <small class="sous">${esc(x.date)}</small></div>`);
-  $("#app").innerHTML=h+"</div>"}
-function rendreProposer(){$("#app").innerHTML=onglets()+`<h2>📷 Propose un exercice</h2><p class="sous">Un exercice que tu n'as pas su résoudre ? Envoie-le en photo. S'il est retenu, il devient un verrou signé de ton pseudonyme.</p>
-  <div class="carte"><select id="pm"><option value="maths">Mathématiques</option><option value="physique-chimie">Physique-Chimie</option></select><br><br>
-  <input id="pn" placeholder="Niveau (ex. Tle)" maxlength="20"><br><br><textarea id="pt" rows="2" maxlength="400" placeholder="Un mot d'explication (facultatif)"></textarea><br><br>
-  <input type="file" id="pf" accept="image/jpeg,image/png"><br><br><button class="prim" onclick="envoyerPhoto()">Envoyer</button><p id="pmsg"></p></div>`}
-async function envoyerPhoto(){const f=$("#pf").files[0];if(!f){$("#pmsg").textContent="Choisis une photo.";return}
+  let h=menu()+`<h2>Tableau d'honneur</h2>`;
+  if(!r.palmares.length)h+=`<p class="vide">Personne n'a encore franchi de verrou. Le premier nom sera le tien.</p>`;
+  else{h+=`<table><tr><th></th><th>Pseudonyme</th><th>Verrous</th><th>Points</th></tr>`;
+    r.palmares.forEach((p,i)=>h+=`<tr><td class="rang">${i+1}</td><td>${esc(p.pseudo)}</td><td>${p.verrous}</td><td>${p.points}</td></tr>`);h+=`</table>`;
+    h+=`<h2 style="margin-top:26px">Derniers verrous franchis</h2><table>`;
+    r.recentes.forEach(x=>h+=`<tr><td>${esc(x.pseudo)}</td><td>${esc(x.titre)}</td><td>${x.score}/100</td><td class="vide">${esc(x.date)}</td></tr>`);h+=`</table>`}
+  $("#app").innerHTML=h}
+function rendreProposer(){$("#app").innerHTML=menu()+`<h2>Proposer un exercice</h2><p class="meta">Un exercice que tu n'as pas su résoudre ? Envoie-le en photo. Je le relis avant toute publication ; s'il est retenu, il devient un verrou signé de ton pseudonyme.</p>
+  <label class="l" for="pm">Matière</label><select class="champ" id="pm"><option value="maths">Mathématiques</option><option value="physique-chimie">Physique-Chimie</option><option value="svt">SVT</option></select>
+  <label class="l" for="pn">Niveau</label><input class="champ" id="pn" placeholder="Par exemple : Tle" maxlength="20">
+  <label class="l" for="pt">Un mot d'explication (facultatif)</label><textarea class="champ" id="pt" rows="2" maxlength="400"></textarea>
+  <label class="l" for="pf">Photo (JPEG ou PNG, 4 Mo maximum)</label><input class="champ" type="file" id="pf" accept="image/jpeg,image/png">
+  <button class="btn plein" onclick="envoyerPhoto()">Envoyer la photo</button><div id="pmsg" role="alert"></div>`}
+async function envoyerPhoto(){const f=$("#pf").files[0];if(!f){$("#pmsg").innerHTML=`<p class="retour-faux">Choisis d'abord une photo.</p>`;return}
   const fd=new FormData();fd.append("photo",f);fd.append("appareil",appareil());fd.append("matricule",matricule());fd.append("matiere",$("#pm").value);fd.append("niveau",$("#pn").value);fd.append("message",$("#pt").value);
-  try{const r=await fetch(API+"/proposer",{method:"POST",body:fd});const j=await r.json();$("#pmsg").innerHTML=r.ok?`<span class="ok">${esc(j.message)}</span>`:`<span class="ko">${esc(j.detail)}</span>`}catch(e){$("#pmsg").textContent="Erreur réseau."}}
+  try{const r=await fetch(API+"/proposer",{method:"POST",body:fd});const j=await r.json();$("#pmsg").innerHTML=r.ok?`<p class="corrige"><b>Photo reçue</b>${esc(j.message)}</p>`:`<p class="retour-faux">${esc(j.detail)}</p>`}catch(e){$("#pmsg").innerHTML=`<p class="retour-faux">Connexion impossible. Réessaie dans un instant.</p>`}}
 rendre();
 </script></body></html>
