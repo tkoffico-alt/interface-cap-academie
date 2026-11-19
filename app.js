@@ -5752,6 +5752,8 @@ function obtenirDeviceId() {
 // Un élève qui présente mal sa pensée par écrit peut enregistrer sa
 // question à l'oral : le texte transcrit vient simplement pré-remplir la
 // zone de saisie, sans envoi automatique — il garde la main pour relire.
+// (Exception voulue : si l'élève appuie sur « Envoyer » PENDANT l'enregistrement,
+// le message est transcrit puis envoyé directement — voir envoiPendantMicro.)
 // Cible "sas" (Espace de Préparation + Académie, mêmes champs) ou "arene"
 // (Ateliers Orateur/Philo/Sciences) : les deux partagent la même logique
 // d'enregistrement, seuls les identifiants de bouton/champ diffèrent.
@@ -5764,6 +5766,26 @@ let mediaRecorderVocal = null;
 let chunksAudioVocal = [];
 let enregistrementVocalEnCours = false;
 let cibleMicroActive = null;
+// ❖ Envoi direct pendant le micro : si l'élève appuie sur « Envoyer » alors que
+// l'enregistrement est en cours (ou que la transcription se termine), on arrête
+// l'enregistrement, on transcrit, puis le message part tout seul.
+// Le bouton « Arrêter » garde son rôle : il pré-remplit seulement la zone de saisie.
+let envoiAutoApresVocal = null;
+let transcriptionVocaleEnCours = false;
+
+function envoiPendantMicro(cible) {
+    if (cibleMicroActive !== cible) return false;
+    if (enregistrementVocalEnCours) {
+        envoiAutoApresVocal = cible;
+        toggleEnregistrementVocal(cible);
+        return true;
+    }
+    if (transcriptionVocaleEnCours) {
+        envoiAutoApresVocal = cible;
+        return true;
+    }
+    return false;
+}
 
 async function toggleEnregistrementVocal(cible) {
     const infosCible = CIBLES_MICRO[cible];
@@ -5813,6 +5835,8 @@ async function envoyerVocalPourTranscription(cible) {
     const placeholderOriginal = inputField.placeholder;
     inputField.placeholder = "Transcription de ta voix en cours...";
     inputField.disabled = true;
+    transcriptionVocaleEnCours = true;
+    let envoyerMaintenant = false;
 
     try {
         const blobAudio = new Blob(chunksAudioVocal, { type: (mediaRecorderVocal && mediaRecorderVocal.mimeType) || 'audio/webm' });
@@ -5828,6 +5852,7 @@ async function envoyerVocalPourTranscription(cible) {
         if (data.status === 'success' && data.texte) {
             inputField.value = data.texte;
             inputField.placeholder = placeholderOriginal;
+            envoyerMaintenant = (envoiAutoApresVocal === cible);
         } else {
             inputField.placeholder = data.message || "La transcription a échoué. Réessaie ou écris ta question.";
             setTimeout(() => { inputField.placeholder = placeholderOriginal; }, 4000);
@@ -5836,12 +5861,18 @@ async function envoyerVocalPourTranscription(cible) {
         inputField.placeholder = "Le réseau est instable. Réessaie dans un instant.";
         setTimeout(() => { inputField.placeholder = placeholderOriginal; }, 4000);
     } finally {
+        transcriptionVocaleEnCours = false;
+        envoiAutoApresVocal = null;
         inputField.disabled = false;
         inputField.focus();
+    }
+    if (envoyerMaintenant) {
+        if (cible === 'arene') sendAreneMessage(); else sendSasMessage();
     }
 }
 
 async function sendSasMessage() {
+    if (envoiPendantMicro('sas')) return;
     const inputField = document.getElementById('sas-user-input');
     const button = inputField.nextElementSibling;
     const message = inputField.value.trim();
@@ -7255,6 +7286,7 @@ function handleAreneKeyPress(event) {
 }
 
 async function sendAreneMessage(messageForce, optionsEnvoi) {
+    if (typeof messageForce !== 'string' && envoiPendantMicro('arene')) return;
     optionsEnvoi = optionsEnvoi || {};
     const silencieux = optionsEnvoi.silencieux === true;
 
