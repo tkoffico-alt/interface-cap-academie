@@ -73,7 +73,7 @@ th{color:var(--doux);font-weight:600;font-size:.9rem}
 .rang{font:700 1.1rem Georgia,serif;width:2.2em}.rang.un{color:var(--medaille)}
 .vide{color:var(--doux)}.erreur{color:var(--ko);font-weight:600}
 @media(max-width:560px){.matieres{gap:8px}.matiere{padding:10px;min-height:78px}.matiere b{font-size:.9rem}h1{font-size:1.4rem}}
-</style></head><body><main class="page">
+.brouillon{margin:12px 0}.brouillon summary{cursor:pointer;font-weight:600;color:var(--marine,#1e3a6e);margin-bottom:8px}.brouillon textarea{width:100%;font-family:inherit}</style></head><body><main class="page">
 <h1>🏛️ Cap Excellence</h1>
 <p class="sous">Chaque verrou a tes propres chiffres : rien à recopier, tout à comprendre. Franchis-en un pour ouvrir le suivant.</p>
 <div id="app" aria-live="polite"></div></main>
@@ -107,6 +107,7 @@ async function rendre(){
     if(etat.vue==="defi")return rendreDefi();
     if(etat.vue==="honneur")return rendreHonneur();
     if(etat.vue==="proposer")return rendreProposer();
+    if(etat.vue==="reprendre")return rendreReprendre();
     if(etat.vue==="avis")return rendreAvis();
     if(etat.vue==="avis_admin")return rendreAvisAdmin();
     const c=await appel("/catalogue");etat.cat=c;
@@ -114,11 +115,11 @@ async function rendre(){
       <label class="l" for="pseudo">Pseudonyme</label><input class="champ" id="pseudo" maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')inscription()">
       <label class="l" for="niv">Ta classe (facultatif)</label><select class="champ" id="niv"><option value="">Je préfère ne pas le dire</option>${c.niveaux.map(n=>`<option value="${n.cle}">${esc(n.nom)}</option>`).join("")}</select>
       <p class="meta" style="margin-top:-6px">Elle sert seulement à te repérer les verrous de ton niveau. Rien n'est bloqué : tu peux viser plus haut.</p>
-      <button class="btn plein" onclick="inscription()">Entrer dans Cap Excellence</button><p id="err" class="erreur" role="alert"></p></div>`;return}
+      <button class="btn plein" onclick="inscription()">Entrer dans Cap Excellence</button><p id="err" class="erreur" role="alert"></p><button class="lien" onclick="etat.vue='reprendre';rendre()">J'ai déjà un pseudo : le retrouver avec mon code</button></div>`;return}
     if(!c.matieres.some(m=>m.cle===etat.mat))etat.mat=c.matieres[0].cle;
     const m=c.matieres.find(x=>x.cle===etat.mat);
     const pct=Math.round(100*c.nb_valides/c.nb_total);
-    let h=menu()+`<div class="carte resume"><div class="n">${c.nb_valides}/${c.nb_total}</div><div class="t"><b>${esc(c.pseudo)}</b><div class="meta" style="margin:0 0 6px">verrous franchis${c.niveau_nom?` · ${esc(c.niveau_nom)}`:""} · <button class="lien" style="min-height:0;font-size:inherit" onclick="changerNiveau()">${c.niveau_nom?"changer de classe":"indiquer ma classe"}</button></div><div class="barre" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div></div></div>`;
+    let h=menu()+(etat.codeNouveau?blocCode(etat.codeNouveau,"Bienvenue ! Note bien ton code de reprise"):"")+`<div class="carte resume"><div class="n">${c.nb_valides}/${c.nb_total}</div><div class="t"><b>${esc(c.pseudo)}</b><div class="meta" style="margin:0 0 6px">verrous franchis${c.niveau_nom?` · ${esc(c.niveau_nom)}`:""} · <button class="lien" style="min-height:0;font-size:inherit" onclick="changerNiveau()">${c.niveau_nom?"changer de classe":"indiquer ma classe"}</button></div><div class="barre" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div></div></div>`;
     h+=`<div class="matieres">`+c.matieres.map(x=>{const v=nbV(x),t=nbT(x);return `<button class="matiere" aria-pressed="${x.cle===etat.mat}" onclick="choisirMatiere('${x.cle}')"><b>${esc(x.nom)}</b><span>${v} sur ${t}</span><div class="barre"><i style="width:${Math.round(100*v/t)}%"></i></div></button>`}).join("")+`</div>`;
     for(const p of m.paliers){
       const v=p.defis.filter(d=>d.statut==="valide").length;
@@ -129,13 +130,22 @@ async function rendre(){
         const pt=d.pour_toi?`<span class="pourtoi">Pour ton niveau</span>`:"";
         h+=`<li class="${d.statut}"><button class="tuile" ${d.statut==="verrouille"?'disabled aria-disabled="true"':""} onclick="ouvrir('${d.id}')"><span class="num" aria-hidden="true">${ic}</span><span><b>${esc(d.titre)}</b><small>Niveau ${esc(d.niveau)}${etiq?" · "+etiq:""}</small>${pt}${d.score!=null?`<span class="score">${d.score}/100</span>`:""}</span></button></li>`});
       h+=`</ul></section>`}
-    h+=`<div class="carte" style="margin-top:26px"><b>Tu es enseignant ou testeur ?</b><p class="meta" style="margin:2px 0 10px">Dis-moi si un verrou est trop facile, trop difficile ou mal formulé.</p><button class="btn" onclick="ouvrirAvis('')">Donner mon avis</button></div>`;
+    h+=`<div class="carte" style="margin-top:26px"><b>Tu es enseignant ou testeur ?</b><p class="meta" style="margin:2px 0 10px">Dis-moi si un verrou est trop facile, trop difficile ou mal formulé.</p><button class="btn" onclick="ouvrirAvis('')">Donner mon avis</button></div><div class="carte"><b>Changer d'appareil ou de navigateur ?</b><p class="meta" style="margin:2px 0 10px">Ton code de reprise te permet de retrouver ton pseudo et ta progression. Si tu l'as perdu, tu peux en générer un nouveau (l'ancien ne marchera plus).</p><button class="btn" onclick="monCode()">Voir un nouveau code de reprise</button><div id="zone_code"></div></div>`;
     el.innerHTML=h}catch(e){if(e.message==="Introuvable.")return demanderCode();el.innerHTML=menu()+`<p class="erreur">${esc(e.message)}</p>`}}
 async function changerNiveau(){const c=etat.cat;
   $("#app").innerHTML=menu()+`<div class="carte"><h2>Ta classe</h2><p class="meta">Elle sert seulement à repérer les verrous de ton niveau. Rien n'est bloqué.</p>
   <label class="l" for="niv">Classe</label><select class="champ" id="niv"><option value="">Je préfère ne pas le dire</option>${c.niveaux.map(n=>`<option value="${n.cle}" ${n.cle===c.niveau?"selected":""}>${esc(n.nom)}</option>`).join("")}</select>
   <button class="btn plein" onclick="enregistrerNiveau()">Enregistrer</button></div>`}
 async function enregistrerNiveau(){try{await appel("/niveau",{niveau:$("#niv").value});aller("accueil")}catch(e){alert(e.message)}}
+function blocCode(code,titre){return `<div class="carte" style="border-color:var(--marine,#1e3a6e)"><b>${esc(titre)}</b><p style="font:700 28px/1.2 Georgia,serif;letter-spacing:.08em;margin:10px 0">${esc(code)}</p><p class="meta" style="margin:0 0 10px">Garde-le dans tes notes ou prends-le en photo. Il te permet de retrouver ton pseudo et ta progression sur un autre téléphone, ordinateur ou navigateur, ou si les données de ton navigateur sont effacées. Ne le donne à personne.</p><button class="btn" onclick="etat.codeNouveau=null;rendre()">J'ai noté mon code</button></div>`}
+async function monCode(){try{const r=await appel("/code");$("#zone_code").innerHTML=blocCode(r.code_reprise,"Ton nouveau code de reprise").replace('onclick="etat.codeNouveau=null;rendre()"','onclick="this.closest(\'.carte\').remove()"')}catch(e){$("#zone_code").innerHTML=`<div class="faux">${esc(e.message)}</div>`}}
+function rendreReprendre(){$("#app").innerHTML=`<button class="lien" onclick="etat.vue='accueil';rendre()">Retour</button><div class="carte"><h2>Retrouver mon pseudo</h2><p class="meta">Entre le pseudonyme et le code de reprise reçu à ton inscription.</p>
+  <label class="l" for="rp_p">Pseudonyme</label><input class="champ" id="rp_p" maxlength="20" autocomplete="off">
+  <label class="l" for="rp_c">Code de reprise</label><input class="champ" id="rp_c" maxlength="12" autocomplete="off" placeholder="ABCD-2345" onkeydown="if(event.key==='Enter')reprendre()">
+  <button class="btn plein" onclick="reprendre()">Retrouver mon compte</button><p id="rp_err" class="erreur" role="alert"></p></div>`}
+async function reprendre(){try{await appel("/reprendre",{pseudo:$("#rp_p").value,code_reprise:$("#rp_c").value});etat.vue="accueil";rendre()}catch(e){$("#rp_err").textContent=e.message}}
+function lireBrouillon(id){try{return localStorage.getItem("excellence_brouillon_"+id)||""}catch(e){return ""}}
+function ecrireBrouillon(id,v){try{if(v)localStorage.setItem("excellence_brouillon_"+id,v);else localStorage.removeItem("excellence_brouillon_"+id)}catch(e){}}
 function ouvrirAvis(id){etat.avisDefi=id;etat.vue="avis";rendre();window.scrollTo(0,0)}
 function rendreAvis(){const c=etat.cat;
   const opts=c.matieres.map(m=>`<optgroup label="${esc(m.nom)}">`+m.paliers.flatMap(p=>p.defis).map(d=>`<option value="${d.id}" ${d.id===etat.avisDefi?"selected":""}>${esc(d.titre)}</option>`).join("")+`</optgroup>`).join("");
@@ -157,7 +167,7 @@ async function rendreAvisAdmin(){const r=await appel("/avis/liste");const R=r.re
   avecTexte.forEach(m=>h+=`<p style="margin:10px 0"><b>${esc(m.titre)}</b> · ${esc(m.ressenti)}<br>${esc(m.message)}<br><span class="vide">${esc(m.pseudo)}${m.niveau_nom?" ("+esc(m.niveau_nom)+")":""}, ${esc(m.date)}</span></p>`);
   $("#app").innerHTML=h+`</div>`}
 function choisirMatiere(k){etat.mat=k;try{localStorage.setItem("excellence_matiere",k)}catch(e){}rendre()}
-async function inscription(){try{await appel("/inscrire",{pseudo:$("#pseudo").value,niveau:$("#niv").value});rendre()}catch(e){$("#err").textContent=e.message}}
+async function inscription(){try{const r=await appel("/inscrire",{pseudo:$("#pseudo").value,niveau:$("#niv").value});etat.codeNouveau=r.code_reprise;rendre()}catch(e){$("#err").textContent=e.message}}
 async function ouvrir(id){try{etat.defi=await appel("/defi/ouvrir",{defi_id:id});etat.vue="defi";rendre();window.scrollTo(0,0)}catch(e){alert(e.message)}}
 function rendreDefi(){const d=etat.defi,r=d.resultat;
   let h=`<button class="lien" onclick="aller('accueil')">Retour aux verrous</button><div class="carte"><p class="meta">${esc(d.titre)} · palier ${d.palier} · niveau ${esc(d.niveau)}</p><p class="enonce">${esc(d.enonce)}</p>`;
@@ -169,6 +179,8 @@ function rendreDefi(){const d=etat.defi,r=d.resultat;
     h+=`<div class="actions">${suiv?`<button class="btn plein" onclick="ouvrir('${suiv.id}')">Verrou suivant : ${esc(suiv.titre)}</button>`:(r?`<span class="meta">Tu as terminé cette matière.</span>`:"")}<button class="btn" onclick="aller('accueil')">Retour aux verrous</button><button class="btn" onclick="ouvrirAvis('${d.id}')">Donner mon avis</button></div>`}
   else{
     h+=`<div class="rep"><input class="champ" id="rep" inputmode="decimal" autocomplete="off" aria-label="Ta réponse" placeholder="Ta réponse" onkeydown="if(event.key==='Enter')repondre()">${d.unite?`<span>${esc(d.unite)}</span>`:""}</div>
+      <p class="meta" style="margin:6px 0 0">Seul le résultat final se saisit ici. Pose ta démarche dans le brouillon ci-dessous.</p>
+      <details class="brouillon" ${lireBrouillon(d.id)?"open":""}><summary>Brouillon (reste sur cet appareil)</summary><textarea class="champ" id="brouillon" rows="6" placeholder="Pose ici tes calculs, schémas, étapes…" oninput="ecrireBrouillon('${d.id}',this.value)">${esc(lireBrouillon(d.id))}</textarea></details>
       <div class="actions"><button class="btn plein" onclick="repondre()">Valider</button><button class="btn" onclick="indice()" ${d.indices_debloques.length>=d.nb_indices_total?"disabled":""}>Indice (moins 20 points)</button></div><div id="msg" role="alert"></div><div class="actions"><button class="lien" onclick="ouvrirAvis('${d.id}')">Donner mon avis sur ce verrou</button></div>`}
   $("#app").innerHTML=h+"</div>"}
 async function indice(){try{const r=await appel("/defi/indice",{defi_id:etat.defi.id});etat.defi.indices_debloques.push(r.indice);rendreDefi()}catch(e){$("#msg").innerHTML=`<div class="faux">${esc(e.message)}</div>`}}
