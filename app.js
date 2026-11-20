@@ -1543,7 +1543,7 @@ function goHome() {
 // éléments sont masqués n'est pas affiché.
 const MENU_NAV_DISPOSITIONS = {
     eleve: [
-        ['Mon parcours', ['sas', 'fiches', 'casier-bloc', 'salle-bloc']],
+        ['Mon parcours', ['sas', 'fiches', 'casier-bloc', 'salle-bloc', 'excellence-bloc']],
         ['Ateliers', ['orateur', 'philo', 'sciences', 'elan']],
         ['Orientation', ['eleve', 'boussole', 'boussole-univ']],
         ['Autres espaces', ['enseignant', 'parents']],
@@ -8513,6 +8513,16 @@ document.addEventListener('fonctions-actives', function () {
         const bloc = document.getElementById('menu-nav-casier-bloc');
         // Vitrine : le casier est visible pour tous les élèves (accès libre compris) ; sans code ELV-, sa page explique qu'il est réservé aux abonnés. Masqué pour un enseignant.
         if (bloc) bloc.style.display = codeEnseignantPresent() ? 'none' : 'block';
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+});
+
+// Cap Excellence (20/11/2026) : la carte n'apparaît que si le serveur ouvre la fonction « excellence »
+// (créateur pendant les essais ; tout le monde quand FONCTIONS_EN_TEST contient excellence=TOUS). Masquée pour un enseignant.
+document.addEventListener('fonctions-actives', function () {
+    try {
+        const bloc = document.getElementById('menu-nav-excellence-bloc');
+        if (bloc) bloc.style.display = (fonctionActive('excellence') && !codeEnseignantPresent()) ? 'block' : 'none';
+        organiserMenuNavigation();
     } catch (e) { /* le menu ne doit jamais gêner l'application */ }
 });
 
