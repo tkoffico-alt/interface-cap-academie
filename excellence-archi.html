@@ -93,6 +93,7 @@ let etat={vue:"accueil",mat:null};
 try{etat.mat=localStorage.getItem("excellence_matiere")}catch(e){}
 function aller(v){etat.vue=v;rendre()}
 function menu(){const t=[["accueil","Verrous"],["honneur","Honneur"],["proposer","Proposer"]];
+  if(etat.cat&&etat.cat.admin)t.push(["avis_admin","Avis"]);
   return `<nav class="nav" aria-label="Sections">`+t.map(([k,l])=>`<button ${etat.vue===k?'aria-current="page"':""} onclick="aller('${k}')">${l}</button>`).join("")+`</nav>`}
 function demanderCode(){$("#app").innerHTML=`<div class="carte"><h2>Accès réservé</h2><p class="meta">Cap Excellence n'est pas encore ouvert à tous. Entre ton code d'accès pour continuer.</p>
   <label class="l" for="code">Code d'accès</label><input class="champ" id="code" type="password" autocomplete="off" onkeydown="if(event.key==='Enter')validerCode()">
@@ -106,6 +107,8 @@ async function rendre(){
     if(etat.vue==="defi")return rendreDefi();
     if(etat.vue==="honneur")return rendreHonneur();
     if(etat.vue==="proposer")return rendreProposer();
+    if(etat.vue==="avis")return rendreAvis();
+    if(etat.vue==="avis_admin")return rendreAvisAdmin();
     const c=await appel("/catalogue");etat.cat=c;
     if(!c.pseudo){el.innerHTML=`<div class="carte"><h2>Choisis ton pseudonyme</h2><p class="meta">Il apparaîtra au tableau d'honneur. Pas de vrai nom, et pas de numéro de téléphone.</p>
       <label class="l" for="pseudo">Pseudonyme</label><input class="champ" id="pseudo" maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')inscription()">
@@ -126,12 +129,33 @@ async function rendre(){
         const pt=d.pour_toi?`<span class="pourtoi">Pour ton niveau</span>`:"";
         h+=`<li class="${d.statut}"><button class="tuile" ${d.statut==="verrouille"?'disabled aria-disabled="true"':""} onclick="ouvrir('${d.id}')"><span class="num" aria-hidden="true">${ic}</span><span><b>${esc(d.titre)}</b><small>Niveau ${esc(d.niveau)}${etiq?" · "+etiq:""}</small>${pt}${d.score!=null?`<span class="score">${d.score}/100</span>`:""}</span></button></li>`});
       h+=`</ul></section>`}
+    h+=`<div class="carte" style="margin-top:26px"><b>Tu es enseignant ou testeur ?</b><p class="meta" style="margin:2px 0 10px">Dis-moi si un verrou est trop facile, trop difficile ou mal formulé.</p><button class="btn" onclick="ouvrirAvis('')">Donner mon avis</button></div>`;
     el.innerHTML=h}catch(e){if(e.message==="Introuvable.")return demanderCode();el.innerHTML=menu()+`<p class="erreur">${esc(e.message)}</p>`}}
 async function changerNiveau(){const c=etat.cat;
   $("#app").innerHTML=menu()+`<div class="carte"><h2>Ta classe</h2><p class="meta">Elle sert seulement à repérer les verrous de ton niveau. Rien n'est bloqué.</p>
   <label class="l" for="niv">Classe</label><select class="champ" id="niv"><option value="">Je préfère ne pas le dire</option>${c.niveaux.map(n=>`<option value="${n.cle}" ${n.cle===c.niveau?"selected":""}>${esc(n.nom)}</option>`).join("")}</select>
   <button class="btn plein" onclick="enregistrerNiveau()">Enregistrer</button></div>`}
 async function enregistrerNiveau(){try{await appel("/niveau",{niveau:$("#niv").value});aller("accueil")}catch(e){alert(e.message)}}
+function ouvrirAvis(id){etat.avisDefi=id;etat.vue="avis";rendre();window.scrollTo(0,0)}
+function rendreAvis(){const c=etat.cat;
+  const opts=c.matieres.map(m=>`<optgroup label="${esc(m.nom)}">`+m.paliers.flatMap(p=>p.defis).map(d=>`<option value="${d.id}" ${d.id===etat.avisDefi?"selected":""}>${esc(d.titre)}</option>`).join("")+`</optgroup>`).join("");
+  $("#app").innerHTML=`<button class="lien" onclick="aller('accueil')">Retour aux verrous</button><div class="carte"><h2>Donner mon avis</h2><p class="meta">Ton retour m'aide à régler la difficulté. Il n'est lu que par l'architecte de Cap Excellence.</p>
+  <label class="l" for="av_d">Verrou concerné</label><select class="champ" id="av_d"><option value="" ${etat.avisDefi===""?"selected":""}>Avis général (pas un verrou précis)</option>${opts}</select>
+  <label class="l" for="av_r">Comment l'as-tu trouvé ?</label><select class="champ" id="av_r">${c.ressentis.map(r=>`<option value="${r.cle}">${esc(r.nom)}</option>`).join("")}</select>
+  <label class="l" for="av_m">Précisions (facultatif)</label><textarea class="champ" id="av_m" rows="4" maxlength="500" placeholder="Par exemple : l'énoncé ne dit pas l'unité attendue, ou le niveau convient à des élèves de 1ère."></textarea>
+  <button class="btn plein" onclick="envoyerAvis()">Envoyer mon avis</button><div id="av_msg" role="alert"></div></div>`}
+async function envoyerAvis(){try{const r=await appel("/avis",{defi_id:$("#av_d").value,ressenti:$("#av_r").value,message:$("#av_m").value});
+  $("#av_msg").innerHTML=`<div class="corrige"><b>Merci !</b>${esc(r.message)}</div>`;$("#av_m").value=""}catch(e){$("#av_msg").innerHTML=`<div class="faux">${esc(e.message)}</div>`}}
+async function rendreAvisAdmin(){const r=await appel("/avis/liste");const R=r.ressentis;
+  let h=menu()+`<div class="carte"><h2>Avis reçus par verrou</h2>`;
+  if(!r.par_verrou.length)h+=`<p class="vide">Aucun avis pour l'instant.</p>`;
+  else{h+=`<table><tr><th>Verrou</th>${Object.values(R).map(n=>`<th>${esc(n)}</th>`).join("")}</tr>`;
+    r.par_verrou.forEach(d=>h+=`<tr><td>${esc(d.titre)}</td>${Object.keys(R).map(k=>`<td>${d.ressentis[k]||""}</td>`).join("")}</tr>`);h+=`</table>`}
+  h+=`</div><div class="carte"><h2>Derniers messages</h2>`;
+  const avecTexte=r.messages.filter(m=>m.message);
+  if(!avecTexte.length)h+=`<p class="vide">Aucun message écrit.</p>`;
+  avecTexte.forEach(m=>h+=`<p style="margin:10px 0"><b>${esc(m.titre)}</b> · ${esc(m.ressenti)}<br>${esc(m.message)}<br><span class="vide">${esc(m.pseudo)}${m.niveau_nom?" ("+esc(m.niveau_nom)+")":""}, ${esc(m.date)}</span></p>`);
+  $("#app").innerHTML=h+`</div>`}
 function choisirMatiere(k){etat.mat=k;try{localStorage.setItem("excellence_matiere",k)}catch(e){}rendre()}
 async function inscription(){try{await appel("/inscrire",{pseudo:$("#pseudo").value,niveau:$("#niv").value});rendre()}catch(e){$("#err").textContent=e.message}}
 async function ouvrir(id){try{etat.defi=await appel("/defi/ouvrir",{defi_id:id});etat.vue="defi";rendre();window.scrollTo(0,0)}catch(e){alert(e.message)}}
@@ -142,10 +166,10 @@ function rendreDefi(){const d=etat.defi,r=d.resultat;
     h+=`<p class="gros">${d.score}<small> / 100</small></p><p class="meta">Verrou franchi${r&&r.duree_s?` en ${Math.max(1,Math.round(r.duree_s/60))} min`:""}.</p>`;
     if(d.explication)h+=`<div class="corrige"><b>Corrigé</b>${esc(d.explication)}</div>`;
     const suiv=r&&r.suivant;
-    h+=`<div class="actions">${suiv?`<button class="btn plein" onclick="ouvrir('${suiv.id}')">Verrou suivant : ${esc(suiv.titre)}</button>`:(r?`<span class="meta">Tu as terminé cette matière.</span>`:"")}<button class="btn" onclick="aller('accueil')">Retour aux verrous</button></div>`}
+    h+=`<div class="actions">${suiv?`<button class="btn plein" onclick="ouvrir('${suiv.id}')">Verrou suivant : ${esc(suiv.titre)}</button>`:(r?`<span class="meta">Tu as terminé cette matière.</span>`:"")}<button class="btn" onclick="aller('accueil')">Retour aux verrous</button><button class="btn" onclick="ouvrirAvis('${d.id}')">Donner mon avis</button></div>`}
   else{
     h+=`<div class="rep"><input class="champ" id="rep" inputmode="decimal" autocomplete="off" aria-label="Ta réponse" placeholder="Ta réponse" onkeydown="if(event.key==='Enter')repondre()">${d.unite?`<span>${esc(d.unite)}</span>`:""}</div>
-      <div class="actions"><button class="btn plein" onclick="repondre()">Valider</button><button class="btn" onclick="indice()" ${d.indices_debloques.length>=d.nb_indices_total?"disabled":""}>Indice (moins 20 points)</button></div><div id="msg" role="alert"></div>`}
+      <div class="actions"><button class="btn plein" onclick="repondre()">Valider</button><button class="btn" onclick="indice()" ${d.indices_debloques.length>=d.nb_indices_total?"disabled":""}>Indice (moins 20 points)</button></div><div id="msg" role="alert"></div><div class="actions"><button class="lien" onclick="ouvrirAvis('${d.id}')">Donner mon avis sur ce verrou</button></div>`}
   $("#app").innerHTML=h+"</div>"}
 async function indice(){try{const r=await appel("/defi/indice",{defi_id:etat.defi.id});etat.defi.indices_debloques.push(r.indice);rendreDefi()}catch(e){$("#msg").innerHTML=`<div class="faux">${esc(e.message)}</div>`}}
 async function repondre(){const v=$("#rep").value;if(!v.trim())return;
