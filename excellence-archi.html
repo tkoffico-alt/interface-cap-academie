@@ -145,6 +145,9 @@ function rendreReprendre(){$("#app").innerHTML=`<button class="lien" onclick="et
   <label class="l" for="rp_c">Code de reprise</label><input class="champ" id="rp_c" maxlength="12" autocomplete="off" placeholder="ABCD-2345" onkeydown="if(event.key==='Enter')reprendre()">
   <button class="btn plein" onclick="reprendre()">Retrouver mon compte</button><p id="rp_err" class="erreur" role="alert"></p></div>`}
 async function reprendre(){try{await appel("/reprendre",{pseudo:$("#rp_p").value,code_reprise:$("#rp_c").value});etat.vue="accueil";rendre()}catch(e){$("#rp_err").textContent=e.message}}
+// Retour à EdukaTchat : si l'application a mémorisé d'où l'élève venait (espace + matière), on l'y ramène (comme le casier).
+document.addEventListener("click",function(e){try{const a=e.target&&e.target.closest?e.target.closest(".retour-app"):null;
+  if(a&&localStorage.getItem("eduka_retour")){e.preventDefault();window.location.href="https://edukatchat.org/?retour=1"}}catch(x){}});
 function lireBrouillon(id){try{return localStorage.getItem("excellence_brouillon_"+id)||""}catch(e){return ""}}
 function ecrireBrouillon(id,v){try{if(v)localStorage.setItem("excellence_brouillon_"+id,v);else localStorage.removeItem("excellence_brouillon_"+id)}catch(e){}}
 function ouvrirAvis(id){etat.avisDefi=id;etat.vue="avis";rendre();window.scrollTo(0,0)}
