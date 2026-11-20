@@ -5,15 +5,15 @@
 <title>Cap Excellence — EdukaTchat</title>
 <style>
 :root{--bg:#f3f5f9;--carte:#fff;--txt:#1b2335;--doux:#657088;--bleu:#1e3a6e;--bleu-clair:#e7eefb;--bord:#dde2ec;
-  --ok:#1d7a4c;--ok-fond:#e4f4ec;--ko:#b3392f;--ko-fond:#fbeceb;--medaille:#b8860b;--ombre:0 1px 2px rgba(20,30,60,.06)}
+  --ok:#1d7a4c;--ok-fond:#e4f4ec;--ko:#b3392f;--ko-fond:#fbeceb;--medaille:#b8860b;--or:#b08a3e;--or-fond:#f7f0df;--ombre:0 1px 2px rgba(20,30,60,.06)}
 @media(prefers-color-scheme:dark){:root{--bg:#10151f;--carte:#1a2130;--txt:#e8ecf4;--doux:#97a1b6;--bleu:#8fb0ff;--bleu-clair:#1f2c4a;--bord:#2b344a;
-  --ok:#52c48c;--ok-fond:#14332a;--ko:#f08a80;--ko-fond:#3a1d1f;--medaille:#e0b33f;--ombre:none}}
+  --ok:#52c48c;--ok-fond:#14332a;--ko:#f08a80;--ko-fond:#3a1d1f;--medaille:#e0b33f;--or:#d4b06a;--or-fond:#2a2517;--ombre:none}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .page{max-width:880px;margin:0 auto;padding:16px 16px 70px}
 h1{font:700 1.6rem/1.2 Georgia,serif;margin:6px 0 2px}
 h2{font:700 1.15rem/1.3 Georgia,serif;margin:0}
-.sous{color:var(--doux);margin:0 0 14px;font-size:.95rem}
+.sous{color:var(--doux);margin:0 0 14px;font-size:.95rem}.sous::after{content:"";display:block;width:56px;height:3px;border-radius:2px;background:var(--or);margin-top:10px}
 button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
 :focus-visible{outline:3px solid var(--bleu);outline-offset:2px;border-radius:8px}
 .nav{display:flex;gap:8px;margin:10px 0 14px}
@@ -33,7 +33,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;paddin
 .matiere[aria-pressed=true]{border-color:var(--bleu);background:var(--bleu-clair)}
 .palier{margin:24px 0 0}
 .palier-tete{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-.palier-tete small{color:var(--doux)}
+.palier-tete small{color:var(--doux)}.palier-tete h2{border-left:3px solid var(--or);padding-left:10px}
 .grille{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
 .tuile{display:flex;gap:12px;align-items:flex-start;width:100%;height:100%;text-align:left;background:var(--carte);border:1px solid var(--bord);border-radius:14px;padding:13px;min-height:88px;box-shadow:var(--ombre)}
 .num{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;border:2px solid var(--bord);color:var(--doux)}
@@ -46,7 +46,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;paddin
 .valide .tuile{border-color:var(--ok)}
 .valide .num{background:var(--ok);border-color:var(--ok);color:#fff}
 .verrouille .tuile{cursor:not-allowed;opacity:.6;box-shadow:none}
-.pourtoi{display:inline-block;margin-top:4px;padding:1px 8px;border-radius:99px;background:var(--bleu-clair);color:var(--bleu);font-size:.8rem;font-weight:600}
+.pourtoi{display:inline-block;margin-top:4px;padding:1px 8px;border-radius:99px;background:var(--or-fond);color:var(--or);border:1px solid var(--or);font-size:.8rem;font-weight:600}
 .score{display:block;margin-top:4px;font-weight:700;color:var(--ok)}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border-radius:10px;border:1px solid var(--bleu);font-weight:650;color:var(--bleu);background:var(--carte)}
 .btn.plein{background:var(--bleu);color:#fff}
@@ -70,7 +70,7 @@ label.l{font-weight:600}
 table{width:100%;border-collapse:collapse}
 th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--bord)}
 th{color:var(--doux);font-weight:600;font-size:.9rem}
-.rang{font:700 1.1rem Georgia,serif;width:2.2em}.rang.un{color:var(--medaille)}
+.rang{font:700 1.1rem Georgia,serif;width:2.2em}.rang.un{color:var(--or)}
 .vide{color:var(--doux)}.erreur{color:var(--ko);font-weight:600}
 @media(max-width:560px){.matieres{gap:8px}.matiere{padding:10px;min-height:78px}.matiere b{font-size:.9rem}h1{font-size:1.4rem}}
 .brouillon{margin:12px 0}.brouillon summary{cursor:pointer;font-weight:600;color:var(--marine,#1e3a6e);margin-bottom:8px}.brouillon textarea{width:100%;font-family:inherit}</style></head><body><main class="page">
@@ -137,7 +137,7 @@ async function changerNiveau(){const c=etat.cat;
   <label class="l" for="niv">Classe</label><select class="champ" id="niv"><option value="">Je préfère ne pas le dire</option>${c.niveaux.map(n=>`<option value="${n.cle}" ${n.cle===c.niveau?"selected":""}>${esc(n.nom)}</option>`).join("")}</select>
   <button class="btn plein" onclick="enregistrerNiveau()">Enregistrer</button></div>`}
 async function enregistrerNiveau(){try{await appel("/niveau",{niveau:$("#niv").value});aller("accueil")}catch(e){alert(e.message)}}
-function blocCode(code,titre){return `<div class="carte" style="border-color:var(--marine,#1e3a6e)"><b>${esc(titre)}</b><p style="font:700 28px/1.2 Georgia,serif;letter-spacing:.08em;margin:10px 0">${esc(code)}</p><p class="meta" style="margin:0 0 10px">Garde-le dans tes notes ou prends-le en photo. Il te permet de retrouver ton pseudo et ta progression sur un autre téléphone, ordinateur ou navigateur, ou si les données de ton navigateur sont effacées. Ne le donne à personne.</p><button class="btn" onclick="etat.codeNouveau=null;rendre()">J'ai noté mon code</button></div>`}
+function blocCode(code,titre){return `<div class="carte" style="border-color:var(--or);background:var(--or-fond)"><b>${esc(titre)}</b><p style="font:700 28px/1.2 Georgia,serif;letter-spacing:.08em;margin:10px 0">${esc(code)}</p><p class="meta" style="margin:0 0 10px">Garde-le dans tes notes ou prends-le en photo. Il te permet de retrouver ton pseudo et ta progression sur un autre téléphone, ordinateur ou navigateur, ou si les données de ton navigateur sont effacées. Ne le donne à personne.</p><button class="btn" onclick="etat.codeNouveau=null;rendre()">J'ai noté mon code</button></div>`}
 async function monCode(){try{const r=await appel("/code");$("#zone_code").innerHTML=blocCode(r.code_reprise,"Ton nouveau code de reprise").replace('onclick="etat.codeNouveau=null;rendre()"','onclick="this.closest(\'.carte\').remove()"')}catch(e){$("#zone_code").innerHTML=`<div class="faux">${esc(e.message)}</div>`}}
 function rendreReprendre(){$("#app").innerHTML=`<button class="lien" onclick="etat.vue='accueil';rendre()">Retour</button><div class="carte"><h2>Retrouver mon pseudo</h2><p class="meta">Entre le pseudonyme et le code de reprise reçu à ton inscription.</p>
   <label class="l" for="rp_p">Pseudonyme</label><input class="champ" id="rp_p" maxlength="20" autocomplete="off">
