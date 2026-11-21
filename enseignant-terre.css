@@ -476,3 +476,10 @@ body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom
 
 /* Mode sombre : barres de défilement sombres (plus de bande blanche à droite) (21/11/2026) */
 body.dark-theme.espace-ens, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom), body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-history { color-scheme: dark; scrollbar-color: #66524A #17110E; }
+
+/* Réponse générée sur téléphone : marge intérieure dans la carte ; note de relecture dans un petit encadré teinté (21/11/2026) */
+@media (max-width: 700px) {
+    body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .bot-message:has(> .fiche-lecon .fiche-carte), body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .bot-message:has(> .fiche-carte) { padding: .7rem .7rem .9rem; }
+}
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .note-relire-fiche { background: var(--at-survol); border-radius: 10px; padding: .6rem .85rem; margin-top: 8px; text-align: center; font-size: .88rem; font-weight: 600; line-height: 1.45; color: #4A342C; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .note-relire-fiche { color: #F0E2D6; }
