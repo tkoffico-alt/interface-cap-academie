@@ -441,3 +441,10 @@ body.dark-theme #teacher-atelier-chooser .ens-pilule:hover { background: rgba(22
 body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-titre::after, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-titre::after {
     content: ""; display: block; width: 44px; height: 3px; border-radius: 2px; background: var(--at-ligne); margin: .55rem auto 0;
 }
+
+/* Retrait du filet coloré à gauche des cartes d'atelier ; carte d'accueil d'un blanc éclatant en mode clair (21/11/2026) */
+.ens-ligne-evaluations, .ens-ligne-lecons, .ens-ligne-cabinet, .ens-ligne-lecons-primaire, .ens-ligne-cabinet-primaire,
+body.dark-theme .ens-ligne-lecons, body.dark-theme .ens-ligne-lecons-primaire, body.dark-theme .ens-ligne-cabinet, body.dark-theme .ens-ligne-cabinet-primaire { border-left-width: 1px; border-left-color: var(--t-bord); }
+body.espace-ens:not(.dark-theme) :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message {
+    background-color: #FFFFFF; border: 1px solid var(--at-bord); box-shadow: 0 8px 26px rgba(42,29,25,.12), 0 1px 3px rgba(42,29,25,.08);
+}
