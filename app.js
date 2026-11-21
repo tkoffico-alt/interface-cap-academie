@@ -537,8 +537,8 @@ function memoriserInfosEnseignant(data) {
     try {
         if (!data) return;
         var infos = JSON.parse(localStorage.getItem('eduka_ens_infos') || '{}');
-        if (data.prenom) infos.prenom = String(data.prenom).slice(0, 40);
-        if (data.date_fin) infos.date_fin = String(data.date_fin).slice(0, 10);
+        // Remplacement complet : un autre code (ex. Créateur, sans prénom) ne doit pas garder le prénom du précédent.
+        infos = { prenom: data.prenom ? String(data.prenom).slice(0, 40) : '', date_fin: data.date_fin ? String(data.date_fin).slice(0, 10) : '' };
         localStorage.setItem('eduka_ens_infos', JSON.stringify(infos));
     } catch (e) { /* esthétique seulement */ }
 }
@@ -5274,7 +5274,8 @@ function toggleTheme() {
 function updateThemeButtonUI(isLight) {
     const themeBtn = document.getElementById('btn-theme');
     if (themeBtn) {
-        themeBtn.textContent = isLight ? "🌙" : "☀️";
+        var emo = themeBtn.querySelector('.ico-emoji');   // ❖ 21/11/2026 : on ne remplace plus tout le bouton (il contient aussi les icônes au trait)
+        if (emo) emo.textContent = isLight ? "🌙" : "☀️"; else themeBtn.textContent = isLight ? "🌙" : "☀️";
         themeBtn.title = isLight ? "Passer en mode sombre" : "Passer en mode clair";
     }
 }

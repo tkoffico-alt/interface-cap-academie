@@ -311,3 +311,17 @@ body.dark-theme .ens-bandeau-etiquette { color: #C9B8AB; }
 body.dark-theme .ens-bandeau-outil { color: #F3E9DD; }
 body.dark-theme .ens-bandeau-bouton { background: #E8A898; color: #2A1D19; }
 body.dark-theme .ens-bandeau-bouton:hover { background: #F0B9AB; }
+
+
+/* ════════════════════════════════════════════════════════════════
+   ICÔNES AU TRAIT dans la barre du haut (21/11/2026). Chaque bouton contient un emoji (.ico-emoji) et une icône (.ico-ligne) :
+   côté élève on voit l'emoji, côté enseignant l'icône au trait (couleur du texte).
+   ════════════════════════════════════════════════════════════════ */
+.ico-ligne { display: none; width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+body.espace-ens .ico-emoji { display: none; }
+body.espace-ens .ico-ligne { display: inline-block; }
+body.espace-ens #btn-theme .ico-soleil { display: none; }
+body.dark-theme.espace-ens #btn-theme .ico-lune { display: none; }
+body.dark-theme.espace-ens #btn-theme .ico-soleil { display: inline-block; }
+body.espace-ens .btn-changer-categorie-enseignant .ico-ligne,
+body.espace-ens .btn-aide-visite .ico-ligne { width: 16px; height: 16px; vertical-align: -3px; }
