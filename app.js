@@ -351,8 +351,14 @@ function ouvrirFormulaireGuide(outil) {
 // ❖ LA GESTION DES ESPACES ET DE L'AIGUILLAGE ❖
 // =======================================================================
 
+// ❖ Habillage « Terre cuite » (21/11/2026) : pose la classe .espace-ens sur <body> quand on est dans l'Espace Enseignant
+// (couleurs de la barre du haut, voir enseignant-terre.css). Ne touche à rien d'autre.
+function majHabillageEspace() {
+    try { document.body.classList.toggle('espace-ens', espaceActuel === 'enseignant'); } catch (e) { /* esthétique seulement */ }
+}
+
 async function openSpace(space) {
-    espaceActuel = space;
+    espaceActuel = space; majHabillageEspace();
     setTimeout(function () { try { majMenuOutilsEnseignant(); organiserMenuNavigation(); } catch (e) { /* menu */ } }, 0);
 
     if (space === 'eleve') {
@@ -452,7 +458,7 @@ async function openSpace(space) {
 // décision d'accès elle-même (openSpace ci-dessus).
 function entrerDansEspaceEnseignant() {
     // 13/11/2026 : mémorise l'espace (retour depuis une page Séance/Bibliothèque : openSpace() n'est pas rappelé, les raccourcis disparaissaient).
-    espaceActuel = 'enseignant';
+    espaceActuel = 'enseignant'; majHabillageEspace();
     try { majMenuOutilsEnseignant(); } catch (e) { /* ignoré */ }
     document.getElementById('home-view').style.display = 'none';
     document.getElementById('app-view').style.display = 'flex';
@@ -8434,7 +8440,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!r || !r.avatar || !(Date.now() - (r.t || 0) < 6 * 3600 * 1000) || !codeOuSas || matieres.indexOf(r.avatar) === -1) { retirer(); return; }
         setTimeout(function () {
             try {
-                espaceActuel = (r.espace === 'sas') ? 'sas' : 'eleve';
+                espaceActuel = (r.espace === 'sas') ? 'sas' : 'eleve'; majHabillageEspace();
                 entrerDansLeChat(r.avatar);
             } catch (x) { /* jamais bloquant */ }
             setTimeout(retirer, 700);
@@ -8458,7 +8464,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(function () {
             if (!localStorage.getItem('eduka_sceau')) { window._reviserFiche = null; retirerVoile(); return; }
             try {
-                espaceActuel = 'eleve';
+                espaceActuel = 'eleve'; majHabillageEspace();
                 if (matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
                 else { openSpace('eleve'); }
             } catch (e) { /* jamais bloquant */ }
@@ -8486,7 +8492,7 @@ document.addEventListener('DOMContentLoaded', function () {
         window._schemaEnAttente = r;
         setTimeout(function () {
             try {
-                espaceActuel = 'eleve';
+                espaceActuel = 'eleve'; majHabillageEspace();
                 // Sans code d'abonné mémorisé : l'application demande le code (fenêtre habituelle), puis la matière ; la question part ensuite.
                 if (sceau && sceau.indexOf('ENS-') !== 0 && matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
                 else { openSpace('eleve'); }

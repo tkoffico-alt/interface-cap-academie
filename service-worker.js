@@ -15,7 +15,7 @@
 // style.css pour forcer les appareils déjà installés à récupérer la
 // nouvelle version (sinon ils resteraient sur une version mise en cache).
 
-const CACHE_VERSION = 'edukatchat-shell-v241';
+const CACHE_VERSION = 'edukatchat-shell-v242';
 
 // ❖ Images (schémas, illustrations) : cache d'abord (09/11/2026), pour économiser les données mobiles de l'élève —
 // un schéma déjà vu ne se retélécharge plus et reste visible hors connexion. Cache SÉPARÉ de la coquille
@@ -29,6 +29,7 @@ const FICHIERS_COQUILLE = [
     '/index.html',
     '/style.css',
     '/enseignant-terre.css',
+    '/enseignant-terre-pages.css',
     '/app.js',
     '/visite-guidee.js',
     '/centres-interet.js',
