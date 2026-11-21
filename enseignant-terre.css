@@ -325,3 +325,36 @@ body.dark-theme.espace-ens #btn-theme .ico-lune { display: none; }
 body.dark-theme.espace-ens #btn-theme .ico-soleil { display: inline-block; }
 body.espace-ens .btn-changer-categorie-enseignant .ico-ligne,
 body.espace-ens .btn-aide-visite .ico-ligne { width: 16px; height: 16px; vertical-align: -3px; }
+
+
+/* ════════════════════════════════════════════════════════════════
+   PISTE A « Brique et sauge » (21/11/2026) : fiche d'évaluation générée (.fiche-eval), bulle de l'enseignant, bouton « Enregistrer ».
+   Les fiches de leçon (cartes colorées par matière) ne sont pas touchées.
+   ════════════════════════════════════════════════════════════════ */
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .user-message { background: #3A2620; background-image: none; color: #FBF3E8; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .user-message { background: #7E3326; background-image: none; }
+
+body.espace-ens .fiche-eval { --fiche-accent: #7E3326; --fiche-accent-douce: rgba(126, 51, 38, .12); }
+body.espace-ens .fiche-eval .fiche-preambule { font-family: 'Literata', Georgia, 'Times New Roman', serif; font-weight: 600; font-size: 1.1rem; line-height: 1.55; color: #7E3326; }
+body.espace-ens .fiche-eval .fiche-emoji { display: none; }
+body.espace-ens .fiche-eval .fiche-section-titre {
+    text-transform: none; letter-spacing: 0; font-size: .95rem; font-weight: 700;
+    background: #F1DDD6; color: #6B2A1F; border-radius: 10px; padding: .6rem .9rem;
+}
+body.espace-ens .fiche-eval .fiche-section-titre.fiche-titre-b,
+body.espace-ens .fiche-eval .fiche-section-titre:has(+ .fiche-corrige) { background: #E1EADB; color: #2F4528; }
+body.espace-ens .fiche-eval .fiche-carte { background: #FFFFFF; border: 1px solid #DDD2C2; box-shadow: none; border-radius: 12px; }
+body.espace-ens .fiche-eval .fiche-carte.fiche-corrige { background: #EEF3EA; border-color: #B9CBB0; }
+body.espace-ens .fiche-eval .fiche-badge.fiche-badge-competence { background: #7E3326; color: #FBF3E8; border-radius: 10px; }
+
+body.dark-theme.espace-ens .fiche-eval { --fiche-accent: #E8A898; --fiche-accent-douce: rgba(232, 168, 152, .14); }
+body.dark-theme.espace-ens .fiche-eval .fiche-preambule { color: #E8A898; }
+body.dark-theme.espace-ens .fiche-eval .fiche-section-titre { background: rgba(232, 168, 152, .16); color: #F0C2B6; }
+body.dark-theme.espace-ens .fiche-eval .fiche-section-titre.fiche-titre-b,
+body.dark-theme.espace-ens .fiche-eval .fiche-section-titre:has(+ .fiche-corrige) { background: rgba(143, 176, 128, .18); color: #BFD6B2; }
+body.dark-theme.espace-ens .fiche-eval .fiche-carte { background: #2B211D; border-color: #4A3A33; }
+body.dark-theme.espace-ens .fiche-eval .fiche-carte.fiche-corrige { background: rgba(143, 176, 128, .08); border-color: rgba(143, 176, 128, .4); }
+
+body.espace-ens .message-actions .btn-action-doc.btn-biblio { background: #4F6B45; background-image: none; border-color: transparent; border-radius: 999px; box-shadow: none; color: #FFFFFF; }
+body.espace-ens .message-actions .btn-action-doc.btn-biblio:hover:not(:disabled) { background: #435C3A; filter: none; }
+body.dark-theme.espace-ens .message-actions .btn-action-doc.btn-biblio { background: #5A7A4E; background-image: none; }

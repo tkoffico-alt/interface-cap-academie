@@ -4124,17 +4124,17 @@ function construireHTMLEvaluation(analyse, classeAccent) {
     // Une carte par exercice, puis barème et corrigé comme les autres.
     if (exercices.length) {
         exercices.forEach(ex => {
-            html += `<div class="fiche-section-titre">📝 ${echapperHTMLFiche(ex.titre || '')}</div>`;
+            html += `<div class="fiche-section-titre"><span class="fiche-emoji">📝</span> ${echapperHTMLFiche(ex.titre || '')}</div>`;
             html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(ex.texte)}</div>`;
         });
         if (baremeTexte) {
             html += `<div class="fiche-bloc-entete"><span class="fiche-badge fiche-badge-competence">${echapperHTMLFiche(titres.bareme || 'BARÈME TOTAL')} : ${echapperHTMLFiche(baremeTexte)}</span></div>`;
         }
         if (corrigeTexte) {
-            html += `<div class="fiche-section-titre">🔑 ${echapperHTMLFiche(titres.corrige || '')}</div>`;
+            html += `<div class="fiche-section-titre"><span class="fiche-emoji">🔑</span> ${echapperHTMLFiche(titres.corrige || '')}</div>`;
             html += `<div class="fiche-carte fiche-corrige">${texteVersHtmlLegerFiche(corrigeTexte)}</div>`;
         }
-        return `<div class="fiche-lecon${classeAccent || ''}">${html}</div>`;
+        return `<div class="fiche-lecon fiche-eval${classeAccent || ''}">${html}</div>`;
     }
 
     // ❖ Trois canevas possibles : PARTIE A/B (générique), SITUATION D'ÉVALUATION
@@ -4142,19 +4142,19 @@ function construireHTMLEvaluation(analyse, classeAccent) {
     // dissertation) -- un seul est présent selon la matière/demande, voir
     // analyserEvaluation().
     if (partieATexte) {
-        html += `<div class="fiche-section-titre">📄 ${echapperHTMLFiche(titres.partieA || '')}</div>`;
+        html += `<div class="fiche-section-titre"><span class="fiche-emoji">📄</span> ${echapperHTMLFiche(titres.partieA || '')}</div>`;
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieATexte)}</div>`;
     } else if (situationTexte) {
-        html += `<div class="fiche-section-titre">📄 ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-section-titre"><span class="fiche-emoji">📄</span> ${echapperHTMLFiche(titres.situation || '')}</div>`;
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
     } else if (sujetTexte) {
-        html += `<div class="fiche-section-titre">📄 ${echapperHTMLFiche(titres.sujet || '')}</div>`;
+        html += `<div class="fiche-section-titre"><span class="fiche-emoji">📄</span> ${echapperHTMLFiche(titres.sujet || '')}</div>`;
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(sujetTexte)}</div>`;
     }
 
     if (partieBTexte || questionsTexte || grilleTexte || baremeTexte) {
         const titreSecondaire = titres.partieB || titres.questions || titres.grilleCriteres || '';
-        html += `<div class="fiche-section-titre">🧩 ${echapperHTMLFiche(titreSecondaire)}</div>`;
+        html += `<div class="fiche-section-titre fiche-titre-b"><span class="fiche-emoji">🧩</span> ${echapperHTMLFiche(titreSecondaire)}</div>`;
         html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieBTexte || questionsTexte || grilleTexte)}</div>`;
         if (baremeTexte) {
             html += `<div class="fiche-bloc-entete"><span class="fiche-badge fiche-badge-competence">${echapperHTMLFiche(titres.bareme || 'BARÈME TOTAL')} : ${echapperHTMLFiche(baremeTexte)}</span></div>`;
@@ -4162,11 +4162,11 @@ function construireHTMLEvaluation(analyse, classeAccent) {
     }
 
     if (corrigeTexte) {
-        html += `<div class="fiche-section-titre">🔑 ${echapperHTMLFiche(titres.corrige || '')}</div>`;
+        html += `<div class="fiche-section-titre"><span class="fiche-emoji">🔑</span> ${echapperHTMLFiche(titres.corrige || '')}</div>`;
         html += `<div class="fiche-carte fiche-corrige">${texteVersHtmlLegerFiche(corrigeTexte)}</div>`;
     }
 
-    return `<div class="fiche-lecon${classeAccent || ''}">${html}</div>`;
+    return `<div class="fiche-lecon fiche-eval${classeAccent || ''}">${html}</div>`;
 }
 
 function construireRenduEvaluation(source) {
