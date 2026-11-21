@@ -434,6 +434,7 @@ async function openSpace(space) {
             });
             let data = {};
             try { data = await response.json(); } catch (e) { /* réponse illisible */ }
+            if (data.valide) memoriserInfosEnseignant(data);
             if (data.valide || !response.ok || data.temporaire) {
                 // Un refus définitif seul efface le code ; un problème passager ne le fait jamais.
                 entrerDansEspaceEnseignant();
@@ -526,6 +527,80 @@ function masquerChooserCategorieEnseignant() {
 // ❖ SAS DES ATELIERS (27/10/2026) : après le choix de catégorie, l'enseignant
 // choisit lui-même l'atelier où entrer (plus d'ouverture automatique sur
 // Évaluations, qui lançait l'amorçage IA et consommait des jetons pour rien).
+// ❖ 21/11/2026 : BANDEAU D'ACCUEIL ENSEIGNANT (prénom, fin d'accès, « Reprendre »).
+// Le prénom et la date de fin viennent de /verifier-sceau (mémorisés ici à chaque vérification) ; « Reprendre » rouvre
+// le dernier atelier utilisé. Tout est facultatif : sans donnée, la partie correspondante n'est simplement pas affichée.
+var ENS_NOMS_OUTILS = { atelier: 'Évaluations', forge: 'Leçons', cabinet: 'Cabinet', forge_primaire: 'Leçons', cabinet_primaire: 'Cabinet' };
+var ENS_OUTILS_PAR_CATEGORIE = { professeur: ['atelier', 'forge', 'cabinet'], instituteur: ['forge_primaire', 'cabinet_primaire'] };
+
+function memoriserInfosEnseignant(data) {
+    try {
+        if (!data) return;
+        var infos = JSON.parse(localStorage.getItem('eduka_ens_infos') || '{}');
+        if (data.prenom) infos.prenom = String(data.prenom).slice(0, 40);
+        if (data.date_fin) infos.date_fin = String(data.date_fin).slice(0, 10);
+        localStorage.setItem('eduka_ens_infos', JSON.stringify(infos));
+    } catch (e) { /* esthétique seulement */ }
+}
+
+function majBandeauEnseignant(categorie) {
+    try {
+        var groupe = document.getElementById(categorie === 'instituteur' ? 'sas-ateliers-instituteur' : 'sas-ateliers-professeur');
+        if (!groupe) return;
+        var ancien = document.getElementById('ens-bandeau');
+        if (ancien) ancien.remove();
+        var infos = {}, dernier = null;
+        try { infos = JSON.parse(localStorage.getItem('eduka_ens_infos') || '{}') || {}; } catch (e) { infos = {}; }
+        try { dernier = JSON.parse(localStorage.getItem('eduka_ens_dernier') || 'null'); } catch (e) { dernier = null; }
+
+        var bandeau = document.createElement('div');
+        bandeau.id = 'ens-bandeau';
+        bandeau.className = 'ens-bandeau';
+
+        var gauche = document.createElement('div');
+        gauche.className = 'ens-bandeau-texte';
+        var role = document.createElement('p');
+        role.className = 'ens-bandeau-role';
+        role.textContent = categorie === 'instituteur' ? 'Instituteur, primaire' : 'Professeur, secondaire';
+        var salut = document.createElement('h2');
+        salut.className = 'ens-bandeau-salut';
+        salut.textContent = infos.prenom ? 'Bonjour, ' + infos.prenom : 'Bonjour';
+        gauche.appendChild(role);
+        gauche.appendChild(salut);
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(infos.date_fin || '');
+        if (m && Number(m[1]) < 2090) {
+            var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+            var acces = document.createElement('p');
+            acces.className = 'ens-bandeau-acces';
+            acces.textContent = 'Votre accès est actif jusqu’au ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) + '.';
+            gauche.appendChild(acces);
+        }
+        bandeau.appendChild(gauche);
+
+        var permis = ENS_OUTILS_PAR_CATEGORIE[categorie === 'instituteur' ? 'instituteur' : 'professeur'];
+        if (dernier && dernier.outil && permis.indexOf(dernier.outil) !== -1) {
+            var carte = document.createElement('div');
+            carte.className = 'ens-bandeau-carte';
+            var etiquette = document.createElement('p');
+            etiquette.className = 'ens-bandeau-etiquette';
+            etiquette.textContent = 'Dernier atelier utilisé';
+            var nom = document.createElement('p');
+            nom.className = 'ens-bandeau-outil';
+            nom.textContent = ENS_NOMS_OUTILS[dernier.outil] || '';
+            var bouton = document.createElement('button');
+            bouton.type = 'button';
+            bouton.className = 'ens-bandeau-bouton';
+            bouton.textContent = 'Reprendre';
+            bouton.addEventListener('click', function () { switchTeacherTool(dernier.outil); });
+            carte.appendChild(etiquette);
+            carte.appendChild(nom);
+            carte.appendChild(bouton);
+            bandeau.appendChild(carte);
+        }
+        groupe.insertBefore(bandeau, groupe.firstChild);
+    } catch (e) { /* esthétique seulement */ }
+}
+
 function afficherSasAteliersEnseignant(categorie) {
     ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].forEach((id) => {
         const conteneur = document.getElementById(`container-${id}-custom`);
@@ -538,6 +613,7 @@ function afficherSasAteliersEnseignant(categorie) {
     const inst = document.getElementById('sas-ateliers-instituteur');
     if (prof) prof.style.display = categorie === 'instituteur' ? 'none' : 'flex';
     if (inst) inst.style.display = categorie === 'instituteur' ? 'flex' : 'none';
+    majBandeauEnseignant(categorie);
     if (sas) sas.style.display = 'flex';
     if (typeof majMenuOutilsEnseignant === 'function') majMenuOutilsEnseignant();
     if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('choix_atelier');
@@ -603,7 +679,7 @@ async function verifyMatriculeEnseignant() {
         if (data.valide === true) {
             feedback.textContent = data.message;
             feedback.style.color = "#10B981";
-            localStorage.setItem('eduka_sceau_enseignant', matricule); try { if (typeof chargerFonctionsActives === 'function') chargerFonctionsActives(); } catch (e) { /* menu : sans gravité */ }
+            localStorage.setItem('eduka_sceau_enseignant', matricule); memoriserInfosEnseignant(data); try { if (typeof chargerFonctionsActives === 'function') chargerFonctionsActives(); } catch (e) { /* menu : sans gravité */ }
 
             setTimeout(() => {
                 fermerModaleAccesEnseignant();
@@ -1472,6 +1548,7 @@ function mettreAJourBanniereMatiere() {
 }
 
 function switchTeacherTool(toolID) {
+    try { localStorage.setItem('eduka_ens_dernier', JSON.stringify({ outil: toolID, t: Date.now() })); } catch (e) { /* sans gravité */ }
     masquerSasAteliersEnseignant();
     document.getElementById('container-atelier-custom').classList.remove('active');
     document.getElementById('container-forge-custom').classList.remove('active');

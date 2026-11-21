@@ -285,3 +285,29 @@ body.dark-theme.espace-ens #formulaire-guide-overlay input, body.dark-theme.espa
 body.dark-theme.espace-ens #formulaire-guide-overlay > div > div:last-child button:nth-child(1) { color: #E8A898 !important; border-color: #E8A898 !important; }
 body.dark-theme.espace-ens #formulaire-guide-overlay > div > div[style*="254, 243, 199"] { background: #3A2E1A !important; border-color: #6B5226 !important; color: #E8D3A6 !important; }
 body.dark-theme.espace-ens #formulaire-guide-overlay > div > div[style*="224, 242, 254"] { background: #3A2C26 !important; border-color: #4A3A33 !important; color: #E8A898 !important; }
+
+
+/* ════════════════════════════════════════════════════════════════
+   BANDEAU D'ACCUEIL (21/11/2026) : prénom, fin d'accès, « Reprendre ». Construit par majBandeauEnseignant() (app.js).
+   ════════════════════════════════════════════════════════════════ */
+.ens-bandeau {
+    background: #7E3326; color: #FBF3E8; border-radius: 16px; margin-bottom: 1rem;
+    padding: clamp(1.4rem, 4vw, 2.6rem) clamp(1.3rem, 4vw, 2.8rem);
+    display: flex; flex-wrap: wrap; gap: 1.5rem 2.2rem; align-items: center; justify-content: space-between; text-align: left;
+}
+.ens-bandeau-texte { flex: 1 1 320px; min-width: 0; }
+.ens-bandeau-role { margin: 0 0 .5rem; font-size: .95rem; color: #F0D9C4; }
+.ens-bandeau-salut { margin: 0; font-family: 'Literata', Georgia, 'Times New Roman', serif; font-weight: 600; font-size: clamp(1.7rem, 5vw, 2.5rem); line-height: 1.18; color: #FBF3E8; overflow-wrap: anywhere; }
+.ens-bandeau-acces { margin: .9rem 0 0; font-size: 1rem; line-height: 1.5; color: #F0D9C4; }
+.ens-bandeau-carte { flex: 0 1 300px; background: #F3EDE4; color: #2A1D19; border-radius: 12px; padding: 1.1rem 1.3rem; display: flex; flex-direction: column; gap: .35rem; }
+.ens-bandeau-etiquette { margin: 0; font-size: .88rem; color: #66554D; }
+.ens-bandeau-outil { margin: 0 0 .6rem; font-family: 'Literata', Georgia, serif; font-weight: 600; font-size: 1.15rem; color: #2A1D19; }
+.ens-bandeau-bouton { align-self: flex-start; font: inherit; font-weight: 700; font-size: .95rem; cursor: pointer; background: #7E3326; color: #FBF3E8; border: 0; border-radius: 999px; padding: .7rem 1.4rem; }
+.ens-bandeau-bouton:hover { background: #6B2A1F; }
+.ens-bandeau-bouton:focus-visible { outline: 3px solid #7E3326; outline-offset: 3px; }
+body.dark-theme .ens-bandeau { background: #4E241C; }
+body.dark-theme .ens-bandeau-carte { background: #2B211D; color: #F3E9DD; }
+body.dark-theme .ens-bandeau-etiquette { color: #C9B8AB; }
+body.dark-theme .ens-bandeau-outil { color: #F3E9DD; }
+body.dark-theme .ens-bandeau-bouton { background: #E8A898; color: #2A1D19; }
+body.dark-theme .ens-bandeau-bouton:hover { background: #F0B9AB; }
