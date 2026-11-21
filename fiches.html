@@ -19,6 +19,19 @@
 })();
 </script>
 <link rel="stylesheet" href="seance.css?v=3">
+<script>
+/* ❖ 21/11/2026 : habillage « Terre cuite » seulement quand on arrive depuis l'Espace Enseignant (point de départ enregistré par app.js, moins de 6 h). Les élèves gardent l'aspect habituel. */
+(function () {
+  try {
+    var r = JSON.parse(localStorage.getItem('eduka_retour') || 'null');
+    if (r && r.espace === 'enseignant' && r.t && (Date.now() - r.t) < 21600000) {
+      document.write('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+        + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600&family=Nunito+Sans:wght@400;600;700&display=swap">'
+        + '<link rel="stylesheet" href="enseignant-terre-pages.css?v=2">');
+    }
+  } catch (e) { /* jamais bloquant */ }
+})();
+</script>
 <style>
   .f-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
   .f-grille-img { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }

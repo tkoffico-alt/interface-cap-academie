@@ -26,3 +26,7 @@ h1, h2, .score-grand { font-family: 'Literata', Georgia, 'Times New Roman', seri
 #bandeau-apercu { border-left-color: var(--accent) !important; }
 #bandeau-apercu a:not(.btn) { color: var(--primaire) !important; }
 .tableau-suivi th, .tableau-suivi td { border-color: var(--bord); }
+
+/* Fiches et schémas (arrivée depuis l'Espace Enseignant) */
+#f-chemin a, #f-chemin button { color: var(--primaire); }
+.f-choix:hover, .f-choix:focus-visible, .f-chapitre:hover, .f-chapitre:focus-visible { border-color: var(--primaire); }
