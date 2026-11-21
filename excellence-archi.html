@@ -73,10 +73,42 @@ th{color:var(--doux);font-weight:600;font-size:.9rem}
 .rang{font:700 1.1rem Georgia,serif;width:2.2em}.rang.un{color:var(--or)}
 .vide{color:var(--doux)}.erreur{color:var(--ko);font-weight:600}
 @media(max-width:560px){.matieres{gap:8px}.matiere{padding:10px;min-height:78px}.matiere b{font-size:.9rem}h1{font-size:1.4rem}}
-.brouillon{margin:12px 0}.brouillon summary{cursor:pointer;font-weight:600;color:var(--marine,#1e3a6e);margin-bottom:8px}.brouillon textarea{width:100%;font-family:inherit}.retour-app{display:inline-block;margin:2px 0 4px;color:var(--doux);font-size:.92rem;text-decoration:none;border-bottom:1px solid var(--bord)}.retour-app:hover,.retour-app:focus-visible{color:var(--bleu);border-bottom-color:var(--bleu)}</style></head><body><main class="page">
+.brouillon{margin:12px 0}.brouillon summary{cursor:pointer;font-weight:600;color:var(--marine,#1e3a6e);margin-bottom:8px}.brouillon textarea{width:100%;font-family:inherit}.retour-app{display:inline-block;margin:2px 0 4px;color:var(--doux);font-size:.92rem;text-decoration:none;border-bottom:1px solid var(--bord)}.retour-app:hover,.retour-app:focus-visible{color:var(--bleu);border-bottom-color:var(--bleu)}
+/* --- Contraste : bandeau bleu nuit + corps clair --- */
+:root{--bg:#f7f6f2;--nuit:#10203f;--nuit2:#0e1b36;--or-vif:#d4a73a}
+.hero{background:linear-gradient(160deg,var(--nuit),var(--nuit2));border-radius:0 0 28px 28px;border-bottom:4px solid var(--or-vif);color:#fff;padding:14px 0 22px}
+.hero-in{max-width:880px;margin:0 auto;padding:0 16px}
+.hero .retour-app{color:#b9c5e0;border-bottom-color:#3a4a6e}
+.hero .retour-app:hover,.hero .retour-app:focus-visible{color:#fff;border-bottom-color:#fff}
+.hero h1{display:flex;align-items:center;gap:12px;margin:10px 0 8px;color:#fff;font-size:1.8rem}
+.ico-salle{flex:none;width:44px;height:44px;border-radius:12px;background:#1a2a4d;border:1px solid #3a4a6e;display:grid;place-items:center}
+.hero .sous{color:#d6dff1;margin:0 0 14px}.hero .sous::after{display:none}.hero .sous b{color:#e3b84a;font-weight:600}
+.hero .nav{background:#1a2a4d;border:1px solid #2f4170;border-radius:14px;padding:4px;gap:4px;margin:0 0 14px}
+.hero .nav button{border:0;background:transparent;color:#d6dff1;border-radius:10px}
+.hero .nav button[aria-current=page]{background:#fff;color:var(--nuit)}
+.hero :focus-visible{outline-color:#e3b84a}
+.hero .carte.resume{background:transparent;border:0;box-shadow:none;padding:12px 0 0;margin:0;border-top:1px solid #2f4170;color:#fff;gap:14px;flex-wrap:nowrap}
+.hero .resume .n{color:#fff}.hero .resume .meta{color:#b9c5e0}.hero .resume b{color:#fff}
+.hero .resume .lien{color:#e3b84a}
+.hero .barre{background:#2a3b64}.hero .barre i{background:var(--or-vif)}
+.sceau{flex:none;width:46px;height:46px}
+.reprise{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin:14px 0 0;border-radius:12px;background:var(--or-vif);color:var(--nuit);font-weight:700;padding:0 16px;text-align:center}
+.mention{display:inline-block;margin-top:4px;padding:2px 10px;border-radius:99px;font-size:.82rem;font-weight:700}
+.mention.m-ex{background:#f7f0df;color:#6b4f12;border:1px solid var(--or-vif)}
+.mention.m-ma{background:#e4eaf6;color:#1e3a6e}
+.mention.m-ac{background:#eceff5;color:#4a5570}
+.palier.prepa .palier-tete{background:linear-gradient(160deg,var(--nuit),var(--nuit2));border-bottom:4px solid var(--or-vif);border-radius:20px;padding:16px 18px;color:#f8efd2;align-items:center;margin-bottom:12px}
+.palier.prepa .palier-tete h2{border-left:0;padding-left:0;font-size:1.45rem;display:flex;align-items:center;gap:12px;color:#f8efd2}
+.palier.prepa .palier-tete small{color:#b9c5e0}
+.palier.prepa .verrouille .num{border-color:#d4a73a;color:#9a7618}
+@media(prefers-color-scheme:dark){:root{--bg:#10151f}.mention.m-ma,.mention.m-ac{background:#1f2c4a;color:#cdd8ee}}
+</style></head><body><header class="hero"><div class="hero-in">
 <a class="retour-app" href="https://edukatchat.org/">← Retour à EdukaTchat</a>
-<h1>🏛️ Cap Excellence</h1>
-<p class="sous">Chaque verrou a tes propres chiffres : rien à recopier, tout à comprendre. Franchis-en un pour ouvrir le suivant.</p>
+<h1><span class="ico-salle" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 9l9-5 9 5H3zM5 11v7M9 11v7M15 11v7M19 11v7M3 20h18" fill="none" stroke="#d4a73a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Cap Excellence</h1>
+<p class="sous">Chaque verrou a <b>tes chiffres</b> : rien à recopier, tout à comprendre. Franchis-en un pour ouvrir le suivant.</p>
+<div id="haut"></div>
+</div></header>
+<main class="page">
 <div id="app" aria-live="polite"></div></main>
 <script>
 const API=(window.SALLE_API||"https://api.edukatchat.org")+"/api/excellence";
@@ -100,6 +132,13 @@ function demanderCode(){$("#app").innerHTML=`<div class="carte"><h2>Accès rése
   <label class="l" for="code">Code d'accès</label><input class="champ" id="code" type="password" autocomplete="off" onkeydown="if(event.key==='Enter')validerCode()">
   <button class="btn plein" onclick="validerCode()">Entrer</button></div>`}
 function validerCode(){const c=$("#code").value.trim();try{localStorage.setItem("excellence_code",c)}catch(e){window.__code=c}rendre()}
+
+function mention(sc){return sc>=90?["Excellence","m-ex"]:(sc>=70?["Maîtrise","m-ma"]:["Acquis","m-ac"])}
+function sceau(n){const t=n>=24?["#f7f0df","#b08a3e","#7a5c17","Sceau d'or"]:(n>=12?["#e9ecf2","#aeb7c9","#4a5570","Sceau d'argent"]:(n>=3?["#f3e4d6","#b0764a","#7a4a26","Sceau de bronze"]:["#2a3b64","#4a5a82","#8a97b8","Sceau à gagner"]));
+  return `<svg class="sceau" viewBox="0 0 64 64" role="img" aria-label="${t[3]}"><circle cx="32" cy="32" r="30" fill="${t[0]}" stroke="${t[1]}" stroke-width="2"/><circle cx="32" cy="32" r="23" fill="none" stroke="${t[1]}" stroke-dasharray="2 3"/><path d="M21 34l8 8 15-18" fill="none" stroke="${t[2]}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
+(function(){const app=document.getElementById("app"),haut=document.getElementById("haut");
+  const mo=new MutationObserver(()=>{haut.innerHTML="";[".nav",".resume",".reprise"].forEach(s=>{const e=app.querySelector(":scope > "+s);if(e)haut.appendChild(e)});mo.takeRecords()});
+  mo.observe(app,{childList:true})})();
 const nbV=m=>m.paliers.reduce((a,p)=>a+p.defis.filter(d=>d.statut==="valide").length,0);
 const nbT=m=>m.paliers.reduce((a,p)=>a+p.defis.length,0);
 async function rendre(){
@@ -120,16 +159,17 @@ async function rendre(){
     if(!c.matieres.some(m=>m.cle===etat.mat))etat.mat=c.matieres[0].cle;
     const m=c.matieres.find(x=>x.cle===etat.mat);
     const pct=Math.round(100*c.nb_valides/c.nb_total);
-    let h=menu()+(etat.codeNouveau?blocCode(etat.codeNouveau,"Bienvenue ! Note bien ton code de reprise"):"")+`<div class="carte resume"><div class="n">${c.nb_valides}/${c.nb_total}</div><div class="t"><b>${esc(c.pseudo)}</b><div class="meta" style="margin:0 0 6px">verrous franchis${c.niveau_nom?` · ${esc(c.niveau_nom)}`:""} · <button class="lien" style="min-height:0;font-size:inherit" onclick="changerNiveau()">${c.niveau_nom?"changer de classe":"indiquer ma classe"}</button></div><div class="barre" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div></div></div>`;
+    let h=menu()+(etat.codeNouveau?blocCode(etat.codeNouveau,"Bienvenue ! Note bien ton code de reprise"):"")+`<div class="carte resume">${sceau(c.nb_valides)}<div class="n">${c.nb_valides}/${c.nb_total}</div><div class="t"><b>${esc(c.pseudo)}</b><div class="meta" style="margin:0 0 6px">verrous franchis${c.niveau_nom?` · ${esc(c.niveau_nom)}`:""} · <button class="lien" style="min-height:0;font-size:inherit" onclick="changerNiveau()">${c.niveau_nom?"changer de classe":"indiquer ma classe"}</button></div><div class="barre" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div></div></div>`;
+    {const o=m.paliers.flatMap(p=>p.defis).find(d=>d.statut==="ouvert")||c.matieres.flatMap(x=>x.paliers.flatMap(p=>p.defis)).find(d=>d.statut==="ouvert");if(o)h+=`<button class="reprise" onclick="ouvrir('${o.id}')">Reprendre : ${esc(o.titre)} →</button>`}
     h+=`<div class="matieres">`+c.matieres.map(x=>{const v=nbV(x),t=nbT(x);return `<button class="matiere" aria-pressed="${x.cle===etat.mat}" onclick="choisirMatiere('${x.cle}')"><b>${esc(x.nom)}</b><span>${v} sur ${t}</span><div class="barre"><i style="width:${Math.round(100*v/t)}%"></i></div></button>`}).join("")+`</div>`;
     for(const p of m.paliers){
       const v=p.defis.filter(d=>d.statut==="valide").length;
-      h+=`<section class="palier"><div class="palier-tete"><h2>Palier ${p.palier} : ${esc(p.nom)}</h2><small>${esc(PALIERS[p.palier]||"")} (${v}/${p.defis.length})</small></div><ul class="grille">`;
+      h+=`<section class="palier${p.palier===3?" prepa":""}"><div class="palier-tete"><h2>${p.palier===3?'<svg width="34" height="34" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="none" stroke="#d4a73a" stroke-width="2"/><path d="M24 12l3.5 8 8.5.7-6.5 5.6 2 8.4-7.5-4.5-7.5 4.5 2-8.4-6.5-5.6 8.5-.7z" fill="#d4a73a"/></svg>':""}Palier ${p.palier} : ${esc(p.nom)}</h2><small>${esc(PALIERS[p.palier]||"")} (${v}/${p.defis.length})</small></div><ul class="grille">`;
       p.defis.forEach((d,i)=>{
         const ic=d.statut==="valide"?COCHE:(d.statut==="verrouille"?CADENAS:String(i+1));
         const etiq=d.statut==="valide"?"":(d.statut==="ouvert"?"À relever":"Verrouillé");
         const pt=d.pour_toi?`<span class="pourtoi">Pour ton niveau</span>`:"";
-        h+=`<li class="${d.statut}"><button class="tuile" ${d.statut==="verrouille"?'disabled aria-disabled="true"':""} onclick="ouvrir('${d.id}')"><span class="num" aria-hidden="true">${ic}</span><span><b>${esc(d.titre)}</b><small>Niveau ${esc(d.niveau)}${etiq?" · "+etiq:""}</small>${pt}${d.score!=null?`<span class="score">${d.score}/100</span>`:""}</span></button></li>`});
+        h+=`<li class="${d.statut}"><button class="tuile" ${d.statut==="verrouille"?'disabled aria-disabled="true"':""} onclick="ouvrir('${d.id}')"><span class="num" aria-hidden="true">${ic}</span><span><b>${esc(d.titre)}</b><small>Niveau ${esc(d.niveau)}${etiq?" · "+etiq:""}</small>${pt}${d.score!=null?(()=>{const mt=mention(d.score);return `<span class="mention ${mt[1]}" title="${d.score}/100">${mt[0]}</span>`})():""}</span></button></li>`});
       h+=`</ul></section>`}
     h+=`<div class="carte" style="margin-top:26px"><b>Tu es enseignant ou testeur ?</b><p class="meta" style="margin:2px 0 10px">Dis-moi si un verrou est trop facile, trop difficile ou mal formulé.</p><button class="btn" onclick="ouvrirAvis('')">Donner mon avis</button></div><div class="carte"><b>Changer d'appareil ou de navigateur ?</b><p class="meta" style="margin:2px 0 10px">Ton code de reprise te permet de retrouver ton pseudo et ta progression. Si tu l'as perdu, tu peux en générer un nouveau (l'ancien ne marchera plus).</p><button class="btn" onclick="monCode()">Voir un nouveau code de reprise</button><div id="zone_code"></div></div>`;
     el.innerHTML=h}catch(e){if(e.message==="Introuvable.")return demanderCode();el.innerHTML=menu()+`<p class="erreur">${esc(e.message)}</p>`}}
