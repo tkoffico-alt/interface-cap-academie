@@ -473,3 +473,6 @@ body.dark-theme .ens-ligne:not(:hover) { background: #3A2D27; border-color: #665
 body.dark-theme .ens-ligne:hover { background: #4A3A33; box-shadow: 0 8px 22px rgba(0,0,0,.5); }
 body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-area { background-color: #0F0B09; border-top: 1px solid #4A3A33; box-shadow: 0 -6px 18px rgba(0,0,0,.4); }
 body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input { background-color: #3A2D27; border: 1px solid #66524A; color: #F3E9DD; box-shadow: 0 3px 10px rgba(0,0,0,.4); }
+
+/* Mode sombre : barres de défilement sombres (plus de bande blanche à droite) (21/11/2026) */
+body.dark-theme.espace-ens, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom), body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-history { color-scheme: dark; scrollbar-color: #66524A #17110E; }
