@@ -358,3 +358,80 @@ body.dark-theme.espace-ens .fiche-eval .fiche-carte.fiche-corrige { background: 
 body.espace-ens .message-actions .btn-action-doc.btn-biblio { background: #4F6B45; background-image: none; border-color: transparent; border-radius: 999px; box-shadow: none; color: #FFFFFF; }
 body.espace-ens .message-actions .btn-action-doc.btn-biblio:hover:not(:disabled) { background: #435C3A; filter: none; }
 body.dark-theme.espace-ens .message-actions .btn-action-doc.btn-biblio { background: #5A7A4E; background-image: none; }
+
+
+/* ════════════════════════════════════════════════════════════════
+   COULEUR PAR ATELIER (21/11/2026) : Évaluations = brique, Leçons = sauge, Cabinet = ardoise ; « Mes outils » = ocre.
+   Chaque outil définit ses variables --at-* ; les règles ci-dessous les utilisent (clair et sombre).
+   Les fiches de leçon générées (cartes colorées par matière) ne sont pas touchées.
+   ════════════════════════════════════════════════════════════════ */
+body.espace-ens #container-atelier-custom { --at-ligne:#7E3326;--at-plein:#7E3326;--at-hover:#6B2A1F;--at-survol:rgba(126,51,38,.09);--at-bulle:#3A2620;--at-carte:#FBF8F3;--at-bord:#DDD2C2;--at-titre:#7E3326; }
+body.dark-theme.espace-ens #container-atelier-custom { --at-ligne:#E8A898;--at-plein:#7E3326;--at-hover:#93402F;--at-survol:rgba(232,168,152,.12);--at-bulle:#7E3326;--at-carte:#2B211D;--at-bord:#4A3A33;--at-titre:#E8A898; }
+body.espace-ens #container-forge-custom { --at-ligne:#4F6B45;--at-plein:#4F6B45;--at-hover:#435C3A;--at-survol:rgba(79,107,69,.10);--at-bulle:#27361F;--at-carte:#F2F6EC;--at-bord:#C9D6BF;--at-titre:#3F5A36; }
+body.dark-theme.espace-ens #container-forge-custom { --at-ligne:#A9C79B;--at-plein:#4F6B45;--at-hover:#5E7F52;--at-survol:rgba(169,199,155,.12);--at-bulle:#4F6B45;--at-carte:#222A1E;--at-bord:#3E4A38;--at-titre:#BFD6B2; }
+body.espace-ens #container-cabinet-custom { --at-ligne:#3E5C6E;--at-plein:#3E5C6E;--at-hover:#324C5B;--at-survol:rgba(62,92,110,.10);--at-bulle:#25333D;--at-carte:#F0F4F6;--at-bord:#C3D2DA;--at-titre:#2F4858; }
+body.dark-theme.espace-ens #container-cabinet-custom { --at-ligne:#9CBBCB;--at-plein:#3E5C6E;--at-hover:#4C6F84;--at-survol:rgba(156,187,203,.12);--at-bulle:#3E5C6E;--at-carte:#1F2A30;--at-bord:#384953;--at-titre:#B7D0DD; }
+body.espace-ens #container-forge_primaire-custom { --at-ligne:#4F6B45;--at-plein:#4F6B45;--at-hover:#435C3A;--at-survol:rgba(79,107,69,.10);--at-bulle:#27361F;--at-carte:#F2F6EC;--at-bord:#C9D6BF;--at-titre:#3F5A36; }
+body.dark-theme.espace-ens #container-forge_primaire-custom { --at-ligne:#A9C79B;--at-plein:#4F6B45;--at-hover:#5E7F52;--at-survol:rgba(169,199,155,.12);--at-bulle:#4F6B45;--at-carte:#222A1E;--at-bord:#3E4A38;--at-titre:#BFD6B2; }
+body.espace-ens #container-cabinet_primaire-custom { --at-ligne:#3E5C6E;--at-plein:#3E5C6E;--at-hover:#324C5B;--at-survol:rgba(62,92,110,.10);--at-bulle:#25333D;--at-carte:#F0F4F6;--at-bord:#C3D2DA;--at-titre:#2F4858; }
+body.dark-theme.espace-ens #container-cabinet_primaire-custom { --at-ligne:#9CBBCB;--at-plein:#3E5C6E;--at-hover:#4C6F84;--at-survol:rgba(156,187,203,.12);--at-bulle:#3E5C6E;--at-carte:#1F2A30;--at-bord:#384953;--at-titre:#B7D0DD; }
+
+/* Boutons rapides et boutons de la carte d'accueil */
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion { color: var(--at-ligne); border-color: var(--at-ligne); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion:hover, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion:hover { background: var(--at-survol); color: var(--at-ligne); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion.sug-principal, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion.sug-principal { background: var(--at-plein); border-color: var(--at-plein); color: #FBF3E8; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion.sug-principal:hover, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion.sug-principal:hover { background: var(--at-hover); color: #FBF3E8; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .nom-bouton, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .nom-bouton { color: var(--at-ligne); border-color: var(--at-ligne); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .nom-bouton:hover, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .nom-bouton:hover { background: var(--at-survol); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .nom-bouton.nb-principal, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .nom-bouton.nb-principal { background: var(--at-plein); border-color: var(--at-plein); color: #FBF3E8; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .nom-bouton.nb-principal:hover, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .nom-bouton.nb-principal:hover { background: var(--at-hover); }
+
+/* Carte d'accueil, bulles, saisie */
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message { background-color: var(--at-carte); border-color: var(--at-bord); border-top: 4px solid var(--at-ligne); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-titre, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-titre { color: var(--at-titre); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .user-message, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .user-message { background: var(--at-bulle); background-image: none; color: #FBF3E8; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .bot-message, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .bot-message { border-left: 3px solid var(--at-ligne); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input:focus, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input:focus { border-color: var(--at-ligne); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-envoyer-icon, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-envoyer-icon { background-color: var(--at-plein); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-envoyer-icon:hover:not(:disabled), body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-envoyer-icon:hover:not(:disabled) { background-color: var(--at-hover); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil, .btn-icone-outil.btn-icone-neutre, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil, .btn-icone-outil.btn-icone-neutre { border-color: var(--at-ligne); color: var(--at-ligne); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil:hover, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil:hover { background-color: var(--at-survol); color: var(--at-ligne); }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-attachment, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-attachment { color: var(--at-ligne); }
+
+/* Onglets : chacun garde sa couleur, actif plein */
+body.espace-ens #teacher-tabs-container #tab-forge:not(.active), body.espace-ens #teacher-tabs-container #tab-forge_primaire:not(.active) { border-color: #A9BE9F; color: #3F5A36; }
+body.espace-ens #teacher-tabs-container #tab-cabinet:not(.active), body.espace-ens #teacher-tabs-container #tab-cabinet_primaire:not(.active) { border-color: #A9BFCB; color: #2F4858; }
+body.espace-ens #teacher-tabs-container #tab-forge:not(.active):hover, body.espace-ens #teacher-tabs-container #tab-forge_primaire:not(.active):hover { background: #E1EADB; border-color: #4F6B45; color: #3F5A36; }
+body.espace-ens #teacher-tabs-container #tab-cabinet:not(.active):hover, body.espace-ens #teacher-tabs-container #tab-cabinet_primaire:not(.active):hover { background: #DFE8ED; border-color: #3E5C6E; color: #2F4858; }
+body.espace-ens #teacher-tabs-container #tab-forge.active, body.espace-ens #teacher-tabs-container #tab-forge_primaire.active { background: #4F6B45; border-color: #4F6B45; color: #FFFFFF; }
+body.espace-ens #teacher-tabs-container #tab-cabinet.active, body.espace-ens #teacher-tabs-container #tab-cabinet_primaire.active { background: #3E5C6E; border-color: #3E5C6E; color: #FFFFFF; }
+body.dark-theme.espace-ens #teacher-tabs-container #tab-forge:not(.active), body.dark-theme.espace-ens #teacher-tabs-container #tab-forge_primaire:not(.active) { border-color: #4E6347; color: #A9C79B; }
+body.dark-theme.espace-ens #teacher-tabs-container #tab-cabinet:not(.active), body.dark-theme.espace-ens #teacher-tabs-container #tab-cabinet_primaire:not(.active) { border-color: #46606E; color: #9CBBCB; }
+body.dark-theme.espace-ens #teacher-tabs-container #tab-forge:not(.active):hover, body.dark-theme.espace-ens #teacher-tabs-container #tab-forge_primaire:not(.active):hover { background: rgba(169, 199, 155, .12); border-color: #A9C79B; color: #E3F0DC; }
+body.dark-theme.espace-ens #teacher-tabs-container #tab-cabinet:not(.active):hover, body.dark-theme.espace-ens #teacher-tabs-container #tab-cabinet_primaire:not(.active):hover { background: rgba(156, 187, 203, .12); border-color: #9CBBCB; color: #E1EEF4; }
+
+/* Choix de l'atelier : bande de couleur à gauche, icône et titre assortis */
+.ens-ligne-evaluations, .ens-ligne-lecons, .ens-ligne-cabinet, .ens-ligne-lecons-primaire, .ens-ligne-cabinet-primaire { border-left-width: 6px; }
+.ens-ligne-evaluations { border-left-color: #7E3326; }
+.ens-ligne-lecons, .ens-ligne-lecons-primaire { border-left-color: #4F6B45; }
+.ens-ligne-cabinet, .ens-ligne-cabinet-primaire { border-left-color: #3E5C6E; }
+.ens-ligne-lecons > svg, .ens-ligne-lecons-primaire > svg { stroke: #4F6B45; }
+.ens-ligne-cabinet > svg, .ens-ligne-cabinet-primaire > svg { stroke: #3E5C6E; }
+.ens-ligne-lecons h3, .ens-ligne-lecons-primaire h3 { color: #3F5A36; }
+.ens-ligne-cabinet h3, .ens-ligne-cabinet-primaire h3 { color: #2F4858; }
+.ens-ligne-evaluations:hover { border-color: #7E3326; }
+.ens-ligne-lecons:hover, .ens-ligne-lecons-primaire:hover { border-color: #4F6B45; background: #F7FAF3; }
+.ens-ligne-cabinet:hover, .ens-ligne-cabinet-primaire:hover { border-color: #3E5C6E; background: #F4F7F9; }
+body.dark-theme .ens-ligne-lecons, body.dark-theme .ens-ligne-lecons-primaire { border-left-color: #A9C79B; }
+body.dark-theme .ens-ligne-cabinet, body.dark-theme .ens-ligne-cabinet-primaire { border-left-color: #9CBBCB; }
+body.dark-theme .ens-ligne-lecons > svg, body.dark-theme .ens-ligne-lecons-primaire > svg { stroke: #A9C79B; }
+body.dark-theme .ens-ligne-cabinet > svg, body.dark-theme .ens-ligne-cabinet-primaire > svg { stroke: #9CBBCB; }
+body.dark-theme .ens-ligne-lecons h3, body.dark-theme .ens-ligne-lecons-primaire h3 { color: #BFD6B2; }
+body.dark-theme .ens-ligne-cabinet h3, body.dark-theme .ens-ligne-cabinet-primaire h3 { color: #B7D0DD; }
+body.dark-theme .ens-ligne-lecons:hover, body.dark-theme .ens-ligne-lecons-primaire:hover, body.dark-theme .ens-ligne-cabinet:hover, body.dark-theme .ens-ligne-cabinet-primaire:hover { background: #3A2C26; }
+
+/* « Mes outils » en ocre : une troisième famille, distincte des ateliers */
+#teacher-atelier-chooser .ens-pilule { border-color: #9A6414; color: #8A5A12; }
+#teacher-atelier-chooser .ens-pilule:hover { background: rgba(154, 100, 20, .10); }
+body.dark-theme #teacher-atelier-chooser .ens-pilule { border-color: #E0B36B; color: #E0B36B; }
+body.dark-theme #teacher-atelier-chooser .ens-pilule:hover { background: rgba(224, 179, 107, .12); }
