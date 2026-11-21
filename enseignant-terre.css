@@ -1,0 +1,103 @@
+/* ❖ ESPACE ENSEIGNANT « Terre cuite » (21/11/2026)
+   Habillage de l'écran d'entrée (Professeur / Instituteur) et du choix de l'atelier.
+   Style seulement : aucun identifiant ni fonction modifié. Chargé après style.css.
+   Palette : sable #F3EDE4, brique #7E3326, encre #2A1D19. Thème sombre inclus. */
+
+#teacher-categorie-chooser,
+#teacher-atelier-chooser {
+    --t-fond: #F3EDE4; --t-carte: #FBF8F3; --t-bord: #DDD2C2;
+    --t-texte: #2A1D19; --t-doux: #66554D; --t-brique: #7E3326; --t-accent: #7E3326;
+    background: var(--t-fond);
+    color: var(--t-texte);
+    font-family: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    animation: ensFondu .35s ease both;
+}
+body.dark-theme #teacher-categorie-chooser,
+body.dark-theme #teacher-atelier-chooser {
+    --t-fond: #1F1714; --t-carte: #2B211D; --t-bord: #4A3A33;
+    --t-texte: #F3E9DD; --t-doux: #C9B8AB; --t-accent: #E8A898;
+}
+@keyframes ensFondu { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+    #teacher-categorie-chooser, #teacher-atelier-chooser { animation: none; }
+}
+
+#teacher-categorie-chooser { align-items: flex-start; padding: 4rem 1.5rem 2.5rem; overflow-y: auto; }
+#teacher-atelier-chooser { align-items: flex-start; justify-content: center; padding: 3.5rem 1.5rem 2.5rem; overflow-y: auto; gap: 0; }
+
+.ens-accueil { width: 100%; max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.ens-titre { margin: 0; font-family: 'Literata', Georgia, 'Times New Roman', serif; font-weight: 600; font-size: clamp(1.6rem, 4vw, 2.3rem); line-height: 1.2; color: var(--t-texte); }
+.ens-sous { margin: 1rem 0 0; font-size: 1.05rem; line-height: 1.55; color: var(--t-doux); max-width: 44ch; }
+
+/* Entrée : deux cartes de même hauteur */
+.ens-niveaux { margin-top: 2.5rem; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; text-align: left; }
+.ens-niveau {
+    font: inherit; color: inherit; cursor: pointer; text-align: left;
+    background: var(--t-carte); border: 1px solid var(--t-bord); border-radius: 16px;
+    padding: 2rem 1.9rem 1.7rem; min-height: 250px; box-sizing: border-box;
+    display: flex; flex-direction: column; gap: .9rem;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.ens-niveau:hover { border-color: var(--t-accent); }
+.ens-niveau svg { width: 40px; height: 40px; flex: none; stroke: var(--t-accent); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.ens-niveau h3 { margin: 0; font-family: 'Literata', Georgia, serif; font-weight: 600; font-size: 1.7rem; color: var(--t-texte); }
+.ens-niveau p { margin: 0; flex-grow: 1; font-size: .95rem; line-height: 1.55; color: var(--t-doux); }
+.ens-bouton { align-self: flex-start; background: #7E3326; color: #FBF3E8; font-weight: 700; font-size: .95rem; padding: .75rem 1.6rem; border-radius: 999px; }
+
+/* Choix de l'atelier : une ligne par outil */
+#teacher-atelier-chooser .sas-ateliers-groupe {
+    flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: stretch;
+    gap: .75rem; width: 100%; max-width: 880px; margin: 0 auto;
+}
+.ens-entete { margin-bottom: 1rem; }
+.ens-entete .ens-titre { font-size: clamp(1.5rem, 3.5vw, 2rem); }
+.ens-entete .ens-sous { margin-top: .6rem; max-width: none; font-size: 1rem; }
+.ens-ligne {
+    font: inherit; color: inherit; cursor: pointer; text-align: left; width: 100%; box-sizing: border-box;
+    display: flex; align-items: center; gap: 1.4rem;
+    background: var(--t-carte); border: 1px solid var(--t-bord); border-radius: 14px;
+    padding: 1.3rem 1.6rem;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.ens-ligne:hover { border-color: var(--t-accent); }
+.ens-ligne > svg { width: 34px; height: 34px; flex: none; stroke: var(--t-accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.ens-ligne-texte { flex: 1; min-width: 0; }
+.ens-ligne h3 { margin: 0 0 .25rem; font-family: 'Literata', Georgia, serif; font-weight: 600; font-size: 1.3rem; color: var(--t-texte); }
+.ens-ligne p { margin: 0; font-size: .95rem; line-height: 1.5; color: var(--t-doux); }
+.ens-ligne .ens-fleche { width: 22px; height: 22px; stroke-width: 2; }
+
+/* Mes outils : deux boutons arrondis */
+#teacher-atelier-chooser .sas-outils-groupe { flex-basis: auto; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; gap: .75rem; margin-top: 1.4rem; }
+#teacher-atelier-chooser .sas-outils-titre {
+    flex-basis: 100%; text-align: left; margin: 0 0 .1rem;
+    font-family: 'Literata', Georgia, serif; font-size: 1.1rem; font-weight: 600;
+    letter-spacing: 0; text-transform: none; color: var(--t-texte);
+}
+.ens-pilule {
+    display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; cursor: pointer;
+    border: 1.5px solid var(--t-accent); color: var(--t-accent); background: transparent;
+    border-radius: 999px; padding: .75rem 1.4rem; font-weight: 700; font-size: .95rem;
+    transition: background-color .15s ease;
+}
+.ens-pilule:hover { background: rgba(126, 51, 38, .08); }
+body.dark-theme .ens-pilule:hover { background: rgba(232, 168, 152, .12); }
+.ens-pilule svg { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.ens-liens { margin: 1.8rem 0 0; display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; font-size: .9rem; }
+.ens-lien { font: inherit; background: none; border: 0; padding: .6rem 0; min-height: 44px; box-sizing: border-box; color: var(--t-doux); text-decoration: underline; cursor: pointer; }
+.ens-lien:hover { color: var(--t-accent); }
+
+.ens-niveau:focus-visible, .ens-ligne:focus-visible, .ens-pilule:focus-visible, .ens-lien:focus-visible {
+    outline: 3px solid var(--t-accent); outline-offset: 3px;
+}
+
+@media (max-width: 700px) {
+    #teacher-categorie-chooser { padding: 2rem 1rem; }
+    #teacher-atelier-chooser { padding: 1.5rem 1rem 2rem; }
+    .ens-niveaux { grid-template-columns: 1fr; }
+    .ens-niveau { min-height: 0; padding: 1.5rem 1.3rem; }
+    .ens-ligne { gap: 1rem; padding: 1rem 1.1rem; }
+    .ens-ligne > svg:not(.ens-fleche) { width: 28px; height: 28px; }
+    .ens-ligne h3 { font-size: 1.15rem; }
+    .ens-ligne p { font-size: .88rem; }
+}

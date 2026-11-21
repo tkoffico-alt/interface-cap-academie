@@ -32,11 +32,11 @@
             { s: '#container-sas-custom .btn-envoyer-icon', t: 'Envoyer', x: 'Envoyez votre message.' }
         ],
         choix_atelier: [
-            { s: '#sas-ateliers-professeur .sas-atelier-evaluations', t: 'Évaluations', x: 'Créez devoirs, compositions et épreuves, ou faites corriger des copies.' },
-            { s: '#sas-ateliers-professeur .sas-atelier-lecons', t: 'Leçons', x: 'Préparez vos fiches de leçon et vos exercices.' },
-            { s: '#sas-ateliers-professeur .sas-atelier-cabinet', t: 'Cabinet', x: 'Demandez un conseil pédagogique ou aidez un élève en difficulté.' },
-            { s: '#sas-ateliers-instituteur .sas-atelier-card:nth-child(1)', t: 'Leçons (primaire)', x: 'Préparez vos fiches de séance et d’évaluation, du CP1 au CM2.' },
-            { s: '#sas-ateliers-instituteur .sas-atelier-card:nth-child(2)', t: 'Cabinet (primaire)', x: 'Élève en difficulté, conseil pédagogique, gestion de classe.' },
+            { s: '#sas-ateliers-professeur .ens-ligne-evaluations', t: 'Évaluations', x: 'Créez devoirs, compositions et épreuves, ou faites corriger des copies.' },
+            { s: '#sas-ateliers-professeur .ens-ligne-lecons', t: 'Leçons', x: 'Préparez vos fiches de leçon et vos exercices.' },
+            { s: '#sas-ateliers-professeur .ens-ligne-cabinet', t: 'Cabinet', x: 'Demandez un conseil pédagogique ou aidez un élève en difficulté.' },
+            { s: '#sas-ateliers-instituteur .ens-ligne-lecons-primaire', t: 'Leçons (primaire)', x: 'Préparez vos fiches de séance et d’évaluation, du CP1 au CM2.' },
+            { s: '#sas-ateliers-instituteur .ens-ligne-cabinet-primaire', t: 'Cabinet (primaire)', x: 'Élève en difficulté, conseil pédagogique, gestion de classe.' },
             { s: '.btn-changer-categorie-enseignant', t: 'Catégorie', x: 'Revenez au choix Professeur / Instituteur.' }
         ],
         atelier: [

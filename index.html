@@ -33,6 +33,10 @@
     <meta name="apple-mobile-web-app-title" content="EdukaTchat">
 
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600&family=Nunito+Sans:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="enseignant-terre.css">
     <!-- ❖ KaTeX -- rendu des formules mathématiques/scientifiques (LaTeX)
          que les agents Dify écrivent parfois dans le chat du Sas (voir
          interface/app.js, extraireEtRendreLatex()). CSS chargé en tête,
@@ -1755,86 +1759,91 @@
         </div>
 
         <div class="iframe-container">
-            <!-- ❖ Écran de sélection Professeur/Instituteur (27/09/2026) :
-                 affiché seul, sans le moindre onglet visible, à l'entrée de
-                 l'Espace Enseignant -- voir entrerDansEspaceEnseignant() et
-                 choisirCategorieEnseignant() dans app.js. Masqué par défaut ;
-                 sans rapport avec les autres espaces (sas/eleve), qui
-                 partagent ce même conteneur .iframe-container. -->
+            <!-- ❖ Habillage « Terre cuite » (21/11/2026) : écran d'entrée Professeur/Instituteur, style dans enseignant-terre.css.
+                 Mêmes identifiants et mêmes fonctions qu'avant (choisirCategorieEnseignant, switchTeacherTool). -->
             <div id="teacher-categorie-chooser" class="categorie-chooser-grid" style="display: none;">
-                <div class="glass-card door-card categorie-card categorie-card-bleu" onclick="choisirCategorieEnseignant('professeur')">
-                    <div class="icon-wrapper">🎓</div>
-                    <h3>Professeur</h3>
-                    <p>Secondaire — Évaluations, Leçons et Cabinet d'Étude.</p>
-                    <div class="card-action-area">
-                        <button class="btn-entrer" style="background-color: #3B82F6; color: white; border: none;">Entrer</button>
-                    </div>
-                </div>
-                <div class="glass-card door-card categorie-card categorie-card-vert" onclick="choisirCategorieEnseignant('instituteur')">
-                    <div class="icon-wrapper">🌱</div>
-                    <h3>Instituteur</h3>
-                    <p>Primaire — Leçons et Cabinet.</p>
-                    <div class="card-action-area">
-                        <button class="btn-entrer" style="background-color: #10B981; color: white; border: none;">Entrer</button>
+                <div class="ens-accueil">
+                    <h2 class="ens-titre">Bienvenue dans votre espace</h2>
+                    <p class="ens-sous">Choisissez le niveau que vous enseignez. Vous pourrez changer à tout moment.</p>
+                    <div class="ens-niveaux">
+                        <button type="button" class="ens-niveau" onclick="choisirCategorieEnseignant('professeur')">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11.5V16c1.5 1.5 3 2 5 2s3.5-.5 5-2v-4.5"/></svg>
+                            <h3>Professeur</h3>
+                            <p>Secondaire. Évaluations, Leçons et Cabinet d'Étude.</p>
+                            <span class="ens-bouton">Entrer</span>
+                        </button>
+                        <button type="button" class="ens-niveau" onclick="choisirCategorieEnseignant('instituteur')">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V10"/><path d="M12 10c0-3.5-2.5-5.5-6-5.5 0 3.5 2.5 5.5 6 5.5zM12 13c0-3 2.2-5 5.5-5 0 3-2.2 5-5.5 5z"/></svg>
+                            <h3>Instituteur</h3>
+                            <p>Primaire, du CP1 au CM2. Leçons et Cabinet.</p>
+                            <span class="ens-bouton">Entrer</span>
+                        </button>
                     </div>
                 </div>
             </div>
             <!-- SAS DES ATELIERS (27/10/2026) : affiché après le choix Professeur/Instituteur.
                  Aucun atelier n'est lancé (donc aucun jeton consommé) tant que l'enseignant
-                 n'a pas choisi celui où il veut entrer. -->
+                 n'a pas choisi celui où il veut entrer. Habillage « Terre cuite » le 21/11/2026 :
+                 les classes ens-ligne-* servent aussi à la visite guidée (visite-guidee.js). -->
             <div id="teacher-atelier-chooser" class="categorie-chooser-grid" style="display: none;">
                 <div id="sas-ateliers-professeur" class="sas-ateliers-groupe">
-                    <div class="categorie-card sas-atelier-card sas-atelier-evaluations" onclick="switchTeacherTool('atelier')">
-                        <div class="sas-atelier-icone">❖</div>
-                        <h3>Évaluations</h3>
-                        <p>Créer devoirs, compositions et épreuves, corriger des copies.</p>
-                        <span class="sas-atelier-entrer">Entrer →</span>
+                    <div class="ens-entete">
+                        <h2 class="ens-titre">Espace professeur</h2>
+                        <p class="ens-sous">Choisissez l'outil dont vous avez besoin.</p>
                     </div>
-                    <div class="categorie-card sas-atelier-card sas-atelier-lecons" onclick="switchTeacherTool('forge')">
-                        <div class="sas-atelier-icone">✦</div>
-                        <h3>Leçons</h3>
-                        <p>Préparer vos fiches de leçon et vos exercices.</p>
-                        <span class="sas-atelier-entrer">Entrer →</span>
-                    </div>
-                    <div class="categorie-card sas-atelier-card sas-atelier-cabinet" onclick="switchTeacherTool('cabinet')">
-                        <div class="sas-atelier-icone">⚜</div>
-                        <h3>Cabinet</h3>
-                        <p>Conseil pédagogique, situations-problèmes, élèves en difficulté.</p>
-                        <span class="sas-atelier-entrer">Entrer →</span>
-                    </div>
+                    <button type="button" class="ens-ligne ens-ligne-evaluations" onclick="switchTeacherTool('atelier')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg>
+                        <span class="ens-ligne-texte"><h3>Évaluations</h3><p>Créer devoirs, compositions et épreuves, corriger des copies.</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <button type="button" class="ens-ligne ens-ligne-lecons" onclick="switchTeacherTool('forge')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6c3-1.5 6.5-1.5 9-.5V18c-2.5-1-6-1-9 .5-3-1.5-6.5-1.5-9-.5z"/><path d="M12 6v12.5"/></svg>
+                        <span class="ens-ligne-texte"><h3>Leçons</h3><p>Préparer vos fiches de leçon et vos exercices.</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <button type="button" class="ens-ligne ens-ligne-cabinet" onclick="switchTeacherTool('cabinet')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>
+                        <span class="ens-ligne-texte"><h3>Cabinet</h3><p>Conseil pédagogique, situations-problèmes, élèves en difficulté.</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
                     <!-- ❖ Mes outils (11/11/2026) : accès directs, visibles à côté des ateliers (secondaire). Affichés par majMenuOutilsEnseignant() (app.js). -->
                     <div id="sas-outils-prof" class="sas-outils-groupe" style="display: none;">
                         <div class="sas-outils-titre">Mes outils</div>
-                        <a id="sas-outil-seance" class="categorie-card sas-atelier-card sas-atelier-seance" href="seance-prof.html" style="display: none;">
-                            <div class="sas-atelier-icone">📝</div>
-                            <h3>Séance de classe</h3>
-                            <p>Un quiz cliquable pour toute la classe, corrigé automatiquement.</p>
-                            <span class="sas-atelier-entrer">Ouvrir →</span>
+                        <a id="sas-outil-seance" class="ens-pilule" href="seance-prof.html" style="display: none;" title="Un quiz cliquable pour toute la classe, corrigé automatiquement.">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Séance de classe
                         </a>
-                        <a id="sas-outil-biblio" class="categorie-card sas-atelier-card sas-atelier-biblio" href="bibliotheque.html" style="display: none;">
-                            <div class="sas-atelier-icone">📚</div>
-                            <h3>Ma bibliothèque</h3>
-                            <p>Retrouvez, relisez et imprimez toutes vos fiches enregistrées.</p>
-                            <span class="sas-atelier-entrer">Ouvrir →</span>
+                        <a id="sas-outil-biblio" class="ens-pilule" href="bibliotheque.html" style="display: none;" title="Retrouvez, relisez et imprimez toutes vos fiches enregistrées.">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM11 4h4v16h-4z"/><path d="M17.5 5.5l3 .8-3.6 13.7-3-.8"/></svg>Ma bibliothèque
                         </a>
                     </div>
+                    <p class="ens-liens">
+                        <button type="button" class="ens-lien" onclick="retourChoixCategorieEnseignant()">Changer de catégorie</button>
+                        <button type="button" class="ens-lien" onclick="lancerVisiteGuidee()">Visite guidée</button>
+                    </p>
                 </div>
                 <div id="sas-ateliers-instituteur" class="sas-ateliers-groupe">
-                    <div class="categorie-card sas-atelier-card sas-atelier-vert" onclick="switchTeacherTool('forge_primaire')">
-                        <div class="sas-atelier-icone">🌱</div>
-                        <h3>Leçons</h3>
-                        <p>Préparer vos fiches de séance et d'évaluation (CP1 à CM2).</p>
-                        <span class="sas-atelier-entrer">Entrer →</span>
+                    <div class="ens-entete">
+                        <h2 class="ens-titre">Espace instituteur</h2>
+                        <p class="ens-sous">Choisissez l'outil dont vous avez besoin.</p>
                     </div>
-                    <div class="categorie-card sas-atelier-card sas-atelier-vert" onclick="switchTeacherTool('cabinet_primaire')">
-                        <div class="sas-atelier-icone">🌱</div>
-                        <h3>Cabinet</h3>
-                        <p>Élève en difficulté, conseil pédagogique, gestion de classe.</p>
-                        <span class="sas-atelier-entrer">Entrer →</span>
-                    </div>
+                    <button type="button" class="ens-ligne ens-ligne-lecons-primaire" onclick="switchTeacherTool('forge_primaire')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6c3-1.5 6.5-1.5 9-.5V18c-2.5-1-6-1-9 .5-3-1.5-6.5-1.5-9-.5z"/><path d="M12 6v12.5"/></svg>
+                        <span class="ens-ligne-texte"><h3>Leçons</h3><p>Préparer vos fiches de séance et d'évaluation (CP1 à CM2).</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <button type="button" class="ens-ligne ens-ligne-cabinet-primaire" onclick="switchTeacherTool('cabinet_primaire')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>
+                        <span class="ens-ligne-texte"><h3>Cabinet</h3><p>Élève en difficulté, conseil pédagogique, gestion de classe.</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <p class="ens-liens">
+                        <button type="button" class="ens-lien" onclick="retourChoixCategorieEnseignant()">Changer de catégorie</button>
+                        <button type="button" class="ens-lien" onclick="lancerVisiteGuidee()">Visite guidée</button>
+                    </p>
                 </div>
             </div>
-            <!-- Sas -->
+            
+<!-- Sas -->
             <div id="container-sas-custom" class="custom-chat-container">
                 <div id="banniere-matiere" class="banniere-matiere">
                     <span class="banniere-matiere-pilule">
