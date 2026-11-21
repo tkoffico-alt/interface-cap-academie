@@ -102,7 +102,18 @@ th{color:var(--doux);font-weight:600;font-size:.9rem}
 .palier.prepa .palier-tete small{color:#b9c5e0}
 .palier.prepa .verrouille .num{border-color:#d4a73a;color:#9a7618}
 @media(prefers-color-scheme:dark){:root{--bg:#10151f}.mention.m-ma,.mention.m-ac{background:#1f2c4a;color:#cdd8ee}}
-.appro{display:inline-block;margin:4px 6px 0 0;padding:1px 8px;border-radius:99px;background:#e4eaf6;color:#1e3a6e;border:1px solid #9db3dc;font-size:.8rem;font-weight:600}.note-appro{background:#e4eaf6;color:#1e3a6e;border-radius:10px;padding:9px 12px;margin:8px 0;font-size:.92rem}@media(prefers-color-scheme:dark){.appro,.note-appro{background:#1f2c4a;color:#cdd8ee;border-color:#3a4a6e}}@view-transition{navigation:auto}@keyframes pageIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}.hero-in{animation:pageIn .8s cubic-bezier(.25,.6,.3,1) both}#app>*{animation:pageIn .9s cubic-bezier(.25,.6,.3,1) .12s both}.page{animation:none}@media (prefers-reduced-motion:reduce){.hero-in,#app>*,.page{animation:none}}.tuile small{display:block}.tuile .pourtoi,.tuile .appro,.tuile .mention{margin-top:6px}.arevoir{display:inline-block;margin-top:6px;padding:1px 8px;border-radius:99px;background:#fdf1dc;color:#7a4d0b;border:1px solid #e0b56a;font-size:.8rem;font-weight:600}@media(prefers-color-scheme:dark){.arevoir{background:#2a2517;color:#e0c07a;border-color:#6b5420}}</style></head><body><header class="hero"><div class="hero-in">
+.appro{display:inline-block;margin:4px 6px 0 0;padding:1px 8px;border-radius:99px;background:#e4eaf6;color:#1e3a6e;border:1px solid #9db3dc;font-size:.8rem;font-weight:600}.note-appro{background:#e4eaf6;color:#1e3a6e;border-radius:10px;padding:9px 12px;margin:8px 0;font-size:.92rem}@media(prefers-color-scheme:dark){.appro,.note-appro{background:#1f2c4a;color:#cdd8ee;border-color:#3a4a6e}}@view-transition{navigation:auto}@keyframes pageIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}.hero-in{animation:pageIn .8s cubic-bezier(.25,.6,.3,1) both}#app>*{animation:pageIn .9s cubic-bezier(.25,.6,.3,1) .12s both}.page{animation:none}@media (prefers-reduced-motion:reduce){.hero-in,#app>*,.page{animation:none}}.tuile small{display:block}.tuile .pourtoi,.tuile .appro,.tuile .mention{margin-top:6px}.arevoir{display:inline-block;margin-top:6px;padding:1px 8px;border-radius:99px;background:#fdf1dc;color:#7a4d0b;border:1px solid #e0b56a;font-size:.8rem;font-weight:600}@media(prefers-color-scheme:dark){.arevoir{background:#2a2517;color:#e0c07a;border-color:#6b5420}}.moment{text-align:center;padding:10px 0 4px}
+.moment svg{width:84px;height:96px}
+.moment .halo{width:140px;height:140px;margin:0 auto 6px;border-radius:50%;background:var(--or-fond);border:2px solid #d4a73a;display:grid;place-items:center;animation:haloIn 1s ease-out both}
+.moment .anse{transform-origin:20px 34px;animation:ouvre 1.2s ease-out .5s both}
+.m-titre{font:700 1.5rem/1.2 Georgia,serif;margin:8px 0 10px}
+.mention-grand{display:inline-block;padding:7px 22px;border-radius:99px;font:700 1.15rem Georgia,serif;margin-bottom:8px;animation:pageIn .8s ease-out 1s both}
+.m-score{color:var(--doux);margin:2px 0}.m-sceau{font-weight:700;color:#7a5c17;margin:8px 0 0}
+@keyframes ouvre{from{transform:rotate(0) translateY(0)}to{transform:rotate(-18deg) translateY(-6px)}}
+@keyframes haloIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.moment .halo,.moment .anse,.mention-grand{animation:none}.moment .anse{transform:rotate(-18deg) translateY(-6px)}}
+@media(prefers-color-scheme:dark){.m-sceau{color:#e0c07a}}
+</style></head><body><header class="hero"><div class="hero-in">
 <a class="retour-app" href="https://edukatchat.org/">← Retour à EdukaTchat</a>
 <h1><span class="ico-salle" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 9l9-5 9 5H3zM5 11v7M9 11v7M15 11v7M19 11v7M3 20h18" fill="none" stroke="#d4a73a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Cap Excellence</h1>
 <p class="sous">Chaque verrou a <b>tes chiffres</b> : rien à recopier, tout à comprendre. Franchis-en un pour ouvrir le suivant.</p>
@@ -213,11 +224,16 @@ async function rendreAvisAdmin(){const r=await appel("/avis/liste");const R=r.re
 function choisirMatiere(k){etat.mat=k;try{localStorage.setItem("excellence_matiere",k)}catch(e){}rendre()}
 async function inscription(){try{const r=await appel("/inscrire",{pseudo:$("#pseudo").value,niveau:$("#niv").value});etat.codeNouveau=r.code_reprise;rendre()}catch(e){$("#err").textContent=e.message}}
 async function ouvrir(id){try{etat.defi=await appel("/defi/ouvrir",{defi_id:id});etat.vue="defi";rendre();window.scrollTo(0,0)}catch(e){alert(e.message)}}
+function momentFranchi(d,r){const mt=mention(d.score),n=(etat.cat&&etat.cat.nb_valides)||0;
+  const pal=[[3,"de bronze"],[12,"d'argent"],[24,"d'or"]];const obt=pal.find(x=>x[0]===n),suiv=pal.find(x=>x[0]>n);
+  const duree=r&&r.duree_s?` en ${Math.max(1,Math.round(r.duree_s/60))} min`:"";
+  const reste=suiv?suiv[0]-n:0;
+  return `<div class="moment"><div class="halo"><svg viewBox="0 0 40 46" role="img" aria-label="Verrou ouvert"><path class="anse" d="M12 20v-6a8 8 0 0116 0v6" fill="none" stroke="#1e3a6e" stroke-width="4" stroke-linecap="round"/><rect x="6" y="20" width="28" height="22" rx="5" fill="#1e3a6e"/><circle cx="20" cy="30" r="3" fill="#d4a73a"/><rect x="19" y="31" width="2" height="6" rx="1" fill="#d4a73a"/></svg></div><div class="m-titre">Verrou franchi${duree}</div><div class="mention-grand mention ${mt[1]}">Mention ${mt[0]}</div><p class="m-score">${d.score} / 100</p>${obt?`<p class="m-sceau">Sceau ${obt[1]} obtenu !</p>`:(suiv?`<p class="meta">Encore ${reste} verrou${reste>1?"x":""} pour le sceau ${suiv[1]}.</p>`:"")}</div>`}
 function rendreDefi(){const d=etat.defi,r=d.resultat;
   let h=`<button class="lien" onclick="aller('accueil')">Retour aux verrous</button><div class="carte"><p class="meta">${esc(d.titre)} · palier ${d.palier} · niveau ${esc(d.niveau)}</p>${d.approfondissement?`<p class="note-appro"><b>Approfondissement.</b> Ce verrou va au-delà des programmes officiels : il prépare aux études supérieures. Si le sujet est nouveau pour toi, c'est normal. Utilise les indices.</p>`:""}<p class="enonce">${esc(d.enonce)}</p>`;
   for(const i of d.indices_debloques)h+=`<div class="indice">Indice : ${esc(i)}</div>`;
   if(d.etat==="valide"){
-    h+=`<p class="gros">${d.score}<small> / 100</small></p><p class="meta">Verrou franchi${r&&r.duree_s?` en ${Math.max(1,Math.round(r.duree_s/60))} min`:""}.</p>`;
+    if(r&&r.status==="juste")h+=momentFranchi(d,r);else{const mt=mention(d.score);h+=`<p class="meta">Verrou franchi · <span class="mention ${mt[1]}">${mt[0]}</span> · ${d.score} / 100</p>`}
     if(d.explication)h+=`<div class="corrige"><b>Corrigé</b>${esc(d.explication)}</div>`;
     const suiv=r&&r.suivant;
     h+=`<div class="actions">${suiv?`<button class="btn plein" onclick="ouvrir('${suiv.id}')">Verrou suivant : ${esc(suiv.titre)}</button>`:(r?`<span class="meta">Tu as terminé cette matière.</span>`:"")}<button class="btn" onclick="aller('accueil')">Retour aux verrous</button><button class="btn" onclick="ouvrirAvis('${d.id}')">Donner mon avis</button></div>`}
@@ -238,7 +254,7 @@ async function voirCorrection(){try{const r=await appel("/defi/correction",{defi
 async function indice(){try{const r=await appel("/defi/indice",{defi_id:etat.defi.id});etat.defi.indices_debloques.push(r.indice);rendreDefi()}catch(e){$("#msg").innerHTML=`<div class="faux">${esc(e.message)}</div>`}}
 async function repondre(){const v=$("#rep").value;if(!v.trim())return;
   try{const r=await appel("/defi/repondre",{defi_id:etat.defi.id,reponse:v});
-    if(r.status==="juste"){Object.assign(etat.defi,{etat:"valide",score:r.score,explication:r.explication,resultat:r});rendreDefi();window.scrollTo(0,0)}
+    if(r.status==="juste"){if(etat.cat)etat.cat.nb_valides=(etat.cat.nb_valides||0)+1;Object.assign(etat.defi,{etat:"valide",score:r.score,explication:r.explication,resultat:r});rendreDefi();window.scrollTo(0,0)}
     else $("#msg").innerHTML=`<div class="faux">${esc(r.message)}${r.bloque_s?` Pause de ${r.bloque_s} secondes avant le prochain essai.`:""}</div>`}
   catch(e){$("#msg").innerHTML=`<div class="faux">${esc(e.message)}</div>`}}
 async function rendreHonneur(){const r=await appel("/honneur");
