@@ -172,3 +172,64 @@ body.espace-ens .btn-changer-categorie-enseignant, body.espace-ens .btn-aide-vis
 body.espace-ens .btn-changer-categorie-enseignant:hover, body.espace-ens .btn-aide-visite:hover { background: #FBF8F3; color: #7E3326; border-color: #7E3326; transform: none; box-shadow: none; }
 body.dark-theme.espace-ens .btn-changer-categorie-enseignant, body.dark-theme.espace-ens .btn-aide-visite { border-color: #4A3A33; color: #C9B8AB; }
 body.dark-theme.espace-ens .btn-changer-categorie-enseignant:hover, body.dark-theme.espace-ens .btn-aide-visite:hover { background: #3A2C26; color: #F3E9DD; border-color: #E8A898; }
+
+
+/* ════════════════════════════════════════════════════════════════
+   ÉTAPE 3 (21/11/2026) : l'intérieur des 5 outils enseignants (Évaluations, Leçons, Cabinet,
+   Leçons primaire, Cabinet primaire) prend la palette Terre cuite : fond, message d'accueil,
+   boutons rapides, bulles, zone de saisie. Seulement sous body.espace-ens.
+   ════════════════════════════════════════════════════════════════ */
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) { background-color: #F3EDE4; font-family: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) { background-color: #1F1714; }
+
+/* Message d'accueil de chaque outil */
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message, body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message.accent-vert {
+    background-color: #FBF8F3; border: 1px solid #DDD2C2; border-radius: 16px; color: #66554D; max-width: 520px; padding: 1.4rem 1.7rem;
+}
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message.accent-vert { background-color: #2B211D; border-color: #4A3A33; color: #C9B8AB; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-icone { display: none; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-titre, body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message.accent-vert .system-message-titre {
+    font-family: 'Literata', Georgia, 'Times New Roman', serif; font-weight: 600; font-size: 1.3rem; color: #7E3326;
+}
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-titre, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message.accent-vert .system-message-titre { color: #E8A898; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-texte { color: #66554D; font-size: .98rem; line-height: 1.6; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message-texte { color: #C9B8AB; }
+
+/* Boutons rapides : tous en contour brique, le principal est plein */
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion {
+    background: transparent; color: #7E3326; border: 1.5px solid #7E3326; border-radius: 999px;
+    box-shadow: none; text-shadow: none; font-weight: 700; filter: none;
+}
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion:hover { background: rgba(126, 51, 38, .09); color: #7E3326; transform: none; box-shadow: none; filter: none; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion.sug-principal { background: #7E3326; color: #FBF3E8; border-color: #7E3326; box-shadow: none; font-size: .92em; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion.sug-principal:hover { background: #6B2A1F; color: #FBF3E8; filter: none; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion { color: #E8A898; border-color: #E8A898; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion:hover { background: rgba(232, 168, 152, .12); color: #F3E9DD; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion.sug-principal { background: #7E3326; color: #FBF3E8; border-color: #7E3326; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .suggestions-rapides .btn-suggestion.sug-principal:hover { background: #93402F; color: #FBF3E8; }
+
+/* Zone de saisie */
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-area { background-color: #FBF8F3; border-top: 1px solid #DDD2C2; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-area { background-color: #2B211D; border-top-color: #4A3A33; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input { background-color: #FFFDF9; border: 1px solid #DDD2C2; color: #2A1D19; border-radius: 999px; padding: .9rem 1.4rem; font-family: inherit; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input:focus { border-color: #7E3326; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input::placeholder { color: #8A7A70; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input { background-color: #1F1714; border-color: #4A3A33; color: #F3E9DD; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input:focus { border-color: #E8A898; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input::placeholder { color: #A8978B; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-envoyer-icon { background-color: #7E3326; color: #FBF3E8; border-radius: 50%; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-envoyer-icon:hover:not(:disabled) { background-color: #6B2A1F; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-envoyer-icon { background-color: #B5513F; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil, body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil.btn-icone-neutre {
+    background-color: transparent; background-image: none; border: 1.5px solid #7E3326; color: #7E3326; box-shadow: none;
+}
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil:hover { background-color: rgba(126, 51, 38, .09); color: #7E3326; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil, body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil.btn-icone-neutre { border-color: #E8A898; color: #E8A898; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-icone-outil:hover { background-color: rgba(232, 168, 152, .12); color: #F3E9DD; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-attachment { color: #7E3326; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .btn-attachment { color: #E8A898; }
+
+/* Bulles de discussion */
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .user-message { background-color: #7E3326; color: #FBF3E8; }
+body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .bot-message { background-color: #FBF8F3; border: 1px solid #DDD2C2; color: #2A1D19; }
+body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .bot-message { background-color: #2B211D; border-color: #4A3A33; color: #F3E9DD; }
