@@ -448,3 +448,7 @@ body.dark-theme .ens-ligne-lecons, body.dark-theme .ens-ligne-lecons-primaire, b
 body.espace-ens:not(.dark-theme) :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .system-message {
     background-color: #FFFFFF; border: 1px solid var(--at-bord); box-shadow: 0 8px 26px rgba(42,29,25,.12), 0 1px 3px rgba(42,29,25,.08);
 }
+
+/* Page de choix : cartes d'atelier en blanc pur avec ombre, pour le contraste (mode clair) (21/11/2026) */
+body:not(.dark-theme) .ens-ligne:not(:hover) { background: #FFFFFF; box-shadow: 0 6px 20px rgba(42,29,25,.10), 0 1px 3px rgba(42,29,25,.07); }
+body:not(.dark-theme) .ens-ligne { box-shadow: 0 6px 20px rgba(42,29,25,.10), 0 1px 3px rgba(42,29,25,.07); }
