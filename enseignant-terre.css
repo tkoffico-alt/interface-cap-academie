@@ -452,3 +452,8 @@ body.espace-ens:not(.dark-theme) :is(#container-atelier-custom,#container-forge-
 /* Page de choix : cartes d'atelier en blanc pur avec ombre, pour le contraste (mode clair) (21/11/2026) */
 body:not(.dark-theme) .ens-ligne:not(:hover) { background: #FFFFFF; box-shadow: 0 6px 20px rgba(42,29,25,.10), 0 1px 3px rgba(42,29,25,.07); }
 body:not(.dark-theme) .ens-ligne { box-shadow: 0 6px 20px rgba(42,29,25,.10), 0 1px 3px rgba(42,29,25,.07); }
+
+/* Barre de saisie : bandeau sable plus profond, champ blanc pur avec ombre (mode clair) (21/11/2026) */
+body.espace-ens:not(.dark-theme) :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-area { background-color: #E9DFD0; border-top: 1px solid #CDBFAB; box-shadow: 0 -6px 18px rgba(42,29,25,.07); }
+body.espace-ens:not(.dark-theme) :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input { background-color: #FFFFFF; border: 1px solid #CDBFAB; box-shadow: 0 3px 10px rgba(42,29,25,.08); }
+body.espace-ens:not(.dark-theme) :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .chat-input-wrapper input:focus { border-color: var(--at-ligne); }
