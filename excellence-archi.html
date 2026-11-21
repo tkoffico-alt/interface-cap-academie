@@ -102,7 +102,7 @@ th{color:var(--doux);font-weight:600;font-size:.9rem}
 .palier.prepa .palier-tete small{color:#b9c5e0}
 .palier.prepa .verrouille .num{border-color:#d4a73a;color:#9a7618}
 @media(prefers-color-scheme:dark){:root{--bg:#10151f}.mention.m-ma,.mention.m-ac{background:#1f2c4a;color:#cdd8ee}}
-</style></head><body><header class="hero"><div class="hero-in">
+.appro{display:inline-block;margin:4px 6px 0 0;padding:1px 8px;border-radius:99px;background:#e4eaf6;color:#1e3a6e;border:1px solid #9db3dc;font-size:.8rem;font-weight:600}.note-appro{background:#e4eaf6;color:#1e3a6e;border-radius:10px;padding:9px 12px;margin:8px 0;font-size:.92rem}@media(prefers-color-scheme:dark){.appro,.note-appro{background:#1f2c4a;color:#cdd8ee;border-color:#3a4a6e}}</style></head><body><header class="hero"><div class="hero-in">
 <a class="retour-app" href="https://edukatchat.org/">← Retour à EdukaTchat</a>
 <h1><span class="ico-salle" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 9l9-5 9 5H3zM5 11v7M9 11v7M15 11v7M19 11v7M3 20h18" fill="none" stroke="#d4a73a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Cap Excellence</h1>
 <p class="sous">Chaque verrou a <b>tes chiffres</b> : rien à recopier, tout à comprendre. Franchis-en un pour ouvrir le suivant.</p>
@@ -168,7 +168,7 @@ async function rendre(){
       p.defis.forEach((d,i)=>{
         const ic=d.statut==="valide"?COCHE:(d.statut==="verrouille"?CADENAS:String(i+1));
         const etiq=d.statut==="valide"?"":(d.statut==="ouvert"?"À relever":"Verrouillé");
-        const pt=d.pour_toi?`<span class="pourtoi">Pour ton niveau</span>`:"";
+        const pt=(d.pour_toi?`<span class="pourtoi">Pour ton niveau</span>`:"")+(d.approfondissement?`<span class="appro">Approfondissement</span>`:"");
         h+=`<li class="${d.statut}"><button class="tuile" ${d.statut==="verrouille"?'disabled aria-disabled="true"':""} onclick="ouvrir('${d.id}')"><span class="num" aria-hidden="true">${ic}</span><span><b>${esc(d.titre)}</b><small>Niveau ${esc(d.niveau)}${etiq?" · "+etiq:""}</small>${pt}${d.score!=null?(()=>{const mt=mention(d.score);return `<span class="mention ${mt[1]}" title="${d.score}/100">${mt[0]}</span>`})():""}</span></button></li>`});
       h+=`</ul></section>`}
     h+=`<div class="carte" style="margin-top:26px"><b>Tu es enseignant ou testeur ?</b><p class="meta" style="margin:2px 0 10px">Dis-moi si un verrou est trop facile, trop difficile ou mal formulé.</p><button class="btn" onclick="ouvrirAvis('')">Donner mon avis</button></div><div class="carte"><b>Changer d'appareil ou de navigateur ?</b><p class="meta" style="margin:2px 0 10px">Ton code de reprise te permet de retrouver ton pseudo et ta progression. Si tu l'as perdu, tu peux en générer un nouveau (l'ancien ne marchera plus).</p><button class="btn" onclick="monCode()">Voir un nouveau code de reprise</button><div id="zone_code"></div></div>`;
@@ -214,7 +214,7 @@ function choisirMatiere(k){etat.mat=k;try{localStorage.setItem("excellence_matie
 async function inscription(){try{const r=await appel("/inscrire",{pseudo:$("#pseudo").value,niveau:$("#niv").value});etat.codeNouveau=r.code_reprise;rendre()}catch(e){$("#err").textContent=e.message}}
 async function ouvrir(id){try{etat.defi=await appel("/defi/ouvrir",{defi_id:id});etat.vue="defi";rendre();window.scrollTo(0,0)}catch(e){alert(e.message)}}
 function rendreDefi(){const d=etat.defi,r=d.resultat;
-  let h=`<button class="lien" onclick="aller('accueil')">Retour aux verrous</button><div class="carte"><p class="meta">${esc(d.titre)} · palier ${d.palier} · niveau ${esc(d.niveau)}</p><p class="enonce">${esc(d.enonce)}</p>`;
+  let h=`<button class="lien" onclick="aller('accueil')">Retour aux verrous</button><div class="carte"><p class="meta">${esc(d.titre)} · palier ${d.palier} · niveau ${esc(d.niveau)}</p>${d.approfondissement?`<p class="note-appro"><b>Approfondissement.</b> Ce verrou va au-delà des programmes officiels : il prépare aux études supérieures. Si le sujet est nouveau pour toi, c'est normal. Utilise les indices.</p>`:""}<p class="enonce">${esc(d.enonce)}</p>`;
   for(const i of d.indices_debloques)h+=`<div class="indice">Indice : ${esc(i)}</div>`;
   if(d.etat==="valide"){
     h+=`<p class="gros">${d.score}<small> / 100</small></p><p class="meta">Verrou franchi${r&&r.duree_s?` en ${Math.max(1,Math.round(r.duree_s/60))} min`:""}.</p>`;
