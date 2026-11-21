@@ -1,0 +1,2485 @@
+<!-- EdukaTchat - Propriété Intellectuelle Exclusive -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script>
+    /* Révision depuis le casier : écran d'attente posé dès le premier affichage (avant le chargement de la page), retiré par app.js. */
+    (function () {
+        try {
+            var retour = /[?&]retour=1(&|$)/.test(location.search);
+            if (!/[?&](reviser|schema)=1(&|$)/.test(location.search) && !(retour && localStorage.getItem('eduka_retour'))) return;
+            /* ❖ 21/11/2026 : écran de transition plus lisible, avec un anneau qui tourne ; palette « Terre cuite » au retour de l'Espace Enseignant, couleurs habituelles pour l'élève. */
+            var ens = false, sombre = false;
+            try { var rr = JSON.parse(localStorage.getItem('eduka_retour') || 'null'); ens = !!(retour && rr && rr.espace === 'enseignant'); } catch (e1) { /* ignoré */ }
+            try { var th = localStorage.getItem('eduka_theme'); sombre = (th === 'dark') || (!th && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); } catch (e2) { /* ignoré */ }
+            var fond = ens ? (sombre ? '#1F1714' : '#F3EDE4') : (sombre ? '#0F172A' : '#F8FAFC');
+            var texte = ens ? (sombre ? '#F3E9DD' : '#2A1D19') : (sombre ? '#E2E8F0' : '#334155');
+            var anneau = ens ? (sombre ? '#E8A898' : '#7E3326') : (sombre ? '#818CF8' : '#4F46E5');
+            var piste = ens ? (sombre ? '#4A3A33' : '#DDD2C2') : (sombre ? '#334155' : '#E2E8F0');
+            var police = ens ? "'Literata',Georgia,'Times New Roman',serif" : "system-ui,-apple-system,'Segoe UI',sans-serif";
+            var message = ens ? 'Retour \\E0  votre espace\\2026' : (retour ? 'Je te ram\\E8ne \\E0  ta mati\\E8re\\2026' : 'Je pr\\E9pare ta r\\E9vision\\2026');
+            var st = document.createElement('style');
+            st.id = 'voile-reviser-css';
+            st.textContent = 'body::before{content:"' + message + '";position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:' + fond + ';color:' + texte + ';display:flex;align-items:center;justify-content:center;padding-top:96px;box-sizing:border-box;font:600 clamp(22px,4.2vw,30px)/1.3 ' + police + ';text-align:center;animation:voileFondu .3s ease both;}'
+                + 'body::after{content:"";position:fixed;z-index:2147483647;left:50%;top:calc(50% - 64px);width:44px;height:44px;margin-left:-22px;box-sizing:border-box;border-radius:50%;border:4px solid ' + piste + ';border-top-color:' + anneau + ';animation:voileTourne .9s linear infinite;}'
+                + '@keyframes voileTourne{to{transform:rotate(360deg)}}@keyframes voileFondu{from{opacity:0}to{opacity:1}}'
+                + '@media (prefers-reduced-motion:reduce){body::after{animation:none}body::before{animation:none}}';
+            document.head.appendChild(st);
+            setTimeout(function () { var e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); }, 9000);
+        } catch (e) { /* jamais bloquant */ }
+    })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>EdukaTchat | La plateforme numérique de l'enseignement ivoirien</title>
+    <link rel="canonical" href="https://edukatchat.org/">
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- ❖ PWA -- installabilité mobile (Android : bandeau/menu "Installer
+         l'application" ; iOS : "Partager -> Sur l'écran d'accueil"). Voir
+         manifest.json et service-worker.js pour le détail. -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="EdukaTchat">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600&family=Nunito+Sans:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="enseignant-terre.css">
+    <!-- ❖ KaTeX -- rendu des formules mathématiques/scientifiques (LaTeX)
+         que les agents Dify écrivent parfois dans le chat du Sas (voir
+         interface/app.js, extraireEtRendreLatex()). CSS chargé en tête,
+         JS chargé avant app.js (comme marked.js) puisque katex.renderToString
+         est appelé de façon synchrone au moment du rendu d'un message. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <style>
+        /* ❖ Correctif barre d'outils du chat : l'ajout du micro (en plus du
+           trombone et, dans le Sas, de l'emploi du temps) faisait déborder
+           la zone de saisie sur petit écran mobile. min-width:0 permet au
+           champ texte de se rétrécir au lieu de forcer le débordement, et
+           la media query réduit légèrement les boutons ronds sous 420px. */
+        .chat-input-wrapper { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .chat-input-wrapper input[type="text"] { min-width: 0; flex: 1 1 auto; }
+        .btn-icone-outil {
+            width: 36px; height: 36px; min-width: 36px;
+            border-radius: 50%; border: none; cursor: pointer; color: #fff;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.05em; flex-shrink: 0;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        }
+        .btn-icone-outil svg { width: 17px; height: 17px; }
+        .btn-icone-outil.btn-icone-neutre { background-color: transparent; border: 1px solid #475569; color: #94A3B8; }
+        .btn-icone-outil.btn-icone-neutre:hover { background-color: rgba(148,163,184,0.12); color: #CBD5E1; }
+        /* ❖ Boutons colorés (micro + bibliothèques) : couleurs ravivées et halo
+           lumineux uniforme sur les quatre, pour qu'ils se détachent nettement
+           de la barre d'outils sombre au lieu de s'y fondre. */
+        .btn-icone-outil.btn-icone-teal { background-color: #14B8A6; box-shadow: 0 0 0 3px rgba(20,184,166,0.35); }
+        .btn-icone-outil.btn-icone-orange { background-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.35); }
+        .btn-icone-outil.btn-icone-bleu { background-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.35); }
+        .btn-icone-outil.btn-icone-violet { background-color: #8B5CF6; box-shadow: 0 0 0 3px rgba(139,92,246,0.35); }
+        .btn-icone-outil.btn-icone-ambre { background-color: #D97706; box-shadow: 0 0 0 3px rgba(217,119,6,0.35); }
+        .btn-icone-outil.btn-icone-teal:hover,
+        .btn-icone-outil.btn-icone-orange:hover,
+        .btn-icone-outil.btn-icone-bleu:hover,
+        .btn-icone-outil.btn-icone-violet:hover,
+        .btn-icone-outil.btn-icone-ambre:hover { transform: scale(1.08); filter: brightness(1.1); }
+        /* ❖ Correctif thème sombre (le clair étant désormais la base, ce
+           correctif change de camp) : body.dark-theme .btn-attachment
+           (deux classes) est plus spécifique que .btn-icone-outil seule
+           (une classe) et repasserait l'icône en gris terne (#94A3B8) sur
+           les quatre boutons colorés, quel que soit le fond. On regagne
+           la priorité avec une sélection tout aussi spécifique. En clair
+           (la base), .btn-icone-outil l'emporte déjà naturellement sur
+           .btn-attachment par ordre de déclaration -- aucun correctif
+           nécessaire de ce côté. */
+        body.dark-theme .btn-icone-outil.btn-icone-teal,
+        body.dark-theme .btn-icone-outil.btn-icone-orange,
+        body.dark-theme .btn-icone-outil.btn-icone-bleu,
+        body.dark-theme .btn-icone-outil.btn-icone-violet,
+        body.dark-theme .btn-icone-outil.btn-icone-ambre { color: #fff; }
+        @media (max-width: 480px) {
+            .btn-icone-outil { width: 30px; height: 30px; min-width: 30px; font-size: 0.9em; }
+            .btn-icone-outil svg { width: 14px; height: 14px; }
+            .chat-input-wrapper { gap: 4px; padding-left: 2px; padding-right: 2px; }
+        }
+        /* ❖ Le bouton "trombone" (Primaire) est le SEUL bouton de la rangée
+           pour ces deux outils (pas de bibliothèque d'illustrations ni de
+           formules au primaire) -- son style "neutre" gris passe-partout,
+           conçu pour se fondre entre des boutons colorés voisins, devient
+           illisible tout seul sur fond clair mobile. On lui donne l'accent
+           vert Primaire pour qu'il reste visible. */
+        #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre,
+        #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre {
+            border-color: #10B981;
+            color: #059669;
+        }
+        body.dark-theme #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre,
+        body.dark-theme #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre {
+            color: #10B981;
+        }
+        #container-forge_primaire-custom .btn-icone-outil.btn-icone-neutre:hover,
+        #container-cabinet_primaire-custom .btn-icone-outil.btn-icone-neutre:hover {
+            background-color: rgba(16, 185, 129, 0.14);
+            color: #059669;
+        }
+
+        /* ❖ Le menu de navigation qui remplace le simple bouton "Retour" :
+           un clic déploie la liste de toutes les destinations de l'accueil,
+           cliquables directement -- plus besoin de revenir à l'accueil
+           d'abord pour changer d'espace. */
+        .menu-navigation-wrapper { position: relative; }
+        .menu-navigation-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 250px;
+            max-height: calc(100vh - 96px);
+            max-height: calc(100dvh - 96px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px);
+            transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+        }
+        body.dark-theme .menu-navigation-panel { background-color: #1E293B; border-color: #334155; }
+        .menu-navigation-panel.ouvert {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .menu-nav-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: #1E293B;
+            font-size: 0.88em;
+            padding: 9px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        body.dark-theme .menu-nav-item { color: #E2E8F0; }
+        .menu-nav-item:hover { background-color: #F1F5F9; }
+        body.dark-theme .menu-nav-item:hover { background-color: #334155; }
+        .menu-nav-item { white-space: nowrap; }
+        .menu-nav-item .badge-nouveau { white-space: nowrap; }
+        /* Écrans peu hauts (ordinateurs portables, zoom navigateur) : menu plus compact pour tout afficher sans défilement. */
+        @media (max-height: 860px) {
+            .menu-navigation-panel { gap: 0; padding: 6px; }
+            .menu-nav-item { padding: 6px 10px; font-size: 0.85em; }
+            .menu-nav-separateur { margin: 3px 4px; }
+        }
+        @media (max-height: 700px) {
+            .menu-nav-item { padding: 4px 10px; }
+        }
+        .menu-nav-separateur { height: 1px; background-color: #E2E8F0; margin: 6px 4px; }
+        .menu-nav-titre { font-size: 0.68em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #64748B; padding: 4px 10px 2px; }
+        body.dark-theme .menu-nav-titre { color: #94A3B8; }
+        body.dark-theme .menu-nav-separateur { background-color: #334155; }
+
+        /* ❖ Les suggestions rapides : un élève qui ne sait pas quoi demander
+           (surtout un premier contact, ou un jour sans idée précise) peut
+           cliquer plutôt que d'affronter un champ vide. Toujours visibles,
+           jamais obligatoires — un simple raccourci, voir envoyerSuggestionRapide()
+           dans app.js. */
+        /* ❖ Bande horizontale défilante plutôt qu'un retour à la ligne : sur
+           mobile étroit, un flex-wrap laissait certains libellés tronqués à
+           gauche (largeur du conteneur mal calculée selon les écrans). Une
+           bande qui défile latéralement (comme les suggestions rapides des
+           apps de messagerie) est beaucoup plus robuste, quel que soit
+           l'écran, et n'a jamais besoin de couper un texte. */
+        /* ❖ Cause racine du bug "boutons invisibles en portrait" : dans
+           style.css, .chat-input-area est en display:flex SANS
+           flex-direction précisé (donc "row" par défaut), conçu à l'origine
+           pour un seul enfant (.chat-input-wrapper). Depuis l'ajout de la
+           bande de suggestions, elle est devenue un 2e enfant qui se
+           partage la largeur EN LIGNE avec le champ de saisie au lieu de
+           s'empiler au-dessus — sur un écran portrait étroit, l'espace
+           restant devient quasi nul et la bande disparaît. On force donc
+           un empilement vertical propre, spécifiquement pour ce conteneur. */
+        /* Même correctif étendu aux 3 outils de l'Espace Enseignant depuis
+           qu'ils ont aussi reçu une bande de suggestions rapides. */
+        #container-sas-custom .chat-input-area,
+        #container-atelier-custom .chat-input-area,
+        #container-forge-custom .chat-input-area,
+        #container-cabinet-custom .chat-input-area,
+        #container-forge_primaire-custom .chat-input-area,
+        #container-cabinet_primaire-custom .chat-input-area {
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        #container-sas-custom .chat-input-area > .suggestions-rapides,
+        #container-atelier-custom .chat-input-area > .suggestions-rapides,
+        #container-forge-custom .chat-input-area > .suggestions-rapides,
+        #container-cabinet-custom .chat-input-area > .suggestions-rapides,
+        #container-forge_primaire-custom .chat-input-area > .suggestions-rapides,
+        #container-cabinet_primaire-custom .chat-input-area > .suggestions-rapides {
+            width: 100%;
+            max-width: 1000px;
+        }
+        .suggestions-rapides {
+            display: flex; flex-wrap: nowrap; gap: 6px;
+            padding: 0 4px 8px 4px;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+        .suggestions-rapides::-webkit-scrollbar { height: 4px; }
+        .btn-suggestion {
+            background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;
+            border-radius: 999px; padding: 6px 12px; font-size: 0.82em;
+            cursor: pointer; white-space: nowrap; transition: background-color 0.15s ease;
+            flex-shrink: 0;
+        }
+        .btn-suggestion:hover, .btn-suggestion:active { background-color: #DBEAFE; }
+        @media (max-width: 420px) {
+            .btn-suggestion { font-size: 0.76em; padding: 5px 10px; }
+        }
+
+        /* ❖ Les suggestions du Sas en petites "cartes" pastel plutôt qu'une
+           bande de pilules uniformément bleues : chaque intention a sa
+           propre couleur douce, pour repérer d'un coup d'œil, et l'emoji
+           légèrement agrandi (dans son propre <span>) donne du caractère
+           sans surcharger le libellé. Forme "carte" (coins moins ronds
+           qu'une pilule pure) + ombre très légère pour l'effet "flottant". */
+        #sas-suggestions-rapides .btn-suggestion {
+            border-radius: 14px;
+            padding: 7px 13px;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+        #sas-suggestions-rapides .btn-suggestion:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
+        }
+        .suggestion-emoji {
+            font-size: 1.25em;
+            margin-right: 2px;
+            vertical-align: -2px;
+            display: inline-block;
+        }
+        #sas-suggestions-rapides .btn-suggestion-guide {
+            background-color: #E0E7FF; color: #4338CA; border-color: #C7D2FE;
+        }
+        #sas-suggestions-rapides .btn-suggestion-guide:hover { background-color: #C7D2FE; }
+        #sas-suggestions-rapides .btn-suggestion-reviser {
+            background-color: #D1FAE5; color: #047857; border-color: #A7F3D0;
+        }
+        #sas-suggestions-rapides .btn-suggestion-reviser:hover { background-color: #A7F3D0; }
+        #sas-suggestions-rapides .btn-suggestion-exercice {
+            background-color: #FFEDD5; color: #C2410C; border-color: #FED7AA;
+        }
+        #sas-suggestions-rapides .btn-suggestion-exercice:hover { background-color: #FED7AA; }
+        #sas-suggestions-rapides .btn-suggestion-rentree {
+            background-color: #EDE9FE; color: #6D28D9; border-color: #DDD6FE;
+        }
+        #sas-suggestions-rapides .btn-suggestion-rentree:hover { background-color: #DDD6FE; }
+        /* ❖ Les 4 pastilles pastel ci-dessus étaient auparavant réaffirmées
+           à l'identique sous body.light-theme (mêmes valeurs, aucun
+           changement) -- redondant, retiré : ces teintes pastel + texte
+           saturé se lisent déjà correctement sur fond clair comme sombre. */
+
+        /* ❖ Les suggestions des 3 outils enseignants reprennent la même
+           forme "carte" que celles du Sas (élève) plutôt que la pilule
+           bleue uniforme d'origine — chaque outil garde la couleur douce
+           déjà associée à son onglet (bleu Atelier, ambre Forge, violet
+           Cabinet), pour une identité cohérente entre onglet et suggestions. */
+        #container-atelier-custom .suggestions-rapides .btn-suggestion,
+        #container-forge-custom .suggestions-rapides .btn-suggestion,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion {
+            border-radius: 14px;
+            padding: 7px 13px;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+        #container-atelier-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
+        }
+        /* ❖ Même bleu uniforme que les onglets pour les trois outils
+           secondaires (voir note plus haut sur l'uniformisation). */
+        #container-atelier-custom .suggestions-rapides .btn-suggestion,
+        #container-forge-custom .suggestions-rapides .btn-suggestion,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion {
+            background-color: #DBEAFE; color: #1D4ED8; border-color: #93C5FD;
+        }
+        #container-atelier-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion:hover {
+            background-color: #BFDBFE;
+        }
+
+        /* ❖ PALETTE DES BOUTONS RAPIDES (27/10/2026, v2) : couleurs vives en dégradé, une famille par rôle.
+           Bleu profond uni = action principale (premier, plus grand, ombre) ; turquoise / vert = outils
+           pédagogiques et exercices ; ambre = aide à la compréhension ; corail = action ponctuelle à
+           mettre en évidence ; violet = espace spécialisé ; gris atténué = fonction secondaire.
+           Le texte est foncé sur les teintes claires, blanc sur les teintes profondes. */
+        #sas-suggestions-rapides .btn-suggestion.sug-principal,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-principal,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-principal,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-principal,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-principal {
+            background: #1D4ED8; color: #FFFFFF; border-color: #1E3A8A; font-weight: 600;
+            font-weight: 700; font-size: 0.92em; padding: 8px 16px; box-shadow: 0 3px 10px rgba(29, 78, 216, 0.40);
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-principal:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-principal:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-principal:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-principal:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-principal:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-principal:hover { background: #1D4ED8; color: #FFFFFF; filter: brightness(1.06) saturate(1.1); }
+        #sas-suggestions-rapides .btn-suggestion.sug-outil,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-outil,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-outil,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-outil,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-outil {
+            background: linear-gradient(135deg, #5EEAD4 0%, #22D3EE 100%); color: #134E4A; border-color: #2DD4BF; font-weight: 600;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-outil:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-outil:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-outil:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-outil:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-outil:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-outil:hover { background: linear-gradient(135deg, #5EEAD4 0%, #22D3EE 100%); color: #134E4A; filter: brightness(1.06) saturate(1.1); }
+        #sas-suggestions-rapides .btn-suggestion.sug-vert,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-vert,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-vert,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-vert,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-vert,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-vert {
+            background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%); color: #14532D; border-color: #4ADE80; font-weight: 600;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-vert:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-vert:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-vert:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-vert:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-vert:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-vert:hover { background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%); color: #14532D; filter: brightness(1.06) saturate(1.1); }
+        #sas-suggestions-rapides .btn-suggestion.sug-ambre,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ambre,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ambre,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-ambre,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-ambre,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-ambre {
+            background: linear-gradient(135deg, #FEF08A 0%, #FBBF24 100%); color: #78350F; border-color: #FACC15; font-weight: 600;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-ambre:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ambre:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ambre:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-ambre:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-ambre:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-ambre:hover { background: linear-gradient(135deg, #FEF08A 0%, #FBBF24 100%); color: #78350F; filter: brightness(1.06) saturate(1.1); }
+        #sas-suggestions-rapides .btn-suggestion.sug-ponctuel,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ponctuel,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-ponctuel,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-ponctuel,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-ponctuel {
+            background: linear-gradient(135deg, #F97316 0%, #DB2777 100%); color: #FFFFFF; border-color: #EA580C; font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-ponctuel:hover { background: linear-gradient(135deg, #F97316 0%, #DB2777 100%); color: #FFFFFF; filter: brightness(1.06) saturate(1.1); }
+        #sas-suggestions-rapides .btn-suggestion.sug-fiche {
+            background: linear-gradient(135deg, #6D28D9 0%, #A855F7 100%); color: #FFFFFF; border-color: #5B21B6; font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-fiche:hover { filter: brightness(1.08) saturate(1.1); color: #FFFFFF; }
+        #sas-suggestions-rapides .btn-suggestion.sug-violet,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-violet,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-violet,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-violet,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-violet {
+            background: linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%); color: #FFFFFF; border-color: #7C3AED; font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-violet:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-violet:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-violet:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-violet:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-violet:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-violet:hover { background: linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%); color: #FFFFFF; filter: brightness(1.06) saturate(1.1); }
+        #sas-suggestions-rapides .btn-suggestion.sug-secondaire,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-secondaire,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-secondaire,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-secondaire,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-secondaire {
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%); color: #475569; border-color: #CBD5E1; font-weight: 600;
+        }
+        #sas-suggestions-rapides .btn-suggestion.sug-secondaire:hover,
+        #container-atelier-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover,
+        #container-forge-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover,
+        #container-cabinet-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover,
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion.sug-secondaire:hover { background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%); color: #475569; filter: brightness(1.06) saturate(1.1); }
+
+        /* ❖ Espace Instituteurs (Primaire) : une SEULE identité verte
+           partagée entre la Forge Primaire et le Cabinet Primaire (au lieu
+           d'une teinte par outil comme côté secondaire) -- l'objectif ici
+           est de reconnaître "je suis dans le Primaire" en un coup d'œil,
+           peu importe l'outil précis ouvert. */
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion {
+            background-color: #D1FAE5; color: #047857; border-color: #6EE7B7;
+        }
+        #container-forge_primaire-custom .suggestions-rapides .btn-suggestion:hover,
+        #container-cabinet_primaire-custom .suggestions-rapides .btn-suggestion:hover {
+            background-color: #A7F3D0;
+        }
+
+        /* ❖ Deuxième passe d'allègement : les boutons "Copier pour Word" /
+           "Imprimer / PDF" ressemblaient encore à des boutons d'action
+           principaux (puces bien visibles) et laissaient un vide
+           disproportionné sous le texte à cause de leur rangée dédiée avec
+           séparateur. Ils passent en simples icônes grises, sans texte,
+           alignées à droite comme dans un coin discret de la bulle -- plus
+           de bordure pleine ni de ligne de séparation, une opacité réduite
+           au repos qui monte au survol/focus (le glyphe reste néanmoins
+           bien tappable sur mobile, où il n'y a pas de survol). */
+        .message-actions {
+            justify-content: flex-end;
+            gap: 2px;
+            margin-top: 4px;
+            padding-top: 0;
+            border-top: none;
+        }
+        /* IMPORTANT : scopé à ".message-actions .btn-action-doc", pas à
+           ".btn-action-doc" seule -- cette classe est réutilisée ailleurs
+           (grille de matières, "Commencer le Chat", boutons Tally...) où
+           elle doit garder sa taille normale. Un premier essai non-scopé
+           avait réduit ces boutons-là par erreur. */
+        .message-actions .btn-action-doc {
+            border: none;
+            background: transparent;
+            color: #64748B;
+            opacity: 0.5;
+            padding: 5px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            gap: 0;
+            transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+        }
+        .message-actions .btn-action-doc:hover,
+        .message-actions .btn-action-doc:focus-visible {
+            opacity: 1;
+            color: #2563EB;
+            background-color: rgba(59, 130, 246, 0.08);
+        }
+        /* ❖ Marque ™ : posée sur le wordmark principal (en-tête), au pied de
+           page, et sur le tampon des documents générés (Atelier/Forge) --
+           les points de contact qui comptent réellement pour dissuader une
+           reprise du nom, sans surcharger chaque mention en prose.
+           Dépôt réel effectué le 29/09/2026 auprès de l'OIPI/OAPI (Côte
+           d'Ivoire) -- reste volontairement ™ et non ® : l'OAPI ne délivre
+           le certificat d'enregistrement définitif qu'après examen et un
+           délai d'opposition légal incompressible de 6 mois (délai total
+           réaliste : 9 à 15 mois après le dépôt). ® ne serait légalement
+           correct qu'une fois ce certificat reçu -- l'utiliser avant serait
+           trompeur. Le récépissé/dossier attendu dans les 3 semaines n'est
+           que la documentation du dépôt, pas le certificat final. */
+        .marque-tm {
+            font-size: 0.45em;
+            vertical-align: super;
+            opacity: 0.65;
+            margin-left: 2px;
+            font-weight: 400;
+        }
+        /* ❖ Graphie retenue : "clin d'œil intégré" -- le T pivot d'EdukaTchat
+           n'est plus un badge sur fond bleu, mais un pictogramme à même le
+           texte (espace négatif) : sa barre horizontale devient une petite
+           bulle de dialogue, et sa haste verticale reste le trait du T.
+           Le tout reprend la couleur du texte environnant (blanc en thème
+           sombre, encre foncée en thème clair) via currentColor -- discret,
+           et lisible dans les deux thèmes sans fond propre. */
+        .brand-text h1 { display: inline-flex; align-items: center; }
+        /* ❖ "chat" doit rester blanc uni -- réinitialisation explicite au
+           cas où une règle antérieure (dégradé/text-fill transparent sur
+           .logo-chat) traînerait encore dans style.css ou une mise en cache. */
+        .logo-eduka, .logo-chat, .logo-t {
+            color: #0F172A !important;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: #0F172A !important;
+        }
+        body.dark-theme .logo-eduka, body.dark-theme .logo-chat, body.dark-theme .logo-t {
+            color: #F8FAFC !important;
+            -webkit-text-fill-color: #F8FAFC !important;
+        }
+        .logo-t {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 0.66em;
+            height: 0.86em;
+            margin: 0 1px;
+            vertical-align: -0.08em;
+        }
+        .logo-t svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            fill: currentColor;
+        }
+        body.dark-theme .message-actions .btn-action-doc {
+            color: #94A3B8;
+        }
+        body.dark-theme .message-actions .btn-action-doc:hover,
+        body.dark-theme .message-actions .btn-action-doc:focus-visible {
+            color: #3B82F6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        /* ❖ Refonte de la barre d'outils (Retour au menu, Mode Clair/Sombre,
+           Plein Écran, onglets de l'Espace Enseignant) : boutons en pilules
+           arrondies, transitions douces, contraste ajusté pour les deux
+           thèmes -- au lieu des rectangles bruts d'origine. */
+        .toolbar { gap: 0.6rem; }
+        .btn-retour {
+            border-radius: 999px;
+            background-color: #F8FAFC;
+            padding: 0.55rem 1.1rem;
+            letter-spacing: 0.01em;
+            transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        .btn-retour:hover {
+            background-color: rgba(59, 130, 246, 0.14);
+            border-color: #3B82F6;
+            color: #F8FAFC;
+            transform: translateY(-1px);
+        }
+        .btn-fullscreen {
+            border-radius: 999px;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+            transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-fullscreen:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+        }
+        .teacher-navigation {
+            gap: 0.3rem;
+            background-color: #EEF2F7;
+            padding: 0.3rem;
+            border-radius: 999px;
+        }
+        body.dark-theme .btn-retour { background-color: rgba(148, 163, 184, 0.08); }
+        body.dark-theme .teacher-navigation { background-color: rgba(148, 163, 184, 0.07); }
+        .tab-btn {
+            border-radius: 999px;
+            padding: 0.5rem 1.1rem;
+            transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        /* ❖ Trois identités visuelles distinctes plutôt qu'un bleu unique
+           pour les trois outils de l'Espace Enseignant -- chaque teinte fait
+           écho au symbole déjà choisi pour l'outil : bleu (❖ Atelier,
+           couleur déjà associée à la précision/l'évaluation), ambre (✦
+           Forge, la chaleur du feu qui façonne), violet (⚜ Cabinet, déjà la
+           couleur du bouton d'abonnement Enseignant -- ton feutré, propice
+           à la réflexion). Repli générique conservé pour tout .tab-btn.active
+           qui n'aurait pas d'identifiant précis. */
+        .tab-btn.active {
+            background-color: #3B82F6;
+            color: #FFFFFF;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+        }
+        /* ❖ Uniformisation demandée : Atelier, Forge et Cabinet du secondaire
+           partagent désormais UNE SEULE couleur (bleu) plutôt que trois
+           teintes distinctes -- ce qui les identifie ensemble comme "le
+           secondaire", face au vert unique du Primaire. L'onglet actif reste
+           le seul { changer d'aspect (fond plein) en entrant dans une
+           fenêtre donnée ; les autres retombent en gris neutre inactif. */
+        #tab-atelier.active,
+        #tab-forge.active,
+        #tab-cabinet.active {
+            background-color: #DBEAFE;
+            color: #1D4ED8;
+            box-shadow: none;
+        }
+        body.dark-theme #tab-atelier.active,
+        body.dark-theme #tab-forge.active,
+        body.dark-theme #tab-cabinet.active {
+            background-color: rgba(59, 130, 246, 0.16);
+            color: #93C5FD;
+        }
+        /* ❖ Primaire : même vert pour les deux onglets (Forge et Cabinet),
+           volontairement identique entre eux -- voir la note plus haut sur
+           l'identité "Primaire" unifiée. */
+        #tab-forge_primaire.active,
+        #tab-cabinet_primaire.active {
+            background-color: #D1FAE5;
+            color: #047857;
+            box-shadow: none;
+        }
+        body.dark-theme #tab-forge_primaire.active,
+        body.dark-theme #tab-cabinet_primaire.active {
+            background-color: rgba(16, 185, 129, 0.16);
+            color: #6EE7B7;
+        }
+
+        /* ❖ Les onglets inactifs "flottaient" sans repère visuel avant le
+           survol (juste du texte nu dans le halo du conteneur) -- un fond
+           discret dès le repos les fait lire comme de vrais onglets d'un
+           logiciel métier, pas comme un simple lien texte. */
+        .tab-btn:not(.active) {
+            background-color: #FFFFFF;
+            color: #64748B;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        }
+        body.dark-theme .tab-btn:not(.active) {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #94A3B8;
+            box-shadow: none;
+        }
+        .tab-btn:not(.active):hover {
+            background-color: #F8FAFC;
+            color: #0F172A;
+        }
+        body.dark-theme .tab-btn:not(.active):hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #E2E8F0;
+        }
+
+        /* ❖ Repérage même AU REPOS (pas seulement à l'état actif) : les 3
+           onglets secondaires portent une teinte bleue discrète, les 2
+           onglets Primaire une teinte verte discrète, dès le premier coup
+           d'œil sur la barre -- avant même de cliquer sur quoi que ce soit.
+           L'onglet actif reste plus saturé/rempli (règles plus haut), la
+           différence de teinte entre les deux groupes est ce qui distingue
+           "secondaire" de "primaire" en un instant. */
+        #tab-atelier:not(.active), #tab-forge:not(.active), #tab-cabinet:not(.active) {
+            background-color: #EFF6FF;
+            color: #2563EB;
+            box-shadow: none;
+        }
+        body.dark-theme #tab-atelier:not(.active),
+        body.dark-theme #tab-forge:not(.active),
+        body.dark-theme #tab-cabinet:not(.active) {
+            background-color: rgba(59, 130, 246, 0.08);
+            color: #93C5FD;
+        }
+        #tab-atelier:not(.active):hover, #tab-forge:not(.active):hover, #tab-cabinet:not(.active):hover {
+            background-color: #DBEAFE;
+        }
+        body.dark-theme #tab-atelier:not(.active):hover,
+        body.dark-theme #tab-forge:not(.active):hover,
+        body.dark-theme #tab-cabinet:not(.active):hover {
+            background-color: rgba(59, 130, 246, 0.16);
+            color: #DBEAFE;
+        }
+        #tab-forge_primaire:not(.active), #tab-cabinet_primaire:not(.active) {
+            background-color: #ECFDF5;
+            color: #04795A;
+            box-shadow: none;
+        }
+        body.dark-theme #tab-forge_primaire:not(.active),
+        body.dark-theme #tab-cabinet_primaire:not(.active) {
+            background-color: rgba(16, 185, 129, 0.08);
+            color: #6EE7B7;
+        }
+        #tab-forge_primaire:not(.active):hover, #tab-cabinet_primaire:not(.active):hover {
+            background-color: #D1FAE5;
+        }
+        body.dark-theme #tab-forge_primaire:not(.active):hover,
+        body.dark-theme #tab-cabinet_primaire:not(.active):hover {
+            background-color: rgba(16, 185, 129, 0.16);
+            color: #A7F3D0;
+        }
+
+        /* ❖ Identité "Espace Enseignant" distincte de celle de l'élève : un
+           bleu ardoise sobre et concentré plutôt que le bleu-violet vif
+           utilisé côté Sas -- un simple repère de couleur qui distingue
+           immédiatement les deux univers, sans changer la structure de la
+           bulle elle-même. */
+        #container-atelier-custom .user-message,
+        #container-forge-custom .user-message,
+        #container-cabinet-custom .user-message {
+            background: linear-gradient(135deg, #334155 0%, #1E3A8A 100%);
+            border-bottom-right-radius: 6px;
+        }
+        /* ❖ Primaire : bulle utilisateur teintée de vert plutôt que le bleu
+           ardoise du secondaire -- on reconnaît l'espace même en pleine
+           conversation, sans avoir à regarder l'onglet actif. */
+        #container-forge_primaire-custom .user-message,
+        #container-cabinet_primaire-custom .user-message {
+            background: linear-gradient(135deg, #134E4A 0%, #047857 100%);
+            border-bottom-right-radius: 6px;
+        }
+
+        /* ❖ Le bloc de propriété intellectuelle que l'agent ajoute en fin
+           de document (❖ Architecture Pédagogique EdukaTchat ❖ ...) reste
+           présent dans le texte -- utile pour l'impression/la copie -- mais
+           s'efface visuellement dans le fil de discussion : petits
+           caractères gris clair, centrés, discrets, au lieu d'alourdir la
+           bulle. Voir attenuerSignatureDocument() dans app.js. */
+        .signature-doc {
+            display: block;
+            margin-top: 14px;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: #94A3B8;
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        /* ❖ Réutiliser une question déjà posée : petit bouton circulaire
+           discret ajouté à la fin de chaque bulle utilisateur, qui reverse
+           le texte dans le champ de saisie au lieu d'obliger à le retaper.
+           Voir creerBoutonReutiliser() dans app.js. */
+        .btn-reutiliser-question {
+            background: rgba(255, 255, 255, 0.18);
+            border: none;
+            color: #F8FAFC;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            line-height: 1;
+            cursor: pointer;
+            margin-left: 8px;
+            vertical-align: middle;
+            transition: background-color 0.15s ease, transform 0.15s ease;
+            flex-shrink: 0;
+        }
+        .btn-reutiliser-question:hover {
+            background: rgba(255, 255, 255, 0.32);
+            transform: scale(1.1);
+        }
+
+        /* ❖ Boutons de la barre d'outils en icônes rondes minimalistes
+           (Retour, Thème, Mascotte, Plein Écran) : dégage l'en-tête pour
+           laisser toute la place à la concentration, plutôt que des
+           libellés textuels. L'intitulé reste disponible au survol/lecture
+           d'écran via title/aria-label. Ajouté APRÈS les règles .btn-retour
+           / .btn-fullscreen existantes : à spécificité égale, l'ordre dans
+           la feuille de style fait gagner cette règle. */
+        .btn-icon {
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            line-height: 1;
+        }
+
+        /* ❖ Socle en pilule regroupant thème/matière/plein écran : même
+           traitement visuel que .teacher-navigation (les onglets de
+           l'Espace Enseignant), pour une cohérence d'ensemble -- un fond
+           doux qui délimite un groupe de réglages, plutôt que des icônes
+           livrées à elles-mêmes dans l'en-tête. */
+        .toolbar-outils {
+            display: flex;
+            align-items: center;
+            gap: 0.15rem;
+            margin-left: 1rem;
+            background-color: #EEF2F7;
+            padding: 0.3rem;
+            border-radius: 999px;
+        }
+        body.dark-theme .toolbar-outils {
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+        .btn-icon-groupe {
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #64748B;
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+        }
+        body.dark-theme .btn-icon-groupe {
+            color: #94A3B8;
+        }
+        .btn-icon-groupe:hover {
+            background-color: #FFFFFF;
+            color: #0F172A;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+            transform: translateY(-1px);
+        }
+        /* ❖ Raccourcis élèves (11/11/2026) : pilule avec icône + petit libellé (texte masqué sur très petit écran). */
+        .btn-icon-groupe.btn-raccourci { width: auto; padding: 0 0.7rem; gap: 0.35rem; border-radius: 999px; text-decoration: none; }
+        .btn-raccourci-texte { font-size: 0.78rem; font-weight: 600; line-height: 1; }
+        @media (max-width: 480px) { .btn-raccourci-texte { display: none; } .btn-icon-groupe.btn-raccourci { padding: 0; width: 38px; } }
+        body.dark-theme .btn-icon-groupe:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #F8FAFC;
+            box-shadow: none;
+        }
+
+        /* ❖ Correctif mobile portrait : dans style.css, une règle plus
+           ancienne empile la barre d'outils verticalement en dessous de
+           768px de large (pensée à l'époque pour des boutons à libellé
+           texte, trop larges pour tenir sur une ligne). Or 4 icônes rondes
+           de 42px tiennent très bien sur une seule ligne, même sur un
+           téléphone étroit -- cet empilement vertical n'a plus lieu d'être
+           et donnait l'impression d'une barre "désorganisée". On force donc
+           un alignement horizontal, quelle que soit la largeur d'écran. */
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: row;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.4rem;
+            }
+            /* ❖ Sur téléphone, les 5 onglets de l'Espace Enseignant se
+               repliaient sur plusieurs lignes { l'intérieur d'un même fond
+               en pilule (border-radius: 999px), ce qui dessinait un gros
+               "ovale" vertical prenant une hauteur d'écran disproportionnée.
+               On force ici une seule ligne défilable horizontalement, avec
+               des pastilles plus compactes -- comme un vrai sélecteur
+               d'onglets mobile plutôt qu'un bloc qui s'empile. */
+            .teacher-navigation {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                justify-content: flex-start;
+                max-width: 100%;
+            }
+            .teacher-navigation::-webkit-scrollbar { height: 3px; }
+            .tab-btn {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.78rem;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+        }
+
+        /* ❖ Bulles de conversation adoucies : coins plus arrondis façon
+           "bulle de BD" moderne, et légère atténuation du coin pointu
+           (au lieu d'un angle droit sec) pour casser la rigidité
+           géométrique tout en gardant la silhouette reconnaissable d'une
+           bulle de chat. */
+        .message {
+            border-radius: 20px;
+        }
+        .user-message {
+            background: linear-gradient(135deg, #3B82F6 0%, #6366F1 100%);
+            border-bottom-right-radius: 6px;
+        }
+        .bot-message {
+            border-bottom-left-radius: 6px;
+        }
+
+        /* ❖ Barre de saisie plus ronde et invitante : hauteur légèrement
+           augmentée, bordure adoucie, très légère ombre portée, extrémités
+           fortement arrondies (forme "pilule"). */
+        .chat-input-wrapper input {
+            padding: 1.05rem 1.4rem;
+            border-radius: 999px;
+            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.12);
+            background-color: #FFFFFF;
+        }
+        body.dark-theme .chat-input-wrapper input {
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+            background-color: #020617;
+        }
+        .chat-input-wrapper input:focus {
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+        }
+        body.dark-theme .chat-input-wrapper input:focus {
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.25);
+        }
+
+        /* ❖ Fond légèrement teinté plutôt que blanc pur : moins "clinique",
+           plus confortable pour les yeux lors de longues lectures. Ne
+           touche que l'espace de travail (chat), pas l'accueil (qui garde
+           son dégradé propre). */
+        #app-view,
+        .custom-chat-container {
+            background-color: #F7F5F2;
+        }
+        body.dark-theme #app-view,
+        body.dark-theme .custom-chat-container {
+            background-color: #020617;
+        }
+
+        /* ❖ Mode Mascotte (optionnel, activé/désactivé via le bouton dédié
+           de la barre d'outils, mémorisé par appareil comme le thème) : un
+           petit hibou compagnon en médaillon au coin de chaque réponse de
+           l'IA dans l'Espace de Préparation, avec une expression qui suit
+           le contexte -- réflexion pendant le chargement, sourire à
+           l'arrivée d'une vraie réponse, air désolé en cas d'erreur.
+           Purement visuel : ne modifie ni la logique de conversation ni le
+           contenu envoyé au serveur. Voir creerAvatarMascotte() dans
+           app.js. */
+        body.mode-mascotte .bot-message {
+            position: relative;
+            margin-left: 16px;
+        }
+        .mascotte-avatar {
+            position: absolute;
+            top: -14px;
+            left: -16px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #DBEAFE;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            animation: mascotteApparition 0.25s ease-out;
+        }
+        .mascotte-avatar svg {
+            width: 23px;
+            height: 23px;
+        }
+        @keyframes mascotteApparition {
+            0% { opacity: 0; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .mascotte-etincelle {
+            position: absolute;
+            top: -8px;
+            right: -6px;
+            font-size: 1.05rem;
+            animation: mascotteEtincelle 1.4s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes mascotteEtincelle {
+            0% { opacity: 0; transform: translateY(4px) scale(0.5) rotate(-10deg); }
+            30% { opacity: 1; transform: translateY(-6px) scale(1.15) rotate(8deg); }
+            100% { opacity: 0; transform: translateY(-18px) scale(0.9) rotate(15deg); }
+        }
+
+        /* ❖ Le fondu progressif des réponses : à chaque fragment reçu du
+           flux SSE, la bulle de réponse est légèrement estompée puis
+           reprend son opacité pleine, au lieu d'un remplacement sec du
+           texte. Voir afficherReponseAvecFondu() dans app.js. */
+        @keyframes fonduTexteReponse {
+            from { opacity: 0.35; }
+            to { opacity: 1; }
+        }
+        .fondu-reponse { animation: fonduTexteReponse 0.35s ease-out; }
+
+        /* ❖ Curseur de frappe : marque la fin du texte déjà reçu pendant le
+           flux SSE (comme ChatGPT/Claude/Gemini), sans jamais réanimer le
+           texte déjà affiché. Retiré au rendu final. Voir afficherReponseAvecFondu()
+           dans app.js. */
+        @keyframes clignoteCurseurFrappe {
+            0%, 45% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        .curseur-frappe {
+            display: inline-block;
+            color: currentColor;
+            opacity: 0.75;
+            animation: clignoteCurseurFrappe 1s steps(1) infinite;
+        }
+
+    
+        /* ❖ ONGLETS DE L'ESPACE ENSEIGNANT — rectangles élégants (27/10/2026) ❖
+           Même logique de couleurs que les boutons rapides : famille bleue (indigo) pour le groupe
+           Professeur, famille émeraude pour le groupe Instituteur. Onglet actif = dégradé plein, texte
+           blanc, lueur douce ; onglets au repos = carte blanche avec liseré coloré en bas. */
+        .teacher-navigation {
+            border-radius: 16px;
+            padding: 0.4rem 0.5rem;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #F1F5F9 0%, #E8EEF8 100%);
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.28), 0 2px 8px rgba(15, 23, 42, 0.06);
+        }
+        body.dark-theme .teacher-navigation {
+            background: linear-gradient(135deg, rgba(148,163,184,0.10) 0%, rgba(148,163,184,0.05) 100%);
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+        }
+        .teacher-tabs-groupe-label {
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+        #tab-atelier.tab-btn, #tab-forge.tab-btn, #tab-cabinet.tab-btn,
+        #tab-forge_primaire.tab-btn, #tab-cabinet_primaire.tab-btn {
+            border-radius: 10px;
+            padding: 0.55rem 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            border: 1px solid transparent;
+            transition: transform 0.18s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+        /* — Repos : carte blanche, liseré coloré en bas — */
+        #tab-atelier.tab-btn:not(.active), #tab-forge.tab-btn:not(.active), #tab-cabinet.tab-btn:not(.active) {
+            background: #FFFFFF; color: #1E40AF;
+            border-color: #DBEAFE; border-bottom: 3px solid #93C5FD;
+            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.10);
+        }
+        #tab-atelier.tab-btn:not(.active):hover, #tab-forge.tab-btn:not(.active):hover, #tab-cabinet.tab-btn:not(.active):hover {
+            background: #EFF6FF; border-bottom-color: #3B82F6; transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(30, 64, 175, 0.18);
+        }
+        #tab-forge_primaire.tab-btn:not(.active), #tab-cabinet_primaire.tab-btn:not(.active) {
+            background: #FFFFFF; color: #047857;
+            border-color: #D1FAE5; border-bottom: 3px solid #6EE7B7;
+            box-shadow: 0 1px 3px rgba(4, 120, 87, 0.10);
+        }
+        #tab-forge_primaire.tab-btn:not(.active):hover, #tab-cabinet_primaire.tab-btn:not(.active):hover {
+            background: #ECFDF5; border-bottom-color: #10B981; transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(4, 120, 87, 0.18);
+        }
+        /* — Actif : dégradé plein, texte blanc, lueur — */
+        #tab-atelier.tab-btn.active, #tab-forge.tab-btn.active, #tab-cabinet.tab-btn.active {
+            background: linear-gradient(135deg, #1D4ED8 0%, #4F46E5 100%); color: #FFFFFF;
+            border-color: #1E3A8A; border-bottom: 3px solid #A5B4FC;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.38);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+        }
+        #tab-forge_primaire.tab-btn.active, #tab-cabinet_primaire.tab-btn.active {
+            background: linear-gradient(135deg, #059669 0%, #10B981 55%, #34D399 100%); color: #FFFFFF;
+            border-color: #047857; border-bottom: 3px solid #A7F3D0;
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+        }
+        body.dark-theme #tab-atelier.tab-btn:not(.active), body.dark-theme #tab-forge.tab-btn:not(.active), body.dark-theme #tab-cabinet.tab-btn:not(.active) {
+            background: rgba(59, 130, 246, 0.10); color: #BFDBFE; border-color: rgba(147, 197, 253, 0.25); border-bottom-color: #3B82F6; box-shadow: none;
+        }
+        body.dark-theme #tab-forge_primaire.tab-btn:not(.active), body.dark-theme #tab-cabinet_primaire.tab-btn:not(.active) {
+            background: rgba(16, 185, 129, 0.10); color: #A7F3D0; border-color: rgba(110, 231, 183, 0.25); border-bottom-color: #10B981; box-shadow: none;
+        }
+        /* — Bouton « Catégorie » : même langage rectangulaire, neutre — */
+        .btn-changer-categorie-enseignant {
+            border-radius: 10px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%);
+            border: 1px solid #CBD5E1; border-bottom: 3px solid #94A3B8;
+            color: #475569; font-weight: 700;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+            transition: transform 0.18s ease, box-shadow 0.2s ease;
+        }
+        .btn-changer-categorie-enseignant:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(15, 23, 42, 0.14); background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 100%); }
+        @media (max-width: 700px) {
+            #tab-atelier.tab-btn, #tab-forge.tab-btn, #tab-cabinet.tab-btn,
+            #tab-forge_primaire.tab-btn, #tab-cabinet_primaire.tab-btn { padding: 0.45rem 0.85rem; font-size: 0.82rem; }
+            .teacher-navigation { border-radius: 14px; }
+        }
+        /* ❖ 01/11/2026 (v3) : noms des boutons rapides dans les messages d'accueil — MÊMES couleurs et même
+           taille que les boutons rapides du bas (palette v2), cliquables. */
+        .nom-bouton { position: relative; display: inline-block; padding: 1px 10px; margin: 1px 2px; border-radius: 999px; border: 1px solid transparent; font: inherit; font-weight: 600; font-size: .82em; letter-spacing: .01em; line-height: 1.45; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 2px rgba(15,23,42,.14), inset 0 1px 0 rgba(255,255,255,.28); transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+        .nom-bouton::after { content: ''; position: absolute; inset: -6px -3px; }
+        .nom-bouton:hover { filter: brightness(1.06) saturate(1.1); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(15,23,42,.2); }
+        .nom-bouton:active { transform: scale(.97); }
+        .nb-principal { background: #1D4ED8; color: #FFFFFF; border-color: #1E3A8A; font-weight: 700; }
+        .nb-outil     { background: linear-gradient(135deg, #5EEAD4 0%, #22D3EE 100%); color: #134E4A; border-color: #2DD4BF; }
+        .nb-vert      { background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%); color: #14532D; border-color: #4ADE80; }
+        .nb-ambre     { background: linear-gradient(135deg, #FEF08A 0%, #FBBF24 100%); color: #78350F; border-color: #FACC15; }
+        .nb-ponctuel  { background: linear-gradient(135deg, #F97316 0%, #DB2777 100%); color: #FFFFFF; border-color: #EA580C; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+        .nb-violet    { background: linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%); color: #FFFFFF; border-color: #7C3AED; }
+        .accueil-liste { display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px; align-items: center; text-align: left; margin: 10px auto 4px; max-width: 520px; }
+        .accueil-liste .nom-bouton { margin: 0; justify-self: stretch; text-align: center; }
+        .accueil-liste .al-desc { font-size: .88em; opacity: .85; line-height: 1.35; }
+        @media (max-width: 560px) { .accueil-liste { grid-template-columns: 1fr; gap: 2px; } .accueil-liste .al-desc { margin: 0 0 8px 6px; } }
+        .accueil-eleve { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+        .accueil-eleve .accueil-titre { font-size: 1.1rem; font-weight: 700; }
+        .accueil-eleve .accueil-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 2px; }
+        .accueil-eleve .nom-bouton { padding: 3px 13px; font-size: .78rem; line-height: 1.4; border-radius: 999px; margin: 0; }
+        .accueil-liste .nom-bouton, .accueil-liste .al-desc { animation: accueilPop .9s cubic-bezier(.22,.8,.3,1) both; }
+        .accueil-liste > :nth-child(1), .accueil-liste > :nth-child(2) { animation-delay: .25s; }
+        .accueil-liste > :nth-child(3), .accueil-liste > :nth-child(4) { animation-delay: .6s; }
+        .accueil-liste > :nth-child(5), .accueil-liste > :nth-child(6) { animation-delay: .95s; }
+                        @keyframes accueilPop { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .accueil-liste .nom-bouton, .accueil-liste .al-desc { animation: none; } }
+</style>
+</head>
+<body>
+    <!-- ❖ BANNIÈRE D'INSTALLATION PWA -- masquée par défaut (classe .active
+         ajoutée par app.js seulement quand le navigateur capture réellement
+         `beforeinstallprompt`, donc jamais sur iOS Safari qui n'a pas cet
+         évènement). Logo-entete.png (le vrai logo coloré, déjà utilisé dans
+         l'en-tête) -- PAS icon-192.png, qui s'est avéré n'être que la marque
+         "T" stylisée de l'en-tête recadrée en icône carrée : cf. retour de
+         Constant du 27/08/2026 après premier essai. -->
+    <div id="pwa-install-banner" class="pwa-install-banner">
+        <img src="logo-entete.png" alt="Logo EdukaTchat" class="pwa-install-icone">
+        <div class="pwa-install-texte">
+            <strong>Installez EdukaTchat sur votre appareil</strong>
+            <p>Accédez directement à EdukaTchat depuis votre écran d'accueil.</p>
+        </div>
+        <button type="button" class="pwa-install-bouton" onclick="installerPWA()">Installer</button>
+        <button type="button" class="pwa-install-fermer" onclick="fermerBanniereInstallationPWA()" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="watermark-background"></div>
+
+    <!-- CHAMBRE D'IMPRESSION SECRÈTE -->
+    <div id="print-area"></div>
+    <header>
+        <div class="brand">
+           <!-- Nous retirons le margin-right et confions le style au CSS -->
+           <img src="logo-entete.png" alt="Logo EdukaTchat" class="logo-signature">
+            <div class="brand-text">
+                <h1><span class="logo-eduka">Eduka</span><span class="logo-t" role="img" aria-label="T"><svg viewBox="0 0 24 28" xmlns="http://www.w3.org/2000/svg"><path d="M6,2 L18,2 Q22,2 22,6 L22,10 Q22,14 18,14 L2,14 L2,6 Q2,2 6,2 Z"/><rect x="10" y="15" width="4" height="12" rx="1.5"/></svg></span><span class="logo-chat">chat</span><sup class="marque-tm" title="Marque déposée à l'OAPI le 29/09/2026 — certificat d'enregistrement en cours d'examen">™</sup></h1>
+                <p>L'IA qui fait réfléchir, sans tricher</p>
+            </div>
+        </div>
+    </header>
+    <div id="home-view">
+        <div class="container-sas">
+            <section class="hero">
+                <h2>L'intelligence au service de l'autonomie</h2>
+                <p>Bienvenue sur l'Académie EdukaTchat. Notre accompagnement s'étend désormais à <strong>l'ensemble des disciplines de l'enseignement secondaire général</strong>, de la <strong>6ème à la Terminale</strong>, dans le strict respect de l'Approche Par Compétences (APC) ivoirienne.</p>
+            </section>
+           <!-- === L'ARCHITECTURE DES PÔLES === -->
+            <section class="temple-hierarchy">
+
+                <!-- ✦ PÔLE 1 : LE CŒUR DE L'ACADÉMIE ✦ -->
+                <div class="pole-section">
+                    <h3 class="pole-title">Fondations & Apprentissage Continu</h3>
+                    <div class="grid-fondamental">
+                        <div class="glass-card door-card sas">
+                            <div class="icon-wrapper">🧭</div>
+                            <h3>Espace de Préparation</h3>
+                            <p>Accès gratuit pour préparer sereinement vos devoirs, simuler vos examens et découvrir votre profil d'orientation.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="openSpace('sas')">Accès Libre</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+                        <div class="glass-card door-card eleve">
+                            <div class="icon-wrapper">🏛️</div>
+                            <h3>L'Académie EdukaTchat</h3>
+                            <p>L'espace académique complet. Accédez aux assistants virtuels pédagogiques et aux évaluations complètes.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="openSpace('eleve')">Déverrouiller l'Accès</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ✦ PÔLE 2 : LES ATELIERS SPÉCIALISÉS ✦ -->
+                <div class="pole-section">
+                    <h3 class="pole-title">Les Ateliers de Maîtrise</h3>
+                    <div class="grid-trois-piliers">
+
+                        <!-- Orateur -->
+                        <div class="glass-card door-card" style="border-color: rgba(17, 24, 39, 0.4);">
+                            <div class="icon-wrapper" style="background: rgba(255, 255, 255, 0.1); color: #F8FAFC;">🎙️</div>
+                            <h3>Atelier de l'Orateur</h3>
+                            <p>Sculptez votre éloquence. Préparez vos oraux (BEPC/Bac) et affrontez les questions de notre jury virtuel.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirAtelier()" style="background-color: #1E293B; color: white;">Entrer dans l'Atelier</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+                        <!-- Philosophie -->
+                        <div class="glass-card door-card philo">
+                            <div class="icon-wrapper">🦉</div>
+                            <h3>Atelier de Philosophie</h3>
+                            <p>Affûtez votre dialectique. Structurez vos dissertations avec l'exigence des grands penseurs.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirPhilo()" style="background-color: #4F46E5; color: white; border: none;">Entrer dans l'Atelier</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+                        <!-- Sciences -->
+                        <div class="glass-card door-card sciences">
+                            <div class="icon-wrapper">🧬</div>
+                            <h3>Atelier des Sciences</h3>
+                            <p>Le laboratoire virtuel. Résolvez vos équations et validez vos hypothèses par la méthode stricte.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirSciences()" style="background-color: #059669; color: white; border: none;">Entrer au Laboratoire</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+                        <!-- Élan -->
+                        <div class="glass-card door-card elan">
+                            <div class="icon-wrapper">🚀</div>
+                            <h3>Atelier de l'Élan</h3>
+                            <p>Ta méthode, ta motivation. Un espace pour trouver comment mieux réviser, te remobiliser après un coup dur, ou fixer tes objectifs.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirElan()" style="background-color: #F43F5E; color: white; border: none;">Entrer dans l'Atelier</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ✦ PÔLE 3 : ACCOMPAGNEMENT & ORIENTATION (4 Piliers) ✦ -->
+                <div class="pole-section">
+                    <h3 class="pole-title">Encadrement & Orientation</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto;">
+
+                        <!-- Enseignants -->
+                        <div class="glass-card door-card enseignant">
+                            <div class="icon-wrapper">🔮</div>
+                            <h3>Espace Enseignant</h3>
+                            <p>Vos assistants collaborent avec vous pour concevoir vos fiches de cours et vos évaluations APC.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="openSpace('enseignant')">Accéder au Cabinet</button>
+                                <div class="action-footer" style="flex-wrap: wrap; gap: 0.3rem 1rem;">
+                                    <a href="#" onclick="ouvrirEnseignantAboModal(); return false;" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">S'abonner à l'Espace</a>
+                                    <a href="seance-prof.html" style="color: #C084FC; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: center;">👀 Voir un aperçu</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Boussole BEPC -->
+                        <div class="glass-card door-card boussole">
+                            <div class="icon-wrapper">🧭</div>
+                            <h3>Boussole d'Orientation</h3>
+                            <p>Simulez votre trajectoire scolaire et vos chances de passage en 2nde (A ou C) de façon stratégique.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirBoussole()" style="background-color: #F59E0B; color: white;">Ouvrir le Simulateur</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+                        <!-- Boussole Universitaire -->
+                        <div class="glass-card door-card boussole-univ">
+    <div class="icon-wrapper">🎓</div>
+                            <h3>Boussole Universitaire</h3>
+                            <p>Nouveaux bacheliers, simulez vos affectations dans les universités publiques selon les critères officiels.</p>
+                            <div class="card-action-area">
+                                <button class="btn-entrer" onclick="ouvrirBoussoleUniv()" style="background-color: #14B8A6; color: white; border: none;">Ouvrir le Simulateur</button>
+                                <div class="action-footer"></div>
+                            </div>
+                        </div>
+                       <!-- Parents -->
+<div class="glass-card door-card parents">
+    <div class="icon-wrapper">🛡️</div>
+    <h3>Espace Parents</h3>
+    <p>Suivez la progression de votre enfant. Choisissez la méthode d'emploi du temps la mieux adaptée pour activer le suivi pédagogique.</p>
+    <div class="card-action-area">
+        <button class="btn-entrer" onclick="ouvrirParentsModal()">Accéder au Bureau</button>
+        <div class="action-footer"></div>
+    </div>
+</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <div class="glass-card info-box">
+                    <h4>📜 Notice & Mode d'emploi</h4>
+                    <p>EdukaTchat allie <strong>l'exigence du programme ivoirien</strong> à la sérénité d'un accompagnement sur mesure pour transformer les doutes en compétences durables.</p>
+                    <ul>
+                        <li><strong>L'Espace de Préparation (Accès Libre) :</strong> Espace ouvert permettant d'explorer les devoirs quotidiens. Soumis à une jauge d'énergie (10 requêtes par jour).</li>
+                        <li><strong>Les Ateliers de Maîtrise :</strong> Des arènes d'entraînement ciblées (Orateur, Philosophie, Sciences) pour affûter ses arguments et sa logique. Accès gratuit limité à 3 épreuves par jour.</li>
+                        <li><strong>L'Académie (Espace Sécurisé) :</strong> Déverrouillée par un Sceau (Abonnement Premium), elle lève toutes les limites de requêtes et active l'analyse visuelle des documents.</li>
+                        <li><strong>La Voie Maïeutique :</strong> Nos Répétiteurs ne donnent jamais la solution finale. Ils fragmentent l'obstacle et posent les questions qui forcent l'élève à construire son propre raisonnement.</li>
+                        <li><strong>🔮 L'Espace Enseignant (Secondaire et Primaire) :</strong> Professeurs du secondaire comme instituteurs du primaire (CP1 à CM2) obtiennent en un clic leurs fiches de préparation de leçon et leurs évaluations, conformes aux programmes APC et PNAPAS selon le niveau — un gain de temps précieux sur la préparation de classe. Ils disposent aussi d'un Cabinet : un coach pédagogique disponible à tout moment pour un conseil, l'analyse d'une difficulté de classe ou d'un élève en particulier.</li>
+                        <li><strong>🛡️ L'Espace Parents :</strong> Suivez la progression réelle de votre enfant grâce aux comptes-rendus détaillés transmis après chaque session (matière abordée, durée, évaluation, observations du Répétiteur) — pour l'accompagner avec justesse, sans deviner.</li>
+                        <li><strong>✏️ Modifier avant d'imprimer :</strong> Dans l'Espace Enseignant, le crayon sous chaque fiche permet de corriger le texte à l'écran avant impression ou copie (texte seulement ; les modifications restent sur votre appareil).</li>
+                        <li><strong>📈 Graphiques et tableaux dans les fiches :</strong> Histogrammes, courbes, camemberts et pyramides des âges sont dessinés directement dans les fiches et évaluations d'Histoire-Géographie, de même que les tableaux de données — à relire et adapter avant usage.</li>
+                        <li><strong>🎯 Quiz cliquables :</strong> Dans l'Espace de Préparation, le Répétiteur peut poser une question à choix : on clique, la correction s'affiche aussitôt.</li>
+                        <li><strong>📚 Anglais fidèle aux manuels :</strong> Les fiches d'Anglais suivent la structure des manuels ivoiriens (unité, leçon, pages) ; l'Histoire-Géographie dispose de formats types (commentaire de document, dissertation).</li>
+                        <li><strong>🕘 Historique des sessions :</strong> Dans l'Espace de Préparation, « Nouvelle discussion » et « Historique » permettent de repartir à neuf et de relire les échanges passés (sur votre appareil).</li>
+                        <li><strong>📝 Séances de classe (enseignants) :</strong> Un quiz cliquable pour toute la classe, à passer sur téléphone pendant un créneau que vous choisissez. Les questions peuvent être proposées par l'IA puis relues et corrigées par vous ; correction automatique, tableau de résultats, et bouton « Dupliquer » pour relancer une séance avec de nouveaux horaires. Un outil de contrôle des connaissances qui complète les évaluations écrites sans les remplacer.</li>
+                        <li><strong>📚 Ma bibliothèque (enseignants) :</strong> Sous chaque fiche ou évaluation générée, « Enregistrer dans ma bibliothèque » la conserve dans votre espace pour la retrouver, la relire, la copier ou l'imprimer en PDF plus tard. Les corrections de copies ne sont jamais enregistrées.</li>
+                        <li><strong>👥 Salle d'étude :</strong> Un espace de révision partagé pour 2 à 4 élèves : un plan de chapitres ou un exposé découpé en parties, des défis entre membres, une consigne et des commentaires de l'organisateur. L'organisateur fait préparer par l'IA une fiche pour chaque chapitre, avec des exercices que tout le groupe traite (sur papier, puis en cliquant la réponse) : les corrigés n'apparaissent qu'une fois que chacun a répondu. Pour un exposé : fiche de départ par partie, retours anonymes des camarades (étoiles), quiz de l'auteur sur sa section et questions probables du jury.</li>
+                        <li><strong>📊 Le Carnet de progression :</strong> Une carte de compétences par matière et par notion, avec un pourcentage de maîtrise calculé à partir des devoirs réellement corrigés — pas une estimation ponctuelle. Accessible depuis l'Espace Parents avec le Code d'accès de votre enfant, pour savoir précisément où porter l'effort.</li>
+                    </ul>
+                </div>
+                <div class="glass-card info-box news-box">
+                    <h4>📌 Journal de Bord</h4>
+                    <ul>
+                        <li><strong>📚 Ma bibliothèque pour les enseignants</strong><br>Sous chaque fiche ou évaluation générée, un bouton « Enregistrer dans ma bibliothèque » la garde dans votre espace : retrouvez-la par matière, relisez-la, copiez-la ou imprimez-la en PDF quand vous voulez. Les corrections de copies ne sont jamais conservées.</li>
+                        <li><strong>📝 Séances de classe : dupliquez et relancez</strong><br>Créez un quiz cliquable pour toute la classe (questions proposées par l'IA, relues par vous), choisissez le créneau, et suivez les résultats. Besoin de la même séance pour une autre classe ? « Dupliquer » reprend tout, il ne reste qu'à choisir les nouveaux horaires.</li>
+                        <li><strong>👥 La Salle d'étude : fiches, exercices et exposés</strong><br>Révisez à plusieurs : l'organisateur fait préparer une fiche par chapitre avec ses exercices. Chacun les fait de son côté et clique sa réponse ; le corrigé s'ouvre quand tout le groupe a répondu, et l'organisateur voit où chacun a besoin d'aide. Pour un exposé : fiche de départ par partie, retours anonymes en étoiles, petit quiz de l'auteur pour vérifier que le groupe a compris, et questions probables du jury pour s'entraîner à l'oral.</li>
+                        <li><strong>📈 Graphiques, tableaux et formats par matière</strong><br>Les fiches et évaluations d'Histoire-Géographie affichent désormais de vrais graphiques (histogramme, courbe, camembert, pyramide des âges) et tableaux ; l'Anglais suit la structure des manuels ivoiriens ; l'accueil de l'Espace Enseignant est plus court. Chaque fiche est une proposition à relire et adapter — le crayon permet de la modifier.</li>
+                        <li><strong>✏️ Modifier une fiche avant impression</strong><br>Espace Enseignant : un petit crayon apparaît sous chaque fiche ou évaluation générée. Cliquez dessus, corrigez le texte directement à l'écran, puis cliquez sur la coche pour valider. L'impression et la copie reprennent votre version.</li>
+                        <li><strong>🎯 Quiz cliquables dans le Sas</strong><br>Le Répétiteur peut maintenant poser une question à choix : l'élève clique sur sa réponse et voit tout de suite la correction, sans rien écrire.</li>
+                        <li><strong>📊 Le Carnet de progression</strong><br>Nouveau dans l'Espace Parents : une carte de compétences par matière et par notion, avec un pourcentage de maîtrise calculé à partir des devoirs réellement corrigés — pour savoir précisément où votre enfant a besoin d'aide.</li>
+                        <li><strong>🧭 Le Conseiller Universitaire s'affine</strong><br>L'orientation post-bac s'appuie désormais sur un profil complet (personnalité, méthode de travail, motivation) pour des recommandations plus fines — et son accès est maintenant gratuit pour tous les bacheliers.</li>
+                        <li><strong>💬 Un accueil qui guide, plus jamais une page blanche</strong><br>L'Espace de Préparation et l'Académie proposent désormais des suggestions de démarrage dès l'ouverture. L'Espace Enseignant (Atelier, Forge, Cabinet) fait de même : chaque outil se présente en quelques mots et vous indique quoi taper pour obtenir ce que vous cherchez.</li>
+                        <li><strong>🎓 La Boussole Universitaire</strong><br>Bacheliers, simulez dès maintenant vos chances d'affectation dans les universités publiques selon l'algorithme officiel du MESRS. <em>Testez le simulateur en accès libre ci-dessus.</em></li>
+                        <li><strong>Version 2.0 (Lancement Global)</strong><br>Déploiement intégral de toutes les matières du secondaire général (de la 6ème à la Terminale).</li>
+                        <li>Intégration des 5 Pôles d'Excellence : Sciences Exactes, Sciences Expérimentales, Lettres & Sciences Humaines, Langues Vivantes, et Arts.</li>
+                        <li>Création de "L'Espace de Préparation" (Accès libre et sécurisé).</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- 1. MODALE CODE D'ACCÈS PREMIUM -->
+    <div id="premium-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 400px; text-align: center;">
+            <button class="modal-close" onclick="closePremiumModal()">×</button>
+            <h3 style="margin-bottom: 15px;">Accès Académique</h3>
+            <p style="margin-bottom: 25px; color: #4B5563;">Veuillez saisir votre Code d'accès pour déverrouiller l'ensemble des ressources pédagogiques.</p>
+
+            <input type="text" id="matricule-input" class="input-matricule" placeholder="Ex: ELV-XXXXX" onkeypress="handleMatriculeKeyPress(event)" style="width: 100%; text-align: center; letter-spacing: 2px; font-weight: bold; margin-bottom: 15px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+
+            <button class="btn-entrer" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; font-size: 1.1em; padding: 10px; border: none; border-radius: 5px; cursor: pointer;" onclick="verifyMatricule()">Valider l'accès</button>
+
+            <p id="modal-feedback" class="feedback-text" style="margin-top: 15px; font-weight: bold; min-height: 20px;"></p>
+
+            <div style="margin-top: 20px; font-size: 0.9em; color: #6B7280;">
+                Vous n'avez pas encore de Code d'accès ?<br>
+                <a id="lien-abonnement-dynamique" href="#" style="color: #3B82F6; font-weight: bold; text-decoration: underline; margin-top: 8px; display: inline-block;" target="_blank">Accéder au Guichet d'Abonnement</a>
+            </div>
+        </div>
+    </div>
+    <!-- 1bis. MODALE D'ACCÈS ESPACE ENSEIGNANT -->
+    <!-- ❖ Distincte de #premium-modal (élève). Un Code d'accès (Sceau
+         ENS-) est désormais OBLIGATOIRE ici -- l'essai Freemium sans code
+         a été retiré le 28/08/2026 (décision de Constant, déconseillé sur
+         le plan commercial). Contrairement à l'accès élève, qui garde son
+         palier gratuit (Espace de Préparation, Ateliers de Maîtrise), plus
+         aucune voie de contournement du Code n'existe côté enseignant, ni
+         ici ni côté serveur (voir gateway/main.py, /api/enseignant/chat).
+         Le code Sceau saisi est vérifié via /verifier-sceau
+         (espace_cible: 'enseignant', qui exige un préfixe ENS-) et stocké
+         séparément du Sceau élève, sous 'eduka_sceau_enseignant', pour
+         qu'un même appareil puisse porter les deux sans conflit. -->
+    <div id="enseignant-code-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 400px; text-align: center;">
+            <button class="modal-close" onclick="fermerModaleAccesEnseignant()">×</button>
+            <h3 style="margin-bottom: 15px;">🔮 Espace Enseignant</h3>
+            <p style="margin-bottom: 25px; color: #4B5563;">Saisissez votre Code d'accès enseignant pour un usage illimité.</p>
+
+            <input type="text" id="matricule-enseignant-input" class="input-matricule" placeholder="Ex: ENS-ABCD1" onkeypress="handleMatriculeEnseignantKeyPress(event)" style="width: 100%; text-align: center; letter-spacing: 2px; font-weight: bold; margin-bottom: 15px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+
+            <button class="btn-entrer" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; font-size: 1.1em; padding: 10px; border: none; border-radius: 5px; cursor: pointer;" onclick="verifyMatriculeEnseignant()">Valider l'accès</button>
+
+            <p id="modal-feedback-enseignant" class="feedback-text" style="margin-top: 10px; font-weight: bold; min-height: 20px;"></p>
+
+            <!-- ❖ Le bouton d'essai gratuit sans code a été retiré le
+                 28/08/2026 (décision de Constant, déconseillé sur le plan
+                 commercial) -- contrairement à l'Espace de Préparation et
+                 aux Ateliers de Maîtrise côté élève, qui conservent leur
+                 palier gratuit. Seule la voie du Code d'accès reste
+                 proposée ici. -->
+
+            <!-- ❖ 03/11/2026 : essai gratuit de la semaine = lien vers essai-enseignant.html (mêmes règles serveur :
+                 1 par téléphone, par type et par semaine, plafonds par IP). Aucune IA appelée depuis cette fenêtre. -->
+            <a href="essai-enseignant.html" style="display:block; margin-top:14px; padding:10px 12px; border:1px dashed #3B82F6; border-radius:8px; color:#3B82F6; font-weight:bold; text-decoration:none; font-size:0.95em;">🎁 Essai gratuit de la semaine<br><span style="font-weight:normal; font-size:0.85em; color:#6B7280;">Une fiche ou une évaluation offerte, sans code</span></a>
+
+            <div style="margin-top:12px; font-size:0.85em; color:#6B7280;"><strong>Avec un Code d'accès :</strong><ul style="text-align:left;margin:8px 0 0;padding-left:18px;font-size:0.95em;line-height:1.5;">
+<li><strong>📝 Séances de classe</strong> : lancez une séance, vos élèves la rejoignent, suivez leurs résultats et exportez-les vers votre tableur. <a href="seance-prof.html" style="color: #3B82F6; font-weight: bold; text-decoration: underline; white-space: nowrap;">Voir un aperçu →</a></li>
+<li><strong>🏫 Salles</strong> : créez une salle pour vos élèves.</li>
+<li><strong>📚 Ma bibliothèque</strong> : gardez vos fiches et évaluations. <a href="bibliotheque.html" style="color: #3B82F6; font-weight: bold; text-decoration: underline; white-space: nowrap;">Voir un aperçu →</a></li>
+<li><strong>✍️ Correction de copies</strong> : photo de la copie, barème, notes.</li>
+</ul></div>
+
+            <div style="margin-top: 15px; font-size: 0.9em; color: #6B7280;">
+                Pas encore de Code d'accès ?<br>
+                <a href="#" onclick="fermerModaleAccesEnseignant(); ouvrirEnseignantAboModal(); return false;" style="color: #3B82F6; font-weight: bold; text-decoration: underline; margin-top: 8px; display: inline-block;">S'abonner à l'Espace</a>
+            </div>
+        </div>
+    </div>
+    <!-- 2. MODALE CHOIX DE LA DISCIPLINE -->
+    <div id="discipline-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="fermerVestibule()">×</button>
+            <h3 style="margin-bottom: 15px; text-align: center;">Choix de la Discipline</h3>
+            <p style="margin-bottom: 25px; color: #4B5563; text-align: center;">Sélectionne la matière que tu souhaites explorer aujourd'hui :</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 20px;">
+                <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none;" onclick="entrerDansLeChat('maths')">Mathématiques</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none;" onclick="entrerDansLeChat('physique')">Physique-Chimie</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none;" onclick="entrerDansLeChat('tice')">TICE (Informatique)</button>
+
+                <button class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none;" onclick="entrerDansLeChat('svt')">SVT</button>
+
+                <button class="btn-action-doc" style="justify-content: center; background-color: #A855F7; color: white; border: none;" onclick="entrerDansLeChat('francais')">Français</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #A855F7; color: white; border: none;" onclick="entrerDansLeChat('philosophie')">Philosophie</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #A855F7; color: white; border: none;" onclick="entrerDansLeChat('histoire_geo')">Histoire-Géo</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #A855F7; color: white; border: none;" onclick="entrerDansLeChat('edhc')">EDHC</button>
+
+                <button class="btn-action-doc" style="justify-content: center; background-color: #F59E0B; color: white; border: none;" onclick="entrerDansLeChat('anglais')">Anglais</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #F59E0B; color: white; border: none;" onclick="entrerDansLeChat('espagnol')">Espagnol</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #F59E0B; color: white; border: none;" onclick="entrerDansLeChat('allemand')">Allemand</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #EC4899; color: white; border: none;" onclick="entrerDansLeChat('musique')">Éducation Musicale</button>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #EC4899; color: white; border: none;" onclick="entrerDansLeChat('arts_plastiques')">Arts Plastiques</button>
+            </div>
+
+            <!-- ❖ N'a d'utilité réelle qu'une fois un profil déjà
+                 enregistré (voir obtenirProfilEleveSauvegarde() dans
+                 app.js) -- reste inoffensif sinon, ouvre simplement le
+                 même formulaire vierge que la première visite. -->
+            <div style="margin-top: 18px; text-align: center;">
+                <a href="#" onclick="ouvrirModificationProfil(); return false;" style="font-size: 0.85em; color: #6B7280; text-decoration: underline;">✎ Modifier ma classe</a>
+            </div>
+        </div>
+    </div>
+    <!-- 3. LE VOILE DE L'ILLUSION -->
+    <div id="profil-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 500px;">
+            <h3 style="text-align: center;">Configuration de la session</h3>
+            <p style="text-align: center; color: #4B5563;">Afin d'adapter notre pédagogie à ton niveau, indique-nous ta classe :</p>
+
+            <div style="margin-top: 20px; text-align: left;">
+                <label style="font-weight: bold; color: #374151;">Tu es en quelle classe ?</label>
+<select id="niveau-classe" class="input-field" style="width: 100%; margin-top: 8px; margin-bottom: 20px; background-color: #F3F4F6; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" onchange="verifierFormulaire()">
+    <option value="">-- Choisis ta classe --</option>
+    <option value="6e">6ème</option>
+    <option value="5e">5ème</option>
+    <option value="4e">4ème</option>
+    <option value="3e">3ème</option>
+    <!-- Séries ajoutées le 24/09/2026 : la feuille Google Sheets "Progression" distingue
+         désormais le contenu par série à partir de la 2nde (Maths/SVT/etc. divergent selon
+         A/C/D) -- ces valeurs doivent rester identiques aux libellés "Niveau" écrits dans
+         cette feuille, sinon chapitre_du_jour() ne trouvera plus aucune correspondance. -->
+    <option value="2nde A">2nde A</option>
+    <option value="2nde C">2nde C</option>
+    <option value="1ère A1">1ère A1</option>
+    <option value="1ère A2">1ère A2</option>
+    <option value="1ère C">1ère C</option>
+    <option value="1ère D">1ère D</option>
+    <option value="Tle A1">Tle A1</option>
+    <option value="Tle A2">Tle A2</option>
+    <option value="Tle C">Tle C</option>
+    <option value="Tle D">Tle D</option>
+</select>
+                <!-- ❖ 01/11/2026 : seules la classe est demandée désormais. Les deux anciennes questions
+                     (habitude de révision, gestion du stress) n'avaient aucun effet mesurable ;
+                     ces champs cachés gardent le reste du code et le serveur inchangés. -->
+                <input type="hidden" id="habitudes-revision" value="Non précisé">
+                <input type="hidden" id="gestion-stress" value="Non précisé">
+            </div>
+
+            <button id="btn-commencer" class="btn-action-doc" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; font-size: 1.1em; opacity: 0.5; cursor: not-allowed; padding: 12px; border: none; border-radius: 5px;" onclick="validerProfilEtEntrer()" disabled>Commencer le Chat</button>
+        </div>
+    </div>
+    <!-- 3bis. MODALE EMPLOI DU TEMPS DE CLASSE (PLANIFICATEUR DE RÉVISION) -->
+    <div id="planning-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 450px; max-height: 90vh; overflow-y: auto; text-align: center;">
+            <button class="modal-close" onclick="fermerPlanningModal()">×</button>
+            <h3 style="margin-bottom: 10px;">📅 Mon emploi du temps de classe</h3>
+            <p style="margin-bottom: 20px; color: #4B5563; font-size: 0.9em;">Prends en photo l'emploi du temps officiel de ta classe (pas ton programme de révision personnel) : l'Académie s'en servira pour te proposer chaque jour ce qui compte vraiment.</p>
+
+            <p style="margin-bottom: 10px; color:#92400E; background:#FEF3C7; border-radius:8px; padding:8px 10px; font-size:0.82em; text-align:left;">📸 <strong>Pour une lecture fiable :</strong> photo nette, bien droite, toute la page visible, sans ombre ni reflet. Tu pourras corriger avant d'enregistrer.</p>
+            <input type="file" id="planning-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 15px;">
+
+            <button id="btn-envoyer-planning" class="btn-entrer" style="background-color: #3B82F6; color: white; width: 100%; justify-content: center; padding: 10px; border: none; border-radius: 5px; cursor: pointer;" onclick="envoyerPhotoEmploiDuTemps()">Envoyer la photo</button>
+
+            <p id="planning-feedback" class="feedback-text" style="margin-top: 15px; font-weight: bold; min-height: 20px;"></p>
+            <!-- ❖ 27/10/2026 : relecture avant enregistrement (rempli par app.js) -->
+            <div id="planning-relecture" style="display:none; text-align:left; margin-top:12px;">
+                <p style="font-size:0.85em; color:#4B5563; margin-bottom:8px;">Voici ce que l'Académie a lu. <strong>Vérifie chaque ligne</strong> : corrige le jour, l'heure ou la matière, supprime une ligne fausse, ajoute un cours oublié. Rien n'est enregistré avant ton clic sur « Enregistrer ».</p>
+                <div id="planning-lignes" style="max-height:260px; overflow-y:auto;"></div>
+                <button type="button" onclick="planningAjouterLigne()" style="margin-top:8px; background:#EFF6FF; color:#1D4ED8; border:1px solid #93C5FD; border-radius:8px; padding:6px 12px; cursor:pointer;">+ Ajouter un cours</button>
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button type="button" id="btn-valider-planning" onclick="planningValiderRelecture()" style="flex:2; background:#1D4ED8; color:#fff; border:none; border-radius:8px; padding:10px; font-weight:700; cursor:pointer;">Enregistrer mon emploi du temps</button>
+                    <button type="button" onclick="planningReprendrePhoto()" style="flex:1; background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; border-radius:8px; padding:10px; cursor:pointer;">Autre photo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 3ter. MODALE ESPACE PARENTS (CHOIX DE L'EMPLOI DU TEMPS) -->
+    <!-- ❖ Parcours en 3 étapes qui se remplacent (25/09/2026) : le lien Carnet
+         reste hors parcours (rien à voir avec l'abonnement) ; la partie
+         "S'abonner" est découpée en WhatsApp → choix de méthode → formulaire
+         de la méthode choisie, un seul modal, contenu JS-swappé (voir
+         parentAboEtape() dans app.js) — voir CLAUDE.md pour le contexte. -->
+    <div id="parents-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 620px; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close" onclick="fermerParentsModal()">×</button>
+            <h3 style="text-align: center; margin-bottom: 10px;">🛡️ Espace Parents</h3>
+            <div style="text-align: center; margin-bottom: 18px;">
+                <a href="carnet.html" target="_blank" style="display: inline-block; padding: 9px 18px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #1D4ED8; border-radius: 8px; font-weight: bold; font-size: 0.85em; text-decoration: none;">📊 Voir le Carnet de progression de mon enfant</a>
+                <p style="font-size: 0.78em; opacity: 0.75; margin: 6px 0 0;">Avec un guide pour comprendre les chiffres et les couleurs.</p>
+                <a href="emploi-du-temps.html" target="_blank" style="display: inline-block; margin-top: 12px; padding: 9px 18px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #1D4ED8; border-radius: 8px; font-weight: bold; font-size: 0.85em; text-decoration: none;">🗓️ Voir l'emploi du temps de mon enfant</a>
+            </div>
+
+            <div style="border-top: 1px dashed rgba(107, 114, 128, 0.3); margin: 0 0 18px 0;"></div>
+
+            <h4 style="text-align: center; margin: 0 0 4px 0; color: #1F2937;">📝 S'abonner : le parcours en 3 étapes</h4>
+            <p id="parent-abo-indicateur" class="indicateur-etape-abo">ÉTAPE 1 / 3</p>
+
+            <div id="parent-abo-etape-1" class="abo-etape">
+                <p style="text-align: center; color: #4B5563; margin-bottom: 16px; font-size: 0.9em;">Dites-nous bonjour sur WhatsApp avant de payer — votre code d'accès pourra alors vous être transmis instantanément sur ce même canal, dès l'abonnement validé.</p>
+                <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 18px; text-align: center;">
+                    <a href="https://wa.me/2250142674315?text=Bonjour" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 6px; font-weight: bold; font-size: 0.85em; text-decoration: none;">💬 Dire bonjour sur WhatsApp</a>
+                </div>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; width: 100%;" onclick="parentAboEtape(2)">C'est fait, continuer →</button>
+            </div>
+
+            <div id="parent-abo-etape-2" class="abo-etape" style="display: none;">
+                <p style="text-align: center; color: #4B5563; margin-bottom: 18px; font-size: 0.9em;">Choisissez la méthode qui organise le mieux l'emploi du temps de révision de votre enfant.</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 16px;">
+                    <button type="button" class="carte-methode-abo" onclick="parentAboEtape('progression')">
+                        <span class="badge-recommande-abo">✅ Recommandé</span>
+                        <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
+                        <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression</h4>
+                        <p style="font-size: 0.85em; color: #4B5563; margin: 0;">Pour un <strong>suivi au quotidien</strong> pendant toute l'année scolaire. Envoyez la photo de l'emploi du temps de votre enfant.</p>
+                    </button>
+                    <button type="button" class="carte-methode-abo" onclick="parentAboEtape('tally')">
+                        <div style="font-size: 1.8em; margin-bottom: 8px;">🔄</div>
+                        <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Tally</h4>
+                        <p style="font-size: 0.85em; color: #4B5563; margin: 0;">Idéal pour un <strong>programme de cours de vacances</strong>. Vous choisissez vous-même les créneaux via un formulaire.</p>
+                    </button>
+                </div>
+                <button class="btn-retour-etape-abo" onclick="parentAboEtape(1)">← Retour</button>
+            </div>
+
+            <div id="parent-abo-etape-progression" class="abo-etape" style="display: none;">
+                <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
+                    <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
+                    <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression <span style="font-size: 0.65em; font-weight: normal; color: #10B981;">✅ Recommandé</span></h4>
+                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Envoyez directement la photo de l'emploi du temps de votre enfant : elle sera prête dès l'activation de votre abonnement.</p>
+
+                    <div style="background: #FEF2F2; border: 2px solid #EF4444; border-radius: 8px; padding: 10px; margin-bottom: 12px; text-align: left;">
+                        <p style="margin: 0; font-size: 0.8em; color: #991B1B; font-weight: bold; line-height: 1.4;">🚨 IMPORTANT : utilisez EXACTEMENT le même numéro WhatsApp ici et à l'étape de paiement Paystack juste après. Un numéro différent empêchera le rattachement automatique de l'emploi du temps au compte (le paiement, lui, aboutira normalement).</p>
+                    </div>
+
+                    <div id="pre-abo-choix-mode" style="display:flex; gap:8px; margin-bottom:12px;">
+                        <button type="button" id="btn-mode-seul" onclick="preAboChoisirMode('seul')" style="flex:1; padding:9px 6px; border-radius:8px; font-weight:700; font-size:0.82em; cursor:pointer; background:#1D4ED8; color:#fff; border:1px solid #1E3A8A;">👤 Un enfant</button>
+                        <button type="button" id="btn-mode-famille" onclick="preAboChoisirMode('famille')" style="flex:1; padding:9px 6px; border-radius:8px; font-weight:700; font-size:0.82em; cursor:pointer; background:#F1F5F9; color:#334155; border:1px solid #CBD5E1;">👨‍👩‍👧 Plusieurs enfants<br><span style="font-weight:400; font-size:0.9em;">tarif famille</span></button>
+                    </div>
+                    <input type="text" id="pre-abo-telephone" placeholder="Numéro WhatsApp du parent" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <input type="text" id="pre-abo-nom-eleve" placeholder="Nom et prénoms de l'élève" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <div id="pre-abo-famille" style="display:none; text-align:left; margin-bottom:10px;">
+                        <p style="margin:0 0 8px 0; font-size:0.78em; color:#1E3A8A; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px; padding:8px; line-height:1.45;">👨‍👩‍👧 <strong>Tarif famille</strong> (abonnement d'un mois, un seul paiement) : 1er enfant 5 000 FCFA, 2ᵉ enfant 4 250 FCFA (−15 %), 3ᵉ enfant et suivants 3 750 FCFA (−25 %). Chaque enfant reçoit son propre code d'accès, et les rapports de séance arrivent sur le même numéro WhatsApp.</p>
+                        <div id="pre-abo-enfants-sup"></div>
+                        <button type="button" id="btn-pre-abo-ajout-enfant" onclick="preAboAjouterEnfant()" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #93C5FD; border-radius:8px; padding:6px 10px; cursor:pointer; font-size:0.8em;">+ Ajouter un enfant</button>
+                        <p id="pre-abo-prix-famille" style="margin:8px 0 0 0; font-size:0.8em; color:#065F46; font-weight:700;"></p>
+                        <p style="margin:4px 0 0 0; font-size:0.72em; color:#6B7280;">Montant estimé : le tarif exact tient aussi compte des enfants déjà abonnés avec ce numéro.</p>
+                    </div>
+                    <p id="pre-abo-label-photo" style="margin:0 0 4px 0; font-size:0.78em; color:#4B5563; text-align:left;">📸 Photo de l'emploi du temps de l'élève (obligatoire)</p>
+                    <input type="file" id="pre-abo-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 10px; font-size: 0.8em;">
+                    <select id="pre-abo-duree" style="width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                        <option value="mensuel">1 mois — 5 000 FCFA</option>
+                        <option value="trimestriel">3 mois — 13 500 FCFA (−10 %)</option>
+                        <option value="semestriel">6 mois — 25 000 FCFA (−17 %)</option>
+                        <option value="annuel">12 mois — 48 000 FCFA (−20 %)</option>
+                    </select>
+                    <p id="pre-abo-prix-reel" style="display:none; margin:-4px 0 8px 0; font-size:0.82em; color:#065F46; font-weight:700; text-align:left;"></p>
+                    <p id="pre-abo-note-tarif" style="margin:-4px 0 10px 0; font-size:0.72em; color:#6B7280; text-align:left;">Un autre enfant est déjà abonné avec ce numéro ? Le tarif famille s'applique automatiquement à l'abonnement d'un mois (−15 % pour le 2ᵉ enfant, −25 % à partir du 3ᵉ).</p>
+                    <p style="margin: 0 0 8px 0; color:#92400E; background:#FEF3C7; border-radius:8px; padding:6px 8px; font-size:0.75em; text-align:left;">📸 Photo nette, bien droite, toute la page visible, sans ombre ni reflet. Vous pourrez corriger avant de payer.</p>
+                    <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Lire la photo</button>
+                    <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0 0 10px 0; min-height: 16px;"></p>
+                    <!-- ❖ 27/10/2026 : relecture avant paiement (rempli par app.js) -->
+                    <div id="pre-abo-relecture" style="display:none; text-align:left; margin-bottom:10px;">
+                        <p style="font-size:0.78em; color:#4B5563; margin-bottom:6px;">Voici ce que l'Académie a lu. <strong>Vérifiez chaque ligne</strong> : corrigez le jour, l'heure ou la matière, supprimez une ligne fausse, ajoutez un cours oublié. Le paiement ne s'ouvre qu'après votre validation.</p>
+                        <div id="pre-abo-lignes" style="max-height:240px; overflow-y:auto;"></div>
+                        <button type="button" onclick="preAboAjouterLigne()" style="margin-top:6px; background:#EFF6FF; color:#1D4ED8; border:1px solid #93C5FD; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:0.8em;">+ Ajouter un cours</button>
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+                            <button type="button" id="btn-pre-abo-valider" onclick="preAboValiderEtPayer()" style="flex:2; background:#10B981; color:#fff; border:none; border-radius:8px; padding:10px; font-weight:700; cursor:pointer;">Valider et payer</button>
+                            <button type="button" onclick="preAboReprendrePhoto()" style="flex:1; background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; border-radius:8px; padding:10px; cursor:pointer;">Autre photo</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-retour-etape-abo" onclick="parentAboEtape(2)">← Retour</button>
+            </div>
+
+            <div id="parent-abo-etape-tally" class="abo-etape" style="display: none;">
+                <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
+                    <div style="font-size: 1.8em; margin-bottom: 8px;">🔄</div>
+                    <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Tally</h4>
+                    <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Vous choisissez vous-même les créneaux de révision souhaités via un formulaire.</p>
+                    <a href="https://tally.so/r/ODE4rA" target="_blank" class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; margin-bottom: 8px; text-decoration: none;">Définir mes créneaux</a>
+                    <a href="https://tally.so/r/lb5WjX" target="_blank" style="font-size: 0.8em; color: #3B82F6; font-weight: bold; text-decoration: none;">🔄 Modifier un emploi du temps existant</a>
+                </div>
+                <button class="btn-retour-etape-abo" style="margin-top: 14px;" onclick="parentAboEtape(2)">← Retour</button>
+            </div>
+        </div>
+    </div>
+    <!-- 3quater. MODALE ABONNEMENT ESPACE ENSEIGNANT -->
+    <!-- ❖ Parcours en 2 étapes qui se remplacent (25/09/2026) : un seul modal,
+         contenu JS-swappé (voir enseignantAboEtape() dans app.js) plutôt que
+         les 2 étapes empilées d'un coup sur le même écran — l'ancienne mise
+         en page mélangeait WhatsApp + formulaire Tally, ce qui perdait
+         l'utilisateur (voir CLAUDE.md, section dédiée). -->
+    <div id="enseignant-abo-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 460px; max-height: 90vh; overflow-y: auto; text-align: center;">
+            <button class="modal-close" onclick="fermerEnseignantAboModal()">×</button>
+            <h3 style="margin-bottom: 4px;">🔮 Abonnement Espace Enseignant</h3>
+            <p id="enseignant-abo-indicateur" class="indicateur-etape-abo">ÉTAPE 1 / 2</p>
+
+            <div id="enseignant-abo-etape-1" class="abo-etape">
+                <p style="margin-bottom: 16px; color: #4B5563; font-size: 0.9em;">Dites-nous bonjour sur WhatsApp avant de payer — votre code d'accès pourra alors vous être transmis instantanément sur ce même canal, dès l'abonnement validé.</p>
+                <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 18px;">
+                    <a href="https://wa.me/2250142674315?text=Bonjour" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 6px; font-weight: bold; font-size: 0.85em; text-decoration: none;">💬 Dire bonjour sur WhatsApp</a>
+                </div>
+                <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; width: 100%;" onclick="enseignantAboEtape(2)">C'est fait, continuer →</button>
+            </div>
+
+            <div id="enseignant-abo-etape-2" class="abo-etape" style="display: none;">
+                <p style="margin-bottom: 16px; color: #4B5563; font-size: 0.9em;">Un dernier pas avant de rejoindre le Cabinet.</p>
+                <input type="text" id="ens-abo-prenom" placeholder="Prénom" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                <input type="text" id="ens-abo-nom" placeholder="Nom" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                <input type="tel" id="ens-abo-telephone" placeholder="Numéro WhatsApp" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                <select id="ens-abo-duree" style="width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
+                    <option value="mensuel">1 mois — 3 000 FCFA</option>
+                    <option value="trimestriel">3 mois — 8 000 FCFA (−11 %)</option>
+                    <option value="semestriel">6 mois — 15 000 FCFA (−17 %)</option>
+                    <option value="annuel">12 mois — 29 000 FCFA (−19 %)</option>
+                </select>
+                <button id="btn-ens-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #8B5CF6; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="payerAbonnementEnseignant()">Payer mon abonnement</button>
+                <p id="ens-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0 0 10px 0; min-height: 16px;"></p>
+                <button class="btn-retour-etape-abo" onclick="enseignantAboEtape(1)">← Retour</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === ESPACE DE TRAVAIL === -->
+    <div id="app-view">
+        <div class="toolbar">
+            <div class="menu-navigation-wrapper">
+                <button class="btn-retour btn-icon" id="btn-menu-nav" onclick="toggleMenuNavigation()" title="Menu de navigation" aria-label="Menu de navigation" aria-expanded="false">
+                    <svg class="ico-menu" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path class="barre-haut" d="M4 6.5h16"/><path class="barre-milieu" d="M4 12h16"/><path class="barre-bas" d="M4 17.5h16"/></svg>
+                </button>
+                <div id="menu-navigation-panel" class="menu-navigation-panel">
+                    <button class="menu-nav-item" id="menu-nav-home" onclick="naviguerVers('home')">🏠 Retour à l'accueil</button>
+                    <div class="menu-nav-separateur"></div>
+                    <button class="menu-nav-item" id="menu-nav-sas" onclick="naviguerVers('sas')">🧭 Espace de Préparation</button>
+                    <button class="menu-nav-item" id="menu-nav-eleve" onclick="naviguerVers('eleve')">🏛️ L'Académie EdukaTchat</button>
+                    <button class="menu-nav-item" id="menu-nav-enseignant" onclick="naviguerVers('enseignant')">🔮 Espace Enseignant</button>
+                    <div class="menu-nav-separateur"></div>
+                    <button class="menu-nav-item" id="menu-nav-orateur" onclick="naviguerVers('orateur')">🎙️ Atelier de l'Orateur</button>
+                    <button class="menu-nav-item" id="menu-nav-philo" onclick="naviguerVers('philo')">🦉 Atelier de Philosophie</button>
+                    <button class="menu-nav-item" id="menu-nav-sciences" onclick="naviguerVers('sciences')">🧬 Atelier des Sciences</button>
+                    <button class="menu-nav-item" id="menu-nav-elan" onclick="naviguerVers('elan')">🚀 Atelier de l'Élan</button>
+                    <div id="menu-nav-salle-bloc" style="display: none;">
+                        <div class="menu-nav-separateur sep-interne"></div>
+                        <a class="menu-nav-item" id="menu-nav-salle" href="salle.html" style="display: block; text-decoration: none;">👥 Salle d'étude <span class="badge-nouveau">Nouveau</span></a>
+                    </div>
+                    <div id="menu-nav-excellence-bloc" style="display: none;">
+                        <a class="menu-nav-item" id="menu-nav-excellence" href="excellence-archi.html" style="display: block; text-decoration: none;">🏛️ Cap Excellence <span class="badge-nouveau">Nouveau</span></a>
+                    </div>
+                    <div id="menu-nav-seance-bloc" style="display: none;">
+                        <a class="menu-nav-item" id="menu-nav-seance" href="seance-prof.html" style="display: block; text-decoration: none;">📝 Séances de classe <span class="badge-nouveau">Nouveau</span></a>
+                    </div>
+                    <a class="menu-nav-item" id="menu-nav-fiches" href="fiches.html" style="display: block; text-decoration: none;">📖 Fiches et schémas <span class="badge-nouveau">Nouveau</span></a>
+                    <div id="menu-nav-biblio-bloc" style="display: none;">
+                        <a class="menu-nav-item" id="menu-nav-biblio" href="bibliotheque.html" style="display: block; text-decoration: none;">📚 Ma bibliothèque <span class="badge-nouveau">Nouveau</span></a>
+                    </div>
+                    <div id="menu-nav-casier-bloc" style="display: none;">
+                        <a class="menu-nav-item" id="menu-nav-casier" href="casier.html" style="display: block; text-decoration: none;">🗂️ Mon casier <span class="badge-nouveau">Nouveau</span></a>
+                    </div>
+                    <div class="menu-nav-separateur"></div>
+                    <button class="menu-nav-item" id="menu-nav-boussole" onclick="naviguerVers('boussole')">🧭 Boussole d'Orientation</button>
+                    <button class="menu-nav-item" id="menu-nav-boussole-univ" onclick="naviguerVers('boussole-univ')">🎓 Boussole Universitaire</button>
+                    <button class="menu-nav-item" id="menu-nav-parents" onclick="naviguerVers('parents')">🛡️ Espace Parents</button>
+                    <div class="menu-nav-separateur"></div>
+                    <a class="menu-nav-item" id="menu-nav-aide" href="https://wa.me/2250142674315?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20sur%20EdukaTchat%20%3A%20" target="_blank" rel="noopener" style="display: block; text-decoration: none;">🆘 Besoin d'aide ?</a>
+                    <button class="menu-nav-item" id="menu-nav-avis" onclick="donnerAvisWhatsApp()">💬 Donner mon avis</button>
+                    <div id="menu-nav-deconnexion-bloc" style="display: none;">
+                        <div class="menu-nav-separateur sep-interne"></div>
+                        <button class="menu-nav-item" id="menu-nav-deconnexion" onclick="demanderDeconnexion()">🚪 Se déconnecter</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ❖ Regroupement esthétique : les icônes de réglage (thème,
+                 matière, plein écran) partagent désormais un même socle en
+                 pilule, plutôt que de flotter séparément -- cohérent avec
+                 le traitement déjà donné aux onglets de l'Espace
+                 Enseignant. "Retour" reste seul et distinct : c'est une
+                 action de sortie, pas un réglage. -->
+            <div class="toolbar-outils">
+                <!-- ❖ Raccourcis élèves (11/11/2026) : mêmes pages que le menu ; affichés par majRaccourcisEleve() (app.js). -->
+                <a id="btn-raccourci-fiches" class="btn-icon-groupe btn-raccourci" href="fiches.html" style="display: none;" title="Fiches et schémas par chapitre" aria-label="Fiches et schémas par chapitre"><span class="ico-emoji" aria-hidden="true">📖</span><svg class="ico-ligne" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6c3-1.5 6.5-1.5 9-.5V18c-2.5-1-6-1-9 .5-3-1.5-6.5-1.5-9-.5z"/><path d="M12 6v12.5"/></svg><span class="btn-raccourci-texte">Fiches</span></a>
+                <a id="btn-raccourci-casier" class="btn-icon-groupe btn-raccourci" href="casier.html" style="display: none;" title="Mon casier" aria-label="Mon casier"><span class="ico-emoji" aria-hidden="true">🗂️</span><svg class="ico-ligne" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="btn-raccourci-texte">Casier</span></a>
+                <a id="btn-raccourci-salle" class="btn-icon-groupe btn-raccourci" href="salle.html" style="display: none;" title="Salle d'étude" aria-label="Salle d'étude"><span class="ico-emoji" aria-hidden="true">👥</span><svg class="ico-ligne" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 1.7 4 4"/></svg><span class="btn-raccourci-texte">Salle</span></a>
+                <!-- ❖ Raccourcis enseignants (13/11/2026) : mêmes pages que le menu ; affichés par majMenuOutilsEnseignant() (app.js). -->
+                <a id="btn-raccourci-seance" class="btn-icon-groupe btn-raccourci" href="seance-prof.html" style="display: none;" title="Séances de classe" aria-label="Séances de classe"><span class="ico-emoji" aria-hidden="true">📝</span><svg class="ico-ligne" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span class="btn-raccourci-texte">Séance</span></a>
+                <a id="btn-raccourci-biblio" class="btn-icon-groupe btn-raccourci" href="bibliotheque.html" style="display: none;" title="Ma bibliothèque" aria-label="Ma bibliothèque"><span class="ico-emoji" aria-hidden="true">📚</span><svg class="ico-ligne" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM11 4h4v16h-4z"/><path d="M17.5 5.5l3 .8-3.6 13.7-3-.8"/></svg><span class="btn-raccourci-texte">Biblio</span></a>
+                <button id="btn-theme" class="btn-icon-groupe btn-theme-toggle" onclick="toggleTheme()" title="Changer de thème" aria-label="Changer de thème">
+                    <span class="ico-emoji">🌙</span><svg class="ico-ligne ico-lune" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="ico-ligne ico-soleil" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                </button>
+                <!-- ❖ Réservé à l'Académie Premium ("eleve") : permet de
+                     changer de matière sans quitter l'espace de travail, en
+                     rouvrant le sélecteur de discipline existant. Masqué par
+                     défaut, affiché/masqué par appliquerProfilEtEntrerDansEspace()
+                     et openSpace() dans app.js selon l'espace actif. -->
+                <button id="btn-matieres" class="btn-icon-groupe" style="display: none;" onclick="document.getElementById('discipline-modal').classList.add('active')" title="Changer de matière" aria-label="Changer de matière">
+                    📚
+                </button>
+                <button id="btn-fullscreen" class="btn-icon-groupe" onclick="toggleFullScreen()" title="Plein écran" aria-label="Plein écran">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+                </button>
+            </div>
+
+            <!-- ❖ Regroupement Professeur/Instituteur (27/09/2026) : les 5 onglets
+                 restent un seul mécanisme (switchTeacherTool), mais sont désormais
+                 répartis en 2 blocs visuellement distincts avec un intitulé de
+                 groupe et un séparateur -- ne change rien à l'accès (toujours un
+                 seul Sceau ENS-, voir CLAUDE.md), seulement à la présentation. -->
+            <div id="teacher-tabs-container" class="teacher-navigation">
+                <!-- ❖ 27/09/2026, révisé le même jour (retour Constant : présentation
+                     trop chargée/débordante sur mobile) : le bouton de retour passe en
+                     icône seule avec infobulle (le texte prenait trop de place sur une
+                     ligne déjà pleine), l'intitulé de groupe visible est retiré (redondant
+                     -- un seul groupe est jamais affiché à la fois, cf. choisirCategorieEnseignant)
+                     et les libellés des onglets sont raccourcis. La rangée entière défile
+                     désormais horizontalement au lieu de s'empiler sur plusieurs lignes. -->
+                <button class="btn-changer-categorie-enseignant" onclick="retourChoixCategorieEnseignant()" title="Changer de catégorie (Professeur / Instituteur)">
+                    <span class="ico-emoji" aria-hidden="true">🔄</span><svg class="ico-ligne" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.5-4M4 4v4h4M4 13a8 8 0 0 0 14.5 4M20 20v-4h-4"/></svg><span class="btn-changer-categorie-texte">&nbsp;Catégorie</span>
+                </button>
+                <button type="button" class="btn-aide-visite" onclick="lancerVisiteGuidee()" title="Visite guidée : à quoi sert chaque bouton"><span class="ico-emoji" aria-hidden="true">❓</span><svg class="ico-ligne" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01"/></svg><span class="btn-changer-categorie-texte">&nbsp;Aide</span></button>
+                <div id="teacher-tabs-groupe-professeur" class="teacher-tabs-groupe">
+                    <span class="teacher-tabs-groupe-label">Professeur</span>
+                    <div class="teacher-tabs-groupe-boutons">
+                        <button id="tab-atelier" class="tab-btn" onclick="switchTeacherTool('atelier')" title="Évaluations : créer devoirs, compositions et épreuves, corriger des copies">
+                            ❖ Évaluations
+                        </button>
+                        <button id="tab-forge" class="tab-btn" onclick="switchTeacherTool('forge')" title="Leçons : préparer des fiches de leçon">
+                            ✦ Leçons
+                        </button>
+                        <button id="tab-cabinet" class="tab-btn" onclick="switchTeacherTool('cabinet')" title="Le Cabinet d'Étude">
+                            ⚜ Cabinet
+                        </button>
+                    </div>
+                </div>
+                <div id="teacher-tabs-separateur" class="teacher-tabs-separateur" aria-hidden="true"></div>
+                <div id="teacher-tabs-groupe-instituteur" class="teacher-tabs-groupe">
+                    <span class="teacher-tabs-groupe-label teacher-tabs-groupe-label-vert">Instituteur</span>
+                    <div class="teacher-tabs-groupe-boutons">
+                        <button id="tab-forge_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('forge_primaire')" title="Leçons : préparer des fiches de séance (primaire)">
+                            🌱 Leçons
+                        </button>
+                        <button id="tab-cabinet_primaire" class="tab-btn tab-btn-vert" onclick="switchTeacherTool('cabinet_primaire')" title="Le Cabinet d'Étude (Primaire)">
+                            🌱 Cabinet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="iframe-container">
+            <!-- ❖ Habillage « Terre cuite » (21/11/2026) : écran d'entrée Professeur/Instituteur, style dans enseignant-terre.css.
+                 Mêmes identifiants et mêmes fonctions qu'avant (choisirCategorieEnseignant, switchTeacherTool). -->
+            <div id="teacher-categorie-chooser" class="categorie-chooser-grid" style="display: none;">
+                <div class="ens-accueil">
+                    <h2 class="ens-titre">Bienvenue dans votre espace</h2>
+                    <p class="ens-sous">Choisissez le niveau que vous enseignez. Vous pourrez changer à tout moment.</p>
+                    <div class="ens-niveaux">
+                        <button type="button" class="ens-niveau" onclick="choisirCategorieEnseignant('professeur')">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11.5V16c1.5 1.5 3 2 5 2s3.5-.5 5-2v-4.5"/></svg>
+                            <h3>Professeur</h3>
+                            <p>Secondaire. Évaluations, Leçons et Cabinet d'Étude.</p>
+                            <span class="ens-bouton">Entrer</span>
+                        </button>
+                        <button type="button" class="ens-niveau" onclick="choisirCategorieEnseignant('instituteur')">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V10"/><path d="M12 10c0-3.5-2.5-5.5-6-5.5 0 3.5 2.5 5.5 6 5.5zM12 13c0-3 2.2-5 5.5-5 0 3-2.2 5-5.5 5z"/></svg>
+                            <h3>Instituteur</h3>
+                            <p>Primaire, du CP1 au CM2. Leçons et Cabinet.</p>
+                            <span class="ens-bouton">Entrer</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- SAS DES ATELIERS (27/10/2026) : affiché après le choix Professeur/Instituteur.
+                 Aucun atelier n'est lancé (donc aucun jeton consommé) tant que l'enseignant
+                 n'a pas choisi celui où il veut entrer. Habillage « Terre cuite » le 21/11/2026 :
+                 les classes ens-ligne-* servent aussi à la visite guidée (visite-guidee.js). -->
+            <div id="teacher-atelier-chooser" class="categorie-chooser-grid" style="display: none;">
+                <div id="sas-ateliers-professeur" class="sas-ateliers-groupe">
+                    <div class="ens-entete">
+                        <h2 class="ens-titre">Espace professeur</h2>
+                        <p class="ens-sous">Choisissez l'outil dont vous avez besoin.</p>
+                    </div>
+                    <button type="button" class="ens-ligne ens-ligne-evaluations" onclick="switchTeacherTool('atelier')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg>
+                        <span class="ens-ligne-texte"><h3>Évaluations</h3><p>Créer devoirs, compositions et épreuves, corriger des copies.</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <button type="button" class="ens-ligne ens-ligne-lecons" onclick="switchTeacherTool('forge')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6c3-1.5 6.5-1.5 9-.5V18c-2.5-1-6-1-9 .5-3-1.5-6.5-1.5-9-.5z"/><path d="M12 6v12.5"/></svg>
+                        <span class="ens-ligne-texte"><h3>Leçons</h3><p>Préparer vos fiches de leçon et vos exercices.</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <button type="button" class="ens-ligne ens-ligne-cabinet" onclick="switchTeacherTool('cabinet')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>
+                        <span class="ens-ligne-texte"><h3>Cabinet</h3><p>Conseil pédagogique, situations-problèmes, élèves en difficulté.</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <!-- ❖ Mes outils (11/11/2026) : accès directs, visibles à côté des ateliers (secondaire). Affichés par majMenuOutilsEnseignant() (app.js). -->
+                    <div id="sas-outils-prof" class="sas-outils-groupe" style="display: none;">
+                        <div class="sas-outils-titre">Mes outils</div>
+                        <a id="sas-outil-seance" class="ens-pilule" href="seance-prof.html" style="display: none;" title="Un quiz cliquable pour toute la classe, corrigé automatiquement.">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Séance de classe
+                        </a>
+                        <a id="sas-outil-biblio" class="ens-pilule" href="bibliotheque.html" style="display: none;" title="Retrouvez, relisez et imprimez toutes vos fiches enregistrées.">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM11 4h4v16h-4z"/><path d="M17.5 5.5l3 .8-3.6 13.7-3-.8"/></svg>Ma bibliothèque
+                        </a>
+                    </div>
+                    <p class="ens-liens">
+                        <button type="button" class="ens-lien" onclick="retourChoixCategorieEnseignant()">Changer de catégorie</button>
+                        <button type="button" class="ens-lien" onclick="lancerVisiteGuidee()">Visite guidée</button>
+                    </p>
+                </div>
+                <div id="sas-ateliers-instituteur" class="sas-ateliers-groupe">
+                    <div class="ens-entete">
+                        <h2 class="ens-titre">Espace instituteur</h2>
+                        <p class="ens-sous">Choisissez l'outil dont vous avez besoin.</p>
+                    </div>
+                    <button type="button" class="ens-ligne ens-ligne-lecons-primaire" onclick="switchTeacherTool('forge_primaire')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6c3-1.5 6.5-1.5 9-.5V18c-2.5-1-6-1-9 .5-3-1.5-6.5-1.5-9-.5z"/><path d="M12 6v12.5"/></svg>
+                        <span class="ens-ligne-texte"><h3>Leçons</h3><p>Préparer vos fiches de séance et d'évaluation (CP1 à CM2).</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <button type="button" class="ens-ligne ens-ligne-cabinet-primaire" onclick="switchTeacherTool('cabinet_primaire')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>
+                        <span class="ens-ligne-texte"><h3>Cabinet</h3><p>Élève en difficulté, conseil pédagogique, gestion de classe.</p></span>
+                        <svg class="ens-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <p class="ens-liens">
+                        <button type="button" class="ens-lien" onclick="retourChoixCategorieEnseignant()">Changer de catégorie</button>
+                        <button type="button" class="ens-lien" onclick="lancerVisiteGuidee()">Visite guidée</button>
+                    </p>
+                </div>
+            </div>
+            
+<!-- Sas -->
+            <div id="container-sas-custom" class="custom-chat-container">
+                <div id="banniere-matiere" class="banniere-matiere">
+                    <span class="banniere-matiere-pilule">
+                        <span class="banniere-matiere-icone" id="banniere-matiere-icone"></span>
+                        <span class="banniere-matiere-nom" id="banniere-matiere-nom">Espace de Préparation</span>
+                    </span>
+                    <span class="banniere-actions-sas">
+                        <button type="button" class="btn-banniere-action btn-banniere-nouvelle" onclick="nouvelleSessionSas()" title="Terminer cette discussion et en commencer une nouvelle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nouvelle discussion</button>
+                        <button type="button" class="btn-banniere-action btn-banniere-historique" onclick="ouvrirHistoriqueSas()" title="Revoir vos sessions précédentes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Historique</button>
+                        <button type="button" class="btn-banniere-action btn-banniere-aide" onclick="lancerVisiteGuidee('sas')" title="Visite guidée : à quoi sert chaque bouton">❓ Aide</button>
+                    </span>
+                </div>
+                <div id="sas-chat-history" class="chat-history">
+                    <div class="message system-message">Bienvenue dans l'Espace de Préparation. Posez votre question pour commencer.</div>
+                </div>
+                <div class="chat-input-area">
+                    <div id="sas-suggestions-rapides" class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion btn-suggestion-guide sug-principal" data-message="Je ne sais pas par où commencer aujourd'hui, guide-moi."><span class="suggestion-emoji">🧭</span>Guide-moi</button>
+                        <button type="button" data-outil="sas" data-apres-doc="1" class="btn-suggestion sug-ambre" data-message="Explique-moi autrement ta dernière explication, plus simplement, avec un exemple de la vie en Côte d'Ivoire."><span class="suggestion-emoji">💡</span>Explique-moi autrement</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-reviser sug-outil" data-prefill="Je veux réviser le chapitre : …"><span class="suggestion-emoji">📖</span>Réviser un chapitre</button>
+                        <button type="button" class="btn-suggestion btn-suggestion-exercice sug-vert" data-prefill="J'ai un exercice précis sur lequel je bloque. Voici l'énoncé : …"><span class="suggestion-emoji">✏️</span>Un exercice précis</button>
+                        <button type="button" data-outil="sas" data-apres-doc="1" class="btn-suggestion sug-fiche" data-message="Fais-moi une fiche de révision de la leçon que nous venons de voir : l'essentiel, les définitions ou formules, les erreurs à éviter et un exemple. Elle doit tenir sur une page, pour que je la range dans mon casier."><span class="suggestion-emoji">📝</span>Fiche de révision</button>
+                        <button type="button" data-outil="sas" data-apres-doc="1" class="btn-suggestion sug-ponctuel" data-message="Quiz sur cette leçon : pose-moi 5 questions à choix pour me tester sur la leçon que nous venons de voir."><span class="suggestion-emoji">🎯</span>Quiz sur cette leçon</button>
+                        <button type="button" data-saison-rentree="1" class="btn-suggestion btn-suggestion-rentree sug-violet" data-prefill="Pour préparer la rentrée, je veux revoir : …"><span class="suggestion-emoji">🌴</span>Préparer la rentrée</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('sas-chat-history', 'sas')" title="Joindre un document">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                        </button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-bleu" onclick="ouvrirPlanningModal()" title="Ajouter mon emploi du temps de classe">📅</button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-violet" id="btn-micro-sas" onclick="toggleEnregistrementVocal('sas')" title="Poser ma question à l'oral">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        </button>
+                        <input type="text" id="sas-user-input" placeholder="Exprimez votre difficulté ici..." onkeypress="handleSasKeyPress(event)">
+                        <button class="btn-envoyer-icon" onclick="sendSasMessage()" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Atelier Prof -->
+            <div id="container-atelier-custom" class="custom-chat-container">
+                <div id="atelier-chat-history" class="chat-history">
+                    <div class="message system-message">
+                        <span class="system-message-icone">❖</span>
+                        <span class="system-message-titre">L'Atelier des Évaluations</span>
+                        <span class="system-message-texte">Je suis le Concepteur Universel. Choisissez ce que vous voulez faire&nbsp;:
+                            <span class="accueil-liste">
+                                <button type="button" class="nom-bouton nb-principal" data-formulaire="atelier">📋 Formulaire guidé</button><span class="al-desc">évaluation APC adaptée aux programmes ivoiriens (type, durée, nombre d'exercices)</span>
+                                <button type="button" class="nom-bouton nb-violet" data-formulaire="atelier_officiel">🏛 Épreuve BEPC / BAC</button><span class="al-desc">épreuve au format officiel</span>
+                                <button type="button" class="nom-bouton nb-ponctuel" data-formulaire="atelier_copies">✍️ Corriger des copies</button><span class="al-desc">joignez la photo de la copie (JPG/PNG) et précisez le barème</span>
+                            </span></span>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier')" title="Renseigner type, durée, nombre d'exercices et répartition des points">📋 Formulaire guidé</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="atelier" data-apres-doc="1" data-message="Propose-moi une variante de la dernière évaluation, avec un barème ajusté.">🔁 Variante</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-ponctuel" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier_copies')" title="Bonus : proposition de correction à relire et ajuster (photo de la copie à joindre)">✍️ Corriger des copies</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-violet" data-outil="atelier" onclick="ouvrirFormulaireGuide('atelier_officiel')" title="Épreuve type BEPC/BAC au format officiel (Exercice 1, 2, 3… avec barème sur 20)">🏛️ Épreuve BEPC / BAC</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('atelier-chat-history', 'atelier')" title="Joindre une photo (JPG/PNG uniquement, une copie par photo, bien éclairée et à plat)">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-teal" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
+                        </button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-ambre" onclick="ouvrirBibliothequeFormules()" title="Bibliothèque de fiches-formules">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 3l4 4l-14 14l-4-4z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7l-1.5-1.5M13 10l-1.5-1.5M10 13l-1.5-1.5M7 16l-1.5-1.5" /></svg>
+                        </button>
+                        <input type="text" id="atelier-user-input" placeholder="Ex: Je suis prof de SVT, 3ème, chapitre..." onkeypress="handleTeacherKeyPress(event, 'atelier')">
+                        <button class="btn-envoyer-icon" onclick="sendTeacherMessage('atelier')" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Forge Prof -->
+            <div id="container-forge-custom" class="custom-chat-container">
+                <div id="forge-chat-history" class="chat-history">
+                    <div class="message system-message">
+                        <span class="system-message-icone">✦</span>
+                        <span class="system-message-titre">La Forge des Leçons</span>
+                        <span class="system-message-texte">Je suis l'Assistant Pédagogique. Cliquez sur <button type="button" class="nom-bouton nb-principal" data-formulaire="forge">📋 Formulaire guidé</button> ci-dessous pour renseigner votre contexte (matière, classe, leçon) et obtenir une fiche de leçon structurée. Vous pouvez aussi décrire directement votre besoin.</span>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="forge" onclick="ouvrirFormulaireGuide('forge')" title="Renseigner durée, matériel… pour obtenir exactement la fiche voulue">📋 Formulaire guidé</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="forge" data-apres-doc="1" data-message="Ajoute des activités ou exercices d'application à la dernière fiche.">🧩 Ajouter des activités</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('forge-chat-history', 'forge')" title="Joindre une photo (JPG/PNG uniquement, bien éclairée et à plat)">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-teal" onclick="ouvrirBibliothequeIllustrations()" title="Bibliothèque d'illustrations">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" /></svg>
+                        </button>
+                        <button class="btn-attachment btn-icone-outil btn-icone-ambre" onclick="ouvrirBibliothequeFormules()" title="Bibliothèque de fiches-formules">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 3l4 4l-14 14l-4-4z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7l-1.5-1.5M13 10l-1.5-1.5M10 13l-1.5-1.5M7 16l-1.5-1.5" /></svg>
+                        </button>
+                        <input type="text" id="forge-user-input" placeholder="Formulez votre demande ici..." onkeypress="handleTeacherKeyPress(event, 'forge')">
+                        <button class="btn-envoyer-icon" onclick="sendTeacherMessage('forge')" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Cabinet Prof -->
+            <div id="container-cabinet-custom" class="custom-chat-container">
+                <div id="cabinet-chat-history" class="chat-history">
+                    <div class="message system-message">
+                        <span class="system-message-icone">⚜</span>
+                        <span class="system-message-titre">Le Cabinet d'Étude</span>
+                        <span class="system-message-texte">Je suis le Consultant Pédagogique. Décrivez la difficulté rencontrée dans votre enseignement, ou cliquez sur l'un des boutons rapides ci-dessous pour partir d'un modèle.</span>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion sug-principal" data-outil="cabinet" data-prefill="Situation-problème — Classe : … ; Ce qui s'est passé : … ; Ce que j'ai déjà essayé : …">💡 Une situation-problème</button>
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="cabinet" data-message="Donne-moi un conseil pédagogique pour un point du programme que je maîtrise moins.">🧑‍🏫 Conseil pédagogique</button>
+                        <button type="button" class="btn-suggestion sug-ambre" data-outil="cabinet" data-prefill="Difficulté récurrente — Classe : … ; Matière : … ; Ce que je constate chez les élèves : …">📊 Analyser une difficulté</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('cabinet-chat-history', 'cabinet')" title="Joindre une photo (JPG/PNG uniquement, bien éclairée et à plat)">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <input type="text" id="cabinet-user-input" placeholder="Ex: Comment introduire les équations du second degré ?" onkeypress="handleTeacherKeyPress(event, 'cabinet')">
+                        <button class="btn-envoyer-icon" onclick="sendTeacherMessage('cabinet')" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Forge Primaire (Instituteurs) -->
+            <div id="container-forge_primaire-custom" class="custom-chat-container">
+                <div id="forge_primaire-chat-history" class="chat-history">
+                    <div class="message system-message accent-vert">
+                        <span class="system-message-icone">🌱</span>
+                        <span class="system-message-titre">La Forge (Primaire)</span>
+                        <span class="system-message-texte">Choisissez ce que vous voulez préparer&nbsp;:
+                            <span class="accueil-liste">
+                                <button type="button" class="nom-bouton nb-principal" data-formulaire="forge_primaire">📋 Formulaire de préparation</button><span class="al-desc">fiche de leçon (classe CP1 à CM2, matière, leçon)</span>
+                                <button type="button" class="nom-bouton nb-outil" data-formulaire="forge_primaire_eval">📝 Formulaire d'évaluation</button><span class="al-desc">évaluation adaptée à la classe et à la matière</span>
+                            </span>
+                            Vous pouvez aussi décrire directement votre besoin.</span>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-principal" data-outil="forge_primaire" onclick="ouvrirFormulaireGuide('forge_primaire')" title="Renseigner classe, matière, leçon, durée… pour obtenir exactement la fiche voulue">📋 Formulaire de préparation</button>
+                        <button type="button" class="btn-suggestion btn-formulaire-guide sug-outil" data-outil="forge_primaire" onclick="ouvrirFormulaireGuide('forge_primaire_eval')" title="Classe, matière, type d'évaluation, durée, barème…">📝 Formulaire d'évaluation</button>
+                        <button type="button" class="btn-suggestion sug-vert" data-outil="forge_primaire" data-apres-doc="1" data-message="Ajoute des exercices d'application à la dernière fiche.">🧩 Ajouter des exercices</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('forge_primaire-chat-history', 'forge_primaire')" title="Joindre une photo (JPG/PNG uniquement, bien éclairée et à plat)">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <input type="text" id="forge_primaire-user-input" placeholder="Ex: Fiche de préparation, CE1, Français, la lecture..." onkeypress="handleTeacherKeyPress(event, 'forge_primaire')">
+                        <button class="btn-envoyer-icon" onclick="sendTeacherMessage('forge_primaire')" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Cabinet Primaire (Instituteurs) -->
+            <div id="container-cabinet_primaire-custom" class="custom-chat-container">
+                <div id="cabinet_primaire-chat-history" class="chat-history">
+                    <div class="message system-message accent-vert">
+                        <span class="system-message-icone">🌱</span>
+                        <span class="system-message-titre">Le Cabinet (Primaire)</span>
+                        <span class="system-message-texte">Posez une question de pédagogie générale, ou décrivez la situation d'un élève précis pour un accompagnement ciblé. Les boutons rapides ci-dessous vous proposent des modèles de départ.</span>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="suggestions-rapides">
+                        <button type="button" class="btn-suggestion sug-outil" data-outil="cabinet_primaire" data-message="Donne-moi un conseil pédagogique pour un point du programme que je maîtrise moins.">🧑‍🏫 Conseil pédagogique</button>
+                        <button type="button" class="btn-suggestion sug-principal" data-outil="cabinet_primaire" data-prefill="Élève en difficulté — Classe : … ; Matière : … ; Ce que j'observe : …">📊 Un élève en difficulté</button>
+                        <button type="button" class="btn-suggestion sug-vert" data-outil="cabinet_primaire" data-message="Comment gérer une classe à plusieurs niveaux de compréhension ?">🧭 Gestion de classe</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-neutre" onclick="declencherJoindreImage('cabinet_primaire-chat-history', 'cabinet_primaire')" title="Joindre une photo (JPG/PNG uniquement, bien éclairée et à plat)">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        </button>
+                        <input type="text" id="cabinet_primaire-user-input" placeholder="Ex: Comment aider un élève de CE1 qui déchiffre encore mal ?" onkeypress="handleTeacherKeyPress(event, 'cabinet_primaire')">
+                        <button class="btn-envoyer-icon" onclick="sendTeacherMessage('cabinet_primaire')" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <!-- Arène des Ateliers (Orateur, Philo, Sciences, Conseiller) -->
+            <div id="container-arene-custom" class="custom-chat-container">
+                <div id="arene-chat-history" class="chat-history">
+                    <div class="message system-message" id="arene-welcome-msg">Le Maître de l'Atelier vous écoute.</div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="chat-input-wrapper">
+                        <button class="btn-attachment btn-icone-outil btn-icone-violet" id="btn-micro-arene" onclick="toggleEnregistrementVocal('arene')" title="Parler au lieu d'écrire">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        </button>
+                        <input type="text" id="arene-user-input" placeholder="Exprimez votre pensée ici..." onkeypress="handleAreneKeyPress(event)">
+                        <button class="btn-envoyer-icon" onclick="sendAreneMessage()" title="Envoyer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; transform: translateX(-1px);">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <iframe id="iframe-eleve" src="https://ia.edukatchat.org/chat/UEtRcXzRm3NKj4rq" allow="microphone; camera"></iframe>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <!-- ❖ abcjs (26/09/2026) : rendu d'une portée musicale (notation ABC) en SVG --
+         voir extraireEtRendreABC/reinjecterABC dans app.js. Chargé avant app.js
+         comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
+         moment du premier rendu de réponse). -->
+    <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
+    <script src="app.js?v=3.90"></script>
+    <script src="visite-guidee.js?v=4"></script>
+    <script src="centres-interet.js?v=7"></script>
+
+    <footer style="text-align: center; padding: 25px 20px; font-size: 0.85em; color: #6B7280; background-color: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(51, 65, 85, 0.5); margin-top: auto;">
+        <!-- Le Canal de Communication -->
+        <div style="margin-bottom: 15px;">
+            <strong style="color: #E2E8F0; font-size: 1.1em; display: block; margin-bottom: 8px;">Besoin d'assistance ?</strong>
+            <span style="display: inline-block; margin: 0 10px;">
+                ✉️ <a href="mailto:edukatchat.assistant@gmail.com" style="color: #60A5FA; text-decoration: none; font-weight: 500;">edukatchat.assistant@gmail.com</a>
+            </span>
+            <span style="color: #475569;">|</span>
+            <span style="display: inline-block; margin: 0 10px;">
+                📞 <a href="https://wa.me/2250142674315" style="color: #10B981; text-decoration: none; font-weight: 500;" target="_blank">WhatsApp Support</a>
+            </span>
+        </div>
+        <!-- Le Sceau et les Lois -->
+        © 2026 EdukaTchat™. Tous droits réservés.<br>
+        <span style="font-size: 0.85em; color: #94A3B8;">EdukaTchat est un service édité et exploité par TANOH KOFFI CONSTANT, Côte d'Ivoire.</span><br>
+        <div style="margin-top: 8px;">
+            <a href="politique.html" style="color: #60A5FA; text-decoration: none; transition: color 0.2s;">Politique de Confidentialité</a>
+            <span style="margin: 0 10px; color: #475569;">|</span>
+            <a href="cgu.html" style="color: #60A5FA; text-decoration: none; transition: color 0.2s;">Conditions Générales d'Utilisation (CGU)</a>
+        </div>
+    </footer>
+   <!-- Modale Moyenne d'Orientation (BEPC) -->
+    <div id="mo-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close" onclick="fermerBoussole()">×</button>
+            <h2 style="color: #F59E0B; text-align: center; margin-bottom: 20px;">Boussole d'Orientation</h2>
+            <p style="text-align: center; font-size: 0.9em; color: #6B7280; margin-bottom: 20px;">Saisis tes moyennes annuelles et tes prévisions au BEPC.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <!-- Français -->
+                <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">Composition Française (Coeff 2)</h4>
+                    <input type="number" id="mo-fr-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <input type="number" id="mo-fr-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                </div>
+                <!-- Mathématiques -->
+                <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">Mathématiques (Coeff 2)</h4>
+                    <input type="number" id="mo-math-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <input type="number" id="mo-math-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                </div>
+                <!-- Physique-Chimie -->
+                <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">Physique-Chimie (Coeff 1)</h4>
+                    <input type="number" id="mo-pc-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <input type="number" id="mo-pc-bepc" placeholder="Note BEPC" step="0.01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                </div>
+                <!-- Anglais -->
+                <div style="background: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">Anglais (Coeff 1)</h4>
+                    <input type="number" id="mo-ang-an" placeholder="Moy. Annuelle" step="0.01" style="width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    <div style="display:flex; gap:5px;">
+                        <input type="number" id="mo-ang-bepc-e" placeholder="Écrit" step="0.01" style="width:50%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                        <input type="number" id="mo-ang-bepc-o" placeholder="Oral" step="0.01" style="width:50%; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB;">
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <button onclick="calculerMO()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #F59E0B; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;">Révéler ma Moyenne</button>
+            </div>
+            <div id="mo-result-container" style="display: none; margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center; border-left: 4px solid #3B82F6;">
+                <p style="margin: 0; color: #6B7280; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">Moyenne d'Orientation</p>
+                <h3 id="mo-score-display" style="font-size: 2.5em; color: #1F2937; margin: 5px 0;"></h3>
+                <p id="mo-advice-display" style="margin-top: 15px; color: #374151; font-style: italic; line-height: 1.5;"></p>
+            </div>
+            <div style="margin-top: 20px; padding: 14px; border-radius: 10px; background: rgba(245,158,11,0.14); text-align: center;">
+                <p style="margin: 0 0 10px; color: #1F2937; font-size: 0.92em; line-height: 1.45;">Et si on regardait aussi ce que tu aimes&nbsp;? <strong>12 questions, 2 minutes.</strong></p>
+                <button type="button" onclick="ouvrirCentresInteret()" style="padding: 10px 16px; background-color: #F59E0B; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">🎯 Découvrir mes centres d'intérêt</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modale Boussole Universitaire -->
+<div id="univ-modal" class="modal-overlay">
+    <div class="glass-card modal-content" style="max-width: 600px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+        <button class="modal-close" onclick="fermerBoussoleUniv()" style="color: #0F172A;">×</button>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 2.5em; margin-bottom: 5px;">🎓</div>
+            <h2 style="color: #0F172A; margin-bottom: 5px;">Le Conseiller Universitaire</h2>
+            <p style="color: #64748B; font-size: 0.9em;">Saisissez vos résultats exacts du Baccalauréat.</p>
+            <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Série du Bac :</label>
+                <select id="univ-serie" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+                    <option value="A">Série A</option>
+                    <option value="C">Série C</option>
+                    <option value="D" selected>Série D</option>
+                    <option value="E">Série E</option>
+                    <option value="G">Série G</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Date de naissance <span style="font-weight: normal; color: #64748B;">(facultatif)</span> :</label>
+                <input type="date" id="univ-date-naissance" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8; color: #0F172A; font-family: inherit;">
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Maths :</label>
+                <input type="number" id="univ-maths" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Français :</label>
+                <input type="number" id="univ-francais" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Philo :</label>
+                <input type="number" id="univ-philo" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Phys-Chimie :</label>
+                <input type="number" id="univ-pc" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">SVT :</label>
+                <input type="number" id="univ-svt" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Histoire-Géo :</label>
+                <input type="number" id="univ-hg" placeholder="/20" step="0.5" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+            <label style="font-weight: bold; color: #334155; font-size: 0.85em;">Moyenne au BAC :</label>
+            <input type="number" id="univ-moyenne" placeholder="/20" step="0.01" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #94A3B8;">
+        </div>
+        <p id="univ-profil-ci" style="display:none; margin: 0 0 12px; padding: 10px 12px; border-radius: 8px; background: rgba(20,184,166,0.15); color: #0F172A; font-size: 0.9em; text-align: center; line-height: 1.4;"></p>
+        <div style="text-align: center;">
+            <button onclick="invoquerConseiller()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #14B8A6; color: white; border: none; border-radius: 4px; cursor: pointer; transition: 0.3s;">Lancer l'Analyse</button>
+        </div>
+        <p style="text-align: center; font-size: 0.78em; color: #64748B; margin: 8px 0 0;">La date de naissance sert seulement à vérifier la limite d'âge d'accès aux universités publiques. Tu peux la laisser vide.</p>
+        <div style="margin-top: 18px; padding: 14px; border-radius: 10px; background: rgba(20,184,166,0.12); text-align: center;">
+            <p style="margin: 0 0 10px; color: #0F172A; font-size: 0.92em; line-height: 1.45;">Tu hésites encore sur ta filière&nbsp;? <strong>12 questions, 2 minutes.</strong></p>
+            <button type="button" onclick="fermerBoussoleUniv(); ouvrirCentresInteret('bac')" style="padding: 10px 16px; background-color: #14B8A6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">🎯 Découvrir mes centres d'intérêt</button>
+        </div>
+        <div style="text-align: center; margin-top: 14px;">
+            <button type="button" onclick="fermerBoussoleUniv()" style="background: none; border: none; color: #475569; text-decoration: underline; cursor: pointer; font-size: 0.95em;">Fermer</button>
+        </div>
+    </div>
+</div>
+    <!-- Modale Atelier de l'Orateur -->
+    <div id="orateur-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto; background-color: #F9F9F9; border: 1px solid #E5E7EB;">
+            <button class="modal-close" onclick="fermerAtelier()" style="color: #111827;">×</button>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 2.5em; margin-bottom: 10px;">🖋️</div>
+                <h2 style="color: #111827; font-family: 'Georgia', serif; font-weight: normal; letter-spacing: 1px;">L'Atelier de l'Orateur</h2>
+                <p style="color: #6B7280; font-style: italic; font-size: 0.95em;">"La parole est l'ombre de l'action."</p>
+                <hr style="border: none; border-top: 1px solid #D1D5DB; width: 50%; margin: 15px auto;">
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-weight: bold; color: #374151; display: block; margin-bottom: 8px;">1. L'Œuvre ou le Sujet étudié :</label>
+                <input type="text" id="orateur-sujet" placeholder="Ex: Cahier d'un retour au pays natal (Aimé Césaire)" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #9CA3AF; background: transparent; color: #111827;">
+            </div>
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="font-weight: bold; color: #374151; display: block; margin-bottom: 8px;">2. Le Cadre de l'Épreuve :</label>
+                <select id="orateur-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #9CA3AF; background: transparent; color: #111827;">
+                    <option value="">-- Choisissez l'arène --</option>
+                    <option value="bepc">Oral du BEPC</option>
+                    <option value="bac">Oral du Baccalauréat (Français)</option>
+                    <option value="expose">Exposé libre en classe</option>
+                </select>
+            </div>
+            <div style="text-align: center;">
+                <button onclick="invoquerJury()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #111827; color: #F9F9F9; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Faire face au Jury (IA)</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modale Atelier de Philosophie -->
+    <div id="philo-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+            <button class="modal-close" onclick="fermerPhilo()" style="color: #0F172A;">×</button>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 2.5em; margin-bottom: 10px;">🦉</div>
+                <h2 style="color: #0F172A; font-family: 'Georgia', serif; font-weight: normal;">Le Maître de la Dialectique</h2>
+                <p style="color: #64748B; font-style: italic; font-size: 0.95em;">"La sagesse commence dans l'émerveillement."</p>
+                <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">1. Sujet ou Thème :</label>
+                <input type="text" id="philo-sujet" placeholder="Ex: La conscience, L'État, ou l'énoncé d'un sujet..." style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+            </div>
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">2. Type d'exercice :</label>
+                <select id="philo-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+                    <option value="">-- Choisissez le format --</option>
+                    <option value="dissertation">Dissertation Philosophique</option>
+                    <option value="commentaire">Commentaire de Texte</option>
+                    <option value="concept">Explication d'un Concept</option>
+                </select>
+            </div>
+            <div style="text-align: center;">
+                <button onclick="invoquerMaitrePhilo()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #4F46E5; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Consulter le Maître</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modale Atelier des Sciences -->
+    <div id="sciences-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 500px; background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+            <button class="modal-close" onclick="fermerSciences()" style="color: #0F172A;">×</button>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 2.5em; margin-bottom: 10px;">🧬</div>
+                <h2 style="color: #0F172A; font-family: 'Georgia', serif; font-weight: normal;">Le Laboratoire des Sciences</h2>
+                <p style="color: #64748B; font-style: italic; font-size: 0.95em;">"La logique vous mènera de A à B. L'imagination vous mènera partout."</p>
+                <hr style="border: none; border-top: 1px solid #CBD5E1; width: 50%; margin: 15px auto;">
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">1. Chapitre ou Problème :</label>
+                <input type="text" id="sciences-sujet" placeholder="Ex: Cinématique, Calcul de pH, Équations..." style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+            </div>
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">2. Type d'assistance :</label>
+                <select id="sciences-cadre" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #94A3B8; background: transparent; color: #0F172A;">
+                    <option value="">-- Choisissez l'approche --</option>
+                    <option value="resolution">Méthode de résolution (Exercice)</option>
+                    <option value="demonstration">Démonstration de cours</option>
+                    <option value="formule">Explication d'une formule</option>
+                </select>
+            </div>
+            <div style="text-align: center;">
+                <button onclick="invoquerLaboratoire()" style="width: 100%; padding: 12px; font-size: 1.1em; background-color: #059669; color: white; border: none; border-radius: 4px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-family: 'Georgia', serif;">Entrer au Laboratoire</button>
+            </div>
+        </div>
+    </div>
+    <!-- MODALE BIBLIOTHÈQUE D'ILLUSTRATIONS (Espace Enseignant — La Forge) -->
+    <div id="illustrations-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 780px; width: 92%;">
+            <button class="modal-close" onclick="fermerBibliothequeIllustrations()">×</button>
+            <h3 style="margin-bottom: 6px;">🖼️ Bibliothèque d'illustrations</h3>
+            <p style="color: #6B7280; font-size: 0.9em; margin-bottom: 18px;">Schémas recréés et vraies photographies microscopiques, prêts à insérer dans une fiche. Cliquez sur une image pour copier son lien Markdown.</p>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
+                <select id="illu-filtre-matiere" class="input-field" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" onchange="rechercherIllustrations()">
+                    <option value="">Toutes les matières</option>
+                    <option value="maths">Mathématiques</option>
+                    <option value="francais">Français</option>
+                    <option value="anglais">Anglais</option>
+                    <option value="espagnol">Espagnol</option>
+                    <option value="allemand">Allemand</option>
+                    <option value="philosophie">Philosophie</option>
+                    <option value="edhc">EDHC</option>
+                    <option value="tice">TICE</option>
+                    <option value="histoire">Histoire</option>
+                    <option value="geographie">Géographie</option>
+                    <option value="svt">SVT</option>
+                    <option value="physique">Physique-Chimie</option>
+                    <option value="arts_plastiques">Arts Plastiques</option>
+                    <option value="musique">Éducation Musicale</option>
+                </select>
+                <select id="illu-filtre-niveau" class="input-field" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" onchange="rechercherIllustrations()">
+                    <option value="">Toutes les classes</option>
+                    <option value="6e">6ème</option>
+                    <option value="5e">5ème</option>
+                    <option value="4e">4ème</option>
+                    <option value="3e">3ème (BEPC)</option>
+                    <option value="2nde">2nde</option>
+                    <option value="1ere">1ère</option>
+                    <option value="terminale">Terminale</option>
+                </select>
+                <input type="text" id="illu-recherche" class="input-field" placeholder="Rechercher un thème, un TP..." style="flex: 2; min-width: 180px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" oninput="rechercherIllustrationsDifferee()">
+            </div>
+
+            <div id="illu-feedback" style="min-height: 18px; font-size: 0.85em; color: #6B7280; margin-bottom: 8px;"></div>
+            <div id="illu-resultats" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; max-height: 55vh; overflow-y: auto; padding-right: 4px;"></div>
+        </div>
+    </div>
+    <!-- MODALE BIBLIOTHÈQUE DE FICHES-FORMULES (Espace Enseignant — Atelier/Forge) -->
+    <div id="formules-modal" class="modal-overlay">
+        <div class="glass-card modal-content" style="max-width: 780px; width: 92%;">
+            <button class="modal-close" onclick="fermerBibliothequeFormules()">×</button>
+            <h3 style="margin-bottom: 6px;">📐 Bibliothèque de fiches-formules</h3>
+            <p style="color: #6B7280; font-size: 0.9em; margin-bottom: 18px;">Formulaires de Maths, Physique-Chimie et SVT, prêts à insérer dans un cours ou une évaluation. Cliquez sur une fiche pour copier son contenu.</p>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
+                <select id="formules-filtre-matiere" class="input-field" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" onchange="rechercherFormules()">
+                    <option value="">Toutes les matières</option>
+                    <option value="maths">Mathématiques</option>
+                    <option value="physique">Physique-Chimie</option>
+                    <option value="svt">SVT</option>
+                </select>
+                <select id="formules-filtre-niveau" class="input-field" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" onchange="rechercherFormules()">
+                    <option value="">Toutes les classes</option>
+                    <option value="6e">6ème</option>
+                    <option value="5e">5ème</option>
+                    <option value="4e">4ème</option>
+                    <option value="3e">3ème (BEPC)</option>
+                    <option value="2nde">2nde</option>
+                    <option value="1ere">1ère</option>
+                    <option value="terminale">Terminale</option>
+                </select>
+                <input type="text" id="formules-recherche" class="input-field" placeholder="Rechercher un chapitre, une notion..." style="flex: 2; min-width: 180px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;" oninput="rechercherFormulesDifferee()">
+            </div>
+
+            <div id="formules-feedback" style="min-height: 18px; font-size: 0.85em; color: #6B7280; margin-bottom: 8px;"></div>
+            <div id="formules-resultats" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; max-height: 55vh; overflow-y: auto; padding-right: 4px;"></div>
+        </div>
+    </div>
+    <!-- Script de régulation des notes scientifiques (Conseiller Universitaire) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectSerie = document.getElementById('univ-serie');
+            const inputPC = document.getElementById('univ-pc');
+            const inputSVT = document.getElementById('univ-svt');
+            function ajusterChampsScientifiques() {
+                if (!selectSerie || !inputPC || !inputSVT) return;
+
+                const serieChoisie = selectSerie.value.toUpperCase();
+
+                // Séries scientifiques : C, D, E
+                if (serieChoisie === 'C' || serieChoisie === 'D' || serieChoisie === 'E') {
+                    // Les piliers s'éveillent et deviennent obligatoires
+                    inputPC.setAttribute('required', 'required');
+                    inputSVT.setAttribute('required', 'required');
+
+                    // Rétablir l'accès et l'apparence normale
+                    inputPC.disabled = false;
+                    inputSVT.disabled = false;
+                    inputPC.style.backgroundColor = "transparent";
+                    inputSVT.style.backgroundColor = "transparent";
+                    inputPC.style.opacity = "1";
+                    inputSVT.style.opacity = "1";
+
+                    inputPC.placeholder = "Requis (/20)";
+                    inputSVT.placeholder = "Requis (/20)";
+                } else {
+                    // Séries littéraires (A, G) : Les piliers se mettent en sommeil
+                    inputPC.removeAttribute('required');
+                    inputSVT.removeAttribute('required');
+
+                    // Verrouiller et griser les champs
+                    inputPC.disabled = true;
+                    inputSVT.disabled = true;
+                    inputPC.style.backgroundColor = "#E2E8F0"; // Gris doux
+                    inputSVT.style.backgroundColor = "#E2E8F0";
+                    inputPC.style.opacity = "0.6"; // Légère transparence
+
+                    // Effacer d'éventuelles notes saisies par erreur
+                    inputPC.value = "";
+                    inputSVT.value = "";
+
+                    inputPC.placeholder = "Non requis";
+                    inputSVT.placeholder = "Non requis";
+                }
+            }
+            if (selectSerie && inputPC && inputSVT) {
+                // 1. Ajustement initial (Série D par défaut)
+                ajusterChampsScientifiques();
+
+                // 2. Écoute de chaque changement
+                selectSerie.addEventListener('change', ajusterChampsScientifiques);
+            }
+        });
+    </script>
+    <!-- Vercel Web Analytics -->
+    <script defer src="/_vercel/insights/script.js"></script>
+    <!-- ❖ PWA -- enregistrement du service worker (condition technique pour
+         que Chrome/Android propose l'installation). Échec silencieux si le
+         navigateur ne supporte pas les service workers (ex: vieux Safari). -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+            });
+            // ❖ Mise à jour automatique : quand une nouvelle version du service
+            // worker prend le contrôle (déploiement), la page se recharge une
+            // fois pour charger le nouveau code -- sauf si l'élève est en train
+            // d'écrire (on attend alors qu'il ait fini). Pas de rechargement à
+            // la toute première installation (aucun contrôleur auparavant).
+            const avaitControleur = !!navigator.serviceWorker.controller;
+            let rechargementFait = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!avaitControleur || rechargementFait) return;
+                rechargementFait = true;
+                const recharger = () => {
+                    const actif = document.activeElement;
+                    const saisie = actif && (actif.tagName === 'TEXTAREA' || actif.tagName === 'INPUT' || actif.isContentEditable) && (actif.value || actif.textContent || '').length > 0;
+                    if (saisie) { setTimeout(recharger, 15000); return; }
+                    location.reload();
+                };
+                recharger();
+            });
+        }
+    </script>
+</body>
+</html>
