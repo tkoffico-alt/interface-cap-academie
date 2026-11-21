@@ -855,6 +855,14 @@ body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
 .message .katex {
     font-size: 1.05em;
 }
+/* ❖ 21/11/2026 : la règle universelle `* { font-family: ... }` du début de ce fichier
+   écrasait les polices internes de KaTeX (les spans sans classe de police prenaient la police
+   système au lieu de KaTeX_Main) : chiffres en police système et signe « ≠ » affiché comme un
+   petit carré. `inherit` rend aux éléments internes la police de .katex ; les règles propres
+   de KaTeX (.katex .mathnormal, etc.), plus spécifiques, continuent de s'appliquer. */
+.katex * {
+    font-family: inherit;
+}
 
 /* ❖ Portée musicale (abcjs, voir extraireEtRendreABC/reinjecterABC dans
    app.js) -- rendu SVG d'un bloc ```abc écrit par l'agent. Utilisé à la
