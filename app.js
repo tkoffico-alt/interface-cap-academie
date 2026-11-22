@@ -355,6 +355,11 @@ function ouvrirFormulaireGuide(outil) {
 // (couleurs de la barre du haut, voir enseignant-terre.css). Ne touche à rien d'autre.
 function majHabillageEspace() {
     try { document.body.classList.toggle('espace-ens', espaceActuel === 'enseignant'); } catch (e) { /* esthétique seulement */ }
+    // 22/11/2026 : barre de titre de la fenêtre / du navigateur — brique côté enseignant, indigo côté élève, bleu d'origine ailleurs.
+    try {
+        var mt = document.querySelector('meta[name="theme-color"]');
+        if (mt) mt.setAttribute('content', espaceActuel === 'enseignant' ? '#7E3326' : (espaceActuel === 'eleve' ? '#1D3FA8' : '#3B82F6'));
+    } catch (e) { /* esthétique seulement */ }
 }
 
 async function openSpace(space) {
