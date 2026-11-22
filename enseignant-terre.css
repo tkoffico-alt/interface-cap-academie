@@ -489,3 +489,10 @@ body.espace-ens:not(.dark-theme) .toolbar-outils { background: #BFD5CD; border: 
 body.espace-ens:not(.dark-theme) .toolbar-outils .btn-icon-groupe:hover { background-color: rgba(255,255,255,.55); box-shadow: 0 0 0 1px #9DBBB0; }
 body.espace-ens:not(.dark-theme) #btn-menu-nav, body.espace-ens:not(.dark-theme) #btn-theme { background: #14243F; border: 1px solid #14243F; color: #FFFFFF; box-shadow: 0 3px 10px rgba(20,36,63,.28); }
 body.espace-ens:not(.dark-theme) #btn-menu-nav:hover, body.espace-ens:not(.dark-theme) #btn-menu-nav[aria-expanded="true"], body.espace-ens:not(.dark-theme) #btn-theme:hover { background: #1F3559; border-color: #1F3559; color: #FFFFFF; box-shadow: 0 3px 10px rgba(20,36,63,.35); }
+
+/* Menu déroulant : même turquoise clair que la barre d'outils (mode clair) (22/11/2026) */
+body.espace-ens:not(.dark-theme) .menu-navigation-panel { background-color: #BFD5CD; border: 1px solid #9DBBB0; box-shadow: 0 12px 32px rgba(20,36,63,.22), 0 2px 6px rgba(20,36,63,.12); }
+body.espace-ens:not(.dark-theme) .menu-nav-item { color: #2A1D19; }
+body.espace-ens:not(.dark-theme) .menu-nav-item:hover { background-color: rgba(255,255,255,.6); }
+body.espace-ens:not(.dark-theme) .menu-nav-separateur { background-color: #9DBBB0; }
+body.espace-ens:not(.dark-theme) .menu-nav-titre { color: #3E4F4A; }
