@@ -483,3 +483,9 @@ body.dark-theme.espace-ens, body.dark-theme.espace-ens :is(#container-atelier-cu
 }
 body.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .note-relire-fiche { background: var(--at-survol); border-radius: 10px; padding: .6rem .85rem; margin-top: 8px; text-align: center; font-size: .88rem; font-weight: 600; line-height: 1.45; color: #4A342C; }
 body.dark-theme.espace-ens :is(#container-atelier-custom,#container-forge-custom,#container-cabinet-custom,#container-forge_primaire-custom,#container-cabinet_primaire-custom) .note-relire-fiche { color: #F0E2D6; }
+
+/* Barre d'outils turquoise clair + boutons menu et thème en bleu marine (mode clair) (22/11/2026) */
+body.espace-ens:not(.dark-theme) .toolbar-outils { background: #BFD5CD; border: 1px solid #9DBBB0; }
+body.espace-ens:not(.dark-theme) .toolbar-outils .btn-icon-groupe:hover { background-color: rgba(255,255,255,.55); box-shadow: 0 0 0 1px #9DBBB0; }
+body.espace-ens:not(.dark-theme) #btn-menu-nav, body.espace-ens:not(.dark-theme) #btn-theme { background: #14243F; border: 1px solid #14243F; color: #FFFFFF; box-shadow: 0 3px 10px rgba(20,36,63,.28); }
+body.espace-ens:not(.dark-theme) #btn-menu-nav:hover, body.espace-ens:not(.dark-theme) #btn-menu-nav[aria-expanded="true"], body.espace-ens:not(.dark-theme) #btn-theme:hover { background: #1F3559; border-color: #1F3559; color: #FFFFFF; box-shadow: 0 3px 10px rgba(20,36,63,.35); }
