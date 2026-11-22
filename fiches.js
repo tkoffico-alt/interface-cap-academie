@@ -169,6 +169,17 @@
   function fermer() { boite.classList.remove('ouverte'); }
   /* « Demander à l'assistant » : réservé aux abonnés Premium élèves (code ELV-). Le serveur revérifie le code à l'envoi. */
   var AVATAR = { physique: 'physique', chimie: 'physique', 'physique-chimie': 'physique', histoire: 'histoire_geo', geographie: 'histoire_geo', arts_plastiques: 'arts_plastiques' };
+  /* 22/11/2026 : pour un enseignant, le bouton est grisé (il reste cliquable pour afficher l'explication). */
+  try {
+    var ens = JSON.parse(localStorage.getItem('eduka_retour') || 'null');
+    if (ens && ens.espace === 'enseignant' && ens.t && (Date.now() - ens.t) < 21600000) {
+      var bt = document.getElementById('f-assistant');
+      bt.style.opacity = '.5';
+      bt.style.cursor = 'not-allowed';
+      bt.setAttribute('aria-disabled', 'true');
+      bt.title = 'Réservé aux élèves abonnés';
+    }
+  } catch (e) {}
   document.getElementById('f-assistant').addEventListener('click', function () {
     var msg = document.getElementById('f-boite-msg');
     var sceau = '';
