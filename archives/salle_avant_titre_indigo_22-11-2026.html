@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2563EB">
+<title>Salle d'étude EdukaTchat</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<script>
+/* Thème : même réglage que l'application (clé « eduka_theme »). */
+(function () {
+  var sombre = false;
+  try {
+    var choix = localStorage.getItem('eduka_theme');
+    sombre = (choix === 'dark') || (!choix && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) {}
+  if (sombre) document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<style>
+  :root {
+    --fond: #F1F5F9; --carte: #FFFFFF; --texte: #1E293B; --doux: #475569; --bord: #CBD5E1;
+    --primaire: #2563EB; --primaire-texte: #FFFFFF; --accent: #F59E0B;
+    --juste-fond: #D1FAE5; --juste-bord: #10B981; --juste-texte: #047857;
+    --faux-texte: #B91C1C; --option: #FFFFFF; --option-survol: #DBEAFE; --expl-fond: #EFF6FF;
+  }
+  :root[data-theme="dark"] {
+    --fond: #0F172A; --carte: #1E293B; --texte: #E2E8F0; --doux: #CBD5E1; --bord: #475569;
+    --primaire: #3B82F6; --juste-fond: #064E3B; --juste-texte: #6EE7B7;
+    --faux-texte: #FCA5A5; --option: #0F172A; --option-survol: #334155; --expl-fond: #172033;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--fond); color: var(--texte);
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.5; }
+  .page { max-width: 1040px; margin: 0 auto; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; }
+  .entete { display: flex; align-items: center; justify-content: space-between; padding: 4px 2px 14px; }
+  .marque { font-weight: 800; font-size: 1.05rem; color: var(--primaire); text-decoration: none; }
+  .carte { background: var(--carte); border-radius: 16px; padding: 20px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.10); margin-bottom: 14px; }
+  h1 { font-size: 1.35rem; line-height: 1.3; margin: 0 0 6px; overflow-wrap: anywhere; }
+  h2 { font-size: 1.05rem; line-height: 1.4; margin: 0 0 12px; overflow-wrap: anywhere; }
+  p { margin: 0 0 12px; }
+  .doux { color: var(--doux); font-size: 0.92rem; }
+  .pastille { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--expl-fond); color: var(--primaire); font-size: 0.82rem; font-weight: 600; margin: 0 6px 10px 0; }
+  label { display: block; font-weight: 600; font-size: 0.92rem; margin: 14px 0 4px; }
+  input[type="text"], input[type="date"], select, textarea { width: 100%; min-height: 48px; padding: 10px 14px; font: inherit; border: 1px solid var(--bord);
+      border-radius: 10px; background: var(--option); color: var(--texte); }
+  textarea { min-height: 150px; resize: vertical; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 14px; padding: 12px 18px;
+         border: 0; border-radius: 12px; background: var(--primaire); color: var(--primaire-texte); font: inherit; font-weight: 700;
+         cursor: pointer; text-decoration: none; }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .btn-sec { background: transparent; color: var(--primaire); border: 2px solid var(--primaire); }
+  .erreur-msg { min-height: 1.3em; margin: 10px 0 0; color: var(--faux-texte); font-size: 0.92rem; font-weight: 600; }
+  .barre { height: 10px; border-radius: 999px; background: var(--bord); overflow: hidden; margin: 6px 0 4px; }
+  .barre > span { display: block; height: 100%; width: 0; background: var(--juste-bord); transition: width 0.3s ease; }
+  .bulle-comm { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(59, 130, 246, 0.12); font-size: .9rem; white-space: pre-wrap; }
+  .tableau-suivi { border-collapse: collapse; font-size: .85rem; margin: 10px 0; }
+  .tableau-suivi th, .tableau-suivi td { border: 1px solid #ddd; padding: 4px 8px; text-align: center; }
+  .tableau-suivi td:first-child { text-align: left; }
+  .liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .tache { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--option); }
+  .tache.fait { background: var(--juste-fond); border-color: var(--juste-bord); }
+  .tache input[type="checkbox"] { flex-shrink: 0; width: 26px; height: 26px; margin-top: 2px; accent-color: var(--juste-bord); cursor: pointer; }
+  .tache-corps { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .tache-nom { font-weight: 600; }
+  /* 15/11/2026 : fiche de chapitre en couleurs, pour se repérer d'un coup d'œil */
+  .fiche-corps h2.sec { padding: 6px 10px; border-radius: 8px; border-left: 5px solid var(--c); background: var(--b); font-size: 1.05rem; }
+  .sec-retenir { --c: #2563EB; --b: rgba(37,99,235,.13); } .sec-retenir::before { content: '🎯 '; }
+  .sec-vocab { --c: #7C3AED; --b: rgba(124,58,237,.13); } .sec-vocab::before { content: '🔤 '; }
+  .sec-exemple { --c: #16A34A; --b: rgba(22,163,74,.13); } .sec-exemple::before { content: '✏️ '; }
+  .sec-erreurs { --c: #DC2626; --b: rgba(220,38,38,.12); } .sec-erreurs::before { content: '⚠️ '; }
+  .sec-astuce { --c: #D97706; --b: rgba(217,119,6,.14); } .sec-astuce::before { content: '💡 '; }
+  .sec-exos { --c: #0D9488; --b: rgba(13,148,136,.14); } .sec-exos::before { content: '📝 '; }
+  .sec-corriges { --c: #64748B; --b: rgba(100,116,139,.15); } .sec-corriges::before { content: '✅ '; }
+  .tache-info .btn-fiche { background: #2563EB; border-color: #1D4ED8; color: #FFFFFF; font-weight: 700; }
+  .tache-info .btn-generer { background: #F59E0B; border-color: #D97706; color: #1F2937; font-weight: 700; }
+  .sec-reponses { --c: #DB2777; --b: rgba(219,39,119,.12); } .sec-reponses::before { content: '✍️ '; }
+  .rep-exo { margin: 10px 0 14px; }
+  .rep-titre { font-weight: 700; margin-bottom: 6px; }
+  .rep-choix { display: flex; flex-wrap: wrap; gap: 8px; }
+  .rep-btn { font-size: 0.95rem; }
+  .rep-btn:disabled { opacity: 0.75; cursor: default; }
+  .rep-btn.rep-juste { background: #16A34A; border-color: #15803D; color: #FFFFFF; opacity: 1; font-weight: 700; }
+  .rep-btn.rep-faux { background: #DC2626; border-color: #B91C1C; color: #FFFFFF; opacity: 1; font-weight: 700; }
+  .rep-verdict { margin: 6px 0 0; font-weight: 600; }
+  .rep-valide { padding: 8px 12px; border-radius: 10px; background: rgba(22,163,74,.16); font-weight: 700; }
+  .rep-grille-titre { margin: 14px 0 6px; }
+  .rep-cell { text-align: center; }
+  .rep-moi { font-weight: 700; }
+  .rep-aide { margin: 6px 0; padding: 8px 12px; border-radius: 10px; background: rgba(217,119,6,.14); }
+  .zone-corriges { margin-top: 18px; } .zone-reponses { margin-top: 14px; } .zone-reponses > .btn-petit { margin-top: 10px; }
+  .suivi-chap { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 10px; text-align: left; }
+  .suivi-chap p { margin: 4px 0; }
+  .suivi-alerte { padding: 6px 10px; border-radius: 8px; background: rgba(217,119,6,.14); font-weight: 600; }
+  .corriges-verrou { padding: 10px 12px; border-radius: 10px; background: rgba(100,116,139,.15); font-weight: 600; }
+  .tache-info { font-size: 0.85rem; color: var(--doux); }
+  .zone-retours { margin-top: 16px; padding: 12px; border-radius: 12px; background: var(--option); border: 1px solid var(--bord); }
+  .zone-retours h3 { margin: 0 0 8px; font-size: 1rem; }
+  .zone-retours .rang { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+  .etoile { min-width: 48px; font-size: 1.5rem; line-height: 1; }
+  .etoile.actif { background: #FDE68A; border-color: #F59E0B; }
+  .puce { font-size: 0.9rem; }
+  .puce.actif { background: var(--juste-fond); border-color: var(--juste-bord); color: var(--juste-texte); font-weight: 700; }
+  .retour-ligne { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 0.92rem; }
+  .retour-ligne .barre { flex: 1; margin: 0; }
+  .retour-ligne > span:first-child { min-width: 44px; } .retour-ligne > span:last-child { min-width: 1.6em; text-align: right; }
+  .jury-q { margin: 12px 0; padding: 10px 12px; border-radius: 10px; background: var(--option); border: 1px solid var(--bord); }
+  .jury-q .jury-rep { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--expl-fond); white-space: pre-wrap; }
+  .quiz-q { margin: 14px 0 6px; font-weight: 700; }
+  .quiz-opt { display: block; width: 100%; margin: 6px 0; text-align: left; justify-content: flex-start; }
+  .quiz-opt.bon { background: var(--juste-fond); border-color: var(--juste-bord); color: var(--juste-texte); font-weight: 700; }
+  .quiz-opt.mauvais { background: var(--expl-fond); border-color: #EF4444; color: var(--faux-texte); }
+  .quiz-edit { margin: 12px 0; padding: 10px; border-radius: 10px; background: var(--carte); border: 1px solid var(--bord); }
+  .quiz-edit input[type="text"] { width: 100%; box-sizing: border-box; margin: 4px 0; }
+  .quiz-prop { display: flex; align-items: center; gap: 8px; }
+  .quiz-prop input[type="radio"] { flex-shrink: 0; width: 22px; height: 22px; accent-color: var(--juste-bord); }
+  .quiz-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .btn-petit { min-height: 44px; min-width: 44px; padding: 6px 10px; border: 1px solid var(--bord); border-radius: 10px; background: var(--option);
+               color: var(--texte); font: inherit; font-size: 0.85rem; cursor: pointer; }
+  .btn-petit.actif { background: var(--accent); border-color: var(--accent); color: #1F2937; font-weight: 700; }
+  .membre { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--option); }
+  .membre.moi { border: 2px solid var(--primaire); background: var(--expl-fond); }
+  .membre-nom { flex: 1 1 120px; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .membre-score { font-size: 0.85rem; color: var(--doux); white-space: nowrap; }
+  .reactions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .recu { display: inline-block; margin: 0 6px 6px 0; padding: 4px 10px; border-radius: 999px; background: var(--expl-fond); font-size: 0.9rem; }
+  .lien-discret { display: inline-block; min-height: 44px; padding: 8px 12px; border: 0; background: transparent; color: var(--doux); font: inherit; font-size: 0.85rem; text-decoration: underline; cursor: pointer; }
+  .centre { text-align: center; }
+  .pied { margin-top: auto; padding: 18px 4px 6px; text-align: center; font-size: 0.8rem; color: var(--doux); }
+  .cache { display: none !important; }
+  .lien-boite { padding: 10px 12px; border: 1px dashed var(--bord); border-radius: 10px; overflow-wrap: anywhere; font-weight: 600; margin-bottom: 8px; }
+  #ecran-liste, #ecran-creation, #ecran-cree, #ecran-accueil, #ecran-erreur, #ecran-chargement { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+  .salle-colonnes { display: block; }
+  @media (min-width: 900px) {
+    .salle-colonnes { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+    .salle-colonnes .carte { margin-bottom: 18px; }
+    .salle-colonnes > div:last-child > .carte:last-child { margin-bottom: 0; }
+    .carte { padding: 24px; }
+    #salle-titre { font-size: 1.8rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .barre > span { transition: none; } }
+</style>
+<style>.page{animation:pageIn .35s cubic-bezier(.22,.8,.3,1) both}main>*,.page main section,.page main .carte{animation:pageIn .4s cubic-bezier(.22,.8,.3,1) both}@view-transition{navigation:auto}@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.page,main>*,.page main section,.page main .carte{animation:none}}</style>
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <a class="marque" id="btn-retour-app" href="https://edukatchat.org/">← Retour à EdukaTchat</a>
+    <span class="doux">👥 Salle d'étude</span>
+  </header>
+
+  <main id="contenu" aria-live="polite">
+    <section id="ecran-chargement" class="carte centre"><p>Chargement…</p></section>
+
+    <section id="ecran-erreur" class="carte cache">
+      <h1 id="erreur-titre">Oups</h1>
+      <p id="erreur-texte" class="doux"></p>
+      <a class="btn" href="https://edukatchat.org/">Découvrir EdukaTchat</a>
+    </section>
+
+    <!-- Mes salles (page sans code dans l'adresse) -->
+    <section id="ecran-liste" class="carte cache">
+      <h1>Mes salles d'étude</h1>
+      <p class="doux">Retrouve ici les salles que tu as ouvertes ou rejointes sur cet appareil.</p>
+      <ul id="liste-salles" class="liste"></ul>
+      <button type="button" id="btn-binome" class="btn">🤝 Étudier en binôme (2 personnes)</button>
+      <button type="button" id="btn-nouvelle" class="btn btn-sec">Créer une salle pour un groupe (jusqu'à 4)</button>
+      <div id="bloc-premium" class="cache" style="background:#eff6ff;border:2px solid #2563eb;border-radius:14px;padding:14px 16px;margin-top:6px">
+        <strong>🔒 Créer une salle : réservé aux abonnés Premium</strong>
+        <p class="doux" style="margin:6px 0 0">Avec l'abonnement Premium élève, tu peux étudier en binôme ou ouvrir une salle pour un groupe de 4 personnes au plus. Connecte-toi à EdukaTchat avec ton code Premium pour débloquer ces boutons.</p>
+      </div>
+      <p class="doux" style="margin-top:14px">Pour rejoindre la salle d'un camarade, ouvre simplement le lien qu'il t'a envoyé.</p>
+    </section>
+
+    <!-- Création d'une salle (sans code dans l'adresse) -->
+    <section id="ecran-creation" class="carte cache">
+      <h1 id="creation-titre">Créer une salle d'étude</h1>
+      <p class="doux">Prépare un devoir ou un examen avec tes camarades : un plan de révision commun, chacun coche ce qu'il a révisé, et vous vous encouragez. Pas de discussion libre.</p>
+      <div id="c-bloc-haut">
+      <label for="c-titre" id="c-titre-label">Titre de la salle</label>
+      <input type="text" id="c-titre" maxlength="60" placeholder="Ex. : Révision BEPC de maths">
+      <label for="c-objectif">Objectif</label>
+      <select id="c-objectif">
+        <option value="devoir">Un devoir</option>
+        <option value="bepc">Le BEPC</option>
+        <option value="bac">Le BAC</option>
+        <option value="expose">Un exposé</option>
+        <option value="autre">Autre</option>
+      </select>
+      </div>
+      <label for="c-matiere">Matière</label>
+      <input type="text" id="c-matiere" maxlength="40" placeholder="Ex. : Mathématiques">
+      <div id="c-bloc-classe">
+      <label for="c-classe">Classe</label>
+      <input type="text" id="c-classe" maxlength="20" placeholder="Ex. : 3e">
+      <label for="c-date">Date de l'examen ou du rendu (facultatif)</label>
+      <input type="date" id="c-date">
+      </div>
+      <label for="c-chapitres" id="c-chap-label">Chapitres à réviser (un par ligne, de 1 à 12)</label>
+      <textarea id="c-chapitres" placeholder="Calcul littéral&#10;Théorème de Thalès&#10;Statistiques"></textarea>
+      <p class="doux" id="c-chap-aide" style="margin:6px 0 0"></p>
+      <button type="button" id="btn-suggerer" class="btn btn-sec">💡 Suggérer des parties (IA, facultatif)</button>
+      <label for="c-pseudo">Ton pseudonyme</label>
+      <input type="text" id="c-pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Awa">
+      <p id="creation-msg" class="erreur-msg" role="alert"></p>
+      <button type="button" id="btn-creer" class="btn">Créer la salle</button>
+      <p class="doux" style="margin-top:14px">Réservé aux abonnés Premium. Jusqu'à 4 personnes, sans compte pour les camarades. La salle reste ouverte jusqu'à la date de l'examen (5 mois au maximum) ; le créateur peut la prolonger.</p>
+    </section>
+
+    <section id="ecran-cree" class="carte cache">
+      <h1>Salle créée 🎉</h1>
+      <p id="cree-info">Envoie ce lien à tes camarades (2 à 4 personnes en tout) :</p>
+      <div id="cree-lien" class="lien-boite"></div>
+      <button type="button" id="btn-copier" class="btn btn-sec">Copier le lien</button>
+      <a id="btn-whatsapp" class="btn" target="_blank" rel="noopener">Partager sur WhatsApp</a>
+      <button type="button" id="btn-entrer" class="btn btn-sec">Entrer dans la salle</button>
+    </section>
+
+    <!-- Rejoindre -->
+    <section id="ecran-accueil" class="carte cache">
+      <span class="pastille" id="accueil-meta"></span>
+      <h1 id="accueil-titre"></h1>
+      <p class="doux" id="accueil-createur"></p>
+      <p id="accueil-infos"></p>
+      <label for="pseudo">Choisis un pseudonyme</label>
+      <input type="text" id="pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Koffi" enterkeyhint="go">
+      <p id="accueil-msg" class="erreur-msg" role="alert"></p>
+      <button type="button" id="btn-rejoindre" class="btn">Rejoindre la salle</button>
+      <p class="doux" style="margin-top:14px">Pas de compte, pas d'abonnement. Seuls ton pseudonyme et les chapitres que tu coches sont gardés ; tout est effacé après la fin de la salle.</p>
+    </section>
+
+    <!-- La salle -->
+    <section id="ecran-salle" class="cache">
+      <div class="carte">
+        <span class="pastille" id="salle-meta"></span><span class="pastille" id="salle-jours"></span>
+        <h1 id="salle-titre"></h1>
+        <div class="doux">Progression du groupe : <strong id="salle-pct"></strong></div>
+        <div class="barre" aria-hidden="true"><span id="salle-barre"></span></div>
+        <div id="consigne-bloc" class="cache" style="margin-top:14px">
+          <strong>📌 Consigne</strong>
+          <p id="consigne-texte" style="margin:6px 0 0;white-space:pre-wrap"></p>
+        </div>
+        <div id="consigne-edition" class="cache" style="margin-top:12px">
+          <button type="button" id="btn-consigne" class="lien-discret">Écrire ou modifier la consigne</button>
+          <div id="consigne-form" class="cache">
+            <textarea id="consigne-saisie" maxlength="300" style="min-height:80px" placeholder="Ex. : Terminez les parties 1 et 2 avant vendredi."></textarea>
+            <div class="doux" id="consigne-compteur"></div>
+            <p id="consigne-msg" class="erreur-msg" role="alert"></p>
+            <button type="button" id="consigne-enregistrer" class="btn btn-sec">Épingler la consigne</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="salle-colonnes">
+      <div>
+      <div class="carte">
+        <h2 id="plan-titre">Mon plan de révision</h2>
+        <p class="doux" id="plan-aide">Coche un chapitre quand tu l'as révisé. Si tu bloques, demande de l'aide : tes camarades le verront.</p>
+        <ul id="liste-plan" class="liste"></ul>
+        <p id="plan-msg" class="erreur-msg" role="alert"></p>
+        <button type="button" id="btn-expose" class="btn btn-sec cache">📄 Voir l'exposé complet</button>
+        <button type="button" id="btn-jury" class="btn btn-sec cache">🎤 Questions du jury</button>
+      </div>
+
+      <div id="panneau-chapitre" class="carte cache">
+        <h2 id="pc-titre"></h2>
+        <p class="doux" id="pc-meta"></p>
+        <article id="pc-corps" class="fiche-corps"></article>
+        <p id="pc-msg" class="erreur-msg" role="alert"></p>
+        <button type="button" id="pc-partager" class="btn btn-sec cache">📤 Partager ce chapitre avec une autre salle (code)</button>
+        <button type="button" id="pc-regenerer" class="btn btn-sec cache">🔄 Régénérer la fiche (une seule fois)</button>
+        <button type="button" id="pc-fermer" class="btn btn-sec">Fermer</button>
+      </div>
+
+      <div id="panneau-section" class="carte cache">
+        <h2 id="ps-titre"></h2>
+        <p class="doux" id="ps-auteur"></p>
+        <textarea id="ps-texte" maxlength="3000" style="min-height:220px"></textarea>
+        <div class="doux" id="ps-compteur"></div>
+        <p id="ps-msg" class="erreur-msg" role="alert"></p>
+        <div id="ps-relecture" class="cache"></div>
+        <div id="ps-comm-lecture" class="cache" style="margin-top:12px;padding:10px 12px;border-radius:10px;background:#eff6ff">
+          <strong>💬 Commentaire du créateur</strong>
+          <p id="ps-comm-texte-lu" style="margin:6px 0 0;white-space:pre-wrap"></p>
+        </div>
+        <div id="ps-comm-edition" class="cache" style="margin-top:12px">
+          <label for="ps-comm-saisie">Ton commentaire sur cette section (visible des membres)</label>
+          <textarea id="ps-comm-saisie" maxlength="400" style="min-height:80px"></textarea>
+          <p id="ps-comm-msg" class="erreur-msg" role="alert"></p>
+          <button type="button" id="ps-comm-enregistrer" class="btn btn-sec">Enregistrer le commentaire</button>
+        </div>
+        <div id="ps-retours" class="cache zone-retours"></div>
+        <div id="ps-quiz" class="cache zone-retours"></div>
+        <button type="button" id="ps-enregistrer" class="btn">Enregistrer ma section</button>
+        <button type="button" id="ps-relire" class="btn btn-sec cache">🔍 Demander une relecture (IA)</button>
+        <button type="button" id="ps-liberer" class="btn btn-sec cache">Libérer cette section</button>
+        <button type="button" id="ps-fermer" class="btn btn-sec">Fermer</button>
+      </div>
+
+      <div id="panneau-jury" class="carte cache">
+        <h2>🎤 Questions du jury</h2>
+        <p class="doux">Voici les questions que l'enseignant pourrait poser à la fin de votre exposé. Répondez-y à voix haute, chacun votre tour, avant de regarder la réponse conseillée.</p>
+        <div id="pj-contenu"></div>
+        <p id="pj-msg" class="erreur-msg" role="status"></p>
+        <div class="quiz-actions">
+          <button type="button" id="pj-generer" class="btn cache">✨ Préparer les questions du jury</button>
+          <button type="button" id="pj-regenerer" class="btn btn-sec cache">🔄 Mettre à jour les questions</button>
+        </div>
+        <button type="button" id="pj-fermer" class="btn btn-sec">Fermer</button>
+      </div>
+
+      <div id="panneau-expose" class="carte cache">
+        <h2>Exposé complet</h2>
+        <div id="pe-contenu"></div>
+        <p id="pe-msg" class="doux" role="status"></p>
+        <button type="button" id="pe-copier" class="btn btn-sec">Copier le texte</button>
+        <button type="button" id="pe-telecharger" class="btn">Télécharger pour Word (.doc)</button>
+        <button type="button" id="pe-fermer" class="btn btn-sec">Fermer</button>
+      </div>
+
+      </div>
+      <div>
+      <div class="carte">
+        <h2>⚔️ Défis de la salle</h2>
+        <p class="doux">Fais un quiz dans <a href="https://edukatchat.org/" target="_blank" rel="noopener">EdukaTchat</a>, puis clique sur « ⚔️ Défier un camarade » et choisis cette salle : le défi apparaît ici tout seul. Tu peux aussi coller un lien de défi ci-dessous.</p>
+        <ul id="liste-defis" class="liste"></ul>
+        <input type="text" id="sd-lien" maxlength="200" placeholder="Colle ici le lien ou le code du défi">
+        <button type="button" id="sd-poster" class="btn btn-sec">Partager dans la salle</button>
+        <p id="sd-msg" class="erreur-msg" role="alert"></p>
+      </div>
+
+      <div class="carte" id="carte-fiches">
+        <h2>📚 Fiches partagées</h2>
+        <p class="doux">Partage une fiche rangée dans ton casier : tes camarades peuvent la lire et l’ajouter à leur propre casier.</p>
+        <ul id="liste-fiches-salle" class="liste"></ul>
+        <p id="fiches-vide" class="doux cache">Aucune fiche partagée pour le moment.</p>
+        <div id="fiche-lue" class="cache">
+          <button type="button" id="fl-fermer" class="lien-discret">← Fermer la fiche</button>
+          <h3 id="fl-titre"></h3>
+          <p class="doux" id="fl-meta"></p>
+          <article id="fl-corps" class="fiche-corps"></article>
+          <button type="button" id="fl-prendre" class="btn btn-sec">📥 Ajouter à mon casier</button>
+          <button type="button" id="fl-merci" class="btn btn-sec">🙏 Dire merci</button>
+        </div>
+        <div id="zone-partage-fiche" class="cache">
+          <label for="sf-choix">Partager une de mes fiches</label>
+          <select id="sf-choix"></select>
+          <button type="button" id="sf-partager" class="btn btn-sec">Partager dans la salle</button>
+        </div>
+        <p id="sf-aide" class="doux cache">Pour partager une fiche, range-la d’abord dans ton casier : clique sur « 🗂️ Ranger » sous une réponse du Sas.</p>
+        <p id="sf-msg" class="erreur-msg" role="status"></p>
+      </div>
+
+      <div id="carte-suivi" class="carte cache">
+        <h2>📊 Suivi de la salle (créateur)</h2>
+        <p class="doux">Qui a révisé quoi, et quand. Les échanges privés avec l'IA ne sont jamais visibles.</p>
+        <button type="button" id="btn-suivi" class="btn btn-sec">Voir le tableau d'avancement</button>
+        <div id="suivi-contenu" style="overflow-x:auto"></div>
+      </div>
+
+      <div class="carte">
+        <h2>Dans la salle</h2>
+        <ul id="liste-membres" class="liste"></ul>
+        <div id="zone-recu" class="cache" style="margin-top:14px">
+          <h2>Messages reçus</h2>
+          <div id="liste-recu"></div>
+        </div>
+        <p id="salle-msg" class="erreur-msg" role="alert"></p>
+      </div>
+
+      </div>
+      </div>
+
+      <div class="carte centre">
+        <button type="button" id="btn-actualiser" class="btn btn-sec" style="margin-top:0">Actualiser</button>
+        <button type="button" id="btn-partager" class="btn btn-sec">Inviter un camarade (copier le lien)</button>
+        <button type="button" id="btn-quitter" class="lien-discret">Quitter la salle</button>
+        <button type="button" id="btn-prolonger" class="lien-discret cache">Prolonger de 30 jours</button>
+        <button type="button" id="btn-fermer" class="lien-discret cache">Fermer la salle</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
+</div>
+<script src="rendu-fiche.js?v=1" defer></script>
+<script src="salle.js?v=33" defer></script>
+</body>
+</html>
