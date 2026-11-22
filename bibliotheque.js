@@ -111,6 +111,8 @@
     });
     var st = document.createElement('style');
     st.textContent = ':host{display:block} .fiche-zone{background:#fff;color:#0F172A;padding:14px;border-radius:12px;overflow-wrap:anywhere;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.55} .fiche-zone img,.fiche-zone svg{max-width:100%;height:auto} .fiche-zone .bot-message{background:transparent;box-shadow:none;border:0;padding:0;margin:0;max-width:none;width:auto} .fiche-zone>p,.fiche-zone .bot-message>p{margin:0 0 .7em} .fiche-zone>ul,.fiche-zone>ol,.fiche-zone .bot-message>ul,.fiche-zone .bot-message>ol{margin:0 0 .7em;padding-left:1.4em}';
+    /* Terre cuite (22/11/2026) : titres en brique, texte en encre, filets sable (la fiche vit dans un shadow DOM : le CSS de la page ne l'atteint pas) */
+    st.textContent += ' .fiche-zone{color:#2A1D19} .fiche-zone h1,.fiche-zone h2,.fiche-zone h3{color:#7E3326;font-family:Literata,Georgia,serif;font-weight:600} .fiche-zone h4,.fiche-zone strong{color:#2A1D19} .fiche-zone th{color:#7E3326;border-bottom:2px solid #DDD2C2} .fiche-zone td{border-bottom:1px solid #EADFD0}';
     ombre.appendChild(st);
     var zone = document.createElement('div'); zone.className = 'fiche-zone';
     var corps = assainir(html);
