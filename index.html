@@ -15,7 +15,7 @@
             try { var th = localStorage.getItem('eduka_theme'); sombre = (th === 'dark') || (!th && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); } catch (e2) { /* ignoré */ }
             var fond = ens ? (sombre ? '#1F1714' : '#F3EDE4') : (sombre ? '#0F172A' : '#F8FAFC');
             var texte = ens ? (sombre ? '#F3E9DD' : '#2A1D19') : (sombre ? '#E2E8F0' : '#334155');
-            var anneau = ens ? (sombre ? '#E8A898' : '#7E3326') : (sombre ? '#818CF8' : '#4F46E5');
+            var anneau = ens ? (sombre ? '#E8A898' : '#7E3326') : (sombre ? '#5C86F5' : '#1D3FA8');
             var piste = ens ? (sombre ? '#4A3A33' : '#DDD2C2') : (sombre ? '#334155' : '#E2E8F0');
             var police = ens ? "'Literata',Georgia,'Times New Roman',serif" : "system-ui,-apple-system,'Segoe UI',sans-serif";
             var message = ens ? 'Retour \\E0  votre espace\\2026' : (retour ? 'Je te ram\\E8ne \\E0  ta mati\\E8re\\2026' : 'Je pr\\E9pare ta r\\E9vision\\2026');
@@ -26,6 +26,8 @@
                 + '@keyframes voileTourne{to{transform:rotate(360deg)}}@keyframes voileFondu{from{opacity:0}to{opacity:1}}'
                 + '@media (prefers-reduced-motion:reduce){body::after{animation:none}body::before{animation:none}}';
             document.head.appendChild(st);
+            /* 22/11/2026 : la barre de titre prend tout de suite la couleur de l'espace (brique enseignant, indigo élève) pendant l'écran de transition. */
+            document.addEventListener('DOMContentLoaded', function () { try { var mt = document.querySelector('meta[name="theme-color"]'); if (mt) mt.setAttribute('content', ens ? '#7E3326' : '#1D3FA8'); } catch (e3) { /* ignoré */ } });
             setTimeout(function () { var e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); }, 9000);
         } catch (e) { /* jamais bloquant */ }
     })();
@@ -39,7 +41,7 @@
          l'application" ; iOS : "Partager -> Sur l'écran d'accueil"). Voir
          manifest.json et service-worker.js pour le détail. -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3B82F6">
+    <meta name="theme-color" content="#1D3FA8">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -2092,7 +2094,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.91"></script>
+    <script src="app.js?v=3.92"></script>
     <script src="visite-guidee.js?v=4"></script>
     <script src="centres-interet.js?v=7"></script>
 
