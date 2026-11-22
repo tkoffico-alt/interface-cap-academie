@@ -27,7 +27,8 @@
     if (r && r.espace === 'enseignant' && r.t && (Date.now() - r.t) < 21600000) {
       document.write('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
         + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600&family=Nunito+Sans:wght@400;600;700&display=swap">'
-        + '<link rel="stylesheet" href="enseignant-terre-pages.css?v=5">');
+        + '<link rel="stylesheet" href="enseignant-terre-pages.css?v=6">');
+      var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', '#7E3326'); /* barre de la fenêtre en brique, comme les autres pages enseignant */
     }
   } catch (e) { /* jamais bloquant */ }
 })();

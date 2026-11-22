@@ -54,3 +54,6 @@ h1, h2, .score-grand { font-family: 'Literata', Georgia, 'Times New Roman', seri
 /* Séance de classe (22/11/2026) : l'en-tête suit la largeur de l'écran affiché (640 px pour création/séance créée, 980 px pour le tableau de résultats) */
 .page:has(#ecran-creation:not(.cache)) .entete, .page:has(#ecran-cree:not(.cache)) .entete { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
 .page:has(#ecran-tableau:not(.cache)) .entete { width: 100%; max-width: 980px; margin-left: auto; margin-right: auto; }
+
+/* Fiches et schémas (22/11/2026) : fond du zoom en brun très sombre au lieu du bleu nuit */
+body .f-boite { background: rgba(23, 17, 14, .96); }
