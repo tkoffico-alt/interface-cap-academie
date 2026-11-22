@@ -50,3 +50,7 @@ h1, h2, .score-grand { font-family: 'Literata', Georgia, 'Times New Roman', seri
 :root[data-theme="dark"] .fiche-corps h4, :root[data-theme="dark"] .fiche-corps strong { color: #F3E9DD; }
 :root[data-theme="dark"] .fiche-corps th { border-bottom-color: #4A3A33 !important; }
 :root[data-theme="dark"] .fiche-corps td { border-bottom-color: #4A3A33; }
+
+/* Séance de classe (22/11/2026) : l'en-tête suit la largeur de l'écran affiché (640 px pour création/séance créée, 980 px pour le tableau de résultats) */
+.page:has(#ecran-creation:not(.cache)) .entete, .page:has(#ecran-cree:not(.cache)) .entete { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+.page:has(#ecran-tableau:not(.cache)) .entete { width: 100%; max-width: 980px; margin-left: auto; margin-right: auto; }
