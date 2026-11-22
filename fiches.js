@@ -174,6 +174,15 @@
     var sceau = '';
     try { sceau = localStorage.getItem('eduka_sceau') || ''; } catch (e) {}
     if (!courante) return;
+    /* 22/11/2026 : un enseignant (arrivé depuis son Espace) ne doit pas être renvoyé vers l'espace élève. */
+    try {
+      var r = JSON.parse(localStorage.getItem('eduka_retour') || 'null');
+      if (r && r.espace === 'enseignant' && r.t && (Date.now() - r.t) < 21600000) {
+        msg.textContent = 'Cette fonction est réservée aux élèves abonnés. Depuis votre Espace Enseignant, utilisez La Forge des Leçons ou le Cabinet des Évaluations pour obtenir vos fiches.';
+        msg.style.display = 'block';
+        return;
+      }
+    } catch (e) {}
     // Sans code mémorisé dans ce navigateur, l'application demandera le code d'abonné élève avant d'envoyer la question.
     try {
       var titre = courante.fiche || courante.legende || courante.theme || 'ce schéma';
