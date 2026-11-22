@@ -2663,3 +2663,31 @@ body.dark-theme .message-actions .btn-action-doc.btn-biblio { color: #FFFFFF; ba
 
 /* Transition douce entre pages (navigateurs compatibles) */
 @view-transition { navigation: auto; }
+
+
+/* ===== ESPACE ÉLÈVE : BARRE D'OUTILS ET MENU EN BLEU FRANC + INDIGO (22/11/2026) =====
+   Même principe que l'Espace Enseignant : barre et menu teintés, boutons menu et thème en bleu foncé (point d'ancrage).
+   Réservé à l'espace élève (body:not(.espace-ens)) ; l'Espace Enseignant garde ses couleurs. Style seulement. */
+body:not(.espace-ens):not(.dark-theme) .toolbar-outils { background: #BFD3FA; border: 1px solid #8FB1EE; box-shadow: none; }
+body:not(.espace-ens):not(.dark-theme) .toolbar-outils .btn-icon-groupe:not(#btn-theme) { color: #14275F; }
+body:not(.espace-ens):not(.dark-theme) .toolbar-outils .btn-icon-groupe:not(#btn-theme):hover { background-color: rgba(255,255,255,.6); box-shadow: 0 0 0 1px #8FB1EE; color: #14275F; }
+body:not(.espace-ens):not(.dark-theme) #btn-menu-nav,
+body:not(.espace-ens):not(.dark-theme) #btn-theme { background: #1D3FA8; border: none; color: #FFFFFF; box-shadow: 0 3px 10px rgba(29,63,168,.35); }
+body:not(.espace-ens):not(.dark-theme) #btn-menu-nav:hover,
+body:not(.espace-ens):not(.dark-theme) #btn-menu-nav[aria-expanded="true"],
+body:not(.espace-ens):not(.dark-theme) #btn-theme:hover { background: #2A52C9; color: #FFFFFF; }
+body:not(.espace-ens):not(.dark-theme) .menu-navigation-panel { background-color: #BFD3FA; border: 1px solid #8FB1EE; box-shadow: 0 12px 32px rgba(20,39,95,.25), 0 2px 6px rgba(20,39,95,.12); }
+body:not(.espace-ens):not(.dark-theme) .menu-nav-item { color: #14275F; }
+body:not(.espace-ens):not(.dark-theme) .menu-nav-item:hover { background-color: rgba(255,255,255,.6); }
+body:not(.espace-ens):not(.dark-theme) .menu-nav-separateur { background-color: #8FB1EE; }
+body:not(.espace-ens):not(.dark-theme) .menu-nav-titre { color: #3A4F8A; }
+
+body.dark-theme:not(.espace-ens) .toolbar-outils { background: #1A2850; border-color: #33509A; }
+body.dark-theme:not(.espace-ens) #btn-menu-nav { background: #5C86F5; border: none; color: #FFFFFF; box-shadow: 0 3px 10px rgba(0,0,0,.45); }
+body.dark-theme:not(.espace-ens) #btn-menu-nav:hover,
+body.dark-theme:not(.espace-ens) #btn-menu-nav[aria-expanded="true"] { background: #7A9DF8; color: #FFFFFF; }
+body.dark-theme:not(.espace-ens) .menu-navigation-panel { background-color: #1A2850; border-color: #33509A; }
+body.dark-theme:not(.espace-ens) .menu-nav-item { color: #E4EBFF; }
+body.dark-theme:not(.espace-ens) .menu-nav-item:hover { background-color: #263B74; }
+body.dark-theme:not(.espace-ens) .menu-nav-separateur { background-color: #33509A; }
+body.dark-theme:not(.espace-ens) .menu-nav-titre { color: #9FB3E6; }
