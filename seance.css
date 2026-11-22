@@ -111,3 +111,6 @@
     .carte { box-shadow: none; padding: 0; }
     .pied { display: block !important; }
   }
+
+/* 22/11/2026 : liens dans les textes d'aide en couleur principale (indigo élève / brique enseignant), y compris déjà visités. */
+.doux a, .doux a:visited { color: var(--primaire); }
