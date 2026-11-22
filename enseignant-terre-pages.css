@@ -39,3 +39,14 @@ h1, h2, .score-grand { font-family: 'Literata', Georgia, 'Times New Roman', seri
 :root:not([data-theme="dark"]) .tache { background: #F6F0E7; border: 1px solid var(--bord); border-radius: 12px; }
 :root[data-theme="dark"] .carte { background: #3A2D27; border-color: #66524A; box-shadow: 0 2px 5px rgba(0,0,0,.4), 0 14px 30px -6px rgba(0,0,0,.6); }
 :root[data-theme="dark"] .entete { background: #2B211D; border: 1px solid #4A3A33; border-radius: 999px; padding: 8px 20px; margin-bottom: 16px; }
+
+/* Bibliothèque (22/11/2026) : en-tête aussi large que la carte de la liste ; titres et tableaux des fiches en brique/encre au lieu du bleu marine d'origine */
+.page:has(#ecran-liste:not(.cache)) .entete, .page:has(#ecran-chargement:not(.cache)) .entete, .page:has(#ecran-erreur:not(.cache)) .entete { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+.fiche-corps h1, .fiche-corps h2, .fiche-corps h3 { color: #7E3326 !important; font-family: 'Literata', Georgia, serif; font-weight: 600; }
+.fiche-corps h4, .fiche-corps strong { color: #2A1D19; }
+.fiche-corps th { color: #7E3326 !important; border-bottom: 2px solid #DDD2C2 !important; }
+.fiche-corps td { border-bottom: 1px solid #DDD2C2; }
+:root[data-theme="dark"] .fiche-corps h1, :root[data-theme="dark"] .fiche-corps h2, :root[data-theme="dark"] .fiche-corps h3, :root[data-theme="dark"] .fiche-corps th { color: #E8A898 !important; }
+:root[data-theme="dark"] .fiche-corps h4, :root[data-theme="dark"] .fiche-corps strong { color: #F3E9DD; }
+:root[data-theme="dark"] .fiche-corps th { border-bottom-color: #4A3A33 !important; }
+:root[data-theme="dark"] .fiche-corps td { border-bottom-color: #4A3A33; }
