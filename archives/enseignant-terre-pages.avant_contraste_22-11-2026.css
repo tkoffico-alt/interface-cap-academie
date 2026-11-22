@@ -1,0 +1,32 @@
+/* ❖ Pages enseignant « Terre cuite » (21/11/2026) : Séances de classe et Ma bibliothèque.
+   Chargé APRÈS seance.css, uniquement par seance-prof.html et bibliotheque.html
+   (les pages élèves qui partagent seance.css ne sont pas touchées). */
+:root {
+  --fond: #F3EDE4; --carte: #FBF8F3; --texte: #2A1D19; --doux: #66554D; --bord: #DDD2C2;
+  --primaire: #7E3326; --primaire-texte: #FBF3E8; --accent: #D9A441;
+  --juste-fond: #E4ECD6; --juste-bord: #6E8B4E; --juste-texte: #3F5A27;
+  --faux-texte: #9B2C1F; --option: #FFFDF9; --option-survol: #F0E3D2; --expl-fond: #F0E3D2;
+}
+:root[data-theme="dark"] {
+  --fond: #1F1714; --carte: #2B211D; --texte: #F3E9DD; --doux: #C9B8AB; --bord: #4A3A33;
+  --primaire: #E8A898; --primaire-texte: #2A1D19; --accent: #D9A441;
+  --juste-fond: #2D3A22; --juste-bord: #6E8B4E; --juste-texte: #BBD59A;
+  --faux-texte: #F2A59A; --option: #1F1714; --option-survol: #3A2C26; --expl-fond: #3A2C26;
+}
+body { font-family: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+h1, h2, .score-grand { font-family: 'Literata', Georgia, 'Times New Roman', serif; font-weight: 600; }
+.marque { font-weight: 700; }
+.carte { border: 1px solid var(--bord); box-shadow: 0 2px 12px rgba(80, 40, 25, 0.07); }
+:root[data-theme="dark"] .carte { box-shadow: none; }
+.btn { border-radius: 999px; }
+.btn-petit { border-radius: 999px; }
+.btn-petit.actif { color: #2A1D19; }
+.btn-sec { border-width: 1.5px; }
+.pastille { background: var(--expl-fond); color: var(--primaire); }
+#bandeau-apercu { border-left-color: var(--accent) !important; }
+#bandeau-apercu a:not(.btn) { color: var(--primaire) !important; }
+.tableau-suivi th, .tableau-suivi td { border-color: var(--bord); }
+
+/* Fiches et schémas (arrivée depuis l'Espace Enseignant) */
+#f-chemin a, #f-chemin button { color: var(--primaire); }
+.f-choix:hover, .f-choix:focus-visible, .f-chapitre:hover, .f-chapitre:focus-visible { border-color: var(--primaire); }

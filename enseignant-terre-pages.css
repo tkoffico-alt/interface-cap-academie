@@ -30,3 +30,12 @@ h1, h2, .score-grand { font-family: 'Literata', Georgia, 'Times New Roman', seri
 /* Fiches et schémas (arrivée depuis l'Espace Enseignant) */
 #f-chemin a, #f-chemin button { color: var(--primaire); }
 .f-choix:hover, .f-choix:focus-visible, .f-chapitre:hover, .f-chapitre:focus-visible { border-color: var(--primaire); }
+
+/* Contraste (22/11/2026) : en-tête turquoise comme la barre d'outils, cartes blanches en relief, lignes de liste crème (mode clair) */
+:root:not([data-theme="dark"]) { --carte: #FFFFFF; }
+:root:not([data-theme="dark"]) .entete { background: #BFD5CD; border: 1px solid #9DBBB0; border-radius: 999px; padding: 8px 20px; margin-bottom: 16px; }
+:root:not([data-theme="dark"]) .entete .doux { color: #2F3F3A; font-weight: 700; }
+:root:not([data-theme="dark"]) .carte { border: 1px solid var(--bord); box-shadow: 0 2px 4px rgba(42,29,25,.08), 0 12px 28px -6px rgba(42,29,25,.18); }
+:root:not([data-theme="dark"]) .tache { background: #F6F0E7; border: 1px solid var(--bord); border-radius: 12px; }
+:root[data-theme="dark"] .carte { background: #3A2D27; border-color: #66524A; box-shadow: 0 2px 5px rgba(0,0,0,.4), 0 14px 30px -6px rgba(0,0,0,.6); }
+:root[data-theme="dark"] .entete { background: #2B211D; border: 1px solid #4A3A33; border-radius: 999px; padding: 8px 20px; margin-bottom: 16px; }
