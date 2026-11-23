@@ -4939,7 +4939,7 @@ function ecrireHistoriqueSas(avatar, liste) {
     }
 }
 
-function archiverSessionSas(avatar, html) {
+function archiverSessionSas(avatar, html, convId) {
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
     const premier = tmp.querySelector('.user-message');
@@ -4949,7 +4949,7 @@ function archiverSessionSas(avatar, html) {
     let titre = (copiePremier.textContent || '').replace(/[↻⟳🔄]/g, '').trim().replace(/\s+/g, ' ');
     if (titre.length > 70) titre = titre.slice(0, 70) + '…';
     const liste = lireHistoriqueSas(avatar);
-    liste.unshift({ id: Date.now(), date: new Date().toISOString(), titre: titre || 'Session', html: html });
+    liste.unshift({ id: Date.now(), date: new Date().toISOString(), titre: titre || 'Session', html: html, conversation_id: convId || '' });
     return ecrireHistoriqueSas(avatar, liste.slice(0, HIST_SAS_MAX));
 }
 
@@ -4962,7 +4962,7 @@ function nouvelleSessionSas() {
     if (aEchange) {
         declencherClotureAutomatiqueSas('nouvelle_session'); // envoie le rapport avec l'ancien conversation_id
         reinitialiserResultatsEvaluations(avatarActif);
-        archiverSessionSas(avatarActif, chatHistory.innerHTML);
+        archiverSessionSas(avatarActif, chatHistory.innerHTML, sasConversationIds[avatarActif] || '');
     }
     sasConversationIds[avatarActif] = '';
     sasSessionOuverte = false;
@@ -4975,6 +4975,39 @@ function nouvelleSessionSas() {
     w.className = 'message system-message';
     w.textContent = "Nouvelle discussion. Posez votre première question pour commencer.";
     chatHistory.appendChild(w);
+}
+
+// ❖ Reprise d'une conversation archivée (23/11/2026) : l'élève qui a quitté
+// une discussion par inadvertance peut y revenir. On réutilise le même
+// conversation_id Dify : l'assistant se souvient de tout le fil.
+function reprendreSessionSas(convId, remplir) {
+    const chat = document.getElementById('sas-chat-history');
+    if (!chat || !convId) { alert("Ouvrez d'abord votre matière, puis reprenez la conversation."); return; }
+    if (sasConversationIds[avatarActif] === convId) { fermerModaleHistoriqueSas(); return; }
+    const aEchange = !!chat.querySelector('.user-message');
+    if (aEchange) {
+        if (!confirm("Reprendre cette conversation ?\nLa discussion en cours sera classée dans l'Historique.")) return;
+        declencherClotureAutomatiqueSas('nouvelle_session');
+        reinitialiserResultatsEvaluations(avatarActif);
+        archiverSessionSas(avatarActif, chat.innerHTML, sasConversationIds[avatarActif] || '');
+    }
+    chat.innerHTML = '';
+    remplir(chat);
+    sasConversationIds[avatarActif] = convId;
+    localStorage.setItem('eduka_conv_sas', JSON.stringify(sasConversationIds));
+    sasSessionOuverte = true;
+    sasClotureDejaEnvoyee = false;
+    try { localStorage.setItem(`eduka_chat_sas_${avatarActif}`, chat.innerHTML); } catch (e) {}
+    fermerModaleHistoriqueSas();
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function boutonReprendreSas(onClick) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'hist-sas-reprendre';
+    b.textContent = '▶ Reprendre cette conversation';
+    b.onclick = onClick;
+    return b;
 }
 
 function fermerModaleHistoriqueSas() {
@@ -5008,8 +5041,13 @@ function ouvrirHistoriqueSas(idOuvert) {
         h.textContent = new Date(ouverte.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
         boite.appendChild(h);
         const note = document.createElement('p');
-        note.textContent = "Lecture seule. Pour continuer ce sujet, démarrez une nouvelle session et reprenez-le.";
+        note.textContent = ouverte.conversation_id
+            ? "Vous pouvez relire cette conversation ou la reprendre là où vous vous êtes arrêté."
+            : "Lecture seule. Pour continuer ce sujet, démarrez une nouvelle session et reprenez-le.";
         boite.appendChild(note);
+        if (ouverte.conversation_id) {
+            boite.appendChild(boutonReprendreSas(() => reprendreSessionSas(ouverte.conversation_id, (chat) => { chat.innerHTML = ouverte.html; })));
+        }
         const fil = document.createElement('div');
         fil.className = 'chat-history hist-sas-fil';
         fil.innerHTML = ouverte.html;
@@ -5122,8 +5160,16 @@ async function lireSessionSasServeur(boite, sceau, s) {
     const h = document.createElement('h3'); h.textContent = d.titre || 'Session';
     boite.appendChild(h);
     const note = document.createElement('p');
-    note.textContent = 'Lecture seule.';
+    note.textContent = 'Vous pouvez relire cette conversation ou la reprendre là où vous vous êtes arrêté.';
     boite.appendChild(note);
+    boite.appendChild(boutonReprendreSas(() => reprendreSessionSas(s.conversation_id, (chat) => {
+        d.echanges.forEach(e => {
+            const q = document.createElement('div'); q.className = 'message user-message'; q.textContent = e.question;
+            const a = document.createElement('div'); a.className = 'message ai-message';
+            if (typeof marked !== 'undefined') a.innerHTML = marked.parse(e.reponse); else a.textContent = e.reponse;
+            chat.appendChild(q); chat.appendChild(a);
+        });
+    })));
     d.echanges.forEach(e => {
         const q = document.createElement('div'); q.className = 'message user-message'; q.textContent = e.question;
         const a = document.createElement('div'); a.className = 'message ai-message';

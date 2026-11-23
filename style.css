@@ -2691,3 +2691,9 @@ body.dark-theme:not(.espace-ens) .menu-nav-item { color: #E4EBFF; }
 body.dark-theme:not(.espace-ens) .menu-nav-item:hover { background-color: #263B74; }
 body.dark-theme:not(.espace-ens) .menu-nav-separateur { background-color: #33509A; }
 body.dark-theme:not(.espace-ens) .menu-nav-titre { color: #9FB3E6; }
+
+/* ❖ Historique Sas : bouton « Reprendre cette conversation » (23/11/2026) */
+.hist-sas-reprendre { background: #1D3FA8; color: #FFFFFF; border: none; border-radius: 10px; padding: 0.6rem 1rem; font-weight: 700; cursor: pointer; margin: 0.3rem 0 0.9rem; }
+.hist-sas-reprendre:hover { background: #2A52C9; }
+body.dark-theme .hist-sas-reprendre { background: #5C86F5; }
+body.dark-theme .hist-sas-reprendre:hover { background: #7A9DF8; }
