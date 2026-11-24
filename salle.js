@@ -207,6 +207,32 @@
     $('consigne-edition').classList.toggle('cache', !d.est_createur);
     if (d.est_createur && $('consigne-form').classList.contains('cache')) { $('consigne-saisie').value = d.consigne || ''; }
     var plan = $('liste-plan'); plan.textContent = '';
+    // 24/11/2026 : demandes d'aide bien visibles (encadré rouge) avec un moyen d'aider (encouragement) et le conseil pour le faire
+    var encAides = document.getElementById('plan-aides');
+    if (!encAides) {
+      encAides = el('div', 'bulle-comm'); encAides.id = 'plan-aides';
+      encAides.style.cssText = 'background:rgba(239,68,68,.10);border:1px solid #DC2626;margin:0 0 12px;';
+      plan.parentNode.insertBefore(encAides, plan);
+    }
+    encAides.textContent = '';
+    var demandes = [];
+    d.plan.forEach(function (t) { (t.aides || []).forEach(function (nom) { if (nom !== d.moi) demandes.push({ nom: nom, chap: t.texte }); }); });
+    if (demandes.length) {
+      encAides.appendChild(el('strong', '', '🙋 ' + (demandes.length > 1 ? 'Des camarades demandent de l\u2019aide' : 'Un camarade demande de l\u2019aide')));
+      demandes.forEach(function (x) {
+        var ligne = el('div', '', '');
+        ligne.style.cssText = 'margin-top:8px;';
+        ligne.appendChild(el('span', '', x.nom + ' bloque sur « ' + x.chap + ' » '));
+        var be = el('button', 'btn-petit', '💪 Encourager ' + x.nom); be.type = 'button';
+        be.addEventListener('click', function () { reagir(x.nom, 'courage'); be.textContent = 'Encouragement envoyé ✓'; be.disabled = true; });
+        ligne.appendChild(be);
+        encAides.appendChild(ligne);
+      });
+      var conseil = el('div', 'doux', 'Comment l\u2019aider : relis ensemble la fiche de ce chapitre, explique-lui avec tes mots l\u2019exercice qu\u2019il a raté, puis envoie-lui un encouragement. Contactez-vous directement (appel, WhatsApp) : l\u2019application ne propose pas de messagerie.');
+      conseil.style.cssText = 'margin-top:8px;';
+      encAides.appendChild(conseil);
+      encAides.style.display = '';
+    } else { encAides.style.display = 'none'; }
     // 24/11/2026 : rappel au créateur (fiches à générer) et information pour les camarades (fiche pas encore prête)
     var sansFiche = d.plan.filter(function (t) { return !t.fiche; }).length;
     var rappel = document.getElementById('plan-rappel');
