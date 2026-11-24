@@ -810,7 +810,56 @@ const LIEN_PAIEMENT_PAYSTACK = "https://paystack.shop/pay/edukatchat-eleves-pare
 
 // ❖ Caisse EdukaTchat (08/10/2026) : le serveur calcule le montant et appelle
 // Paystack (aucun e-mail demandé) ; on redirige vers l'URL renvoyée.
+// ❖ 24/11/2026 : PROGRAMME RELAIS. Le lien edukatchat.org/?ref=REL-XXX01 mémorise
+// le code 60 jours sur l'appareil ; un champ facultatif permet aussi de le saisir.
+// Un code absent ou faux ne bloque jamais le paiement (le serveur l'ignore).
+(function () {
+    try {
+        const p = new URLSearchParams(location.search).get('ref');
+        const c = (p || '').trim().toUpperCase();
+        if (/^REL-[A-Z0-9]{3,10}$/.test(c)) localStorage.setItem('eduka_ref', JSON.stringify({ c: c, t: Date.now() }));
+    } catch (e) { /* stockage indisponible : le champ manuel reste possible */ }
+})();
+function codeRelaisMemorise() {
+    try {
+        const o = JSON.parse(localStorage.getItem('eduka_ref') || 'null');
+        if (o && o.c && Date.now() - o.t < 60 * 86400000) return o.c;
+    } catch (e) {}
+    return '';
+}
+function preAboPrechargerCodeRelais() {
+    const champ = document.getElementById('pre-abo-code-relais');
+    if (champ && !champ.value) { const m = codeRelaisMemorise(); if (m) { champ.value = m; preAboVerifierCodeRelais(); } }
+}
+document.addEventListener('DOMContentLoaded', preAboPrechargerCodeRelais);
+async function preAboVerifierCodeRelais() {
+    const champ = document.getElementById('pre-abo-code-relais');
+    const msg = document.getElementById('pre-abo-code-relais-msg');
+    if (!champ || !msg) return;
+    const code = champ.value.trim().toUpperCase();
+    if (!code) { msg.textContent = ''; return; }
+    try {
+        const tel = (document.getElementById('pre-abo-telephone') || {}).value || '';
+        const r = await fetch('https://api.edukatchat.org/api/relais/verifier', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code, telephone: tel })
+        });
+        const d = await r.json();
+        if (d.status !== 'success') { msg.textContent = ''; return; }
+        msg.textContent = d.valide ? '✓ Code relais reconnu.' : 'Code non reconnu : vous pouvez continuer sans code.';
+        msg.style.color = d.valide ? '#059669' : '#B45309';
+    } catch (e) { msg.textContent = ''; }
+}
+document.addEventListener('change', function (ev) {
+    if (ev.target && ev.target.id === 'pre-abo-code-relais') preAboVerifierCodeRelais();
+});
+
 async function ouvrirPaiementAbonnement(donnees, feedback, repli) {
+    if (!donnees.code_relais) {
+        const champ = document.getElementById('pre-abo-code-relais');
+        const code = ((champ && champ.value) || '').trim().toUpperCase() || codeRelaisMemorise();
+        if (code) donnees.code_relais = code;
+    }
     try {
         const r = await fetch('https://api.edukatchat.org/api/paiement/initialiser', {
             method: 'POST',
