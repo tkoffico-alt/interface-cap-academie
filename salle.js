@@ -216,7 +216,7 @@
     }
     encAides.textContent = '';
     var demandes = [];
-    d.plan.forEach(function (t) { (t.aides || []).forEach(function (nom) { if (nom !== d.moi) demandes.push({ nom: nom, chap: t.texte }); }); });
+    d.plan.forEach(function (t, k) { (t.aides || []).forEach(function (nom) { if (nom !== d.moi) demandes.push({ nom: nom, chap: t.texte, index: k }); }); });
     if (demandes.length) {
       encAides.appendChild(el('strong', '', '🙋 ' + (demandes.length > 1 ? 'Des camarades demandent de l\u2019aide' : 'Un camarade demande de l\u2019aide')));
       demandes.forEach(function (x) {
@@ -226,9 +226,12 @@
         var be = el('button', 'btn-petit', '💪 Encourager ' + x.nom); be.type = 'button';
         be.addEventListener('click', function () { reagir(x.nom, 'courage'); be.textContent = 'Encouragement envoyé ✓'; be.disabled = true; });
         ligne.appendChild(be);
+        var br = el('button', 'btn-petit', '💬 Répondre à ' + x.nom); br.type = 'button';
+        br.addEventListener('click', function () { ouvrirFil(x.index, x.chap); });
+        ligne.appendChild(br);
         encAides.appendChild(ligne);
       });
-      var conseil = el('div', 'doux', 'Comment l\u2019aider : relis ensemble la fiche de ce chapitre, explique-lui avec tes mots l\u2019exercice qu\u2019il a raté, puis envoie-lui un encouragement. Contactez-vous directement (appel, WhatsApp) : l\u2019application ne propose pas de messagerie.');
+      var conseil = el('div', 'doux', 'Comment l\u2019aider : relis ensemble la fiche de ce chapitre, explique-lui avec tes mots l\u2019exercice qu\u2019il a raté, puis réponds-lui dans la discussion du chapitre et envoie-lui un encouragement.');
       conseil.style.cssText = 'margin-top:8px;';
       encAides.appendChild(conseil);
       encAides.style.display = '';
@@ -311,6 +314,12 @@
         }
         corps.appendChild(act);
       }
+      {
+        var actD = el('div', 'tache-info');
+        var bd = el('button', 'btn-petit', '💬 Discussion' + (t.nb_fil ? ' (' + t.nb_fil + ')' : '')); bd.type = 'button';
+        bd.addEventListener('click', function () { ouvrirFil(i, t.texte); });
+        actD.appendChild(bd); corps.appendChild(actD);
+      }
       var moiAide = t.aides.indexOf(d.moi) !== -1;
       var aide = el('button', 'btn-petit' + (moiAide ? ' actif' : ''), moiAide ? '🙋 Aide demandée' : '🙋 Besoin d’aide');
       aide.type = 'button';
@@ -320,6 +329,7 @@
       plan.appendChild(li);
     });
 
+    $('btn-fil-general').textContent = '💬 Discussion de la salle' + (d.nb_fil_general ? ' (' + d.nb_fil_general + ')' : '');
     var liste = $('liste-membres'); liste.textContent = '';
     d.membres.forEach(function (m) {
       var li = el('li', 'membre' + (m.moi ? ' moi' : ''));
@@ -379,7 +389,63 @@
       actualiser(true).then(function () { if (res.ok) ouvrirSection(i); });
     });
   }
-  function fermerPanneaux() { $('panneau-section').classList.add('cache'); $('panneau-expose').classList.add('cache'); $('panneau-chapitre').classList.add('cache'); $('panneau-jury').classList.add('cache'); }
+  /* ---------- Fil d'entraide (24/11/2026) : par élément du plan (chapitre, partie, thème…) ou pour toute la salle (index -1) ---------- */
+  var filCourant = null, filMinuterie = null;
+  function arreterFil() { if (filMinuterie) { clearInterval(filMinuterie); filMinuterie = null; } filCourant = null; }
+  function afficherFil(messages) {
+    var ul = $('pf-liste'); ul.textContent = '';
+    if (!messages.length) { ul.appendChild(el('li', 'doux', 'Aucun message pour l\u2019instant. Pose ta question ou propose ton aide.')); return; }
+    messages.forEach(function (m) {
+      var li = el('li', 'membre' + (m.moi ? ' moi' : ''));
+      var corps = el('div', ''); corps.style.cssText = 'flex:1;min-width:0;';
+      var tete = el('div', 'doux', m.pseudo + (m.moi ? ' (moi)' : '') + ' · ' + m.date); tete.style.fontSize = '.8rem';
+      var txt = el('div', '', m.texte); txt.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;';
+      corps.appendChild(tete); corps.appendChild(txt); li.appendChild(corps);
+      if (m.peut_supprimer) {
+        var b = el('button', 'btn-petit', '🗑'); b.type = 'button'; b.title = 'Supprimer ce message'; b.setAttribute('aria-label', 'Supprimer ce message');
+        b.addEventListener('click', function () {
+          appel('/' + code + '/fil/supprimer', 'POST', { appareil: etat.appareil, id: m.id }).then(function () { chargerFil(true); actualiser(true); });
+        });
+        li.appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+  }
+  function chargerFil(silencieux) {
+    if (!filCourant) return;
+    var idx = filCourant.index;
+    appel('/' + code + '/fil/lire', 'POST', { appareil: etat.appareil, index: idx }).then(function (res) {
+      if (!filCourant || filCourant.index !== idx) return;
+      if (!res.ok) { if (!silencieux) $('pf-msg').textContent = messageErreur(res); return; }
+      var liste = $('pf-liste'), enBas = liste.scrollHeight - liste.scrollTop - liste.clientHeight < 60;
+      afficherFil(res.donnees.messages || []);
+      if (enBas) { try { liste.scrollTop = liste.scrollHeight; } catch (e) {} }
+    });
+  }
+  function ouvrirFil(index, titre) {
+    fermerPanneaux();
+    filCourant = { index: index };
+    $('pf-titre').textContent = index < 0 ? '💬 Discussion de la salle' : '💬 ' + titre;
+    $('pf-msg').textContent = ''; $('pf-saisie').value = ''; $('pf-compteur').textContent = '0 / 300';
+    $('pf-liste').textContent = '';
+    $('panneau-fil').classList.remove('cache');
+    $('panneau-fil').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    chargerFil(false);
+    filMinuterie = setInterval(function () { if (!document.hidden) chargerFil(true); }, 15000);
+  }
+  function envoyerFil() {
+    if (!filCourant) return;
+    var texte = $('pf-saisie').value.trim();
+    if (!texte) { $('pf-msg').textContent = 'Écris un message.'; return; }
+    $('pf-msg').textContent = ''; $('pf-envoyer').disabled = true;
+    appel('/' + code + '/fil/ecrire', 'POST', { appareil: etat.appareil, index: filCourant.index, texte: texte }).then(function (res) {
+      $('pf-envoyer').disabled = false;
+      if (!res.ok) { $('pf-msg').textContent = messageErreur(res); return; }
+      $('pf-saisie').value = ''; $('pf-compteur').textContent = '0 / 300';
+      chargerFil(true); actualiser(true);
+    });
+  }
+  function fermerPanneaux() { arreterFil(); $('panneau-fil').classList.add('cache'); $('panneau-section').classList.add('cache'); $('panneau-expose').classList.add('cache'); $('panneau-chapitre').classList.add('cache'); $('panneau-jury').classList.add('cache'); }
 
   /* ---------- Fiche de chapitre générée par l'assistant (créateur Premium ; lue par tous les membres) ---------- */
   function genererFiche(i, regenerer, bouton) {
@@ -1122,6 +1188,10 @@
     $('pe-fermer').addEventListener('click', fermerPanneaux);
     $('pj-fermer').addEventListener('click', fermerPanneaux);
     $('pc-fermer').addEventListener('click', fermerPanneaux);
+    $('pf-fermer').addEventListener('click', fermerPanneaux);
+    $('pf-envoyer').addEventListener('click', envoyerFil);
+    $('btn-fil-general').addEventListener('click', function () { ouvrirFil(-1, ''); });
+    $('pf-saisie').addEventListener('input', function () { $('pf-compteur').textContent = $('pf-saisie').value.length + ' / 300'; });
     $('pc-partager').addEventListener('click', partagerPaquet);
     $('pc-regenerer').addEventListener('click', function () {
       if (etat.chapitreLu === undefined || etat.chapitreLu === null) return;
