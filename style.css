@@ -2779,3 +2779,11 @@ body.dark-theme .fiche-cours-eleve .fce-exercices .fce-titre, body.dark-theme .f
     .fiche-cours-eleve .fce-bloc { box-shadow: none !important; border-radius: 6px !important; }
     .fiche-cours-eleve .fce-savoir, .fiche-cours-eleve .fce-retiens, .fiche-cours-eleve .fce-corriges { background: none !important; }
 }
+
+/* ❖ 24/11/2026 — Impression du cours élève : ne pas couper les petits encadrés ni un titre de ses premières lignes. */
+@media print {
+    .fiche-cours-eleve .fce-savoir, .fiche-cours-eleve .fce-retiens, .fiche-cours-eleve .fce-entete,
+    .fiche-cours-eleve .fce-exercices { break-inside: avoid; page-break-inside: avoid; }
+    .fiche-cours-eleve .fce-titre { break-after: avoid; page-break-after: avoid; }
+    .fiche-cours-eleve li { break-inside: avoid; page-break-inside: avoid; }
+}
