@@ -2710,3 +2710,59 @@ body.dark-theme .fiche-recap th { background: rgba(92, 134, 245, 0.18); color: #
 .fiche-invite-texte { line-height: 1.5; }
 .fiche-invite-bouton { align-self: flex-start; }
 @media print { .fiche-invite-cours-eleve { display: none !important; } }
+
+/* ❖ 24/11/2026 — Pastille « rédaction en cours / document prêt » (outils enseignants). */
+.statut-redaction {
+    display: flex; align-items: center; justify-content: center; gap: 0.55rem;
+    width: fit-content; max-width: 96%; margin: 0 auto 0.45rem;
+    padding: 0.4rem 0.9rem; border-radius: 999px;
+    font-size: 0.82rem; line-height: 1.3; text-align: center;
+}
+.statut-redaction.encours { background: #EEF2FF; color: #1D3FA8; border: 1px solid #C7D2FE; }
+.statut-redaction.pret { background: #ECFDF3; color: #166534; border: 1px solid #A7F3D0; font-weight: 600; cursor: pointer; }
+.statut-redaction .statut-lien { text-decoration: underline; font-weight: 500; }
+body.dark-theme .statut-redaction.encours { background: rgba(92, 134, 245, 0.16); color: #B4C7FA; border-color: rgba(92, 134, 245, 0.4); }
+body.dark-theme .statut-redaction.pret { background: rgba(34, 197, 94, 0.14); color: #86EFAC; border-color: rgba(34, 197, 94, 0.4); }
+.statut-points { display: inline-flex; gap: 3px; }
+.statut-points i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.35; animation: statut-point 1.2s infinite ease-in-out; }
+.statut-points i:nth-child(2) { animation-delay: 0.2s; }
+.statut-points i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes statut-point { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .statut-points i { animation: none; opacity: 0.7; } }
+
+/* ❖ 24/11/2026 — Fiche de cours pour les élèves (Forge secondaire). */
+.fiche-cours-eleve { display: flex; flex-direction: column; gap: 0.85rem; text-align: left; }
+.fiche-cours-eleve .fce-bloc { border: 1px solid #E5E7EB; border-radius: 16px; padding: 1rem 1.25rem; background: #FFFFFF; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05); }
+.fiche-cours-eleve p, .fiche-cours-eleve li { line-height: 1.65; margin: 0.4rem 0; }
+.fiche-cours-eleve li > p { margin: 0; }
+.fiche-cours-eleve ul, .fiche-cours-eleve ol { margin: 0.3rem 0; padding-left: 1.3rem; }
+.fiche-cours-eleve .fce-titre { margin: 0 0 0.55rem; font-size: 1.08rem; line-height: 1.3; color: #1D3FA8; }
+.fiche-cours-eleve strong { color: #111827; }
+.fiche-cours-eleve .fce-entete { background: linear-gradient(135deg, #1D3FA8, #3F63D8); border: none; color: #FFFFFF; }
+.fiche-cours-eleve .fce-entete .fce-titre { margin: 0; font-size: 1.45rem; letter-spacing: 0.04em; color: #FFFFFF; }
+.fiche-cours-eleve .fce-entete p, .fiche-cours-eleve .fce-entete strong { margin: 0.35rem 0 0; color: rgba(255, 255, 255, 0.95); font-size: 0.95rem; }
+.fiche-cours-eleve .fce-savoir { background: #EEF2FF; border-color: #C7D2FE; }
+.fiche-cours-eleve .fce-savoir ul { list-style: none; padding-left: 0; }
+.fiche-cours-eleve .fce-savoir li { position: relative; padding-left: 1.5rem; }
+.fiche-cours-eleve .fce-savoir li::before { content: "✓"; position: absolute; left: 0; color: #1D3FA8; font-weight: 700; }
+.fiche-cours-eleve .fce-partie { border-left: 5px solid #3F63D8; }
+.fiche-cours-eleve .fce-partie .fce-titre { font-size: 1.2rem; }
+.fiche-cours-eleve .fce-retiens { background: #FFFBEB; border-color: #F3D78B; border-left: 5px solid #E8A317; }
+.fiche-cours-eleve .fce-retiens .fce-titre { color: #92600A; }
+.fiche-cours-eleve .fce-exercices .fce-titre { color: #166534; }
+.fiche-cours-eleve .fce-exercices ol { padding-left: 1.5rem; }
+.fiche-cours-eleve .fce-exercices li { margin: 0.55rem 0; padding: 0.15rem 0.2rem; }
+.fiche-cours-eleve .fce-corriges { background: #F0FDF4; border-color: #BBF7D0; }
+.fiche-cours-eleve .fce-corriges .fce-titre { color: #166534; }
+.fiche-cours-eleve .fce-note { margin: 0.2rem 0 0; font-size: 0.85rem; color: #6B7280; font-style: italic; text-align: center; }
+body.dark-theme .fiche-cours-eleve .fce-bloc { background: rgba(255, 255, 255, 0.035); border-color: rgba(148, 163, 184, 0.2); box-shadow: none; }
+body.dark-theme .fiche-cours-eleve .fce-titre { color: #A9BFFA; }
+body.dark-theme .fiche-cours-eleve strong { color: #F3F4F6; }
+body.dark-theme .fiche-cours-eleve .fce-entete { background: linear-gradient(135deg, #1D3FA8, #3F63D8); }
+body.dark-theme .fiche-cours-eleve .fce-entete .fce-titre { color: #FFFFFF; }
+body.dark-theme .fiche-cours-eleve .fce-savoir { background: rgba(92, 134, 245, 0.12); border-color: rgba(92, 134, 245, 0.35); }
+body.dark-theme .fiche-cours-eleve .fce-savoir li::before { color: #A9BFFA; }
+body.dark-theme .fiche-cours-eleve .fce-retiens { background: rgba(232, 163, 23, 0.1); border-color: rgba(232, 163, 23, 0.4); }
+body.dark-theme .fiche-cours-eleve .fce-retiens .fce-titre { color: #F5C964; }
+body.dark-theme .fiche-cours-eleve .fce-corriges { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.3); }
+body.dark-theme .fiche-cours-eleve .fce-exercices .fce-titre, body.dark-theme .fiche-cours-eleve .fce-corriges .fce-titre { color: #86EFAC; }

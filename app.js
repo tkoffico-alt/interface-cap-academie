@@ -2243,7 +2243,9 @@ function separerTraceEtTitreSuivant(segment) {
     // ❖ 14/11/2026 : plusieurs titres consécutifs (« Séance 2 — … » puis « I. Constat… », ou « III. Vérification… »
     // puis « Activité 1 — … ») : tous sont réunis dans le titre de la phase suivante, au lieu de rester collés
     // en texte brut à la fin de la trace écrite précédente.
-    const reTitreEtape = /^(?:S[ée]ance\s+\d+|Activit[ée]\s+\d+|[IVX]{1,4}\.)\s*\S/i;
+    // 24/11/2026 : « Séquence N » et les moments chiffrés (« Développement (85 min) ») comptent aussi
+    // comme titres d'étape, pour ne plus rester collés à la fin de la trace écrite précédente.
+    const reTitreEtape = /^(?:S[ée](?:ance|quence)\s+\d+|Activit[ée]\s+\d+|[IVX]{1,4}\.|(?:Pr[ée]sentation|D[ée]veloppement|[ÉE]valuation|R[ée]investissement)\s*\(\s*\d)\s*\S/i;
     let debutTitres = paragraphes.length;
     while (debutTitres > 1 && paragraphes[debutTitres - 1].length <= 110 && !paragraphes[debutTitres - 1].includes('\n')
            && reTitreEtape.test(paragraphes[debutTitres - 1]) && !/[.!?]$/.test(paragraphes[debutTitres - 1])) debutTitres--;
@@ -2655,7 +2657,7 @@ function construireHTMLFiche(analyse, classeAccent) {
         // ❖ 24/11/2026 : invitation à générer le second document (fiche de cours
         // pour les élèves). Retirée de la copie et de l'impression.
         html += '<div class="fiche-carte fiche-invite-cours-eleve">';
-        html += '<div class="fiche-invite-texte">🎓 <strong>Besoin du cours pour vos élèves ?</strong> Je peux rédiger la fiche de cours propre, à copier ou à imprimer, avec exercices et corrigés, à partir de cette leçon.</div>';
+        html += '<div class="fiche-invite-texte"><strong>📘 Document complémentaire : fiche de cours pour les élèves</strong><br>Cours rédigé à partir de cette leçon, avec exercices d\'application et corrigés, prêt à copier ou à imprimer.</div>';
         html += '<button class="btn-action-doc fiche-invite-bouton" type="button" onclick="demanderFicheCoursEleve(this)">📘 Générer la fiche de cours élève</button>';
         html += '</div>';
     }
@@ -4873,6 +4875,105 @@ function repondreQuiz(bouton) {
     if (historique) saveChatHistory(historique.id.replace('-chat-history', ''));
 }
 
+// ❖ 24/11/2026 : mise en page de la FICHE DE COURS ÉLÈVE (second document de la Forge secondaire).
+// Le texte reste du Markdown standard ; on regroupe simplement les éléments en blocs (en-tête, objectifs,
+// parties du cours, « Ce que je retiens », exercices, corrigés) que style.css habille.
+function habillerFicheCoursEleve(html) {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    const noeuds = Array.from(tpl.content.childNodes);
+    const sortie = document.createElement('div');
+    sortie.className = 'fiche-cours-eleve';
+    const typeDe = (txt) => {
+        const t = txt.replace(/[:\s]+$/, '').trim();
+        if (/^FICHE DE COURS$/i.test(t)) return 'entete';
+        if (/^ce que je dois savoir faire$/i.test(t)) return 'savoir';
+        if (/^ce que je retiens$/i.test(t)) return 'retiens';
+        if (/^exercices?\b/i.test(t)) return 'exercices';
+        if (/^corrig[ée]s?$/i.test(t)) return 'corriges';
+        if (/^(?:[IVX]{1,4})\.\s*\S/.test(t)) return 'partie';
+        return '';
+    };
+    const estTitre = (n) => {
+        if (n.nodeType !== 1) return false;
+        if (/^H[1-4]$/.test(n.tagName)) return true;
+        return n.tagName === 'P' && n.children.length <= 1 && !!typeDe(n.textContent) && n.textContent.trim().length < 60;
+    };
+    let courant = null;
+    const notes = [];
+    const signatures = [];
+    noeuds.forEach(n => {
+        if (n.nodeType === 3 && !n.textContent.trim()) return;
+        if (n.nodeType === 1 && n.tagName === 'HR') return;
+        if (n.nodeType === 1 && (n.querySelector('.signature-doc') || (n.classList && n.classList.contains('signature-doc')))) { signatures.push(n); return; }
+        if (estTitre(n)) {
+            const type = typeDe(n.textContent);
+            if (type) {
+                courant = document.createElement('div');
+                courant.className = 'fce-bloc fce-' + type;
+                const h = document.createElement(type === 'entete' ? 'h1' : 'h2');
+                h.className = 'fce-titre';
+                h.textContent = n.textContent.trim();
+                courant.appendChild(h);
+                sortie.appendChild(courant);
+                return;
+            }
+        }
+        if (!courant) { courant = document.createElement('div'); courant.className = 'fce-bloc fce-entete'; sortie.appendChild(courant); }
+        courant.appendChild(n.cloneNode(true));
+    });
+    // Dernière phrase d'invitation à ajuster : sortie du bloc « Corrigés », rendue en simple note.
+    const dernierBloc = sortie.lastElementChild;
+    if (dernierBloc) {
+        const derniers = Array.from(dernierBloc.children);
+        const dernier = derniers[derniers.length - 1];
+        if (dernier && dernier.tagName === 'P' && /(peut|peuvent|sur demande|ajust|compl[ée]t|raccourci)/i.test(dernier.textContent) && derniers.length > 2) {
+            const note = document.createElement('p');
+            note.className = 'fce-note';
+            note.textContent = dernier.textContent.trim();
+            dernier.remove();
+            notes.push(note);
+        }
+    }
+    notes.forEach(n => sortie.appendChild(n));
+    const conteneur = document.createElement('div');
+    conteneur.appendChild(sortie);
+    signatures.forEach(sg => conteneur.appendChild(sg.cloneNode(true)));
+    return conteneur.innerHTML;
+}
+
+// ❖ 24/11/2026 : pastille « rédaction en cours / document prêt » au-dessus de la zone de saisie.
+// Pendant la rédaction, la fiche s'affiche en texte brut et ne prend sa forme finale qu'à la fin :
+// sans signal, l'enseignant ne sait pas si le document est terminé.
+const minuteursStatutRedaction = {};
+function statutRedaction(outil, etat, bulle) {
+    if (!['forge', 'forge_primaire', 'atelier'].includes(outil)) return;
+    const histo = document.getElementById(`${outil}-chat-history`);
+    const zone = histo && histo.nextElementSibling && histo.nextElementSibling.classList.contains('chat-input-area')
+        ? histo.nextElementSibling : (histo && histo.parentElement ? histo.parentElement.querySelector('.chat-input-area') : null);
+    if (!zone) return;
+    let pastille = document.getElementById(`${outil}-statut-redaction`);
+    clearTimeout(minuteursStatutRedaction[outil]);
+    if (etat === 'retirer') { if (pastille) pastille.remove(); return; }
+    if (!pastille) {
+        pastille = document.createElement('div');
+        pastille.id = `${outil}-statut-redaction`;
+        pastille.setAttribute('role', 'status');
+        pastille.setAttribute('aria-live', 'polite');
+        zone.insertBefore(pastille, zone.firstChild);
+    }
+    if (etat === 'encours') {
+        pastille.className = 'statut-redaction encours';
+        pastille.onclick = null;
+        pastille.innerHTML = '<span class="statut-points" aria-hidden="true"><i></i><i></i><i></i></span><span>Rédaction en cours — le document se complète, merci de patienter.</span>';
+    } else {
+        pastille.className = 'statut-redaction pret';
+        pastille.innerHTML = '<span>✅ Document prêt</span><span class="statut-lien">Afficher le début</span>';
+        pastille.onclick = () => { if (bulle) scrollToElementTop(`${outil}-chat-history`, bulle); pastille.remove(); };
+        minuteursStatutRedaction[outil] = setTimeout(() => { if (pastille.parentNode) pastille.remove(); }, 25000);
+    }
+}
+
 // ❖ RESTITUTION DU FLUX — style « professionnel » (ChatGPT/Claude/Gemini) ❖
 // Ancien comportement : chaque fragment reçu rejouait le fondu CSS sur TOUT
 // le texte déjà affiché (remove/reflow/add à chaque appel), ce qui provoquait
@@ -4928,6 +5029,10 @@ function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enC
             html = html
                 .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
                 .replace(JETON_SIGNATURE_FIN, '</span>');
+        }
+        // 24/11/2026 : fiche de cours pour les élèves (Forge secondaire) -> mise en page dédiée.
+        if (!enCoursDeFrappe && outil === 'forge' && /^\s*(?:#+\s*)?\**\s*FICHE DE COURS\b/i.test(source)) {
+            try { html = habillerFicheCoursEleve(html); } catch (e) { /* repli : rendu standard */ }
         }
         // ❖ "Mission" (Espace Élève) : le prompt du Sas est délibérément
         // conversationnel et sans structure (ni listes, ni emoji hors
@@ -6535,6 +6640,7 @@ async function sendTeacherMessage(outil, contexteJoint) {
     botLoadingDiv.innerHTML = creerBulleReflexion("Le Cabinet compile les données. L'esprit rassemble le savoir...");
     chatHistory.appendChild(botLoadingDiv);
     scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
+    statutRedaction(outil, 'encours');
 
     // ❖ Sceau propre à l'espace enseignant (voir ouvrirModaleAccesEnseignant),
     // distinct de 'eduka_sceau' (élève) -- vide si l'enseignant a choisi
@@ -6569,6 +6675,7 @@ async function sendTeacherMessage(outil, contexteJoint) {
         // jamais juste après l'envoi (sinon un échec Dify fait perdre
         // l'image en silence).
         let imageEnvoyeeAvecSucces = false;
+        let documentPret = false; // 24/11/2026 : vrai quand un document complet a été reçu
 
         // 1. Vérification de la stabilité du serveur
         if (!response.ok) {
@@ -6640,6 +6747,7 @@ async function sendTeacherMessage(outil, contexteJoint) {
                 botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta demande ?";
             } else {
                 afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, false, outil); // rendu final, curseur retiré
+                documentPret = texteIntegralTeacher.length > 400;
             }
         }
 
@@ -6651,9 +6759,11 @@ async function sendTeacherMessage(outil, contexteJoint) {
             actionsDiv.innerHTML = modeleActionsFicheEnseignant(outil, botLoadingDiv);
             botLoadingDiv.appendChild(actionsDiv);
         }
+        statutRedaction(outil, documentPret ? 'pret' : 'retirer', botLoadingDiv);
         saveChatHistory(outil);
 
     } catch (error) {
+        statutRedaction(outil, 'retirer');
         console.error("Détail de la perturbation :", error);
         botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Une perturbation traverse l'Espace (${error.message}). Reprenez votre souffle et essayez à nouveau.</span>`;
         saveChatHistory(outil);
@@ -6756,6 +6866,17 @@ function imprimerDocument(bouton) {
                style.css, donc les classes .fiche-* doivent être redéfinies
                ici en version imprimable (fond blanc, pas d'ombre, accent
                conservé pour le repérage bleu/vert secondaire/primaire). */
+            /* ❖ Fiche de cours élève (24/11/2026) : version imprimable sobre ; les corrigés démarrent sur une
+               nouvelle page pour pouvoir ne distribuer que le cours et les exercices. */
+            .document-aere .fiche-cours-eleve { white-space: normal; }
+            .document-aere .fce-entete { border-bottom: 2px solid #1D3FA8; margin-bottom: 12px; padding-bottom: 6px; }
+            .document-aere .fce-entete h1 { margin: 0 0 4px; font-size: 20pt; color: #1D3FA8; }
+            .document-aere .fce-bloc { margin: 0 0 12px; }
+            .document-aere .fce-titre { font-size: 14pt; color: #1D3FA8; margin: 14px 0 6px; }
+            .document-aere .fce-savoir, .document-aere .fce-retiens { border: 1px solid #94A3B8; border-radius: 6px; padding: 8px 12px; }
+            .document-aere .fce-corriges { page-break-before: always; }
+            .document-aere .fce-note { display: none; }
+            .document-aere .fiche-cours-eleve p, .document-aere .fiche-cours-eleve li { margin: 4px 0; }
             .document-aere .fiche-lecon {
                 white-space: normal;
                 --fiche-accent: #3B82F6;
