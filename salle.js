@@ -215,10 +215,22 @@
       rappel.style.cssText = 'background:rgba(245,158,11,.16);border:1px solid #D97706;margin:0 0 12px;';
       plan.parentNode.insertBefore(rappel, plan);
     }
-    if (d.est_createur && estEleve() && sansFiche > 0) {
-      rappel.textContent = '✨ À faire : génère la fiche de chaque chapitre (bouton « Générer la fiche »). ' +
-        'Tes camarades travaillent à partir de ces fiches : tant qu\u2019elles ne sont pas générées, ils ne voient aucun contenu. ' +
-        (sansFiche === d.plan.length ? 'Aucune fiche n\u2019est prête pour l\u2019instant.' : sansFiche + ' chapitre' + (sansFiche > 1 ? 's' : '') + ' sans fiche sur ' + d.plan.length + '.');
+    if (d.est_createur && estEleve() && (sansFiche > 0 || etat.genTout)) {
+      rappel.textContent = '';
+      if (etat.genTout) {
+        rappel.appendChild(el('strong', '', '⏳ Génération en cours : ' + etat.genTout.fait + ' / ' + etat.genTout.total + ' fiche' + (etat.genTout.total > 1 ? 's' : '') + ' prête' + (etat.genTout.fait > 1 ? 's' : '') + '. '));
+        rappel.appendChild(document.createTextNode('Garde cette page ouverte (environ 30 secondes par fiche).'));
+      } else {
+        rappel.appendChild(document.createTextNode('✨ À faire : génère la fiche de chaque chapitre. ' +
+          'Tes camarades travaillent à partir de ces fiches : tant qu\u2019elles ne sont pas générées, ils ne voient aucun contenu. ' +
+          (sansFiche === d.plan.length ? 'Aucune fiche n\u2019est prête pour l\u2019instant.' : sansFiche + ' chapitre' + (sansFiche > 1 ? 's' : '') + ' sans fiche sur ' + d.plan.length + '.')));
+        if (sansFiche > 1) {
+          var bt = el('button', 'btn-petit btn-generer', '✨ Générer toutes les fiches (' + sansFiche + ')'); bt.type = 'button';
+          bt.style.cssText = 'display:block;margin-top:8px;';
+          bt.addEventListener('click', function () { genererToutesLesFiches(); });
+          rappel.appendChild(bt);
+        }
+      }
       rappel.classList.remove('cache'); rappel.style.display = '';
     } else { rappel.style.display = 'none'; }
     d.plan.forEach(function (t, i) {
@@ -354,6 +366,28 @@
       if (!res.ok) { (regenerer ? $('pc-msg') : msg).textContent = messageErreur(res); return; }
       actualiser(true).then(function () { ouvrirChapitre(i); });
     });
+  }
+  /* 24/11/2026 : génère, l'une après l'autre, toutes les fiches manquantes (le serveur applique les mêmes règles que pour une fiche seule). */
+  function genererToutesLesFiches() {
+    if (etat.genTout || !etat.donnees) return;
+    var manquants = [];
+    etat.donnees.plan.forEach(function (t, i) { if (!t.fiche) manquants.push(i); });
+    if (!manquants.length) return;
+    var msg = $('plan-msg'); msg.textContent = ''; msg.style.color = '';
+    etat.genTout = { fait: 0, total: manquants.length };
+    afficherSalle(etat.donnees);
+    function suite(k) {
+      if (k >= manquants.length) { etat.genTout = null; actualiser(true); return; }
+      appel('/' + code + '/contenu/generer', 'POST', { appareil: etat.appareil, matricule: sceauSalle(), index: manquants[k], regenerer: false }).then(function (res) {
+        if (!res.ok) {
+          msg.textContent = messageErreur(res) + (k > 0 ? ' (' + k + ' fiche' + (k > 1 ? 's' : '') + ' déjà générée' + (k > 1 ? 's' : '') + '.)' : '');
+          etat.genTout = null; actualiser(true); return;
+        }
+        etat.genTout.fait = k + 1;
+        actualiser(true).then(function () { suite(k + 1); });
+      });
+    }
+    suite(0);
   }
   function habillerFiche(c) {
     var classes = { 'a retenir': 'sec-retenir', 'vocabulaire': 'sec-vocab', 'exemple': 'sec-exemple', 'erreurs a eviter': 'sec-erreurs',
