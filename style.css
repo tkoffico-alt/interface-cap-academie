@@ -2796,3 +2796,16 @@ body.dark-theme .fiche-cours-eleve .fce-exercices .fce-titre, body.dark-theme .f
     .fiche-cours-eleve .fce-entete h1, .fiche-cours-eleve .fce-entete h2, .fiche-cours-eleve .fce-entete h3,
     .fiche-cours-eleve .fce-entete p, .fiche-cours-eleve .fce-entete strong { color: #1D3FA8 !important; }
 }
+
+/* 24/11/2026 : barre de défilement du menu de navigation, contenue dans le cadre arrondi */
+body .menu-navigation-panel {
+    scrollbar-width: auto;
+    padding-right: 4px;
+}
+body .menu-navigation-panel::-webkit-scrollbar { width: 8px; }
+body .menu-navigation-panel::-webkit-scrollbar-track { background: transparent; margin: 14px 0; }
+body .menu-navigation-panel::-webkit-scrollbar-thumb { background: rgba(63,99,216,.45); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+body.dark-theme .menu-navigation-panel::-webkit-scrollbar-thumb { background: rgba(159,179,230,.5); background-clip: padding-box; }
+@supports not selector(::-webkit-scrollbar) {
+    body .menu-navigation-panel { scrollbar-width: thin; scrollbar-color: rgba(63,99,216,.45) transparent; }
+}

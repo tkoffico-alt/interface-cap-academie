@@ -1,0 +1,2798 @@
+/* EdukaTchat - Propriété Intellectuelle Exclusive */
+
+/* --- FONDATIONS --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ❖ THÈME : le clair est désormais la base (aucune classe requise) --
+   inversion volontaire de l'ancienne architecture (sombre par défaut,
+   clair en "body.light-theme"). Le sombre devient l'exception, activée
+   via "body.dark-theme" (voir toggleTheme()/initTheme() dans app.js).
+   Pour la maintenabilité, chaque variante "body.dark-theme .xxx" est
+   placée juste après sa règle de base correspondante plutôt que
+   regroupée en un seul bloc géant en fin de fichier -- c'est cet
+   éparpillement qui rendait l'audit précédent difficile. */
+
+html, body {
+    overflow-x: hidden;
+}
+
+body {
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 50%, #BAE6FD 100%);
+    background-color: #F0F9FF;
+    color: #0F172A;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+}
+body.dark-theme {
+    background: linear-gradient(135deg, #020617 0%, #0F172A 50%, #172554 100%);
+    background-color: #020617;
+    color: #F8FAFC;
+}
+
+/* --- L'EN-TÊTE TRANSLUCIDE --- */
+header {
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+}
+body.dark-theme header {
+    background-color: rgba(15, 23, 42, 0.4);
+    border-bottom-color: rgba(51, 65, 85, 0.5);
+}
+
+.brand {
+    display: flex;
+    flex-direction: column; /* Empile le logo et le texte verticalement */
+    align-items: center;    /* Centre parfaitement l'ensemble */
+    justify-content: center;
+    gap: 0.5rem;            /* L'espace de respiration entre le logo et le titre */
+}
+
+.logo-signature {
+    height: 56px;           /* Légèrement agrandi pour asseoir sa présence en haut */
+    width: auto;
+    border-radius: 8px;
+    object-fit: contain;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    background-color: #FFFFFF;
+    padding: 2px;
+    margin: 0;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.brand-text h1 {
+    font-size: 1.5rem;      /* Une prestance légèrement accentuée */
+    font-weight: 700;
+    color: #0F172A;
+    margin: 0;
+}
+body.dark-theme .brand-text h1 { color: #FFFFFF; }
+
+.brand-text p {
+    color: #475569;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+    letter-spacing: 0.5px;  /* Aère le texte pour plus d'élégance */
+}
+body.dark-theme .brand-text p { color: #94A3B8; }
+
+/* --- L'ACCUEIL --- */
+#home-view {
+    flex: 1;
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+}
+
+.container-sas {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.hero h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin-bottom: 1rem;
+    letter-spacing: -0.025em;
+}
+body.dark-theme .hero h2 { color: #FFFFFF; }
+
+.hero p {
+    font-size: 1.05rem;
+    color: #334155;
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+body.dark-theme .hero p { color: #94A3B8; }
+
+.hero strong {
+    color: #334155;
+}
+body.dark-theme .hero strong { color: #F8FAFC; }
+
+.glass-card {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(203, 213, 225, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+body.dark-theme .glass-card {
+    background-color: rgba(30, 41, 59, 0.4);
+    border-color: rgba(71, 85, 105, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.doors {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+    gap: 2rem;
+    justify-content: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* --- L'ARCHITECTURE DES PÔLES --- */
+.pole-section {
+    margin-bottom: 4rem;
+    width: 100%;
+}
+
+.pole-title {
+    text-align: center;
+    color: #526079;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    font-weight: 600;
+}
+body.dark-theme .pole-title { color: #94A3B8; }
+
+.pole-title::before, .pole-title::after {
+    content: "";
+    height: 1px;
+    background-color: rgba(148, 163, 184, 0.45);
+    flex-grow: 0.1;
+    max-width: 80px;
+}
+body.dark-theme .pole-title::before, body.dark-theme .pole-title::after {
+    background-color: rgba(71, 85, 105, 0.4);
+}
+
+/* Grille du Pôle Fondamental (2 colonnes centrales) */
+.grid-fondamental {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+/* Grille des Ateliers de Maîtrise (4 cartes depuis l'ajout de l'Atelier de
+   l'Élan) -- toujours en flexbox plutôt qu'en grid à colonnes fixes (le
+   flex-wrap + justify-content centre automatiquement toute rangée incomplète,
+   utile si le nombre de cartes redevient impair à l'avenir), mais la base
+   (flex-basis 400px / max-width 480px ci-dessous) tient désormais toujours
+   exactement 2 cartes par ligne dans ce conteneur de 1100px -- demandé par
+   Constant le 04/09/2026 pour une disposition 2x2 symétrique, les 3 premières
+   cartes ne remplissant plus toute la largeur avant de renvoyer la 4e seule
+   sur sa propre ligne. */
+.grid-trois-piliers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+.grid-trois-piliers > .door-card {
+    flex: 1 1 400px;
+    max-width: 480px;
+}
+
+/* Harmonisation visuelle des nouvelles cartes -- badges teintés (fond
+   pastel + texte saturé) : ce motif est déjà lisible sur fond clair
+   comme sur fond sombre, aucune variante de thème nécessaire. Seule la
+   composante noire des ombres portées au survol (rgba(0,0,0,0.5),
+   pensée pour un fond sombre) est adoucie en clair ci-dessous. */
+.door-card.philo .icon-wrapper { background-color: rgba(79, 70, 229, 0.1); color: #818CF8; }
+.door-card.philo:hover { border-color: #4F46E5; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(79, 70, 229, 0.4); }
+body.dark-theme .door-card.philo:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(79, 70, 229, 0.4); }
+
+.door-card.sciences .icon-wrapper { background-color: rgba(5, 150, 105, 0.1); color: #34D399; }
+.door-card.sciences:hover { border-color: #059669; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(5, 150, 105, 0.4); }
+body.dark-theme .door-card.sciences:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(5, 150, 105, 0.4); }
+
+.door-card.boussole .icon-wrapper { background-color: rgba(245, 158, 11, 0.1); color: #FBBF24; }
+.door-card.boussole:hover { border-color: #F59E0B; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(245, 158, 11, 0.4); }
+body.dark-theme .door-card.boussole:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.4); }
+
+.door-card.elan .icon-wrapper { background-color: rgba(244, 63, 94, 0.1); color: #FB7185; }
+.door-card.elan:hover { border-color: #F43F5E; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(244, 63, 94, 0.4); }
+body.dark-theme .door-card.elan:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 63, 94, 0.4); }
+
+@media (max-width: 768px) {
+    .grid-fondamental {
+        grid-template-columns: 1fr;
+    }
+    .grid-trois-piliers > .door-card {
+        flex-basis: 100%;
+        max-width: 100%;
+    }
+}
+
+.door-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    /* PAS de height:100% ici (retiré le 05/09/2026) : une carte flex/grid dont le
+       conteneur parent a une hauteur indéfinie (auto) résout ce 100% comme "non-auto"
+       au sens strict du spec CSS, ce qui désactive le stretch par défaut
+       (align-items: stretch/normal) de TOUS les conteneurs qui utilisent .door-card
+       (.grid-fondamental et la grille Encadrement/Orientation en CSS Grid,
+       .grid-trois-piliers en flexbox) -- chaque carte revient alors à sa hauteur
+       naturelle (hug content) au lieu de s'aligner sur la plus haute carte de sa
+       ligne. Invisible tant que les cartes d'une même ligne ont un texte de longueur
+       comparable, mais c'est exactement ce qui causait le bouton "Entrer dans
+       l'Atelier" de la carte Élan à apparaître décalé vers le bas par rapport à la
+       carte Sciences sur la même ligne (signalé par Constant le 04/09/2026) : le
+       paragraphe de l'Élan est plus long (3 lignes contre 2), donc sa carte restait
+       plus haute (358px) que celle de Sciences (336px) au lieu de s'étirer à la même
+       hauteur. Confirmé par mesure DOM réelle sur edukatchat.org (getBoundingClientRect)
+       avant et après retrait de cette ligne -- les deux cartes passent bien de hauteurs
+       différentes à 358px chacune, boutons parfaitement alignés, aucune régression
+       observée sur .grid-fondamental (Sas/Élève) ni sur la grille Encadrement/
+       Orientation (Enseignant/Boussole/Boussole Univ/Parents), déjà à hauteur égale
+       et inchangée par ce retrait. */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.door-card p {
+    color: #475569;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    flex-grow: 1; /* Le texte occupe tout l'espace libre, poussant le bouton */
+}
+body.dark-theme .door-card p { color: #94A3B8; }
+
+.door-card:hover {
+    transform: translateY(-5px);
+    background-color: rgba(255, 255, 255, 0.7);
+}
+body.dark-theme .door-card:hover {
+    background-color: rgba(30, 41, 59, 0.7);
+}
+
+.sas:hover { border-color: #10B981; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(16, 185, 129, 0.3); }
+.eleve:hover { border-color: #3B82F6; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(59, 130, 246, 0.4); }
+.enseignant:hover { border-color: #A855F7; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(168, 85, 247, 0.4); }
+.parents:hover { border-color: #94A3B8; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(148, 163, 184, 0.4); }
+body.dark-theme .sas:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.3); }
+body.dark-theme .eleve:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.4); }
+body.dark-theme .enseignant:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(168, 85, 247, 0.4); }
+body.dark-theme .parents:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(148, 163, 184, 0.4); }
+
+/* L'aura de la Boussole Universitaire (Teal) */
+.door-card.boussole-univ:hover { border-color: #14B8A6; box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.12), 0 0 20px rgba(20, 184, 166, 0.4); }
+body.dark-theme .door-card.boussole-univ:hover { box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(20, 184, 166, 0.4); }
+.boussole-univ .icon-wrapper { background-color: rgba(20, 184, 166, 0.1); color: #14B8A6; }
+
+.icon-wrapper {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    font-size: 1.8rem;
+}
+
+.sas .icon-wrapper { background-color: rgba(16, 185, 129, 0.1); color: #34D399; }
+.eleve .icon-wrapper { background-color: rgba(59, 130, 246, 0.1); color: #60A5FA; }
+.enseignant .icon-wrapper { background-color: rgba(168, 85, 247, 0.1); color: #C084FC; }
+.parents .icon-wrapper { background-color: rgba(148, 163, 184, 0.1); color: #94A3B8; }
+
+.door-card h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #0F172A;
+    margin-bottom: 0.75rem;
+}
+body.dark-theme .door-card h3 { color: #F8FAFC; }
+
+.card-action-area {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+}
+
+.action-footer {
+    min-height: 24px;
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-entrer {
+    width: 100%;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.sas .btn-entrer { background-color: #10B981; }
+.sas .btn-entrer:hover { background-color: #059669; }
+
+.eleve .btn-entrer { background-color: #3B82F6; }
+.eleve .btn-entrer:hover { background-color: #2563EB; }
+
+.enseignant .btn-entrer { background-color: #A855F7; }
+.enseignant .btn-entrer:hover { background-color: #9333EA; }
+
+.parents .btn-entrer { background-color: #475569; }
+.parents .btn-entrer:hover { background-color: #334155; }
+
+.info-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.info-box h4 {
+    font-size: 1.2rem;
+    color: #0F172A;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+    padding-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+body.dark-theme .info-box h4 {
+    color: #F8FAFC;
+    border-bottom-color: rgba(71, 85, 105, 0.5);
+}
+
+.info-box p {
+    color: #334155;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+body.dark-theme .info-box p { color: #CBD5E1; }
+
+.info-box ul { list-style-type: none; }
+
+.info-box li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+    color: #334155;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+body.dark-theme .info-box li { color: #94A3B8; }
+
+.info-box li strong { color: #0F172A; }
+body.dark-theme .info-box li strong { color: #E2E8F0; }
+
+.info-box li::before {
+    content: "✦";
+    position: absolute;
+    left: 0;
+    color: #3B82F6;
+    font-size: 0.9rem;
+}
+
+.news-box {
+    border-left: 4px solid #3B82F6;
+}
+
+.news-box li::before {
+    content: "•";
+    color: #60A5FA;
+    font-size: 1.2rem;
+    top: -2px;
+}
+
+/* --- L'ESPACE DE TRAVAIL --- */
+#app-view {
+    display: none;
+    flex-direction: column;
+    background-color: #F8FAFC;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 100;
+}
+body.dark-theme #app-view { background-color: #020617; }
+
+.toolbar {
+    background-color: #FFFFFF;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    border-bottom: 1px solid #E2E8F0;
+    flex-shrink: 0;
+}
+body.dark-theme .toolbar {
+    background-color: #0F172A;
+    border-bottom-color: #1E293B;
+}
+
+.btn-retour {
+    background: none;
+    border: 1px solid #CBD5E1;
+    color: #475569;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+body.dark-theme .btn-retour {
+    border-color: #334155;
+    color: #94A3B8;
+}
+.btn-retour:hover {
+    background-color: #F1F5F9;
+    color: #0F172A;
+}
+body.dark-theme .btn-retour:hover {
+    background-color: #1E293B;
+    color: #F8FAFC;
+}
+
+.btn-fullscreen {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: #2563EB;
+    border: 1px solid #2563EB;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+body.dark-theme .btn-fullscreen { color: #60A5FA; }
+.btn-fullscreen:hover {
+    background-color: #2563EB;
+    color: #FFFFFF;
+}
+
+.teacher-navigation {
+    display: none;
+    gap: 0.5rem;
+    margin-left: auto;
+    align-items: center;
+    /* ❖ Révisé le 27/09/2026 (retour Constant : rangée trop chargée, débordante
+       sur mobile) -- une seule ligne qui défile horizontalement plutôt que de
+       s'empiler sur plusieurs rangées quand l'espace manque. */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    max-width: 100%;
+    padding-bottom: 2px;
+}
+
+/* ❖ Regroupement Professeur/Instituteur (27/09/2026) : chaque groupe porte
+   son propre petit intitulé au-dessus de ses boutons, séparé de l'autre par
+   .teacher-tabs-separateur -- rend visible d'un coup d'œil que les 5 outils
+   ne forment pas une seule liste plate, mais bien deux publics distincts.
+   Intitulé volontairement discret (masqué sur mobile, voir media query) :
+   un seul groupe est jamais affiché à la fois, la couleur des onglets suffit
+   déjà à distinguer Professeur (violet) d'Instituteur (vert). */
+.teacher-tabs-groupe {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    flex-shrink: 0;
+}
+
+.teacher-tabs-groupe-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #9333EA;
+    opacity: 0.6;
+}
+body.dark-theme .teacher-tabs-groupe-label { color: #C084FC; }
+
+.teacher-tabs-groupe-label-vert { color: #10B981; }
+body.dark-theme .teacher-tabs-groupe-label-vert { color: #34D399; }
+
+.teacher-tabs-groupe-boutons {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: nowrap;
+}
+
+.teacher-tabs-separateur {
+    width: 1px;
+    height: 24px;
+    background-color: #E2E8F0;
+    align-self: center;
+    flex-shrink: 0;
+}
+body.dark-theme .teacher-tabs-separateur { background-color: #334155; }
+
+/* ❖ Bouton "Changer de catégorie" (27/09/2026, révisé le même jour) : ramène
+   l'enseignant à l'écran de sélection Professeur/Instituteur -- discret,
+   jamais habillé comme un vrai onglet d'outil. Passé en icône compacte avec
+   infobulle (le libellé complet prenait trop de place sur une rangée déjà
+   pleine) ; le mot "Catégorie" ne reste visible que si la place le permet. */
+.btn-changer-categorie-enseignant {
+    background: none;
+    border: 1px solid #E2E8F0;
+    border-radius: 999px;
+    color: #64748B;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.55rem;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-changer-categorie-enseignant:hover { background-color: #F1F5F9; }
+body.dark-theme .btn-changer-categorie-enseignant { border-color: #334155; color: #94A3B8; }
+body.dark-theme .btn-changer-categorie-enseignant:hover { background-color: #1E293B; }
+
+/* ❖ Écran de sélection Professeur/Instituteur (27/09/2026), voir
+   #teacher-categorie-chooser dans index.html -- réutilise le motif visuel
+   .door-card déjà en place sur la page d'accueil, dans un conteneur qui
+   occupe tout l'espace de .iframe-container (comme un container-chat) au
+   lieu d'une grille de la page d'accueil. */
+.categorie-chooser-grid {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem;
+}
+.categorie-card {
+    cursor: pointer;
+    flex: 1 1 280px;
+    max-width: 340px;
+}
+.categorie-card-bleu .icon-wrapper { background-color: rgba(59, 130, 246, 0.12); }
+.categorie-card-vert .icon-wrapper { background-color: rgba(16, 185, 129, 0.12); }
+
+.tab-btn {
+    background-color: transparent;
+    color: #64748B;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+body.dark-theme .tab-btn { color: #64748B; }
+
+.tab-btn:hover {
+    color: #0F172A;
+    background-color: #F1F5F9;
+}
+body.dark-theme .tab-btn:hover {
+    color: #CBD5E1;
+    background-color: rgba(30, 41, 59, 0.5);
+}
+
+.tab-btn.active {
+    background-color: rgba(168, 85, 247, 0.15);
+    color: #9333EA;
+}
+body.dark-theme .tab-btn.active { color: #C084FC; }
+
+/* ❖ Identité verte pour les 2 onglets Instituteur (Primaire), cohérente avec
+   accent-vert déjà utilisé sur leurs conteneurs de chat une fois ouverts --
+   jusqu'ici ils prenaient le même violet que les onglets Professeur. */
+.tab-btn-vert.active {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #10B981;
+}
+body.dark-theme .tab-btn-vert.active { color: #34D399; }
+
+.iframe-container {
+    flex: 1;
+    width: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.custom-chat-container {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    background-color: #F8FAFC;
+}
+body.dark-theme .custom-chat-container { background-color: #020617; }
+
+.custom-chat-container.active {
+    display: flex;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: none;
+}
+
+iframe.active {
+    display: block;
+}
+
+@media (max-width: 900px) {
+    .info-section { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    .toolbar { flex-direction: column; gap: 1rem; align-items: stretch; }
+    /* ❖ Révisé le 27/09/2026 (retour Constant : rangée débordante/tronquée
+       sur mobile, capture à l'appui) -- abandon du flex-wrap (qui empilait
+       la barre sur 3-4 lignes et écrasait la conversation en dessous) au
+       profit d'une seule ligne compacte qui défile horizontalement d'un
+       doigt, comme le fait déjà .grille-boutons-suggeres ailleurs dans
+       cette app. Le libellé de groupe (Professeur/Instituteur) est masqué
+       ici : sur un écran étroit, la couleur des onglets suffit à distinguer
+       les deux publics sans consommer une ligne de texte supplémentaire. */
+    .teacher-navigation { margin-left: 0; justify-content: flex-start; }
+    .teacher-tabs-groupe-label { display: none; }
+    .teacher-tabs-separateur { height: 20px; }
+    .tab-btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+    .btn-changer-categorie-texte { display: none; }
+    .btn-fullscreen { margin-left: 0; justify-content: center; }
+}
+
+/* --- FILIGRANE EDUKATCHAT --- */
+.watermark-background {
+    background-image: url('logo-fond.png');
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    background-image: url('logo-edukatchat.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+    -webkit-mask-image: radial-gradient(circle, black 40%, transparent 90%);
+    mask-image: radial-gradient(circle, black 40%, transparent 90%);
+}
+
+.chat-history {
+    flex: 1;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-height: 0;
+}
+
+/* ❖ Bannière d'identité de matière (Espace de Préparation / Académie
+   Premium) : contrairement à l'ancien message d'accueil (un simple
+   message dans le fil, qui défile hors de vue), cet élément vit HORS
+   de .chat-history -- comme un frère qui la précède dans le flex
+   column de .custom-chat-container -- donc il reste affiché en
+   permanence, un repère visuel constant de "où je suis". */
+.banniere-matiere {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.1rem 1.5rem;
+    background-color: #FAFAF9;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+body.dark-theme .banniere-matiere {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ❖ L'écrin en pilule (26/08/2026) : remplace l'ancien texte flottant
+   directement sur le dégradé bleu vif par un badge délimité, au ton
+   plus feutré -- cf. demande de Constant d'un rendu plus posé/serein. */
+.banniere-matiere-pilule {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.5rem 1.35rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(71, 85, 105, 0.07), rgba(71, 85, 105, 0.02));
+    border: 1px solid rgba(71, 85, 105, 0.14);
+}
+body.dark-theme .banniere-matiere-pilule {
+    background: linear-gradient(135deg, rgba(148, 163, 184, 0.14), rgba(148, 163, 184, 0.04));
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+.banniere-matiere-icone {
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    color: #475569;
+}
+.banniere-matiere-icone svg { display: block; width: 100%; height: 100%; }
+body.dark-theme .banniere-matiere-icone { color: #94A3B8; }
+
+.banniere-matiere-nom {
+    font-size: 1.05rem;
+    font-weight: 500;
+    font-variant: small-caps;
+    letter-spacing: 0.05em;
+    color: #334155;
+}
+body.dark-theme .banniere-matiere-nom { color: #CBD5E1; }
+
+@media (max-width: 600px) {
+    .banniere-matiere { padding: 0.8rem 1rem; }
+    .banniere-matiere-pilule { padding: 0.4rem 1.05rem; gap: 0.5rem; }
+    .banniere-matiere-nom { font-size: 0.92rem; }
+    .banniere-matiere-icone { width: 16px; height: 16px; }
+}
+
+.message {
+    max-width: 90%;
+    padding: 1.2rem 1.5rem;
+    border-radius: 12px;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+/* Illustrations pédagogiques insérées par l'agent élève (schémas
+   recréés / vraies photographies microscopiques) dans une bulle de
+   réponse — voir illustrations_disponibles côté gateway. */
+.message img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin: 0.8rem 0;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Variante "compacte" : posée dynamiquement par JS (voir
+   chargerTaillesIllustrations() / afficherReponseAvecFondu() dans app.js)
+   selon le champ "taille" du catalogue (illustrations_manifest.json).
+   Volontairement PAS de float ni d'habillage de texte -- reste un bloc
+   centré, simplement plus étroit, pour ne pas interférer avec le
+   white-space: pre-wrap des bulles ni avec .message-actions en dessous. */
+.message img.illustration-compacte {
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ❖ Formules KaTeX (voir extraireEtRendreLatex()/reinjecterLatex() dans
+   app.js) -- rendu des délimiteurs LaTeX écrits par l'agent (Sas). Une
+   formule "display" (bloc $$...$$) peut dépasser la largeur de la bulle
+   sur un petit écran mobile -- défilement horizontal plutôt qu'un
+   débordement qui casserait la mise en page. */
+.message .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0.6rem 0;
+    padding-bottom: 0.2rem;
+}
+.message .katex {
+    font-size: 1.05em;
+}
+/* ❖ 21/11/2026 : la règle universelle `* { font-family: ... }` du début de ce fichier
+   écrasait les polices internes de KaTeX (les spans sans classe de police prenaient la police
+   système au lieu de KaTeX_Main) : chiffres en police système et signe « ≠ » affiché comme un
+   petit carré. `inherit` rend aux éléments internes la police de .katex ; les règles propres
+   de KaTeX (.katex .mathnormal, etc.), plus spécifiques, continuent de s'appliquer. */
+.katex * {
+    font-family: inherit;
+}
+
+/* ❖ Portée musicale (abcjs, voir extraireEtRendreABC/reinjecterABC dans
+   app.js) -- rendu SVG d'un bloc ```abc écrit par l'agent. Utilisé à la
+   fois dans le chat Sas (bulles .message) ET dans les fiches/évaluations
+   de la Forge et de l'Atelier des Évaluations (cartes .fiche-carte, sans
+   ancêtre .message) -- voir texteVersHtmlLegerFiche. Même raison que
+   .katex-display : le SVG produit par abcjs a une largeur fixe qui peut
+   dépasser son conteneur sur mobile -- défilement horizontal plutôt
+   qu'un débordement. */
+.partition-musicale {
+    overflow-x: auto;
+    overflow-y: hidden;
+    min-height: 150px;
+    /* ⚠️ VRAIE CAUSE RACINE D'UN SECOND BUG trouvée le 30/09/2026, plus tard
+       le même jour que le correctif position:relative ci-dessous, en
+       reproduisant en direct sur edukatchat.org l'exacte capture partagée par
+       Constant (TRACE ÉCRITE VALIDÉE totalement VIDE, alors que le texte brut
+       Dify contenait un bloc ```abc parfaitement formé -- confirmé via les
+       Journaux Dify Studio) : le <svg> généré par abcjs porte lui-même
+       `position: absolute` (voir plus bas) -- un élément en position absolue
+       ne contribue JAMAIS à la hauteur "auto" de son conteneur, même une fois
+       ce conteneur rendu POSITIONNÉ (position: relative) pour l'ancrer
+       correctement. Sans aucun autre contenu, `.partition-musicale` se
+       retrouvait donc réduite à la hauteur de son seul `padding` (0.4rem ×
+       2 = 12.8px, confirmé par mesure directe `getBoundingClientRect()`) --
+       et `overflow-y: hidden` (posé plus haut le même jour, voir plus bas)
+       rognait alors tout le <svg> réellement dessiné (≈74-98px de haut) sauf
+       ces 12.8 premiers pixels, une simple tranche de marge sans note
+       visible : une "boîte vide" à l'écran, alors que le HTML généré
+       contenait bel et bien un <svg> complet et valide (confirmé par
+       `analyserFicheLecon()` + `texteVersHtmlLegerFiche()` appelés
+       directement, en isolation, sur le vrai texte réel -- les deux
+       renvoyaient un SVG correct, la perte n'avait lieu qu'à l'affichage).
+       `min-height` fixe (au lieu de laisser le conteneur se réduire à son
+       seul padding) donne au <svg> assez d'espace réel pour ne plus être
+       rogné par `overflow-y: hidden`, sans avoir à toucher ce filet déjà en
+       place -- vérifié par mesure directe (`svgFullyContained: true`) avant
+       toute livraison. */
+    margin: 0.6rem 0;
+    padding: 0.4rem 0;
+    background: #ffffff;
+    border-radius: 8px;
+    /* ⚠️ VRAIE CAUSE RACINE trouvée le 30/09/2026, en reproduisant le bug en
+       direct sur edukatchat.org (harnais navigateur : appel réel de
+       analyserFicheLecon()/construireHTMLFiche() avec un vrai bloc ```abc,
+       injection du HTML dans le DOM réel, inspection de getComputedStyle) --
+       après plusieurs correctifs successifs qui n'avaient traité que des
+       symptômes (overflow, margin-top, voir historique ci-dessous) sans
+       jamais confirmer la vraie cause : abcjs pose lui-même `position:
+       absolute; top:0` sur le <svg> racine qu'il génère (comportement propre
+       à la librairie, indépendant de `responsive`). Un élément en position
+       absolute se positionne par rapport à son plus proche ancêtre POSITIONNÉ
+       (position non-static) -- or AUCUN ancêtre de .partition-musicale
+       (.fiche-phase-ligne, .fiche-carte, .fiche-lecon...) n'est positionné,
+       donc le SVG remontait jusqu'au containing block initial (la racine du
+       document/du conteneur défilable), s'affichant TOUJOURS en haut à
+       gauche -- exactement le symptôme observé (portée superposée à
+       l'EN-TÊTE ADMINISTRATIF), quel que soit l'endroit réel du texte où le
+       modèle avait écrit le bloc ```abc. Confirmé par une mesure directe :
+       sans ce correctif, `getBoundingClientRect()` du <svg> donnait un `top`
+       très négatif (hors de son propre conteneur) ; avec `position:
+       relative` posé ICI, le <svg> s'ancre correctement à l'intérieur de
+       .partition-musicale, exactement où il doit apparaître. Un ancêtre
+       positionné le plus proche possible du <svg> est le correctif direct --
+       pas un correctif de repli comme les précédents. */
+    position: relative;
+}
+/* ⚠️ Bug réel trouvé le 29/09/2026 : ces règles n'étaient scopées que
+   sous .message (le SVG chevauchait le texte précédent dans les fiches
+   Forge/Atelier des Évaluations -- portée superposée à l'objectif ou
+   aux badges d'en-tête, car ces cartes ne sont jamais enveloppées dans
+   .message). Corrigé en retirant le préfixe .message : ces règles
+   s'appliquent désormais partout où .partition-musicale apparaît. */
+/* ⚠️ Bug réel plus grave trouvé le 30/09/2026 -- révélé PAR le correctif
+   ci-dessus : une fois ces règles appliquées aux cartes de fiche/évaluation
+   (qui n'ont pas le même confinement que les bulles .message), le
+   `overflow: visible` posé sur le <svg> (voir historique ci-dessous) a
+   laissé le débordement négatif d'abcjs remonter librement dans le flux du
+   document -- une seule portée pouvait alors s'afficher visuellement à
+   l'intérieur des badges de l'EN-TÊTE ADMINISTRATIF ou juste après le titre
+   PARTIE A, plusieurs sections avant sa vraie position dans le texte
+   (confirmé par Constant : "une seule portée apparaissant au mauvais
+   endroit"). `overflow: visible` avait été ajouté le 26/09/2026 pour laisser
+   ce débordement RESTER VISIBLE plutôt que d'être rogné -- mais dans ce
+   contexte (carte de fiche, sans .message pour le contenir), laisser le
+   débordement visible est pire que le rogner : un fragment de portée
+   manquant est un défaut mineur, une portée entière déplacée dans une
+   section sans rapport est une vraie casse de mise en page. Corrigé en deux
+   points : (1) le SVG repasse en `overflow: hidden` (comportement par défaut
+   d'un élément <svg>, annulant l'ajout du 26/09/2026) -- tout débordement
+   négatif est désormais rogné DANS le SVG lui-même, invisible, plutôt que de
+   fuir vers le haut de la page ; (2) `.partition-musicale` reçoit en plus un
+   `overflow-y: hidden` explicite (au lieu de dépendre de la règle CSS
+   d'interdépendance overflow-x/overflow-y, qui force normalement l'axe
+   resté "visible" à "auto" quand l'autre est "auto", mais dont la fiabilité
+   entre navigateurs n'a pas pu être vérifiée dans ce bac à sable) -- double
+   filet plutôt qu'un seul mécanisme dont on ne peut pas garantir qu'il
+   suffit seul. */
+.partition-musicale svg {
+    display: block;
+    margin-top: 2.2rem !important;
+    margin-bottom: 0.6rem !important;
+    overflow: hidden;
+}
+body.dark-theme .partition-musicale {
+    background: #f1f5f9; /* la portée SVG d'abcjs dessine en noir sur fond
+                             transparent -- un fond clair reste nécessaire
+                             même en thème sombre pour rester lisible. */
+}
+.partition-musicale-erreur {
+    white-space: pre-wrap;
+    font-size: 0.85em;
+    opacity: 0.75;
+}
+
+.user-message {
+    align-self: flex-end;
+    background-color: #3B82F6;
+    color: white;
+    border-bottom-right-radius: 0;
+}
+
+.bot-message {
+    align-self: flex-start;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #334155;
+    border-bottom-left-radius: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+body.dark-theme .bot-message {
+    background-color: #1E293B;
+    border-color: #334155;
+    color: #E2E8F0;
+}
+
+/* ❖ CARTE "FICHE DE LEÇON" — reskin visuel (Forge / Forge Primaire) ❖
+   Rendu enrichi construit par construireRenduFiche()/construireHTMLFiche()
+   dans app.js, uniquement quand le texte généré est reconnu comme une
+   fiche de leçon structurée. Palette bleue par défaut (secondaire),
+   accent-vert pour le primaire -- cohérent avec l'identité de couleur déjà
+   en place sur les onglets. En cas d'échec du parsing, ce bloc n'apparaît
+   jamais : l'appelant se replie sur le rendu Markdown standard. */
+.fiche-lecon {
+    --fiche-accent: #3B82F6;
+    --fiche-accent-douce: rgba(59, 130, 246, 0.14);
+    white-space: normal;
+}
+.fiche-lecon.accent-vert {
+    --fiche-accent: #10B981;
+    --fiche-accent-douce: rgba(16, 185, 129, 0.14);
+}
+
+.fiche-lecon > * + * {
+    margin-top: 1.4rem;
+}
+
+.fiche-section-titre {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--fiche-accent);
+    text-transform: uppercase;
+}
+
+/* ❖ Mention « Bonus EdukaTchat » (03/10/2026) : situation d'apprentissage,
+   matériel et trace écrite ne figurent pas dans la fiche pratique officielle
+   PNAPAS ; l'instituteur doit voir d'un coup d'œil qu'il peut les retirer.
+   Pastille discrète, sans majuscules, pour ne pas concurrencer le titre.
+   Les variables --fiche-accent* valent pour les deux thèmes : pas de
+   variante body.dark-theme nécessaire. */
+.fiche-mention-bonus {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    border: 1px dashed var(--fiche-accent);
+    background: var(--fiche-accent-douce);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+/* ❖ Repères Je fais / Nous faisons / Tu fais dans les cellules du
+   déroulement (lecture PNAPAS, 03/10/2026). */
+.fiche-moment-lecture {
+    color: var(--fiche-accent);
+    font-weight: 700;
+}
+
+.fiche-bloc-entete {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.6rem !important;
+}
+.fiche-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: var(--fiche-accent-douce);
+    color: var(--fiche-accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--fiche-accent-douce);
+}
+.fiche-badge-label {
+    opacity: 0.75;
+    font-weight: 500;
+}
+.fiche-badge.fiche-badge-competence {
+    width: 100%;
+    border-radius: 12px;
+    background: var(--fiche-accent);
+    color: #FFFFFF;
+    padding: 0.6rem 1rem;
+}
+.fiche-badge.fiche-badge-competence .fiche-badge-label {
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 1;
+}
+
+.fiche-carte {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 1.1rem 1.3rem;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    margin-top: 0.6rem !important;
+}
+body.dark-theme .fiche-carte {
+    background: rgba(255, 255, 255, 0.035);
+    border-color: rgba(148, 163, 184, 0.18);
+    box-shadow: 0 4px 14px rgba(2, 6, 23, 0.18);
+}
+
+.fiche-liste-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.fiche-liste-simple > div {
+    padding: 0.55rem 0;
+    border-top: 1px solid #EEF0F3;
+}
+body.dark-theme .fiche-liste-simple > div { border-top-color: rgba(148, 163, 184, 0.16); }
+.fiche-liste-simple > div:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+.fiche-liste-simple > div:last-child {
+    padding-bottom: 0;
+}
+
+/* ❖ Plan pour le cahier de texte (Forge secondaire, 25/09/2026) -- un
+   résumé A./a./b. destiné à être copié tel quel dans le cahier de texte
+   physique de la classe. <pre> pour préserver l'indentation des sous-
+   points (perdue si on repassait par texteVersHtmlLegerFiche), bouton
+   Copier ciblé juste en dessous plutôt que le "Copier pour Word" général
+   (qui copierait toute la fiche, pas seulement ce résumé). */
+.fiche-plan-cahier-texte {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.fiche-plan-cahier-texte-contenu {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #1F2937;
+}
+body.dark-theme .fiche-plan-cahier-texte-contenu { color: #E2E8F0; }
+.fiche-plan-cahier-texte-bouton {
+    align-self: flex-start;
+}
+
+/* ❖ Page « Illustrations » (08/10/2026) : images du catalogue appariées à la
+   leçon, avec légende, juste avant le plan. Nouvelle page à l'impression. */
+.fiche-illustrations-slot[hidden] { display: none; }
+.fiche-illustrations {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+.fiche-illustration {
+    margin: 0;
+    text-align: center;
+    break-inside: avoid;
+}
+.fiche-illustration img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: #FFFFFF;
+}
+.fiche-illustration figcaption {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #475569;
+}
+body.dark-theme .fiche-illustration figcaption { color: #CBD5E1; }
+@media print {
+    .fiche-illustrations-slot:not([hidden]) { break-before: page; }
+}
+
+/* ❖ Le déroulement du canevas PNAPAS natif : un vrai tableau à quatre
+   colonnes, tel qu'il figure dans les fiches modèles officielles. */
+.fiche-carte-tableau {
+    padding: 0;
+    overflow: hidden;
+}
+/* Tableaux Markdown simples dans les cartes de fiche/évaluation (15/10/2026) */
+.fiche-table-wrap { overflow-x: auto; margin: 0.6rem 0; }
+.fiche-table-simple { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.fiche-table-simple th, .fiche-table-simple td {
+    border: 1px solid rgba(100, 116, 139, 0.35);
+    padding: 0.5rem 0.7rem; text-align: left; vertical-align: top;
+}
+.fiche-table-simple th { background: rgba(59, 130, 246, 0.12); font-weight: 700; }
+.fiche-table-simple tbody tr:nth-child(even) td { background: rgba(100, 116, 139, 0.07); }
+@media print { .fiche-table-simple th, .fiche-table-simple td { border-color: #94a3b8; } .fiche-table-wrap { overflow: visible; } }
+.fiche-deroulement-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.88rem;
+}
+.fiche-deroulement-table th,
+.fiche-deroulement-table td {
+    padding: 0.7rem 0.85rem;
+    border: 1px solid #EEF0F3;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+body.dark-theme .fiche-deroulement-table th,
+body.dark-theme .fiche-deroulement-table td { border-color: rgba(148, 163, 184, 0.16); }
+.fiche-deroulement-table th {
+    background: #F8FAFC;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    color: var(--fiche-accent);
+}
+body.dark-theme .fiche-deroulement-table th { background: rgba(255, 255, 255, 0.04); }
+.fiche-deroulement-table td:first-child { font-weight: 600; }
+.fiche-deroulement-table p { margin: 0; }
+.fiche-deroulement-table p + p { margin-top: 0.35rem; }
+/* La première colonne (les phases) est plus étroite : elle ne porte qu'un
+   intitulé, là où les trois autres portent des activités rédigées. */
+.fiche-deroulement-table th:first-child,
+.fiche-deroulement-table td:first-child { width: 20%; }
+
+/* ❖ Coloration par phase du tableau à 4 colonnes, réservée aux fiches APC
+   qui se rédigent malgré tout en tableau (jamais aux vraies fiches PNAPAS,
+   voir la garde côté app.js sur la présence d'un badge "Compétence") --
+   29/08/2026, même palette interne teal/amber/violet que le reste de
+   l'application pour ces repères de phase/niveau. */
+.fiche-deroulement-table { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.fiche-deroulement-table tbody tr.fiche-phase-presentation td { background: rgba(20, 184, 166, 0.06); }
+.fiche-deroulement-table tbody tr.fiche-phase-presentation td:first-child { color: #0F766E; }
+.fiche-deroulement-table tbody tr.fiche-phase-developpement td { background: rgba(245, 158, 11, 0.06); }
+.fiche-deroulement-table tbody tr.fiche-phase-developpement td:first-child { color: #B45309; }
+.fiche-deroulement-table tbody tr.fiche-phase-evaluation td { background: rgba(139, 92, 246, 0.06); }
+.fiche-deroulement-table tbody tr.fiche-phase-evaluation td:first-child { color: #6D28D9; }
+body.dark-theme .fiche-deroulement-table tbody tr.fiche-phase-presentation td { background: rgba(45, 212, 191, 0.08); }
+body.dark-theme .fiche-deroulement-table tbody tr.fiche-phase-presentation td:first-child { color: #5EEAD4; }
+body.dark-theme .fiche-deroulement-table tbody tr.fiche-phase-developpement td { background: rgba(251, 191, 36, 0.07); }
+body.dark-theme .fiche-deroulement-table tbody tr.fiche-phase-developpement td:first-child { color: #FCD34D; }
+body.dark-theme .fiche-deroulement-table tbody tr.fiche-phase-evaluation td { background: rgba(167, 139, 250, 0.09); }
+body.dark-theme .fiche-deroulement-table tbody tr.fiche-phase-evaluation td:first-child { color: #C4B5FD; }
+
+/* ❖ Sous 600 px, le tableau se replie en cartes empilées : une carte par
+   phase, chaque colonne devenant une ligne étiquetée par son en-tête
+   (repris depuis l'attribut data-libelle). Quatre colonnes sur un écran de
+   téléphone donneraient trois mots par ligne ou un défilement horizontal :
+   ni l'un ni l'autre n'est acceptable pour un instituteur qui prépare sa
+   classe sur son téléphone. */
+@media (max-width: 600px) {
+    .fiche-deroulement-table,
+    .fiche-deroulement-table tbody,
+    .fiche-deroulement-table tr,
+    .fiche-deroulement-table td {
+        display: block;
+        width: auto;
+    }
+    .fiche-deroulement-table thead {
+        display: none;
+    }
+    .fiche-deroulement-table tr {
+        padding: 0.9rem 1rem;
+        border-top: 1px solid #EEF0F3;
+    }
+    body.dark-theme .fiche-deroulement-table tr { border-top-color: rgba(148, 163, 184, 0.16); }
+    .fiche-deroulement-table tr:first-child { border-top: none; }
+    .fiche-deroulement-table td {
+        border: none;
+        padding: 0.45rem 0 0;
+    }
+    .fiche-deroulement-table td:first-child {
+        width: auto;
+        padding-top: 0;
+        color: var(--fiche-accent);
+        font-size: 0.95rem;
+    }
+    .fiche-deroulement-table td::before {
+        content: attr(data-libelle);
+        display: block;
+        font-size: 0.72rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        opacity: 0.6;
+        margin-bottom: 0.15rem;
+    }
+    .fiche-deroulement-table td:first-child::before { display: none; }
+    .fiche-deroulement-table td:empty { display: none; }
+}
+
+/* ❖ À l'impression, on rétablit toujours le tableau complet, quelle que
+   soit la largeur de la fenêtre : la feuille A4 a la place, et c'est cette
+   mise en forme-là que l'instituteur range dans son cahier de préparation.
+   Cette règle doit rester APRÈS le repli ci-dessus pour l'emporter. */
+@media print {
+    .fiche-deroulement-table { display: table; }
+    .fiche-deroulement-table thead { display: table-header-group; }
+    .fiche-deroulement-table tbody { display: table-row-group; }
+    .fiche-deroulement-table tr {
+        display: table-row;
+        padding: 0;
+        border-top: none;
+        break-inside: avoid;
+    }
+    .fiche-deroulement-table td {
+        display: table-cell;
+        border: 1px solid #D1D5DB;
+        padding: 0.6rem 0.7rem;
+    }
+    .fiche-deroulement-table td::before { display: none; }
+    .fiche-deroulement-table th:first-child,
+    .fiche-deroulement-table td:first-child { width: 20%; }
+    .fiche-carte-tableau { box-shadow: none; }
+}
+
+/* ❖ Le tableau du Plan de session hebdomadaire a 7 colonnes (Jour /
+   Objectifs / Activités / Matériels / SP / Durée / Observations), contre 4
+   pour le déroulement PNAPAS -- la 1ère colonne n'y porte qu'un jour de la
+   semaine ("Lundi"), pas un intitulé de phase : 20% de large serait
+   disproportionné. Sélecteur à deux classes = plus spécifique que
+   .fiche-deroulement-table seul, donc l'emporte y compris dans le bloc
+   @media print ci-dessus, sans avoir à dupliquer la règle. */
+.fiche-deroulement-table.tableau-plan-hebdo th:first-child,
+.fiche-deroulement-table.tableau-plan-hebdo td:first-child {
+    width: 9%;
+}
+
+/* ❖ Hiérarchie à trois niveaux (catégorie -> activité -> points) du bloc
+   "Détail des activités" du Plan de session hebdomadaire -- voir
+   structurerActivitesPlanHebdo() / htmlActivitesPlanHebdo() dans app.js. */
+.plan-hebdo-activites {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+.plan-hebdo-categorie + .plan-hebdo-categorie {
+    padding-top: 1.1rem;
+    border-top: 1px solid #EEF0F3;
+}
+body.dark-theme .plan-hebdo-categorie + .plan-hebdo-categorie { border-top-color: rgba(148, 163, 184, 0.16); }
+.plan-hebdo-categorie-titre {
+    font-weight: 700;
+    color: var(--fiche-accent);
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+}
+.plan-hebdo-activite {
+    margin-left: 0.9rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--fiche-accent-douce);
+}
+.plan-hebdo-activite + .plan-hebdo-activite {
+    margin-top: 0.7rem;
+}
+.plan-hebdo-activite-titre {
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+.plan-hebdo-activite-points {
+    margin: 0.3rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.88rem;
+}
+.plan-hebdo-activite-points li { margin-bottom: 0.2rem; }
+.plan-hebdo-activite-points li:last-child { margin-bottom: 0; }
+
+/* ❖ Variante "plan mensuel" du Plan de session hebdomadaire : plusieurs
+   blocs Semaine à la suite, chacun avec ses propres badges et son propre
+   tableau -- voir construireHTMLFichePlanHebdo() dans app.js. */
+.plan-hebdo-semaine + .plan-hebdo-semaine {
+    margin-top: 1.4rem;
+    padding-top: 1.4rem;
+    border-top: 1px dashed #D9DEE6;
+}
+body.dark-theme .plan-hebdo-semaine + .plan-hebdo-semaine { border-top-color: rgba(148, 163, 184, 0.24); }
+.plan-hebdo-semaine-titre {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--fiche-accent);
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
+/* ❖ Coloration douce du tableau du Plan de session hebdomadaire par niveau
+   (cas hétérogène PNAPAS, section 6 BIS du prompt Forge Primaire) --
+   inspirée du canevas officiel (rangs teintés par groupe), mais avec des
+   teintes pastel + une pastille de couleur sur la cellule "Groupes de
+   niveau" plutôt que des aplats francs, pour rester dans l'esprit visuel
+   sobre du reste de l'application. Cycle sur 3 teintes -- niveau 1
+   (collectif), niveau 2, niveau 3 -- réappliqué à chaque nouvelle journée
+   par construireHTMLFichePlanHebdo() (classes plan-hebdo-niveau-1/2/3,
+   posées sur le <tr>). Sans rapport avec --fiche-accent (bleu/vert) : ce
+   sont des couleurs de repérage au sein du tableau, pas la couleur de
+   l'outil.
+   Impression : print-color-adjust force la survie des teintes au format
+   PDF (le "Print to PDF" de Windows, utilisé pour vérifier ces fiches,
+   n'imprime pas toujours les couleurs de fond par défaut). */
+.tableau-plan-hebdo { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.tableau-plan-hebdo tbody tr.plan-hebdo-niveau-1 td { background: rgba(20, 184, 166, 0.07); }
+.tableau-plan-hebdo tbody tr.plan-hebdo-niveau-2 td { background: rgba(245, 158, 11, 0.07); }
+.tableau-plan-hebdo tbody tr.plan-hebdo-niveau-3 td { background: rgba(139, 92, 246, 0.07); }
+body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-niveau-1 td { background: rgba(45, 212, 191, 0.09); }
+body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-niveau-2 td { background: rgba(251, 191, 36, 0.08); }
+body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-niveau-3 td { background: rgba(167, 139, 250, 0.1); }
+
+/* Pastille + accent de bordure sur la cellule "Groupes de niveau" elle-même
+   -- c'est elle qui porte l'étiquette du niveau, la couleur y est donc plus
+   affirmée que sur le reste du rang. */
+.tableau-plan-hebdo td.plan-hebdo-cellule-groupe {
+    font-weight: 600;
+    position: relative;
+    padding-left: 1.1rem;
+}
+.tableau-plan-hebdo td.plan-hebdo-cellule-groupe::before {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 0.35rem;
+    top: 0.9rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+}
+.plan-hebdo-niveau-1 td.plan-hebdo-cellule-groupe { color: #0F766E; }
+.plan-hebdo-niveau-1 td.plan-hebdo-cellule-groupe::before { background: #14B8A6; }
+.plan-hebdo-niveau-2 td.plan-hebdo-cellule-groupe { color: #B45309; }
+.plan-hebdo-niveau-2 td.plan-hebdo-cellule-groupe::before { background: #F59E0B; }
+.plan-hebdo-niveau-3 td.plan-hebdo-cellule-groupe { color: #6D28D9; }
+.plan-hebdo-niveau-3 td.plan-hebdo-cellule-groupe::before { background: #8B5CF6; }
+body.dark-theme .plan-hebdo-niveau-1 td.plan-hebdo-cellule-groupe { color: #5EEAD4; }
+body.dark-theme .plan-hebdo-niveau-2 td.plan-hebdo-cellule-groupe { color: #FCD34D; }
+body.dark-theme .plan-hebdo-niveau-3 td.plan-hebdo-cellule-groupe { color: #C4B5FD; }
+
+/* Séparation visuelle nette entre deux journées : un filet plus marqué au
+   sommet du 1er rang de chaque jour (repéré via la même détection que le
+   cycle de couleurs -- 1ère colonne "Jour" non vide). */
+.tableau-plan-hebdo tbody tr.plan-hebdo-jour-debut td {
+    border-top: 2px solid #CBD5E1;
+}
+body.dark-theme .tableau-plan-hebdo tbody tr.plan-hebdo-jour-debut td {
+    border-top-color: rgba(148, 163, 184, 0.4);
+}
+
+.fiche-phase {
+    display: flex;
+    flex-direction: column;
+}
+.fiche-phase-titre {
+    font-weight: 700;
+    color: var(--fiche-accent);
+    font-size: 0.95rem;
+}
+.fiche-phase-ligne {
+    padding: 0.65rem 0;
+    border-top: 1px solid #EEF0F3;
+}
+body.dark-theme .fiche-phase-ligne { border-top-color: rgba(148, 163, 184, 0.16); }
+.fiche-phase-ligne:first-of-type {
+    border-top: none;
+    padding-top: 0;
+}
+.fiche-phase-titre + .fiche-phase-ligne {
+    border-top: none;
+}
+.fiche-phase-legende {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: 0.65;
+    margin-bottom: 0.25rem;
+}
+.fiche-phase-legende.legende-prof {
+    color: var(--fiche-accent);
+    opacity: 0.9;
+}
+.fiche-phase-legende.legende-trace {
+    color: #F59E0B;
+    opacity: 0.9;
+}
+
+/* ❖ Coloration douce du déroulement de la Fiche APC Primaire par grande
+   phase (29/08/2026, demande de Constant, même esprit que la coloration par
+   niveau du Plan de session hebdomadaire) -- réutilise volontairement la
+   même palette interne teinte/repère (teal/amber/violet) pour une cohérence
+   visuelle entre les deux cartes, plutôt qu'une nouvelle palette isolée.
+   Limitée à .fiche-phase (canevas APC en cartes empilées) : la carte PNAPAS
+   native et son vrai tableau à 4 colonnes (.fiche-deroulement-table)
+   n'ont volontairement pas été touchés ici. */
+.fiche-phase { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.fiche-phase-presentation {
+    background: rgba(20, 184, 166, 0.06);
+    border-left: 3px solid #14B8A6;
+    padding-left: 0.75rem;
+}
+.fiche-phase-presentation .fiche-phase-titre { color: #0F766E; }
+.fiche-phase-developpement {
+    background: rgba(245, 158, 11, 0.06);
+    border-left: 3px solid #F59E0B;
+    padding-left: 0.75rem;
+}
+.fiche-phase-developpement .fiche-phase-titre { color: #B45309; }
+.fiche-phase-evaluation {
+    background: rgba(139, 92, 246, 0.06);
+    border-left: 3px solid #8B5CF6;
+    padding-left: 0.75rem;
+}
+.fiche-phase-evaluation .fiche-phase-titre { color: #6D28D9; }
+body.dark-theme .fiche-phase-presentation { background: rgba(45, 212, 191, 0.08); }
+body.dark-theme .fiche-phase-presentation .fiche-phase-titre { color: #5EEAD4; }
+body.dark-theme .fiche-phase-developpement { background: rgba(251, 191, 36, 0.07); }
+body.dark-theme .fiche-phase-developpement .fiche-phase-titre { color: #FCD34D; }
+body.dark-theme .fiche-phase-evaluation { background: rgba(167, 139, 250, 0.09); }
+body.dark-theme .fiche-phase-evaluation .fiche-phase-titre { color: #C4B5FD; }
+
+.fiche-lecon p {
+    margin: 0 0 0.5rem;
+    white-space: normal;
+}
+.fiche-lecon p:last-child {
+    margin-bottom: 0;
+}
+.fiche-lecon ul {
+    margin: 0.3rem 0 0.5rem 1.1rem;
+    padding: 0;
+}
+.fiche-lecon .signature-doc {
+    display: block;
+    margin-top: 1.4rem;
+    opacity: 0.55;
+    font-size: 0.85rem;
+}
+
+/* ❖ Préambule libre (Atelier des Évaluations) : titre que le modèle
+   écrit avant "PARTIE A" (discipline/niveau/thème), sans structure
+   imposée par le prompt -- simple emphase, pas une carte à part. */
+.fiche-preambule {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--fiche-accent);
+    margin-top: 0 !important;
+}
+
+/* ❖ Carte CORRIGÉ (Atelier des Évaluations) : accent ambre pour la
+   distinguer visuellement des questions -- c'est la réponse, pas
+   l'énoncé, l'enseignant doit pouvoir la repérer d'un coup d'œil. */
+.fiche-carte.fiche-corrige {
+    border-color: #FDE68A;
+    background: #FFFBEB;
+}
+body.dark-theme .fiche-carte.fiche-corrige {
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.06);
+}
+
+/* ❖ Carte "Mission" (devoir) -- Espace Élève. Bords très arrondis pour
+   rester dans l'esprit "carte de jeu" plutôt que document administratif,
+   cohérent avec l'identité bleue de l'Élève Général. Le contenu (texte du
+   devoir) n'est jamais modifié, seul son habillage change : marked.parse
+   le produit en <pre><code>, habillerBlocsDevoirs() dans app.js l'entoure
+   de ce conteneur. */
+.mission-devoir {
+    margin-top: 0.8rem;
+    border: 1px solid #BFDBFE;
+    background: #EFF6FF;
+    border-radius: 20px;
+    padding: 1rem 1.3rem;
+}
+body.dark-theme .mission-devoir {
+    background: rgba(59, 130, 246, 0.07);
+    border-color: rgba(59, 130, 246, 0.35);
+}
+.mission-devoir-titre {
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: #2563EB;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+}
+body.dark-theme .mission-devoir-titre { color: #60A5FA; }
+.mission-devoir-contenu {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: inherit;
+}
+/* ❖ Spécificité volontairement renforcée (3 classes) : .message.bot-message
+   code (règle existante, pour le code inline) a une spécificité de
+   (0,2,1) qui l'emporterait sinon sur une règle plus simple ici et
+   laisserait le "pilule grise" de code inline s'appliquer par erreur au
+   devoir entier. */
+.message.bot-message .mission-devoir-contenu code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-weight: 400;
+    font-family: inherit;
+}
+
+/* ❖ Impression : les ombres/badges arrondis restent lisibles, mais on
+   retire l'ombre portée (parasite en noir et blanc) et on force un
+   contraste fort quelle que soit l'accent de couleur. */
+@media print {
+    .fiche-carte {
+        box-shadow: none;
+        border: 1px solid #CBD5E1;
+    }
+    .fiche-badge {
+        border: 1px solid currentColor;
+    }
+    .fiche-badge.fiche-badge-competence {
+        background: #F1F5F9 !important;
+        color: #0F172A !important;
+    }
+}
+
+.system-message {
+    align-self: center;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: rgba(59, 130, 246, 0.05);
+    border: 1px solid rgba(59, 130, 246, 0.14);
+    color: #64748B;
+    font-style: normal;
+    text-align: center;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    padding: 1.1rem 1.5rem;
+    border-radius: 14px;
+}
+body.dark-theme .system-message {
+    background-color: rgba(59, 130, 246, 0.06);
+    border-color: rgba(59, 130, 246, 0.16);
+    color: #94A3B8;
+}
+
+.system-message-icone {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.system-message-titre {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #3B82F6;
+}
+
+.system-message-texte {
+    color: #64748B;
+}
+body.dark-theme .system-message-texte { color: #94A3B8; }
+
+/* ❖ Variante verte : réservée aux espaces Primaire (Forge/Cabinet
+   Primaire), cohérente avec l'identité de couleur déjà utilisée pour
+   les fiches du primaire (--fiche-accent / .accent-vert) ailleurs
+   dans le site. */
+.system-message.accent-vert {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-color: rgba(16, 185, 129, 0.16);
+}
+body.dark-theme .system-message.accent-vert {
+    background-color: rgba(16, 185, 129, 0.06);
+    border-color: rgba(16, 185, 129, 0.18);
+}
+.system-message.accent-vert .system-message-titre { color: #10B981; }
+
+.chat-input-area {
+    width: 100%;
+    background-color: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+    padding: 1.5rem 2rem;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
+body.dark-theme .chat-input-area {
+    background-color: #0F172A;
+    border-top-color: #1E293B;
+}
+
+.chat-input-wrapper {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+    gap: 1rem;
+    align-items: center;
+}
+
+.chat-input-wrapper input {
+    flex: 1;
+    padding: 0.9rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid #CBD5E1;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+body.dark-theme .chat-input-wrapper input {
+    border-color: #334155;
+    background-color: #020617;
+    color: #F8FAFC;
+}
+
+.chat-input-wrapper input:focus {
+    border-color: #3B82F6;
+}
+
+.chat-input-wrapper .btn-entrer {
+    width: auto;
+    white-space: nowrap;
+    background-color: #3B82F6;
+    padding: 0.9rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.chat-input-wrapper .btn-entrer:hover {
+    background-color: #2563EB;
+}
+
+.btn-attachment {
+    background: transparent;
+    border: none;
+    color: #64748B;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+body.dark-theme .btn-attachment { color: #94A3B8; }
+
+.btn-attachment:hover {
+    color: #2563EB;
+}
+body.dark-theme .btn-attachment:hover { color: #60A5FA; }
+
+.btn-attachment svg {
+    width: 26px;
+    height: 26px;
+}
+
+/* --- MODALE PREMIUM --- */
+/* ❖ Le voile de fond d'une modale reste volontairement sombre quel que
+   soit le thème de la page (convention d'interface courante : assombrir
+   l'arrière-plan pour faire ressortir le contenu de la modale) -- aucune
+   variante de thème nécessaire ici. */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+    background-color: rgba(2, 6, 23, 0.8); backdrop-filter: blur(8px);
+    display: none; justify-content: center; align-items: center;
+    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; display: flex; }
+.modal-overlay.active { animation: modalVoileIn .3s ease both; }
+.modal-overlay.active .modal-content { animation: modalContenuIn .38s cubic-bezier(.22,.8,.3,1) both; }
+@keyframes modalVoileIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalContenuIn { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .modal-overlay.active, .modal-overlay.active .modal-content { animation: none; } }
+.modal-content {
+    position: relative; max-width: 400px; width: 90%; text-align: center;
+    max-height: 92vh; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain;
+    transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modal-overlay.active .modal-content { transform: translateY(0); }
+.modal-close {
+    position: absolute; top: 1rem; right: 1rem; background: none; border: none;
+    color: #64748B; font-size: 1.5rem; cursor: pointer; transition: color 0.2s ease;
+}
+body.dark-theme .modal-close { color: #94A3B8; }
+.modal-close:hover { color: #0F172A; }
+body.dark-theme .modal-close:hover { color: #F8FAFC; }
+.modal-content h3 { color: #0F172A; font-size: 1.4rem; margin-bottom: 1rem; }
+body.dark-theme .modal-content h3 { color: #F8FAFC; }
+.modal-content p { color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5; }
+body.dark-theme .modal-content p { color: #94A3B8; }
+.input-matricule {
+    width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid #3B82F6;
+    background-color: #FFFFFF; color: #0F172A; font-size: 1rem; text-align: center;
+    letter-spacing: 2px; margin-bottom: 1rem; outline: none; transition: box-shadow 0.2s ease;
+}
+body.dark-theme .input-matricule { background-color: rgba(2, 6, 23, 0.6); color: #F8FAFC; border-color: #3B82F6; }
+.input-matricule:focus { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+.feedback-text { margin-top: 1rem; font-size: 0.85rem; min-height: 20px; font-weight: 500; }
+
+/* --- BOUTONS D'ACTION (IMPRIMER & PDF) --- */
+.message-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.note-relire-fiche {
+    align-self: center;
+    font-size: 0.75rem;
+    color: #94A3B8;
+    font-style: italic;
+    margin-left: 4px;
+}
+
+.btn-action-doc {
+    background-color: transparent;
+    border: 1px solid #3B82F6;
+    color: #2563EB;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+body.dark-theme .btn-action-doc { color: #60A5FA; }
+
+.btn-action-doc:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #1D4ED8;
+}
+body.dark-theme .btn-action-doc:hover { color: #F8FAFC; }
+
+/* --- ÉDITION D'UNE FICHE AVANT IMPRESSION (10/10/2026) --- */
+.bot-message.fiche-en-edition {
+    outline: 2px dashed #F59E0B;
+    outline-offset: 4px;
+    cursor: text;
+}
+.bot-message.fiche-en-edition .message-actions { cursor: default; }
+/* Quiz cliquables (Sas) */
+.quiz-carte { margin: 12px 0; padding: 14px; border: 1px solid #BFDBFE; border-left: 4px solid #3B82F6; border-radius: 10px; background: #EFF6FF; }
+.quiz-etiquette { font-size: 0.75em; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; color: #1D4ED8; margin-bottom: 6px; }
+.quiz-question { font-weight: 600; margin-bottom: 10px; color: #1E293B; }
+.quiz-options { display: flex; flex-direction: column; gap: 8px; }
+.quiz-option { display: flex; align-items: center; gap: 10px; text-align: left; padding: 9px 12px; border: 1px solid #93C5FD; border-radius: 8px; background: #FFFFFF; color: #1E293B; cursor: pointer; font: inherit; }
+.quiz-option:hover:not(:disabled) { background: #DBEAFE; }
+.quiz-option:disabled { cursor: default; }
+.quiz-lettre { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #3B82F6; color: #FFFFFF; font-size: 0.8em; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+.quiz-option.quiz-juste { background: #D1FAE5; border-color: #10B981; }
+.quiz-option.quiz-faux { background: #FEE2E2; border-color: #EF4444; }
+.quiz-retour { margin-top: 10px; font-weight: bold; }
+.quiz-retour-juste { color: #047857; }
+.quiz-retour-faux { color: #B91C1C; }
+.quiz-explication { margin-top: 6px; font-size: 0.92em; color: #334155; }
+body.dark-theme .quiz-carte { background: #1E293B; border-color: #334155; border-left-color: #3B82F6; }
+body.dark-theme .quiz-etiquette { color: #93C5FD; }
+body.dark-theme .quiz-question { color: #E2E8F0; }
+body.dark-theme .quiz-option { background: #0F172A; border-color: #475569; color: #E2E8F0; }
+body.dark-theme .quiz-option:hover:not(:disabled) { background: #334155; }
+body.dark-theme .quiz-option.quiz-juste { background: #064E3B; border-color: #10B981; }
+body.dark-theme .quiz-option.quiz-faux { background: #7F1D1D; border-color: #EF4444; }
+body.dark-theme .quiz-retour-juste { color: #6EE7B7; }
+body.dark-theme .quiz-retour-faux { color: #FCA5A5; }
+body.dark-theme .quiz-explication { color: #CBD5E1; }
+.btn-modifier-fiche { flex-shrink: 0; }
+.btn-modifier-fiche.actif {
+    background-color: #10B981;
+    border-color: #10B981;
+    color: #FFFFFF;
+}
+.btn-modifier-fiche.actif:hover { background-color: #059669; color: #FFFFFF; }
+body.dark-theme .btn-modifier-fiche.actif { color: #FFFFFF; }
+body.dark-theme .btn-modifier-fiche.actif:hover { color: #FFFFFF; }
+
+/* --- PARCOURS EN ÉTAPES DES MODALES D'ABONNEMENT (25/09/2026) ---
+   Un seul modal par public (Enseignant/Parents), dont le contenu est
+   remplacé par JS (voir enseignantAboEtape()/parentAboEtape() dans app.js)
+   plutôt que d'empiler toutes les étapes sur un même écran. */
+.indicateur-etape-abo {
+    text-align: center;
+    color: #9CA3AF;
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin: 0 0 16px 0;
+}
+body.dark-theme .indicateur-etape-abo { color: #6B7280; }
+
+.btn-retour-etape-abo {
+    background: none;
+    border: none;
+    color: #6B7280;
+    font-size: 0.8em;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px 0;
+}
+body.dark-theme .btn-retour-etape-abo { color: #94A3B8; }
+
+/* Cartes de choix de méthode (étape 2 du parcours Parents) : boutons plutôt
+   que <div>, pour rester accessibles au clavier comme le reste des CTA. */
+.carte-methode-abo {
+    position: relative;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.carte-methode-abo:hover {
+    transform: translateY(-2px);
+    border-color: #3B82F6;
+}
+body.dark-theme .carte-methode-abo {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(148, 163, 184, 0.25);
+}
+body.dark-theme .carte-methode-abo:hover { border-color: #60A5FA; }
+
+.badge-recommande-abo {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    background-color: #10B981;
+    color: white;
+    font-size: 0.68em;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+}
+
+/* --- LA PRONONCIATION À LA DEMANDE, DIRECTEMENT SUR LA PHRASE CONCERNÉE ---
+   Plutôt qu'un unique bouton en bas du message (qui lisait tout, y compris
+   les explications en français), un petit haut-parleur s'insère juste après
+   chaque mot/phrase en langue étrangère repéré dans la réponse -- voir
+   ajouterBoutonsPrononciationInline() dans app.js. L'agent encadre désormais
+   ces mots avec des BACKTICKS (`mot`) dans son Markdown plutôt que des
+   guillemets (le français citant lui-même volontiers un mot entre
+   guillemets, ex. "bonjour" -- ambiguïté que les backticks éliminent).
+   marked.js transforme automatiquement ces backticks en balises <code> ;
+   la règle ci-dessous leur retire leur habillage "code" par défaut pour les
+   présenter comme un simple mot mis en valeur, cliquable pour être écouté. */
+.message.bot-message code {
+    font-family: inherit;
+    background: rgba(37, 99, 235, 0.10);
+    color: inherit;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1em;
+}
+body.dark-theme .message.bot-message code {
+    background: rgba(59, 130, 246, 0.12);
+}
+.btn-ecoute-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin: 0 1px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #2563EB;
+    font-size: 0.8em;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+}
+body.dark-theme .btn-ecoute-inline { color: #3B82F6; }
+.btn-ecoute-inline:hover { color: #1D4ED8; }
+.btn-ecoute-inline:disabled { cursor: wait; opacity: 0.6; }
+
+/* --- LE FILTRE DE PURIFICATION POUR L'IMPRIMANTE --- */
+#print-area { display: none; }
+@media print {
+    body > *:not(#print-area) {
+        display: none !important;
+    }
+    html, body {
+        background: #FFFFFF !important;
+        height: auto !important;
+        width: auto !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    #print-area {
+        display: block !important;
+        width: 100% !important;
+    }
+}
+
+/* ❖ L'APPARITION FLUIDE DES MESSAGES (désactivée à la demande — affichage immédiat) ❖ */
+.apparition-fluide {
+    animation: none;
+    opacity: 1;
+    transform: none;
+}
+
+/* Le nouveau bouton minimaliste d'envoi */
+.btn-envoyer-icon {
+    background-color: #3B82F6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.3s ease, transform 0.1s ease;
+}
+
+.btn-envoyer-icon:active {
+    transform: scale(0.95);
+}
+
+.btn-envoyer-icon:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- L'ARÈNE (LE VOILE D'IMMERSION) ---
+   ❖ Reste volontairement sombre quel que soit le thème de la page : c'est
+   un voile plein écran immersif (mode examen), pas un panneau de contenu
+   -- comme .modal-overlay, aucune variante claire nécessaire. */
+.eduka-arene-cache {
+    display: none;
+}
+
+.eduka-arene-active {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(17, 24, 39, 0.90);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- LE BOUTON DE SORTIE --- */
+.btn-fermer-arene {
+    position: absolute;
+    top: 25px;
+    right: 35px;
+    background: transparent;
+    color: white;
+    font-size: 2.5em;
+    border: none;
+    cursor: pointer;
+    z-index: 10001;
+    transition: transform 0.3s ease;
+}
+
+.btn-fermer-arene:hover {
+    transform: scale(1.2);
+}
+
+/* --- LA FENÊTRE DE L'EXAMINATEUR --- */
+.eduka-iframe {
+    display: block !important;
+    width: 90%;
+    max-width: 1200px;
+    height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+    background-color: #ffffff;
+}
+
+/* --- LE SOUFFLE D'ATTENTE (ANIMATION) --- */
+.eduka-loader {
+    position: absolute;
+    display: flex;
+    gap: 12px;
+    z-index: 10000;
+}
+
+.eduka-loader .point {
+    width: 16px;
+    height: 16px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    animation: eduka-respiration 1.4s infinite ease-in-out both;
+}
+
+.eduka-loader .point:nth-child(1) { animation-delay: -0.32s; }
+.eduka-loader .point:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes eduka-respiration {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.2; }
+    40% { transform: scale(1); opacity: 1; }
+}
+/* --- LE MYSTÈRE DU SCEAU (PROTECTION VISUELLE ET IMPRESSION) --- */
+
+/* 1. Sur l'écran : Le sceau est totalement invisible */
+@media screen {
+    img[alt*="Sceau"], .sceau-image {
+        display: none !important;
+    }
+}
+
+/* 2. Sur le papier (Impression) : Le sceau apparaît, intact et proportionné */
+@media print {
+    img[alt*="Sceau"], .sceau-image {
+        display: block !important;
+        max-width: 200px !important;
+        height: auto !important;
+        margin-top: 30px;
+        page-break-inside: avoid;
+    }
+}
+
+/* --- BANNIÈRE D'INSTALLATION PWA --- */
+
+.pwa-install-banner {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background-color: #ECFDF5;
+    border-bottom: 1px solid #A7F3D0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+body.dark-theme .pwa-install-banner { background-color: #064E3B; border-bottom-color: #065F46; }
+
+.pwa-install-banner.active { display: flex; }
+
+.pwa-install-icone {
+    height: 40px;
+    width: auto;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.pwa-install-texte { flex: 1 1 auto; min-width: 0; }
+
+.pwa-install-texte strong { display: block; color: #065F46; font-size: 0.95em; }
+body.dark-theme .pwa-install-texte strong { color: #D1FAE5; }
+
+.pwa-install-texte p { margin: 2px 0 0; color: #047857; font-size: 0.85em; }
+body.dark-theme .pwa-install-texte p { color: #A7F3D0; }
+
+.pwa-install-bouton {
+    background-color: #10B981;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+.pwa-install-bouton:hover { background-color: #059669; }
+
+.pwa-install-fermer {
+    background: none;
+    border: none;
+    color: #6B7280;
+    cursor: pointer;
+    font-size: 1.1em;
+    line-height: 1;
+    flex-shrink: 0;
+    padding: 4px;
+}
+body.dark-theme .pwa-install-fermer { color: #9CA3AF; }
+
+/* Sous 400px, le sous-texte disparaît pour garder bouton et icône visibles
+   sans que la bannière ne s'écrase sur les petits écrans. */
+@media (max-width: 400px) {
+    .pwa-install-texte p { display: none; }
+}
+
+/* ❖ Historique des sessions du Sas (10/10/2026) */
+.banniere-matiere { flex-wrap: wrap; gap: 0.6rem 1rem; }
+.banniere-actions-sas { display: inline-flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+.btn-banniere-action {
+    display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px;
+    border: none; color: #FFFFFF; font-weight: 600;
+    border-radius: 999px; padding: 0.4rem 1rem; font-size: 0.84rem; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.btn-banniere-action svg { width: 15px; height: 15px; flex-shrink: 0; }
+.btn-banniere-action:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25); filter: brightness(1.06); }
+.btn-banniere-action:active { transform: translateY(0); }
+.btn-banniere-nouvelle { background: linear-gradient(135deg, #10B981, #059669); }
+.btn-banniere-historique { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+body.dark-theme .btn-banniere-action { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); }
+.hist-sas-boite { position: relative; max-width: 640px; width: 94%; max-height: 85vh; overflow-y: auto; text-align: left;
+    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 20px 50px rgba(2, 6, 23, 0.35); }
+body.dark-theme .hist-sas-boite { background: #0F172A; border-color: rgba(148, 163, 184, 0.25); }
+.hist-sas-fermer { position: absolute; top: 0.6rem; right: 0.8rem; background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #64748B; }
+.hist-sas-lien { background: none; border: none; color: #3B82F6; cursor: pointer; padding: 0; margin-bottom: 0.6rem; font-size: 0.9rem; }
+.hist-sas-ligne { display: flex; gap: 0.4rem; align-items: stretch; margin-bottom: 0.5rem; }
+.hist-sas-item {
+    flex: 1; display: flex; flex-direction: column; gap: 0.15rem; text-align: left; cursor: pointer;
+    background: rgba(71, 85, 105, 0.06); border: 1px solid rgba(71, 85, 105, 0.15); border-radius: 10px; padding: 0.55rem 0.8rem;
+}
+.hist-sas-item:hover { background: rgba(59, 130, 246, 0.1); }
+.hist-sas-date { font-size: 0.75rem; color: #64748B; }
+.hist-sas-titre { font-size: 0.92rem; color: #0F172A; }
+.hist-sas-suppr { background: none; border: none; cursor: pointer; font-size: 1rem; color: #475569; }
+body.dark-theme .hist-sas-suppr { color: #E2E8F0; }
+.hist-sas-note { font-size: 0.8rem; color: #64748B; margin-top: 0.8rem; }
+.hist-sas-fil { max-height: 55vh; overflow-y: auto; pointer-events: auto; }
+body.dark-theme .hist-sas-titre { color: #E2E8F0; }
+
+/* ❖ Graphiques SVG générés à partir de données (bloc ```graphique) */
+.graphique-fiche {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    text-align: center;
+    break-inside: avoid;
+}
+.graphique-svg {
+    width: 100%;
+    max-width: 560px;
+    height: auto;
+    display: inline-block;
+}
+body.dark-theme .graphique-fiche {
+    /* fond clair conservé : le SVG dessine en couleurs sombres sur fond blanc */
+    background: #ffffff;
+    border-color: #475569;
+}
+
+
+/* ❖ SAS DES ATELIERS (27/10/2026) : cartes de choix de l'atelier après la catégorie. */
+.sas-ateliers-groupe { display: none; flex-wrap: wrap; justify-content: center; gap: 1.5rem; width: 100%; }
+.sas-atelier-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-bottom: 4px solid var(--sas-couleur, #3B82F6);
+    border-radius: 14px;
+    padding: 1.6rem 1.4rem 1.3rem;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.sas-atelier-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14); }
+.sas-atelier-icone {
+    width: 56px; height: 56px; margin: 0 auto .8rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; color: #FFFFFF; border-radius: 12px;
+    background: linear-gradient(135deg, var(--sas-couleur, #3B82F6), var(--sas-couleur2, #6366F1));
+}
+.sas-atelier-card h3 { margin: 0 0 .4rem; font-size: 1.15rem; color: #0F172A; }
+.sas-atelier-card p { margin: 0 0 .9rem; font-size: .88rem; line-height: 1.45; color: #64748B; }
+.sas-atelier-entrer { font-weight: 700; font-size: .9rem; color: var(--sas-couleur, #3B82F6); }
+.sas-atelier-evaluations { --sas-couleur: #2563EB; --sas-couleur2: #4F46E5; }
+.sas-atelier-lecons { --sas-couleur: #7C3AED; --sas-couleur2: #A855F7; }
+.sas-atelier-cabinet { --sas-couleur: #0D9488; --sas-couleur2: #14B8A6; }
+.sas-atelier-vert { --sas-couleur: #059669; --sas-couleur2: #34D399; }
+/* ❖ Mes outils (11/11/2026) : Séance de classe et Ma bibliothèque, sous les ateliers de l'Espace Enseignant (secondaire). */
+.sas-outils-groupe { flex-basis: 100%; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+.sas-outils-titre { flex-basis: 100%; text-align: center; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #94A3B8; margin-top: .4rem; }
+a.sas-atelier-card { text-decoration: none; display: block; color: inherit; }
+.sas-atelier-seance { --sas-couleur: #EA580C; --sas-couleur2: #F59E0B; }
+.sas-atelier-biblio { --sas-couleur: #0284C7; --sas-couleur2: #38BDF8; }
+@media (max-width: 700px) { .sas-outils-groupe { flex-direction: column; flex-wrap: nowrap; gap: .75rem; } a.sas-atelier-card { display: grid; } }
+body.dark-theme .sas-atelier-card { background: #1E293B; border-color: #334155; }
+body.dark-theme .sas-atelier-card h3 { color: #F1F5F9; }
+body.dark-theme .sas-atelier-card p { color: #94A3B8; }
+
+/* ❖ SAS DES ATELIERS — affichage mobile (27/10/2026) : cartes compactes en liste
+   verticale, zone défilante, pour que les 3 ateliers soient visibles. */
+#teacher-atelier-chooser { overflow-y: auto; }
+@media (max-width: 700px) {
+    #teacher-atelier-chooser {
+        align-items: flex-start;
+        padding: 1rem;
+        gap: 0;
+    }
+    .sas-ateliers-groupe { flex-direction: column; flex-wrap: nowrap; gap: .75rem; }
+    .sas-atelier-card {
+        flex: none;
+        max-width: none;
+        width: 100%;
+        box-sizing: border-box;
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        column-gap: .9rem;
+        align-items: center;
+        text-align: left;
+        padding: .8rem .9rem;
+    }
+    .sas-atelier-icone { grid-row: 1 / span 3; width: 48px; height: 48px; margin: 0; font-size: 1.4rem; }
+    .sas-atelier-card h3 { margin: 0; font-size: 1.05rem; }
+    .sas-atelier-card p { margin: .15rem 0 .25rem; font-size: .8rem; }
+    .sas-atelier-entrer { font-size: .8rem; }
+}
+
+
+/* ❖ VISITE GUIDÉE (28/10/2026) ❖ */
+.btn-aide-visite, .btn-banniere-aide {
+    border-radius: 10px; cursor: pointer; font-weight: 700; font-family: inherit;
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border: 1px solid #FCD34D; border-bottom: 3px solid #F59E0B; color: #92400E;
+    padding: 0.4rem 0.8rem; white-space: nowrap; flex-shrink: 0;
+    transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+.btn-aide-visite:hover, .btn-banniere-aide:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(146,64,14,.2); }
+.btn-banniere-aide { font-size: 0.85rem; }
+#visite-guidee-overlay { position: fixed; inset: 0; z-index: 10050; pointer-events: auto; }
+#visite-guidee-overlay .vg-spot {
+    position: fixed; border-radius: 12px; border: 3px solid #F59E0B;
+    box-shadow: 0 0 0 9999px rgba(15,23,42,.64); pointer-events: none;
+    transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease;
+}
+#visite-guidee-overlay .vg-bulle {
+    position: fixed; width: max-content; background: #FFFFFF; color: #1E293B;
+    border-radius: 14px; padding: 14px 16px 12px; box-shadow: 0 12px 32px rgba(0,0,0,.35);
+    font-family: inherit; line-height: 1.45;
+}
+#visite-guidee-overlay .vg-fleche {
+    position: absolute; width: 18px; height: 18px; background: #FFFFFF; transform: rotate(45deg);
+}
+#visite-guidee-overlay .vg-fleche-haut { top: -9px; }
+#visite-guidee-overlay .vg-fleche-bas { bottom: -9px; }
+#visite-guidee-overlay .vg-compteur { font-size: .72rem; font-weight: 700; color: #D97706; letter-spacing: .04em; }
+#visite-guidee-overlay .vg-titre { font-size: 1.02rem; font-weight: 800; margin: 2px 0 4px; }
+#visite-guidee-overlay .vg-texte { font-size: .9rem; color: #334155; }
+#visite-guidee-overlay .vg-boutons { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+#visite-guidee-overlay .vg-espace { flex: 1; }
+#visite-guidee-overlay .vg-boutons button {
+    border: 0; border-radius: 9px; padding: 8px 14px; font-weight: 700; font-size: .85rem; cursor: pointer; font-family: inherit;
+}
+#visite-guidee-overlay .vg-passer { background: transparent; color: #64748B; padding-left: 0; }
+#visite-guidee-overlay .vg-prec { background: #E2E8F0; color: #334155; }
+#visite-guidee-overlay .vg-suiv { background: linear-gradient(135deg,#F59E0B,#EA580C); color: #fff; }
+body.dark-theme #visite-guidee-overlay .vg-bulle, body.dark-theme #visite-guidee-overlay .vg-fleche { background: #1E293B; color: #F1F5F9; }
+body.dark-theme #visite-guidee-overlay .vg-texte { color: #CBD5E1; }
+body.dark-theme #visite-guidee-overlay .vg-prec { background: #334155; color: #E2E8F0; }
+.badge-nouveau {
+    display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+    background: #EF4444; color: #fff; font-size: .62rem; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; vertical-align: middle; animation: vg-pulse 1.6s ease-in-out infinite;
+}
+@keyframes vg-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@media (max-width: 700px) { .btn-aide-visite { padding: 0.35rem 0.6rem; } }
+
+/* ❖ LECTURE SUR TÉLÉPHONE — zone de réponse élargie (29/10/2026) ❖
+   Retour de Constant (comparaison avec une application de référence) : sur
+   mobile la bulle de l'assistant était étroite, car trois marges s'empilaient
+   (marge du fil 2rem + bulle à 90 % + marge interne 1,5rem), plus une bordure
+   de bulle autour des cartes de fiche. Sur écran étroit : marges du fil
+   réduites, bulle de l'assistant pleine largeur, cartes de fiche collées à
+   la bulle, barre de saisie plus compacte. Le bureau n'est pas modifié. */
+@media (max-width: 700px) {
+    .chat-history {
+        padding: 0.9rem 0.45rem 1.1rem;
+        gap: 0.8rem;
+    }
+    .chat-history .message {
+        max-width: 100%;
+        padding: 0.9rem 1rem;
+        line-height: 1.62;
+    }
+    .chat-history .bot-message {
+        align-self: stretch;
+        border-radius: 16px;
+        border-bottom-left-radius: 6px;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+    }
+    .chat-history .user-message {
+        max-width: 90%;
+        border-radius: 16px;
+        border-bottom-right-radius: 6px;
+    }
+    .chat-history .system-message {
+        max-width: 100%;
+        align-self: stretch;
+    }
+    /* Une fiche est déjà une carte : la bulle qui l'entoure s'efface pour
+       éviter « une carte dans une bulle ». */
+    .chat-history .bot-message:has(> .fiche-lecon .fiche-carte),
+    .chat-history .bot-message:has(> .fiche-carte) {
+        padding: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        gap: 0.6rem;
+    }
+    body.dark-theme .chat-history .bot-message:has(> .fiche-lecon .fiche-carte),
+    body.dark-theme .chat-history .bot-message:has(> .fiche-carte) { background: transparent; }
+    .fiche-carte {
+        padding: 0.85rem 0.9rem;
+        border-radius: 14px;
+    }
+    .chat-history .message-actions {
+        margin-top: 0.7rem;
+        padding-top: 0.5rem;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .chat-input-area {
+        padding: 0.6rem 0.5rem;
+        padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
+    }
+    /* Fil figé : jamais de glissement latéral. Un mot très long, un tableau
+       ou une carte ne doivent plus élargir le fil (cause du décalage vers la
+       droite signalé le 29/10/2026). */
+    .chat-history {
+        overflow-x: hidden;
+        overscroll-behavior-x: none;
+    }
+    .chat-history > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+    .chat-history .bot-message,
+    .chat-history .user-message,
+    .chat-history .fiche-lecon,
+    .chat-history .fiche-carte {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+    /* Mode mascotte : l'avatar reste entièrement visible à gauche. */
+    body.mode-mascotte .chat-history { padding-left: 0.85rem; }
+    body.mode-mascotte .chat-history .bot-message { margin-left: 8px; }
+    .chat-history .mascotte-avatar { left: -12px; top: -13px; width: 30px; height: 30px; }
+}
+
+
+/* ===== DÉFI PAR LIEN (étape 3, 29/10/2026) ===== */
+.defi-action { margin: 6px 0 12px; display: flex; justify-content: center; }
+.defi-bouton { min-height: 38px; padding: 6px 16px; border: none; border-radius: 999px; background: linear-gradient(135deg, #F43F5E, #E11D48); color: #FFFFFF; font: inherit; font-size: 0.88em; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(225,29,72,0.35); }
+.defi-bouton:hover { background: linear-gradient(135deg, #FB7185, #F43F5E); }
+.defi-overlay { position: fixed; inset: 0; z-index: 10050; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(15, 23, 42, 0.6); }
+.defi-fenetre { width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; padding: 20px; border-radius: 14px; background: #FFFFFF; color: #1E293B; box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
+.defi-titre-fenetre { margin: 0 0 8px; font-size: 1.15em; }
+.defi-aide { margin: 0 0 12px; font-size: 0.9em; color: #475569; }
+.defi-label { display: block; margin-bottom: 12px; font-size: 0.88em; font-weight: 600; }
+.defi-champ { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; min-height: 44px; padding: 8px 12px; border: 1px solid #94A3B8; border-radius: 8px; background: #FFFFFF; color: #1E293B; font: inherit; font-weight: 400; }
+.defi-message { min-height: 1.2em; margin: 0 0 8px; font-size: 0.9em; color: #B91C1C; }
+.defi-succes { margin: 0 0 8px; font-weight: 700; color: #047857; }
+.defi-boutons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.defi-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 1px solid transparent; border-radius: 8px; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+.defi-btn-principal { background: #2563EB; color: #FFFFFF; }
+.defi-btn-principal:disabled { opacity: 0.6; cursor: default; }
+.defi-btn-secondaire { background: #F1F5F9; color: #1E293B; border-color: #CBD5E1; }
+body.dark-theme .defi-fenetre { background: #1E293B; color: #E2E8F0; }
+body.dark-theme .defi-aide { color: #CBD5E1; }
+body.dark-theme .defi-champ { background: #0F172A; border-color: #475569; color: #E2E8F0; }
+body.dark-theme .defi-message { color: #FCA5A5; }
+body.dark-theme .defi-succes { color: #6EE7B7; }
+body.dark-theme .defi-btn-secondaire { background: #334155; color: #E2E8F0; border-color: #475569; }
+
+
+/* ===== BOUTONS RAPIDES PLUS SERRÉS (29/10/2026) =====
+   Les règles de même nom dans index.html sont chargées après ce fichier et
+   portent un identifiant : !important est donc nécessaire ici. Sur grand
+   écran, les boutons passent à la ligne (centrés) plutôt que d'être coupés ;
+   sur téléphone, ils restent sur une ligne défilante, en plus serrés. */
+.suggestions-rapides { gap: 5px !important; }
+.suggestions-rapides .btn-suggestion { padding: 6px 10px !important; font-size: 0.78em !important; }
+.suggestions-rapides .btn-suggestion .suggestion-emoji { margin-right: 0 !important; }
+@media (min-width: 701px) {
+    .suggestions-rapides { flex-wrap: wrap !important; justify-content: center; overflow-x: visible !important; }
+}
+@media (max-width: 700px) {
+    .suggestions-rapides .btn-suggestion { padding: 5px 8px !important; font-size: 0.72em !important; }
+}
+
+
+/* ===== BOUTONS DE LA BANNIÈRE DU SAS PLUS DISCRETS (30/10/2026) =====
+   « Nouvelle session », « Historique » et « Aide » : formes plus petites, fond
+   pastel très léger, texte coloré et fine bordure, sans ombre portée marquée.
+   Chacun garde sa teinte (vert, bleu, ambre). */
+.banniere-actions-sas { gap: 0.4rem; }
+.banniere-actions-sas .btn-banniere-action {
+    min-height: 30px; padding: 0.22rem 0.7rem; gap: 0.3rem;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.01em;
+    border: 1px solid transparent; border-bottom-width: 1px; border-radius: 999px;
+    box-shadow: none; filter: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.banniere-actions-sas .btn-banniere-action svg { width: 13px; height: 13px; }
+.banniere-actions-sas .btn-banniere-action:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(15, 23, 42, 0.10); filter: none; }
+.banniere-actions-sas .btn-banniere-nouvelle { background: #ECFDF5; color: #047857; border-color: #A7F3D0; }
+.banniere-actions-sas .btn-banniere-nouvelle:hover { background: #D1FAE5; border-color: #6EE7B7; }
+.banniere-actions-sas .btn-banniere-historique { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; }
+.banniere-actions-sas .btn-banniere-historique:hover { background: #DBEAFE; border-color: #93C5FD; }
+.banniere-actions-sas .btn-banniere-aide { background: #FFFBEB; color: #92400E; border-color: #FDE68A; font-size: 0.78rem; }
+.banniere-actions-sas .btn-banniere-aide:hover { background: #FEF3C7; border-color: #FCD34D; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.10); }
+body.dark-theme .banniere-actions-sas .btn-banniere-action { box-shadow: none; }
+body.dark-theme .banniere-actions-sas .btn-banniere-nouvelle { background: rgba(16, 185, 129, 0.14); color: #6EE7B7; border-color: rgba(16, 185, 129, 0.40); }
+body.dark-theme .banniere-actions-sas .btn-banniere-historique { background: rgba(59, 130, 246, 0.14); color: #93C5FD; border-color: rgba(59, 130, 246, 0.40); }
+body.dark-theme .banniere-actions-sas .btn-banniere-aide { background: rgba(245, 158, 11, 0.14); color: #FCD34D; border-color: rgba(245, 158, 11, 0.40); }
+@media (max-width: 700px) {
+    .banniere-actions-sas .btn-banniere-action { min-height: 28px; padding: 0.18rem 0.6rem; font-size: 0.74rem; }
+}
+
+/* ===== BOUTONS D'ACTION « APRÈS DOCUMENT » (30/10/2026) =====
+   Visibles seulement une fois un document généré (classe .doc-pret posée par app.js). */
+.suggestions-rapides .btn-suggestion[data-apres-doc]:not(.doc-pret) { display: none !important; }
+
+
+/* ===== MENU ☰, THÈME ET PLEIN ÉCRAN : PLUS ESTHÉTIQUES (30/10/2026) =====
+   Menu : bouton rond en verre indigo, trois barres nettes qui deviennent une croix à l'ouverture.
+   Thème : la lune dort dans un halo indigo ; en mode sombre, le soleil rayonne en ambre.
+   Plein écran : icône à quatre coins, teinte turquoise. Mouvements coupés si « réduire les animations ». */
+#btn-menu-nav {
+    background: linear-gradient(145deg, #FFFFFF 0%, #EEF2FF 100%);
+    border: 1px solid #C7D2FE;
+    color: #4338CA;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 5px 12px -5px rgba(79, 70, 229, 0.45);
+    transition: transform 0.18s cubic-bezier(.2,.8,.3,1), box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+#btn-menu-nav:hover {
+    background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 1px 2px rgba(30, 58, 138, 0.25), 0 8px 16px -6px rgba(37, 99, 235, 0.65);
+}
+#btn-menu-nav:active { transform: scale(.94); }
+#btn-menu-nav:focus-visible { outline: 2px solid #4F46E5; outline-offset: 2px; }
+#btn-menu-nav .ico-menu path { transform-box: fill-box; transform-origin: center; transition: transform 0.25s cubic-bezier(.2,.8,.3,1), opacity 0.2s ease; }
+#btn-menu-nav[aria-expanded="true"] { background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.5); }
+#btn-menu-nav[aria-expanded="true"] .barre-haut { transform: translateY(5.5px) rotate(45deg); }
+#btn-menu-nav[aria-expanded="true"] .barre-milieu { opacity: 0; transform: scaleX(0.2); }
+#btn-menu-nav[aria-expanded="true"] .barre-bas { transform: translateY(-5.5px) rotate(-45deg); }
+body.dark-theme #btn-menu-nav {
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0.10) 100%);
+    border-color: rgba(129, 140, 248, 0.55);
+    color: #C7D2FE;
+    box-shadow: 0 5px 12px -5px rgba(0, 0, 0, 0.6);
+}
+body.dark-theme #btn-menu-nav:hover, body.dark-theme #btn-menu-nav[aria-expanded="true"] { background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%); color: #FFFFFF; }
+
+/* Socle des réglages : filet fin et léger relief */
+.toolbar-outils {
+    background: linear-gradient(180deg, #F4F7FB 0%, #E9EEF5 100%);
+    border: 1px solid #E2E8F0;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+body.dark-theme .toolbar-outils { background: rgba(255, 255, 255, 0.06); border-color: rgba(148, 163, 184, 0.22); box-shadow: none; }
+.toolbar-outils .btn-icon-groupe { transition: transform 0.2s cubic-bezier(.2,.8,.3,1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.25s ease; }
+.toolbar-outils .btn-icon-groupe:active { transform: scale(.92); }
+
+/* Thème : lune dans un halo indigo / soleil ambre qui rayonne */
+#btn-theme { background: radial-gradient(circle at 50% 40%, #FFFFFF 0%, #E0E7FF 100%); color: #4338CA; box-shadow: 0 0 0 1px #C7D2FE, 0 3px 8px -3px rgba(79, 70, 229, 0.45); }
+#btn-theme:hover { background: radial-gradient(circle at 50% 40%, #FFFFFF 0%, #C7D2FE 100%); color: #3730A3; transform: rotate(-14deg) scale(1.08); box-shadow: 0 0 0 1px #A5B4FC, 0 6px 12px -4px rgba(79, 70, 229, 0.55); }
+body.dark-theme #btn-theme { background: radial-gradient(circle at 50% 40%, rgba(253, 224, 71, 0.30) 0%, rgba(251, 191, 36, 0.12) 100%); color: #FDE68A; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.55), 0 0 14px rgba(251, 191, 36, 0.35); }
+body.dark-theme #btn-theme:hover { background: radial-gradient(circle at 50% 40%, rgba(253, 224, 71, 0.42) 0%, rgba(251, 191, 36, 0.20) 100%); color: #FEF3C7; transform: rotate(18deg) scale(1.08); box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.75), 0 0 20px rgba(251, 191, 36, 0.5); }
+
+/* Plein écran : turquoise */
+#btn-fullscreen { color: #0E7490; }
+#btn-fullscreen:hover { background-color: #CFFAFE; color: #155E75; box-shadow: 0 0 0 1px #67E8F9, 0 4px 10px -4px rgba(8, 145, 178, 0.5); }
+body.dark-theme #btn-fullscreen { color: #67E8F9; }
+body.dark-theme #btn-fullscreen:hover { background-color: rgba(34, 211, 238, 0.18); color: #A5F3FC; box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.5); }
+#btn-matieres:hover { background-color: #FEF3C7; box-shadow: 0 0 0 1px #FCD34D; }
+
+@media (prefers-reduced-motion: reduce) {
+    #btn-menu-nav, #btn-menu-nav .ico-menu path, .toolbar-outils .btn-icon-groupe { transition: none !important; }
+    #btn-theme:hover, #btn-theme:active { transform: none !important; }
+}
+
+
+/* ===== SÉLECTEUR DE PHOTO AVEC BOUTON « + » (30/10/2026) ===== */
+.photo-picker { position: relative; display: flex; align-items: center; gap: 10px; margin: 0 0 14px; text-align: left; }
+.photo-plus {
+    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, #FFFFFF 0%, #EEF2FF 100%); color: #4338CA;
+    border: 1px solid #C7D2FE; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 5px 12px -5px rgba(79, 70, 229, 0.45);
+    transition: transform 0.18s cubic-bezier(.2,.8,.3,1), background 0.18s ease, color 0.18s ease;
+}
+.photo-plus:hover { background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%); color: #FFFFFF; transform: translateY(-1px); }
+.photo-plus:active { transform: scale(.94); }
+.photo-plus[aria-expanded="true"] svg { transform: rotate(45deg); }
+.photo-plus svg { transition: transform 0.2s ease; }
+.photo-apercu { width: 46px; height: 46px; object-fit: cover; border-radius: 10px; border: 1px solid #CBD5E1; flex: 0 0 auto; }
+.photo-nom { font-size: 0.88rem; color: #64748B; min-width: 0; overflow-wrap: anywhere; }
+.photo-nom.choisie { color: #0F172A; font-weight: 600; }
+.photo-menu {
+    position: absolute; left: 0; top: 54px; z-index: 50; min-width: 230px; padding: 6px;
+    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px;
+    box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.35);
+}
+.photo-menu button {
+    display: block; width: 100%; text-align: left; padding: 11px 12px; border: 0; border-radius: 9px;
+    background: transparent; color: #0F172A; font-size: 0.95rem; cursor: pointer;
+}
+.photo-menu button:hover, .photo-menu button:focus-visible { background: #EEF2FF; outline: none; }
+body.dark-theme .photo-plus { background: linear-gradient(145deg, rgba(99, 102, 241, 0.22), rgba(99, 102, 241, 0.10)); color: #C7D2FE; border-color: rgba(129, 140, 248, 0.55); box-shadow: none; }
+body.dark-theme .photo-nom { color: #94A3B8; }
+body.dark-theme .photo-nom.choisie { color: #F1F5F9; }
+body.dark-theme .photo-menu { background: #1E293B; border-color: #334155; }
+body.dark-theme .photo-menu button { color: #F1F5F9; }
+body.dark-theme .photo-menu button:hover { background: rgba(99, 102, 241, 0.22); }
+
+/* --- BOUTON « ENREGISTRER DANS MA BIBLIOTHÈQUE » (31/10/2026) ---
+   Sur la même rangée que les icônes quand la place suffit, sinon à la ligne ;
+   la note « Proposition à relire… » passe toujours sur sa propre ligne. */
+.message-actions { flex-wrap: wrap; }
+.message-actions:has(.btn-biblio) .note-relire-fiche { order: 9; flex-basis: 100%; margin-left: 0; margin-top: 2px; }
+.message-actions .btn-action-doc.btn-biblio {
+    order: 5;
+    width: auto;
+    height: auto;
+    padding: 6px 12px;
+    border-radius: 8px;
+    gap: 6px;
+    opacity: 1;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    margin-left: 6px;
+    background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%);
+    border-color: transparent;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+.message-actions .btn-action-doc.btn-biblio:hover:not(:disabled) { color: #FFFFFF; filter: brightness(1.08); }
+.message-actions .btn-action-doc.btn-biblio:disabled { opacity: 0.85; cursor: default; }
+body.dark-theme .message-actions .btn-action-doc.btn-biblio { color: #FFFFFF; background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%); }
+
+/* Transition douce entre pages (navigateurs compatibles) */
+@view-transition { navigation: auto; }
+
+
+/* ===== ESPACE ÉLÈVE : BARRE D'OUTILS ET MENU EN BLEU FRANC + INDIGO (22/11/2026) =====
+   Même principe que l'Espace Enseignant : barre et menu teintés, boutons menu et thème en bleu foncé (point d'ancrage).
+   Réservé à l'espace élève (body:not(.espace-ens)) ; l'Espace Enseignant garde ses couleurs. Style seulement. */
+body:not(.espace-ens):not(.dark-theme) .toolbar-outils { background: #BFD3FA; border: 1px solid #8FB1EE; box-shadow: none; }
+body:not(.espace-ens):not(.dark-theme) .toolbar-outils .btn-icon-groupe:not(#btn-theme) { color: #14275F; }
+body:not(.espace-ens):not(.dark-theme) .toolbar-outils .btn-icon-groupe:not(#btn-theme):hover { background-color: rgba(255,255,255,.6); box-shadow: 0 0 0 1px #8FB1EE; color: #14275F; }
+body:not(.espace-ens):not(.dark-theme) #btn-menu-nav,
+body:not(.espace-ens):not(.dark-theme) #btn-theme { background: #1D3FA8; border: none; color: #FFFFFF; box-shadow: 0 3px 10px rgba(29,63,168,.35); }
+body:not(.espace-ens):not(.dark-theme) #btn-menu-nav:hover,
+body:not(.espace-ens):not(.dark-theme) #btn-menu-nav[aria-expanded="true"],
+body:not(.espace-ens):not(.dark-theme) #btn-theme:hover { background: #2A52C9; color: #FFFFFF; }
+body:not(.espace-ens):not(.dark-theme) .menu-navigation-panel { background-color: #BFD3FA; border: 1px solid #8FB1EE; box-shadow: 0 12px 32px rgba(20,39,95,.25), 0 2px 6px rgba(20,39,95,.12); }
+body:not(.espace-ens):not(.dark-theme) .menu-nav-item { color: #14275F; }
+body:not(.espace-ens):not(.dark-theme) .menu-nav-item:hover { background-color: rgba(255,255,255,.6); }
+body:not(.espace-ens):not(.dark-theme) .menu-nav-separateur { background-color: #8FB1EE; }
+body:not(.espace-ens):not(.dark-theme) .menu-nav-titre { color: #3A4F8A; }
+
+body.dark-theme:not(.espace-ens) .toolbar-outils { background: #1A2850; border-color: #33509A; }
+body.dark-theme:not(.espace-ens) #btn-menu-nav { background: #5C86F5; border: none; color: #FFFFFF; box-shadow: 0 3px 10px rgba(0,0,0,.45); }
+body.dark-theme:not(.espace-ens) #btn-menu-nav:hover,
+body.dark-theme:not(.espace-ens) #btn-menu-nav[aria-expanded="true"] { background: #7A9DF8; color: #FFFFFF; }
+body.dark-theme:not(.espace-ens) .menu-navigation-panel { background-color: #1A2850; border-color: #33509A; }
+body.dark-theme:not(.espace-ens) .menu-nav-item { color: #E4EBFF; }
+body.dark-theme:not(.espace-ens) .menu-nav-item:hover { background-color: #263B74; }
+body.dark-theme:not(.espace-ens) .menu-nav-separateur { background-color: #33509A; }
+body.dark-theme:not(.espace-ens) .menu-nav-titre { color: #9FB3E6; }
+
+/* ❖ Historique Sas : bouton « Reprendre cette conversation » (23/11/2026) */
+.hist-sas-reprendre { background: #1D3FA8; color: #FFFFFF; border: none; border-radius: 10px; padding: 0.6rem 1rem; font-weight: 700; cursor: pointer; margin: 0.3rem 0 0.9rem; }
+.hist-sas-reprendre:hover { background: #2A52C9; }
+body.dark-theme .hist-sas-reprendre { background: #5C86F5; }
+body.dark-theme .hist-sas-reprendre:hover { background: #7A9DF8; }
+
+/* ❖ 24/11/2026 — Fiche de leçon (Forge secondaire) : tableau récapitulatif du déroulement
+   et carte d'invitation vers la fiche de cours élève. */
+.fiche-recap { overflow-x: auto; }
+.fiche-recap table { width: 100%; border-collapse: collapse; font-size: 0.82rem; line-height: 1.4; }
+.fiche-recap th, .fiche-recap td { border: 1px solid #E5E7EB; padding: 0.45rem 0.55rem; text-align: left; vertical-align: top; }
+.fiche-recap th { background: #EEF2FF; color: #1D3FA8; font-weight: 700; }
+body.dark-theme .fiche-recap th, body.dark-theme .fiche-recap td { border-color: rgba(148, 163, 184, 0.25); }
+body.dark-theme .fiche-recap th { background: rgba(92, 134, 245, 0.18); color: #A9BFFA; }
+.fiche-invite-cours-eleve { display: flex; flex-direction: column; gap: 0.6rem; border-style: dashed; }
+.fiche-invite-texte { line-height: 1.5; }
+.fiche-invite-bouton { align-self: flex-start; }
+@media print { .fiche-invite-cours-eleve { display: none !important; } }
+
+/* ❖ 24/11/2026 — Pastille « rédaction en cours / document prêt » (outils enseignants). */
+.statut-redaction {
+    display: flex; align-items: center; justify-content: center; gap: 0.55rem;
+    width: fit-content; max-width: 96%; margin: 0 auto 0.45rem;
+    padding: 0.4rem 0.9rem; border-radius: 999px;
+    font-size: 0.82rem; line-height: 1.3; text-align: center;
+}
+.statut-redaction.encours { background: #EEF2FF; color: #1D3FA8; border: 1px solid #C7D2FE; }
+.statut-redaction.pret { background: #ECFDF3; color: #166534; border: 1px solid #A7F3D0; font-weight: 600; cursor: pointer; }
+.statut-redaction .statut-lien { text-decoration: underline; font-weight: 500; }
+body.dark-theme .statut-redaction.encours { background: rgba(92, 134, 245, 0.16); color: #B4C7FA; border-color: rgba(92, 134, 245, 0.4); }
+body.dark-theme .statut-redaction.pret { background: rgba(34, 197, 94, 0.14); color: #86EFAC; border-color: rgba(34, 197, 94, 0.4); }
+.statut-points { display: inline-flex; gap: 3px; }
+.statut-points i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.35; animation: statut-point 1.2s infinite ease-in-out; }
+.statut-points i:nth-child(2) { animation-delay: 0.2s; }
+.statut-points i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes statut-point { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .statut-points i { animation: none; opacity: 0.7; } }
+
+/* ❖ 24/11/2026 — Fiche de cours pour les élèves (Forge secondaire). */
+.fiche-cours-eleve { display: flex; flex-direction: column; gap: 0.85rem; text-align: left; }
+.fiche-cours-eleve .fce-bloc { border: 1px solid #E5E7EB; border-radius: 16px; padding: 1rem 1.25rem; background: #FFFFFF; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05); }
+.fiche-cours-eleve p, .fiche-cours-eleve li { line-height: 1.65; margin: 0.4rem 0; }
+.fiche-cours-eleve li > p { margin: 0; }
+.fiche-cours-eleve ul, .fiche-cours-eleve ol { margin: 0.3rem 0; padding-left: 1.3rem; }
+.fiche-cours-eleve .fce-titre { margin: 0 0 0.55rem; font-size: 1.08rem; line-height: 1.3; color: #1D3FA8; }
+.fiche-cours-eleve strong { color: #111827; }
+.fiche-cours-eleve .fce-entete { background: linear-gradient(135deg, #1D3FA8, #3F63D8); border: none; color: #FFFFFF; }
+.fiche-cours-eleve .fce-entete .fce-titre { margin: 0; font-size: 1.45rem; letter-spacing: 0.04em; color: #FFFFFF; }
+.fiche-cours-eleve .fce-entete p, .fiche-cours-eleve .fce-entete strong { margin: 0.35rem 0 0; color: rgba(255, 255, 255, 0.95); font-size: 0.95rem; }
+.fiche-cours-eleve .fce-savoir { background: #EEF2FF; border-color: #C7D2FE; }
+.fiche-cours-eleve .fce-savoir ul { list-style: none; padding-left: 0; }
+.fiche-cours-eleve .fce-savoir li { position: relative; padding-left: 1.5rem; }
+.fiche-cours-eleve .fce-savoir li::before { content: "✓"; position: absolute; left: 0; color: #1D3FA8; font-weight: 700; }
+.fiche-cours-eleve .fce-partie { border-left: 5px solid #3F63D8; }
+.fiche-cours-eleve .fce-partie .fce-titre { font-size: 1.2rem; }
+.fiche-cours-eleve .fce-retiens { background: #FFFBEB; border-color: #F3D78B; border-left: 5px solid #E8A317; }
+.fiche-cours-eleve .fce-retiens .fce-titre { color: #92600A; }
+.fiche-cours-eleve .fce-exercices .fce-titre { color: #166534; }
+.fiche-cours-eleve .fce-exercices ol { padding-left: 1.5rem; }
+.fiche-cours-eleve .fce-exercices li { margin: 0.55rem 0; padding: 0.15rem 0.2rem; }
+.fiche-cours-eleve .fce-corriges { background: #F0FDF4; border-color: #BBF7D0; }
+.fiche-cours-eleve .fce-corriges .fce-titre { color: #166534; }
+.fiche-cours-eleve .fce-note { margin: 0.2rem 0 0; font-size: 0.85rem; color: #6B7280; font-style: italic; text-align: center; }
+body.dark-theme .fiche-cours-eleve .fce-bloc { background: rgba(255, 255, 255, 0.035); border-color: rgba(148, 163, 184, 0.2); box-shadow: none; }
+body.dark-theme .fiche-cours-eleve .fce-titre { color: #A9BFFA; }
+body.dark-theme .fiche-cours-eleve strong { color: #F3F4F6; }
+body.dark-theme .fiche-cours-eleve .fce-entete { background: linear-gradient(135deg, #1D3FA8, #3F63D8); }
+body.dark-theme .fiche-cours-eleve .fce-entete .fce-titre { color: #FFFFFF; }
+body.dark-theme .fiche-cours-eleve .fce-savoir { background: rgba(92, 134, 245, 0.12); border-color: rgba(92, 134, 245, 0.35); }
+body.dark-theme .fiche-cours-eleve .fce-savoir li::before { color: #A9BFFA; }
+body.dark-theme .fiche-cours-eleve .fce-retiens { background: rgba(232, 163, 23, 0.1); border-color: rgba(232, 163, 23, 0.4); }
+body.dark-theme .fiche-cours-eleve .fce-retiens .fce-titre { color: #F5C964; }
+body.dark-theme .fiche-cours-eleve .fce-corriges { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.3); }
+body.dark-theme .fiche-cours-eleve .fce-exercices .fce-titre, body.dark-theme .fiche-cours-eleve .fce-corriges .fce-titre { color: #86EFAC; }
+
+/* ❖ 24/11/2026 (suite) — Fiche de cours élève : le conteneur de message est en pre-wrap, ce qui
+   transformait les retours à la ligne entre <li> en grands vides. On le remet en flux normal. */
+.fiche-cours-eleve { white-space: normal; }
+.fiche-cours-eleve .fce-savoir li, .fiche-cours-eleve .fce-exercices li { margin: 0.3rem 0; }
+.fiche-cours-eleve .fce-titre { margin-bottom: 0.4rem; }
+/* Impression : pas de bandeau coloré (les navigateurs suppriment le fond mais gardent le texte blanc). */
+@media print {
+    .fiche-cours-eleve .fce-entete { background: none !important; box-shadow: none !important; border: none !important; border-bottom: 2px solid #1D3FA8 !important; border-radius: 0 !important; padding: 0 0 6px !important; }
+    .fiche-cours-eleve .fce-entete .fce-titre, .fiche-cours-eleve .fce-entete p, .fiche-cours-eleve .fce-entete strong { color: #1D3FA8 !important; }
+    .fiche-cours-eleve .fce-bloc { box-shadow: none !important; border-radius: 6px !important; }
+    .fiche-cours-eleve .fce-savoir, .fiche-cours-eleve .fce-retiens, .fiche-cours-eleve .fce-corriges { background: none !important; }
+}
+
+/* ❖ 24/11/2026 — Impression du cours élève : ne pas couper les petits encadrés ni un titre de ses premières lignes. */
+@media print {
+    .fiche-cours-eleve .fce-savoir, .fiche-cours-eleve .fce-retiens, .fiche-cours-eleve .fce-entete,
+    .fiche-cours-eleve .fce-exercices { break-inside: avoid; page-break-inside: avoid; }
+    .fiche-cours-eleve .fce-titre { break-after: avoid; page-break-after: avoid; }
+    .fiche-cours-eleve li { break-inside: avoid; page-break-inside: avoid; }
+}
+
+/* ❖ 24/11/2026 — Bandeau de la fiche de cours : tout texte du bandeau reste blanc, même dans la bibliothèque
+   (dont la feuille de style colore les titres en brique). */
+.fiche-cours-eleve .fce-entete h1, .fiche-cours-eleve .fce-entete h2, .fiche-cours-eleve .fce-entete h3,
+.fiche-cours-eleve .fce-entete p, .fiche-cours-eleve .fce-entete strong { color: #FFFFFF; }
+@media print {
+    .fiche-cours-eleve .fce-entete h1, .fiche-cours-eleve .fce-entete h2, .fiche-cours-eleve .fce-entete h3,
+    .fiche-cours-eleve .fce-entete p, .fiche-cours-eleve .fce-entete strong { color: #1D3FA8 !important; }
+}
