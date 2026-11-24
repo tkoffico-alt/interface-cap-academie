@@ -2475,6 +2475,18 @@ function analyserFicheLecon(texteBrut) {
         });
     }
 
+    // ❖ 24/11/2026 : le modèle glisse parfois une remarque dans le champ « Code » (« 2026-2027 ; Le titre … ne figure
+    // pas tel quel… ») : la pastille devenait un pavé illisible. On garde l'année dans la pastille et on sort la remarque.
+    const notesEntete = [];
+    badges.forEach(b => {
+        const i = b.valeur.indexOf(';');
+        if (/^(code|c[oó]digo)$/i.test((b.label || '').trim()) && i > 0) {
+            const note = b.valeur.slice(i + 1).trim();
+            if (note) notesEntete.push(note);
+            b.valeur = b.valeur.slice(0, i).trim();
+        }
+    });
+
     // --- Tableau des habiletés : liste simple (une ligne = une rangée),
     // sans grille -- exactement l'esprit "ligne horizontale subtile"
     // demandé plutôt qu'un vrai tableau à colonnes. Si le modèle a quand
@@ -2577,11 +2589,11 @@ function analyserFicheLecon(texteBrut) {
         recapTexte = texte.slice(occRecap.end, finRecap).trim();
     }
 
-    return { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte, recapTexte };
+    return { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte, recapTexte, notesEntete };
 }
 
 function construireHTMLFiche(analyse, classeAccent) {
-    const { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte, recapTexte } = analyse;
+    const { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte, recapTexte, notesEntete } = analyse;
     let html = '';
 
     if (badges.length) {
@@ -2595,6 +2607,10 @@ function construireHTMLFiche(analyse, classeAccent) {
         });
         html += '</div>';
     }
+
+    (notesEntete || []).forEach(n => {
+        html += `<div class="fiche-entete-note" style="margin:0.5rem 0 0;font-size:0.85rem;font-style:italic;color:#6B7280;line-height:1.45;">${echapperHTMLFiche(n)}</div>`;
+    });
 
     if (lignesTableau.length) {
         html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titres.tableau || '')}</div>`;
@@ -7012,12 +7028,32 @@ function boutonBibliotheque(outil, bulle) {
     } catch (e) { return ''; }
 }
 
+// ❖ 24/11/2026 : titre, matière et classe tirés de la fiche elle-même (texte brut du modèle). Avant, une fiche
+// de la Forge était enregistrée sous le titre « EN-TÊTE ADMINISTRATIF » (premier texte de la carte).
+function deduireMetaFicheForge(source) {
+    const nettoyer = (v) => String(v || '').replace(/[*_`#]/g, '').replace(/\s+/g, ' ').replace(/^[\s:;\-–—]+|[\s;]+$/g, '').trim();
+    const champ = (re) => { const m = re.exec(source || ''); return m ? nettoyer(m[1]).slice(0, 80) : ''; };
+    const lignes = String(source || '').split('\n').map(l => nettoyer(l)).filter(Boolean);
+    if (lignes.length && /^FICHE DE COURS$/i.test(lignes[0]) && lignes[1]) {
+        // « Philosophie — 1ère A — L'État est-il nécessaire à l'homme ? »
+        const parts = lignes[1].split(/\s+[—–]\s+/);
+        const matiere = parts[0] || '', classe = parts.length >= 3 ? parts[1] : '';
+        const sujet = parts.length >= 3 ? parts.slice(2).join(' — ') : (parts[1] || '');
+        return { titre: ('Fiche de cours ' + matiere + (sujet ? ' — ' + sujet : '') + (classe ? ' (' + classe + ')' : '')).slice(0, 120), matiere: matiere.slice(0, 60), classe: classe.slice(0, 40) };
+    }
+    const sujet = champ(/^[\s\-•*#>]*(?:Titre de la le[çc]on|Le[çc]on|Lesson title|T[ií]tulo de la lecci[óo]n)\s*:\s*(.+)$/im);
+    const matiere = champ(/^[\s\-•*#>]*(?:Discipline|Mati[èe]re|Subject|Asignatura|Fach)\s*:\s*(.+)$/im);
+    const classe = champ(/^[\s\-•*#>]*(?:Niveau|Classe|Level|Nivel|Klasse)\s*:\s*(.+)$/im);
+    if (!sujet) return {};
+    return { titre: ('Fiche' + (matiere ? ' ' + matiere : '') + ' — ' + sujet + (classe ? ' (' + classe + ')' : '')).slice(0, 120), matiere: matiere.slice(0, 60), classe: classe.slice(0, 40) };
+}
+
 async function enregistrerDansBibliotheque(bouton, outil) {
     const bulle = bouton.closest('.bot-message');
     if (!bulle) return;
     // Copie nettoyée de la fiche telle qu'affichée (mise en page conservée) : sans boutons, scripts ni gestionnaires d'événements.
     const clone = bulle.cloneNode(true);
-    clone.querySelectorAll('.message-actions, button, script, style, iframe, object, embed, .mascotte-avatar').forEach(e => e.remove());
+    clone.querySelectorAll('.message-actions, button, script, style, iframe, object, embed, .mascotte-avatar, .fiche-invite-cours-eleve').forEach(e => e.remove());
     clone.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
     clone.querySelectorAll('*').forEach(e => { Array.from(e.attributes).forEach(a => { if (/^on/i.test(a.name)) e.removeAttribute(a.name); }); });
     const html = clone.innerHTML;
@@ -7036,6 +7072,8 @@ async function enregistrerDansBibliotheque(bouton, outil) {
     hote.remove();
     const demande = bulle.dataset.demande || '';
     const lire = (re) => { const m = re.exec(demande); return m ? m[1].trim().slice(0, 60) : ''; };
+    let meta = {};
+    try { if (outil === 'forge') meta = deduireMetaFicheForge(bulle.dataset.sourceBrute || ''); } catch (e) { meta = {}; }
     const texteOriginal = bouton.innerHTML;
     bouton.disabled = true;
     bouton.textContent = 'Enregistrement…';
@@ -7050,8 +7088,9 @@ async function enregistrerDansBibliotheque(bouton, outil) {
                 contenu: contenu,
                 html: html,
                 source: bulle.dataset.sourceBrute || '',
-                matiere: lire(/mati[eè]re\s*:\s*([^;\n,]+)/i),
-                classe: lire(/classe\s*:\s*([^;\n,]+)/i)
+                titre: meta.titre || '',
+                matiere: meta.matiere || lire(/mati[eè]re\s*:\s*([^;\n,]+)/i),
+                classe: meta.classe || lire(/classe\s*:\s*([^;\n,]+)/i)
             })
         });
         const d = await r.json().catch(() => ({}));
