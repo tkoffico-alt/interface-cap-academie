@@ -207,6 +207,20 @@
     $('consigne-edition').classList.toggle('cache', !d.est_createur);
     if (d.est_createur && $('consigne-form').classList.contains('cache')) { $('consigne-saisie').value = d.consigne || ''; }
     var plan = $('liste-plan'); plan.textContent = '';
+    // 24/11/2026 : rappel au créateur (fiches à générer) et information pour les camarades (fiche pas encore prête)
+    var sansFiche = d.plan.filter(function (t) { return !t.fiche; }).length;
+    var rappel = document.getElementById('plan-rappel');
+    if (!rappel) {
+      rappel = el('div', 'bulle-comm'); rappel.id = 'plan-rappel';
+      rappel.style.cssText = 'background:rgba(245,158,11,.16);border:1px solid #D97706;margin:0 0 12px;';
+      plan.parentNode.insertBefore(rappel, plan);
+    }
+    if (d.est_createur && estEleve() && sansFiche > 0) {
+      rappel.textContent = '✨ À faire : génère la fiche de chaque chapitre (bouton « Générer la fiche »). ' +
+        'Tes camarades travaillent à partir de ces fiches : tant qu\u2019elles ne sont pas générées, ils ne voient aucun contenu. ' +
+        (sansFiche === d.plan.length ? 'Aucune fiche n\u2019est prête pour l\u2019instant.' : sansFiche + ' chapitre' + (sansFiche > 1 ? 's' : '') + ' sans fiche sur ' + d.plan.length + '.');
+      rappel.classList.remove('cache'); rappel.style.display = '';
+    } else { rappel.style.display = 'none'; }
     d.plan.forEach(function (t, i) {
       var fait = d.mes_faits.indexOf(i) !== -1;
       var li = el('li', 'tache' + (fait ? ' fait' : ''));
@@ -237,6 +251,8 @@
           var bi = el('button', 'btn-petit', '📥 Importer un paquet'); bi.type = 'button';
           bi.addEventListener('click', function () { importerPaquet(i); });
           actF.appendChild(bi);
+        } else if (!d.est_createur) {
+          actF.appendChild(el('span', 'doux', '⏳ Fiche pas encore prête : le créateur de la salle doit la générer.'));
         }
         if (actF.childNodes.length) corps.appendChild(actF);
       }
