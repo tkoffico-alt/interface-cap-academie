@@ -2697,3 +2697,16 @@ body.dark-theme:not(.espace-ens) .menu-nav-titre { color: #9FB3E6; }
 .hist-sas-reprendre:hover { background: #2A52C9; }
 body.dark-theme .hist-sas-reprendre { background: #5C86F5; }
 body.dark-theme .hist-sas-reprendre:hover { background: #7A9DF8; }
+
+/* ❖ 24/11/2026 — Fiche de leçon (Forge secondaire) : tableau récapitulatif du déroulement
+   et carte d'invitation vers la fiche de cours élève. */
+.fiche-recap { overflow-x: auto; }
+.fiche-recap table { width: 100%; border-collapse: collapse; font-size: 0.82rem; line-height: 1.4; }
+.fiche-recap th, .fiche-recap td { border: 1px solid #E5E7EB; padding: 0.45rem 0.55rem; text-align: left; vertical-align: top; }
+.fiche-recap th { background: #EEF2FF; color: #1D3FA8; font-weight: 700; }
+body.dark-theme .fiche-recap th, body.dark-theme .fiche-recap td { border-color: rgba(148, 163, 184, 0.25); }
+body.dark-theme .fiche-recap th { background: rgba(92, 134, 245, 0.18); color: #A9BFFA; }
+.fiche-invite-cours-eleve { display: flex; flex-direction: column; gap: 0.6rem; border-style: dashed; }
+.fiche-invite-texte { line-height: 1.5; }
+.fiche-invite-bouton { align-self: flex-start; }
+@media print { .fiche-invite-cours-eleve { display: none !important; } }

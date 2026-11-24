@@ -1925,6 +1925,15 @@ const ALTERNATIVES_SECTION_FICHE = {
         "DESARROLLO DE LA CLASE",
         "UNTERRICHTSABLAUF"
     ],
+    // ❖ 24/11/2026 : tableau récapitulatif du déroulement (Forge secondaire,
+    // section 4 TER du prompt), placé entre le déroulement et le plan du cahier
+    // de texte. Sans ce type, il serait avalé par la dernière TRACE ÉCRITE.
+    recap: [
+        "TABLEAU R[ÉE]CAPITULATIF(?:\\s+DU\\s+D[ÉE]ROULEMENT)?",
+        "(?:LESSON\\s+PROCEDURE\\s+)?SUMMARY\\s+TABLE(?:\\s+OF\\s+THE\\s+LESSON\\s+PROCEDURE)?",
+        "TABLA\\s+(?:RESUMEN|RECAPITULATIVA)(?:\\s+DEL\\s+DESARROLLO\\s+DE\\s+LA\\s+CLASE)?",
+        "(?:ZUSAMMENFASSENDE\\s+TABELLE|[ÜU]BERSICHTSTABELLE)(?:\\s+DES\\s+UNTERRICHTSABLAUFS)?"
+    ],
     // ❖ Section ajoutée le 25/09/2026 (Forge secondaire uniquement) : un
     // résumé compact A./a./b./c. au format habituellement utilisé pour
     // remplir le cahier de texte physique de la classe -- voir
@@ -2500,7 +2509,8 @@ function analyserFicheLecon(texteBrut) {
     // d'être reconnu comme sa propre section.
     const occPlanCahierTexte = occurrences.find(o => o.type === 'planCahierTexte');
     const deroulementDebut = occDeroulement.end;
-    const deroulementFin = occPlanCahierTexte ? occPlanCahierTexte.start : texte.length;
+    const occRecap = occurrences.find(o => o.type === 'recap' && o.start >= deroulementDebut);
+    const deroulementFin = occRecap ? occRecap.start : (occPlanCahierTexte ? occPlanCahierTexte.start : texte.length);
     const marqueursPhase = occurrences.filter(o =>
         ['prof', 'classe', 'trace'].includes(o.type) && o.start >= deroulementDebut && o.start < deroulementFin
     );
@@ -2556,11 +2566,20 @@ function analyserFicheLecon(texteBrut) {
     // alors undefined et ce champ vide, sans aucun effet sur le reste).
     const planCahierTexte = occPlanCahierTexte ? contenuApres(occPlanCahierTexte) : '';
 
-    return { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte };
+    // ❖ Tableau récapitulatif : extrait brut (pas de contenuApres, qui convertit
+    // les <br> en retours à la ligne et casserait les lignes du tableau).
+    let recapTexte = '';
+    if (occRecap) {
+        const iRecap = occurrences.indexOf(occRecap);
+        const finRecap = iRecap + 1 < occurrences.length ? occurrences[iRecap + 1].start : texte.length;
+        recapTexte = texte.slice(occRecap.end, finRecap).trim();
+    }
+
+    return { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte, recapTexte };
 }
 
 function construireHTMLFiche(analyse, classeAccent) {
-    const { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte } = analyse;
+    const { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte, recapTexte } = analyse;
     let html = '';
 
     if (badges.length) {
@@ -2601,6 +2620,13 @@ function construireHTMLFiche(analyse, classeAccent) {
         });
     }
 
+    // ❖ Tableau récapitulatif du déroulement (24/11/2026) : vue d'ensemble en
+    // un coup d'œil, rendue en vrai tableau (défilement horizontal sur mobile).
+    if (recapTexte) {
+        html += `<div class="fiche-section-titre">📊 ${echapperHTMLFiche(titres.recap || '')}</div>`;
+        html += `<div class="fiche-carte fiche-recap">${marked.parse(recapTexte)}</div>`;
+    }
+
     // ❖ Plan pour le cahier de texte (Forge secondaire uniquement, voir
     // PROMPT_COMPLET_Forge.md section 5) -- rendu en <pre> brut plutôt que
     // via texteVersHtmlLegerFiche : l'indentation des lignes "a./b./c."
@@ -2626,6 +2652,12 @@ function construireHTMLFiche(analyse, classeAccent) {
         html += `<pre class="fiche-plan-cahier-texte-contenu">${echapperHTMLFiche(planCahierTexte)}</pre>`;
         html += `<button class="btn-action-doc fiche-plan-cahier-texte-bouton" type="button" onclick="copierPlanCahierTexte(this)" title="Copier le plan pour le cahier de texte" aria-label="Copier le plan pour le cahier de texte">📋 Copier</button>`;
         html += '</div>';
+        // ❖ 24/11/2026 : invitation à générer le second document (fiche de cours
+        // pour les élèves). Retirée de la copie et de l'impression.
+        html += '<div class="fiche-carte fiche-invite-cours-eleve">';
+        html += '<div class="fiche-invite-texte">🎓 <strong>Besoin du cours pour vos élèves ?</strong> Je peux rédiger la fiche de cours propre, à copier ou à imprimer, avec exercices et corrigés, à partir de cette leçon.</div>';
+        html += '<button class="btn-action-doc fiche-invite-bouton" type="button" onclick="demanderFicheCoursEleve(this)">📘 Générer la fiche de cours élève</button>';
+        html += '</div>';
     }
 
     return `<div class="fiche-lecon${classeAccent || ''}">${html}</div>`;
@@ -2648,6 +2680,20 @@ function copierPlanCahierTexte(bouton) {
     }).catch(() => {
         bouton.innerHTML = '⚠️ Échec de la copie';
     });
+}
+
+// ❖ 24/11/2026 : demande du second document (fiche de cours pour les élèves)
+// depuis la carte d'invitation en bas de la fiche. On joint la fiche de CETTE
+// bulle (et non la dernière de la conversation) pour que le cours corresponde
+// bien à la leçon sur laquelle l'enseignant a cliqué.
+function demanderFicheCoursEleve(bouton) {
+    const champ = document.getElementById('forge-user-input');
+    if (!champ || champ.disabled) return;
+    const bulle = bouton ? bouton.closest('.bot-message') : null;
+    const source = (bulle && bulle.dataset && bulle.dataset.sourceBrute) || '';
+    outilsDejaAmorces.add('forge');
+    champ.value = "Fais la fiche de cours pour les élèves à partir de la dernière fiche.";
+    sendTeacherMessage('forge', (source.length > 200 ? source.slice(0, 12000) : derniereReponseEnseignant('forge')));
 }
 
 // Point d'entrée : tente le rendu enrichi, ou renvoie null pour laisser
@@ -6504,7 +6550,9 @@ async function sendTeacherMessage(outil, contexteJoint) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 query: contexteJoint
-                    ? (outil === 'forge'
+                    ? ((outil === 'forge' && /fiche de cours pour les [ée]l[èe]ves/i.test(message))
+                        ? `${message}\n\n[FICHE DE LEÇON SOURCE — rédige UNIQUEMENT le second document demandé (la FICHE DE COURS ÉLÈVE) à partir d'elle, sans réécrire la fiche de leçon :]\n${contexteJoint}`
+                        : outil === 'forge'
                         ? `${message}\n\n[DOCUMENT PRÉCÉDENT À MODIFIER — réécris la fiche complète avec exactement la même structure, les mêmes titres de section et la même mise en forme, en intégrant la demande ci-dessus :]\n${contexteJoint}`
                         : `${message}\n\n[DOCUMENT DE RÉFÉRENCE — dernier document généré dans cette conversation ; appuie-toi dessus pour répondre à la demande ci-dessus, sans me redemander de le rappeler :]\n${contexteJoint}`)
                     : message,
@@ -6668,6 +6716,7 @@ function imprimerDocument(bouton) {
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
+    clone.querySelectorAll('.fiche-invite-cours-eleve').forEach(e => e.remove());
     clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
 
     const contenuHTML = clone.innerHTML;
@@ -6900,6 +6949,7 @@ function copierTexte(bouton) {
     const clone = documentDiv.cloneNode(true);
     const actions = clone.querySelector('.message-actions');
     if (actions) actions.remove();
+    clone.querySelectorAll('.fiche-invite-cours-eleve').forEach(e => e.remove());
     clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
 
     const contenuHTML = clone.innerHTML;
