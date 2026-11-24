@@ -4947,7 +4947,8 @@ function habillerFicheCoursEleve(html) {
 // sans signal, l'enseignant ne sait pas si le document est terminé.
 const minuteursStatutRedaction = {};
 function statutRedaction(outil, etat, bulle) {
-    if (!['forge', 'forge_primaire', 'atelier'].includes(outil)) return;
+    if (!['forge', 'forge_primaire', 'atelier', 'cabinet', 'cabinet_primaire'].includes(outil)) return;
+    const conseil = outil.indexOf('cabinet') === 0; // Cabinets : consultations, on parle de « réponse »
     const histo = document.getElementById(`${outil}-chat-history`);
     const zone = histo && histo.nextElementSibling && histo.nextElementSibling.classList.contains('chat-input-area')
         ? histo.nextElementSibling : (histo && histo.parentElement ? histo.parentElement.querySelector('.chat-input-area') : null);
@@ -4965,10 +4966,10 @@ function statutRedaction(outil, etat, bulle) {
     if (etat === 'encours') {
         pastille.className = 'statut-redaction encours';
         pastille.onclick = null;
-        pastille.innerHTML = '<span class="statut-points" aria-hidden="true"><i></i><i></i><i></i></span><span>Rédaction en cours — le document se complète, merci de patienter.</span>';
+        pastille.innerHTML = '<span class="statut-points" aria-hidden="true"><i></i><i></i><i></i></span><span>' + (conseil ? 'Rédaction en cours — la réponse se complète, merci de patienter.' : 'Rédaction en cours — le document se complète, merci de patienter.') + '</span>';
     } else {
         pastille.className = 'statut-redaction pret';
-        pastille.innerHTML = '<span>✅ Document prêt</span><span class="statut-lien">Afficher le début</span>';
+        pastille.innerHTML = '<span>✅ ' + (conseil ? 'Réponse prête' : 'Document prêt') + '</span><span class="statut-lien">Afficher le début</span>';
         pastille.onclick = () => { if (bulle) scrollToElementTop(`${outil}-chat-history`, bulle); pastille.remove(); };
         minuteursStatutRedaction[outil] = setTimeout(() => { if (pastille.parentNode) pastille.remove(); }, 25000);
     }
@@ -6747,7 +6748,7 @@ async function sendTeacherMessage(outil, contexteJoint) {
                 botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta demande ?";
             } else {
                 afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, false, outil); // rendu final, curseur retiré
-                documentPret = texteIntegralTeacher.length > 400;
+                documentPret = texteIntegralTeacher.length > (outil.indexOf('cabinet') === 0 ? 100 : 400);
             }
         }
 

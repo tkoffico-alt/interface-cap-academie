@@ -1,0 +1,8892 @@
+/* EdukaTchat - Propriété Intellectuelle Exclusive */
+
+let pendingSpaceToOpen = null;
+let avatarActif = "general"; // Mémorise l'avatar choisi
+let espaceActuel = "";       // Mémorise la porte choisie
+let disciplineEnAttente = ""; // Retient la matière pendant le questionnaire de diversion
+
+// ❖ Mémorisés depuis le questionnaire de diversion (profil-modal) puis
+// réellement transmis au serveur — auparavant collectés mais jamais
+// envoyés, remplacés côté backend par des valeurs génériques figées.
+let classeActive = "";
+let methodeTravailActive = "";
+let gestionStressActive = "";
+
+// ❖ Garde-fou anti double-envoi entre l'amorçage automatique (setTimeout,
+// voir validerProfilEtEntrer) et un clic sur une suggestion rapide pendant
+// la même fenêtre de 800ms : le premier des deux qui agit désarme l'autre.
+let sasPremierEchangeEnAttente = false;
+
+// ❖ L'AMORÇAGE AUTOMATIQUE DE L'ESPACE ENSEIGNANT (Atelier, Forge, Cabinet) :
+// même logique que le Sas côté élève — un enseignant qui ouvre un outil pour
+// la première fois sur cet appareil ne doit jamais affronter un champ vide
+// en silence. outilsDejaAmorces évite un double déclenchement si l'on
+// bascule rapidement d'onglet avant la fin du premier échange (le vrai
+// garde-fou inter-sessions reste l'historique localStorage, voir
+// switchTeacherTool ci-dessous).
+let outilsDejaAmorces = new Set();
+const MESSAGES_AMORCAGE_ENSEIGNANT = {
+    atelier: "C'est ma première visite dans l'Atelier des Évaluations. Réponds en 3 phrases courtes maximum, sans titre, sans liste et SANS produire d'évaluation d'exemple : dis ce que tu conçois ici, puis ce que je dois taper pour en obtenir une (matière, classe, thème, type d'épreuve). Ajoute une dernière phrase : je peux aussi corriger la photo d'une copie (JPG/PNG), à condition que je précise le barème.",
+    forge: "C'est ma première visite dans la Forge des Leçons. Réponds en 3 phrases courtes maximum, sans titre, sans liste et SANS produire de fiche d'exemple : dis ce que tu produis ici, puis ce que je dois taper pour obtenir une fiche (matière, classe, titre de la leçon).",
+    cabinet: "C'est ma première visite dans le Cabinet d'Étude. Réponds en 3 phrases courtes maximum, sans titre, sans liste et sans exemple développé : dis comment tu peux m'accompagner ici, puis ce que je peux te demander."
+};
+
+// ❖ LES SUGGESTIONS RAPIDES (Sas/Académie + Espace Enseignant) ❖
+// Toujours visibles, jamais obligatoires : un élève ou un enseignant qui ne
+// sait pas quoi demander peut cliquer plutôt que d'affronter un champ vide.
+// Écouteur délégué sur document pour fonctionner quel que soit le moment où
+// les boutons apparaissent dans le DOM. data-outil distingue le Sas (valeur
+// par défaut "sas", champ dédié) des outils enseignants (routés vers
+// sendTeacherMessage).
+document.addEventListener('click', function (evenement) {
+    const bouton = evenement.target.closest('.btn-suggestion');
+    if (!bouton) return;
+    if (bouton.classList.contains('btn-formulaire-guide')) return; // ouvre son propre panneau (ouvrirFormulaireGuide)
+    const outil = bouton.dataset.outil || 'sas';
+    // ❖ 30/10/2026 : bouton « à pré-remplir » (data-prefill) : il place un modèle à
+    // compléter dans le champ SANS rien envoyer (aucun appel au modèle, aucun message
+    // du quota quotidien consommé tant que l'utilisateur n'a pas envoyé lui-même).
+    if (bouton.dataset.prefill) {
+        const cible = document.getElementById(`${outil}-user-input`);
+        if (cible && !cible.disabled) {
+            if (outil === 'sas') sasPremierEchangeEnAttente = false;
+            else { outilsDejaAmorces.add(outil); reinitialiserConversationEnseignant(outil); }
+            cible.value = bouton.dataset.prefill;
+            cible.focus();
+            const i = cible.value.indexOf('…');
+            try { if (i >= 0) cible.setSelectionRange(i, i + 1); } catch (e) {}
+        }
+        return;
+    }
+    if (outil === 'sas') {
+        sasPremierEchangeEnAttente = false;
+        const champ = document.getElementById('sas-user-input');
+        if (champ && !champ.disabled) {
+            champ.value = bouton.dataset.message || "";
+            sendSasMessage();
+        }
+    } else {
+        outilsDejaAmorces.add(outil); // un clic manuel vaut amorçage : plus d'auto-envoi ensuite
+        const champ = document.getElementById(`${outil}-user-input`);
+        if (champ && !champ.disabled) {
+            // ❖ Un clic sur une suggestion ouvre un nouveau sujet : on repart
+            // d'un fil Dify vierge (voir reinitialiserConversationEnseignant).
+            // La logique est volontairement inversée -- on réinitialise PAR
+            // DÉFAUT, sauf pour les rares boutons qui prolongent l'échange
+            // précédent. Une première version ne déclenchait que sur
+            // « Nouvelle fiche… » et laissait donc le Cabinet, dont les
+            // boutons s'appellent « Conseil pédagogique », « Un élève en
+            // difficulté » et « Gestion de classe », accumuler indéfiniment
+            // ses consultations dans un seul fil.
+            const libelle = `${bouton.textContent || ''} ${bouton.dataset.message || ''}`;
+            // ❖ 16/10/2026 : « dernière évaluation » n'était pas reconnu, donc
+            // l'Atelier repartait d'un fil vierge et répondait « je ne sais pas
+            // de quelle évaluation vous parlez » (boutons Références/Variante).
+            // ❖ 16/10/2026 : la Forge est en mode complétion (une demande = une
+            // fiche, aucun dialogue) : « aide-moi à cadrer » ne produisait qu'une
+            // bulle vide. « Nouvelle fiche de leçon » pré-remplit donc un modèle
+            // à compléter, sans rien envoyer.
+            if (outil === 'forge' && /nouvelle\s+fiche/i.test(libelle)) {
+                reinitialiserConversationEnseignant(outil);
+                champ.value = "Fiche de leçon — Matière : … ; Classe : … ; Chapitre/Thème : …";
+                champ.focus();
+                try { champ.setSelectionRange(champ.value.indexOf('…'), champ.value.indexOf('…') + 1); } catch (e) {}
+                return;
+            }
+            // ❖ 17/10/2026 : « Correction de copies » pré-remplit un modèle avec le
+            // barème à renseigner (la photo se joint ensuite avec le trombone).
+            if (outil === 'atelier' && /correction\s+de\s+copie/i.test(libelle)) {
+                reinitialiserConversationEnseignant(outil);
+                champ.value = "Correction de copie — Matière : … ; Classe : … ; Barème (question par question, total /20) : … ; (joins la photo de la copie avec le trombone 📎, JPG/PNG)";
+                champ.focus();
+                try { champ.setSelectionRange(champ.value.indexOf('…'), champ.value.indexOf('…') + 1); } catch (e) {}
+                return;
+            }
+            // ❖ 22/10/2026 : « Format officiel » pré-remplit une consigne d'épreuve
+            // type BEPC/BAC (déclenche le mode EXERCICE 1 … EXERCICE N de l'Atelier).
+            if (outil === 'atelier' && /format\s+officiel/i.test(libelle)) {
+                reinitialiserConversationEnseignant(outil);
+                champ.value = "Épreuve type BEPC/BAC au format officiel — Matière : … ; Classe : … ; Chapitres/notions : … ; Durée : …";
+                champ.focus();
+                try { champ.setSelectionRange(champ.value.indexOf('…'), champ.value.indexOf('…') + 1); } catch (e) {}
+                return;
+            }
+            const prolongeLEchange = /ajoute[rz]?\s+des\s+exercices|derni[èe]re\s+(fiche|[ée]valuation)|cette\s+le[çc]on/i.test(libelle);
+            if (!prolongeLEchange) reinitialiserConversationEnseignant(outil);
+            // La Forge secondaire est en mode complétion (aucune mémoire côté
+            // Dify) : pour « la dernière fiche », on joint le texte de la
+            // dernière réponse à la requête (jamais affiché dans la bulle).
+            let contexteJoint = "";
+            if (prolongeLEchange) { // 30/10/2026 : toujours joint (la mémoire Dify peut manquer ou être tronquée)
+                contexteJoint = derniereReponseEnseignant(outil);
+            }
+            champ.value = bouton.dataset.message || "";
+            sendTeacherMessage(outil, contexteJoint);
+        }
+    }
+});
+
+// =======================================================================
+// ❖ LE FORMULAIRE GUIDÉ (Forge secondaire) -- 26/10/2026 ❖
+// =======================================================================
+// Un panneau facultatif à côté des suggestions rapides : l'enseignant renseigne
+// matière, classe, thème, durée, matériel… et le formulaire compose la même
+// demande qu'il aurait tapée (« Fiche de leçon — Matière : … ») avec, en plus,
+// « Précisions de l'enseignant (à respecter à la lettre) : … » que le prompt de
+// la Forge sait lire. Aucun champ n'est obligatoire sauf matière, classe, thème.
+const FORMULAIRE_GUIDE = {
+    forge: {
+        titre: "Formulaire guidé — Fiche de leçon",
+        champs: [
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Mathématiques','Physique-Chimie','SVT','Français','Histoire-Géographie','Anglais','Espagnol','Allemand','Philosophie','EDHC','TICE','Éducation Musicale','Arts Plastiques']},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['6ème','5ème','4ème','3ème','2nde','1ère','Terminale']},
+            {id: 'theme', lib: 'Chapitre / thème de la leçon', type: 'text', obligatoire: true, ph: 'Ex. Le théorème de Thalès'},
+            {id: 'duree', lib: 'Durée de la séance (facultatif)', type: 'text', ph: 'Ex. 55 min', precision: 'Durée de la séance'},
+            {id: 'materiel', lib: 'Matériel disponible (facultatif)', type: 'text', ph: 'Ex. tableau, règle, pas de vidéoprojecteur', precision: 'Matériel disponible'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: "Ex. beaucoup d'exercices d'application", precision: 'Autre demande'}
+        ],
+        entete: (v) => `Fiche de leçon — Matière : ${v.matiere} ; Classe : ${v.classe} ; Chapitre/Thème : ${v.theme}`
+    },
+    forge_primaire: {
+        titre: "Formulaire guidé — Fiche de préparation (Primaire)",
+        champs: [
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['CP1','CP2','CE1','CE2','CM1','CM2']},
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Français','Mathématiques','EDHC','Histoire-Géographie','Sciences','Arts plastiques','Éducation musicale','EPS','Autre (précisée dans le thème)']},
+            {id: 'theme', lib: 'Leçon / thème', type: 'text', obligatoire: true, ph: 'Ex. Lecture : le texte « … » ; ou Grammaire : le verbe'},
+            {id: 'semaine', lib: 'Semaine et jour de la progression (facultatif — la leçon sera vérifiée avec la progression officielle)', type: 'text', ph: 'Ex. Semaine 2, Jour 1', precision: 'Semaine et jour de la progression'},
+            {id: 'duree', lib: 'Durée de la séance (facultatif)', type: 'text', ph: 'Ex. 40 min', precision: 'Durée de la séance'},
+            {id: 'materiel', lib: 'Matériel disponible (facultatif)', type: 'text', ph: 'Ex. ardoises, bûchettes, pas de vidéoprojecteur', precision: 'Matériel disponible'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: "Ex. beaucoup d'exercices d'application", precision: 'Autre demande'}
+        ],
+        entete: (v) => `Fiche de préparation, ${v.classe}, ${v.matiere.replace(/\s*\(.*\)/, '')}, ${v.theme}`
+    },
+    forge_primaire_eval: {
+        outil: 'forge_primaire',
+        titre: "Formulaire guidé — Fiche d'évaluation (Primaire)",
+        champs: [
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['CP1','CP2','CE1','CE2','CM1','CM2']},
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Français','Mathématiques','EDHC','Histoire-Géographie','Sciences','Arts plastiques','Éducation musicale','Éducation physique']},
+            {id: 'theme', lib: 'Leçon(s) ou compétence évaluée(s)', type: 'text', obligatoire: true, ph: 'Ex. Les additions avec retenue ; ou Lecture : le texte « … »'},
+            {id: 'format', lib: "Type d'évaluation (facultatif)", type: 'select', options: ["Au choix d'EdukaTchat",'Évaluation diagnostique','Évaluation formative','Évaluation sommative'], precision: "Type d'évaluation"},
+            {id: 'duree', lib: 'Durée (facultatif)', type: 'text', ph: 'Ex. 30 min', precision: 'Durée'},
+            {id: 'nb', lib: "Nombre d'exercices (facultatif)", type: 'select', options: ['Au choix','2','3','4','5'], precision: "Nombre d'exercices"},
+            {id: 'bareme', lib: 'Barème (facultatif)', type: 'select', options: ['Au choix','Sur 10','Sur 20'], precision: 'Barème'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: 'Ex. consignes très courtes, prévoir un exercice de remédiation', precision: 'Autre demande'}
+        ],
+        entete: (v) => `Fiche d'évaluation, ${v.classe}, ${v.matiere}, ${v.theme}`
+    },
+    atelier_officiel: {
+        outil: 'atelier',
+        titre: "Épreuve type BEPC / BAC",
+        champs: [
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Mathématiques','Physique-Chimie','SVT','Français','Histoire-Géographie','Anglais','Espagnol','Allemand','Philosophie']},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['3ème (BEPC)','Terminale (BAC)','1ère','2nde','4ème','5ème','6ème']},
+            {id: 'theme', lib: 'Chapitres / notions de l\'épreuve', type: 'text', obligatoire: true, ph: 'Ex. Équations, Pythagore, Thalès'},
+            {id: 'duree', lib: 'Durée (facultatif)', type: 'text', ph: 'Ex. 2 h'},
+            {id: 'nb', lib: "Nombre d'exercices (facultatif)", type: 'select', options: ['Au choix','2','3','4','5'], precision: "Nombre d'exercices"},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: 'Ex. un exercice avec une figure', precision: 'Autre demande'}
+        ],
+        entete: (v) => `Épreuve type BEPC/BAC au format officiel — Matière : ${v.matiere} ; Classe : ${v.classe.replace(/\s*\(.*\)/, '')} ; Chapitres/notions : ${v.theme}` + (v.duree ? ` ; Durée : ${v.duree}` : '')
+    },
+    atelier_copies: {
+        outil: 'atelier',
+        titre: "Correction de copies",
+        sansEnvoi: true,
+        bouton: 'Préparer la correction',
+        avertissement: "🎁 Fonction bonus. L'assistant peut se tromper (écriture difficile à lire, barème mal interprété) : sa correction est une PROPOSITION soumise à votre appréciation. Relisez-la et ajustez toujours la note avant de la communiquer.",
+        rappelPhoto: "📸 Étape suivante : joignez la photo de la copie avec le trombone 📎 (JPG ou PNG, une copie par photo, bien éclairée et à plat), puis envoyez.",
+        champs: [
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Mathématiques','Physique-Chimie','SVT','Français','Histoire-Géographie','Anglais','Espagnol','Allemand','Philosophie','EDHC']},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['6ème','5ème','4ème','3ème','2nde','1ère','Terminale']},
+            {id: 'bareme', lib: 'Barème, question par question (total sur 20)', type: 'textarea', obligatoire: true, ph: 'Ex. Q1 : 3 points ; Q2 : 4 points ; Q3 : 5 points ; Q4 : 8 points'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: 'Ex. ajouter un commentaire encourageant pour l\'élève', precision: 'Autre demande'}
+        ],
+        entete: (v) => `Correction de copie — Matière : ${v.matiere} ; Classe : ${v.classe} ; Barème (question par question, total /20) : ${v.bareme}`
+    },
+    atelier: {
+        titre: "Formulaire guidé — Évaluation",
+        champs: [
+            {id: 'matiere', lib: 'Matière', type: 'select', obligatoire: true, options: ['Mathématiques','Physique-Chimie','SVT','Français','Histoire-Géographie','Anglais','Espagnol','Allemand','Philosophie','EDHC','TICE']},
+            {id: 'classe', lib: 'Classe', type: 'select', obligatoire: true, options: ['6ème','5ème','4ème','3ème','2nde','1ère','Terminale']},
+            {id: 'theme', lib: 'Chapitres / notions évalués', type: 'text', obligatoire: true, ph: 'Ex. Le théorème de Pythagore et sa réciproque'},
+            {id: 'format', lib: "Type d'évaluation (facultatif)", type: 'select', options: ["Au choix d'EdukaTchat",'Devoir de niveau','Composition','Interrogation écrite','Format officiel BEPC','Format officiel BAC'], precision: "Type d'évaluation"},
+            {id: 'duree', lib: 'Durée (facultatif)', type: 'text', ph: 'Ex. 2 h', precision: 'Durée'},
+            {id: 'nb', lib: "Nombre d'exercices (facultatif)", type: 'select', options: ['Au choix','2','3','4','5'], precision: "Nombre d'exercices"},
+            {id: 'bareme', lib: 'Répartition des points (facultatif)', type: 'text', ph: 'Ex. Partie A sur 8 points, Partie B sur 12 points', precision: 'Répartition des points'},
+            {id: 'consigne', lib: 'Autre demande (facultatif)', type: 'text', ph: 'Ex. inclure un QCM', precision: 'Autre demande'}
+        ],
+        entete: (v) => /officiel/i.test(v.format)
+            ? `Épreuve type BEPC/BAC au format officiel — Matière : ${v.matiere} ; Classe : ${v.classe} ; Chapitres/notions : ${v.theme}` + (v.duree ? ` ; Durée : ${v.duree}` : '')
+            : `Crée une évaluation de ${v.matiere} pour la classe de ${v.classe} sur le thème : ${v.theme}`
+    }
+};
+
+// Après « Préparer la correction » : le texte est dans le champ (non envoyé) ; un bandeau rappelle
+// de joindre la photo avec le trombone, puis il disparaît dès que le champ est vidé (message envoyé).
+function afficherRappelPhoto(outil, texteRappel, message) {
+    const champ = document.getElementById(`${outil}-user-input`);
+    if (!champ) return;
+    const zone = champ.closest('.chat-input-area');
+    const ancien = document.getElementById('bandeau-rappel-photo');
+    if (ancien) ancien.remove();
+    const bandeau = document.createElement('div');
+    bandeau.id = 'bandeau-rappel-photo';
+    bandeau.textContent = texteRappel + ' Proposition de correction : à vérifier par l\'enseignant.';
+    bandeau.style.cssText = 'background:#E0F2FE;border:1px solid #7DD3FC;color:#0C4A6E;border-radius:12px;padding:8px 12px;font-size:.84rem;font-weight:600;width:100%;max-width:1000px;box-sizing:border-box;';
+    const avant = zone && zone.querySelector('.chat-input-wrapper');
+    if (zone && avant) zone.insertBefore(bandeau, avant);
+    champ.value = message + ' (la photo de la copie est jointe avec le trombone 📎)';
+    champ.focus();
+    const trombone = zone ? zone.querySelector('.btn-icone-neutre') : null;
+    if (trombone) { trombone.style.boxShadow = '0 0 0 4px rgba(14,165,233,0.45)'; }
+    const surveille = setInterval(() => {
+        if (!document.body.contains(bandeau) || !champ.value.startsWith('Correction de copie')) {
+            clearInterval(surveille);
+            bandeau.remove();
+            if (trombone) trombone.style.boxShadow = '';
+        }
+    }, 1000);
+}
+
+function fermerFormulaireGuide() {
+    const m = document.getElementById('formulaire-guide-overlay');
+    if (m) m.remove();
+}
+
+function ouvrirFormulaireGuide(outil) {
+    const def = FORMULAIRE_GUIDE[outil];
+    if (!def) return;
+    fermerFormulaireGuide();
+    const ov = document.createElement('div');
+    ov.id = 'formulaire-guide-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+    const carte = document.createElement('div');
+    carte.style.cssText = 'background:#fff;color:#0f172a;border-radius:14px;padding:18px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.3);';
+    const h = document.createElement('h3');
+    h.textContent = def.titre;
+    h.style.cssText = 'margin:0 0 4px;font-size:1.15rem;';
+    carte.appendChild(h);
+    const note = document.createElement('p');
+    note.textContent = "Seuls matière, classe et thème sont nécessaires. Ce que vous précisez en plus sera respecté.";
+    note.style.cssText = 'margin:0 0 6px;font-size:.85rem;color:#475569;';
+    carte.appendChild(note);
+    [def.avertissement, def.rappelPhoto].forEach((txt, i) => {
+        if (!txt) return;
+        const bloc = document.createElement('div');
+        bloc.textContent = txt;
+        bloc.style.cssText = i === 0
+            ? 'background:#FEF3C7;border:1px solid #FCD34D;color:#78350F;border-radius:10px;padding:10px 12px;font-size:.86rem;margin:10px 0 4px;'
+            : 'background:#E0F2FE;border:1px solid #7DD3FC;color:#0C4A6E;border-radius:10px;padding:10px 12px;font-size:.86rem;margin:6px 0 4px;font-weight:600;';
+        carte.appendChild(bloc);
+    });
+    def.champs.forEach(c => {
+        const l = document.createElement('label');
+        l.textContent = c.lib;
+        l.htmlFor = 'fg-' + c.id;
+        l.style.cssText = 'display:block;font-weight:600;font-size:.88rem;margin:10px 0 3px;';
+        carte.appendChild(l);
+        let el;
+        if (c.type === 'select') {
+            el = document.createElement('select');
+            c.options.forEach(o => { const op = document.createElement('option'); op.textContent = o; el.appendChild(op); });
+        } else if (c.type === 'textarea') {
+            el = document.createElement('textarea');
+            el.maxLength = 500;
+            el.rows = 3;
+            el.placeholder = c.ph || '';
+        } else {
+            el = document.createElement('input');
+            el.type = 'text';
+            el.maxLength = 200;
+            el.placeholder = c.ph || '';
+        }
+        el.id = 'fg-' + c.id;
+        el.style.cssText = 'width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem;background:#fff;color:#0f172a;box-sizing:border-box;';
+        carte.appendChild(el);
+    });
+    const err = document.createElement('div');
+    err.style.cssText = 'color:#b91c1c;font-size:.88rem;margin-top:8px;min-height:1em;';
+    carte.appendChild(err);
+    const barre = document.createElement('div');
+    barre.style.cssText = 'display:flex;gap:10px;margin-top:12px;';
+    const annuler = document.createElement('button');
+    annuler.type = 'button';
+    annuler.textContent = 'Annuler';
+    annuler.style.cssText = 'flex:1;padding:11px;border:0;border-radius:9px;background:#e2e8f0;color:#0f172a;font-weight:600;cursor:pointer;';
+    annuler.onclick = fermerFormulaireGuide;
+    const ok = document.createElement('button');
+    ok.type = 'button';
+    ok.textContent = def.bouton || 'Générer';
+    ok.style.cssText = 'flex:2;padding:11px;border:0;border-radius:9px;background:#3B82F6;color:#fff;font-weight:700;cursor:pointer;';
+    ok.onclick = () => {
+        const v = {};
+        def.champs.forEach(c => { v[c.id] = (document.getElementById('fg-' + c.id).value || '').replace(/[\[\]{}<>`]/g, '').replace(/\s+/g, ' ').trim().replace(/[\s,;.]+$/, ''); });
+        def.champs.forEach(c => { if (c.type === 'select' && /^Au choix/i.test(v[c.id] || '')) v[c.id] = ''; });
+        const manquant = def.champs.find(c => c.obligatoire && c.type === 'text' && (v[c.id] || '').length < 3)
+            || def.champs.find(c => c.obligatoire && c.type === 'textarea' && (v[c.id] || '').length < 3);
+        if (manquant) { err.textContent = `Merci de renseigner : ${manquant.lib.toLowerCase()}.`; return; }
+        const precisions = def.champs.filter(c => c.precision && v[c.id]).map(c => `${c.precision} : ${v[c.id]}`).join(' ; ');
+        const message = def.entete(v) + (precisions ? `. Précisions de l'enseignant (à respecter à la lettre) : ${precisions}.` : '');
+        const cible = def.outil || outil;
+        const champ = document.getElementById(`${cible}-user-input`);
+        if (!champ || champ.disabled) { fermerFormulaireGuide(); return; }
+        outilsDejaAmorces.add(cible);
+        reinitialiserConversationEnseignant(cible);
+        champ.value = message;
+        fermerFormulaireGuide();
+        if (def.sansEnvoi) { afficherRappelPhoto(cible, def.rappelPhoto, message); return; }
+        sendTeacherMessage(cible, "");
+    };
+    barre.appendChild(annuler);
+    barre.appendChild(ok);
+    carte.appendChild(barre);
+    ov.appendChild(carte);
+    ov.addEventListener('click', e => { if (e.target === ov) fermerFormulaireGuide(); });
+    document.body.appendChild(ov);
+    const premier = document.getElementById('fg-theme');
+    if (premier) premier.focus();
+}
+
+// =======================================================================
+// ❖ LA GESTION DES ESPACES ET DE L'AIGUILLAGE ❖
+// =======================================================================
+
+// ❖ Habillage « Terre cuite » (21/11/2026) : pose la classe .espace-ens sur <body> quand on est dans l'Espace Enseignant
+// (couleurs de la barre du haut, voir enseignant-terre.css). Ne touche à rien d'autre.
+function majHabillageEspace() {
+    try { document.body.classList.toggle('espace-ens', espaceActuel === 'enseignant'); } catch (e) { /* esthétique seulement */ }
+    // 22/11/2026 : barre de titre de la fenêtre / du navigateur — brique côté enseignant, indigo côté élève, bleu d'origine ailleurs.
+    try {
+        var mt = document.querySelector('meta[name="theme-color"]');
+        if (mt) mt.setAttribute('content', espaceActuel === 'enseignant' ? '#7E3326' : (espaceActuel === 'eleve' ? '#1D3FA8' : '#3B82F6'));
+    } catch (e) { /* esthétique seulement */ }
+}
+
+async function openSpace(space) {
+    espaceActuel = space; majHabillageEspace();
+    setTimeout(function () { try { majMenuOutilsEnseignant(); organiserMenuNavigation(); } catch (e) { /* menu */ } }, 0);
+
+    if (space === 'eleve') {
+        const codeAcces = localStorage.getItem('eduka_sceau');
+
+        if (!codeAcces) {
+            pendingSpaceToOpen = 'eleve';
+            openPremiumModal();
+            return;
+        }
+
+        // Illusion de fluidité : on affiche la modale immédiatement pour masquer l'attente
+        openPremiumModal();
+        const feedback = document.getElementById('modal-feedback');
+        if (feedback) {
+            feedback.textContent = "Authentification automatique en cours...";
+            feedback.style.color = "#60A5FA";
+        }
+
+        try {
+            const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // Le Sceau est transmis avec l'identité de la porte (la variable 'space')
+                body: JSON.stringify({ sceau: codeAcces, espace_cible: space })
+            });
+            let data = {};
+            try { data = await response.json(); } catch (e) { /* réponse illisible */ }
+
+            if (data.valide) {
+                closePremiumModal();
+                document.getElementById('discipline-modal').classList.add('active');
+            } else if (!response.ok || data.temporaire) {
+                // Problème passager (serveur occupé, trop de vérifications, erreur système) : le code
+                // n'est PAS effacé, sinon l'élève devrait le ressaisir à chaque connexion.
+                // Le serveur revérifiera le code à l'envoi du premier message.
+                closePremiumModal();
+                document.getElementById('discipline-modal').classList.add('active');
+            } else {
+                localStorage.removeItem('eduka_sceau');
+                if (feedback) {
+                    feedback.textContent = "Votre précédent accès a expiré. Veuillez saisir un nouveau Code.";
+                    feedback.style.color = "#F59E0B";
+                }
+            }
+        } catch (error) {
+            console.error("Erreur de vérification", error);
+            if (feedback) {
+                feedback.textContent = "Le réseau est instable. Impossible de vérifier l'accès.";
+                feedback.style.color = "#F87171";
+            }
+        }
+
+    } else if (space === 'sas') {
+        document.getElementById('discipline-modal').classList.add('active');
+
+    } else if (space === 'enseignant') {
+        const codeEnseignant = localStorage.getItem('eduka_sceau_enseignant');
+
+        if (!codeEnseignant) {
+            ouvrirModaleAccesEnseignant();
+            return;
+        }
+
+        // ❖ Revérification silencieuse à chaque entrée (le code peut avoir
+        // expiré depuis la dernière visite) -- même logique que l'accès
+        // élève ci-dessus.
+        try {
+            const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sceau: codeEnseignant, espace_cible: 'enseignant' })
+            });
+            let data = {};
+            try { data = await response.json(); } catch (e) { /* réponse illisible */ }
+            if (data.valide) memoriserInfosEnseignant(data);
+            if (data.valide || !response.ok || data.temporaire) {
+                // Un refus définitif seul efface le code ; un problème passager ne le fait jamais.
+                entrerDansEspaceEnseignant();
+            } else {
+                localStorage.removeItem('eduka_sceau_enseignant');
+                ouvrirModaleAccesEnseignant();
+            }
+        } catch (error) {
+            console.error("Erreur de vérification enseignant", error);
+            // ❖ Réseau instable : on ne bloque pas un enseignant déjà
+            // abonné -- si son Sceau s'avère finalement invalide, le
+            // serveur le lui signalera au premier envoi de message (plus
+            // d'essai Freemium en repli depuis le 28/08/2026 : sans Sceau
+            // ENS- valide, le serveur bloque directement).
+            entrerDansEspaceEnseignant();
+        }
+    }
+}
+
+// ❖ Sépare l'affichage effectif de l'espace enseignant (appelé une fois
+// le Code d'accès validé) de la
+// décision d'accès elle-même (openSpace ci-dessus).
+function entrerDansEspaceEnseignant() {
+    // 13/11/2026 : mémorise l'espace (retour depuis une page Séance/Bibliothèque : openSpace() n'est pas rappelé, les raccourcis disparaissaient).
+    espaceActuel = 'enseignant'; majHabillageEspace();
+    try { majMenuOutilsEnseignant(); } catch (e) { /* ignoré */ }
+    document.getElementById('home-view').style.display = 'none';
+    document.getElementById('app-view').style.display = 'flex';
+
+    document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+    document.getElementById('container-sas-custom').classList.remove('active');
+    // ❖ 27/09/2026 : plus d'entrée directe sur "atelier" -- l'enseignant
+    // choisit d'abord sa catégorie (Professeur secondaire / Instituteur
+    // primaire) via un vrai écran de sélection, voir
+    // choisirCategorieEnseignant() ci-dessous. Les onglets restent masqués
+    // et aucun outil n'est actif jusqu'à ce choix.
+    ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].forEach((id) => {
+        const conteneur = document.getElementById(`container-${id}-custom`);
+        if (conteneur) conteneur.classList.remove('active');
+    });
+    document.getElementById('teacher-tabs-container').style.display = 'none';
+    const btnMatieresEnseignant = document.getElementById('btn-matieres');
+    if (btnMatieresEnseignant) btnMatieresEnseignant.style.display = 'none';
+    if (typeof majRaccourcisEleve === 'function') majRaccourcisEleve();
+    document.getElementById('teacher-categorie-chooser').style.display = 'flex';
+    masquerSasAteliersEnseignant();
+}
+
+// ❖ SÉLECTION DE CATÉGORIE (PROFESSEUR / INSTITUTEUR) -- ESPACE ENSEIGNANT
+// (27/09/2026) : voir CLAUDE.md, section "Séparation Professeur/Instituteur".
+// Ne change RIEN à l'accès (toujours un seul Sceau ENS- et un seul tarif,
+// voir CLAUDE.md) -- seulement à la présentation : l'enseignant clique sur
+// sa carte, puis ne voit que les onglets de sa catégorie. Le bouton
+// "🔄 Changer de catégorie" (dans la barre d'onglets) permet de revenir sur
+// ce choix sans quitter l'Espace Enseignant.
+function choisirCategorieEnseignant(categorie) {
+    document.getElementById('teacher-categorie-chooser').style.display = 'none';
+    document.getElementById('teacher-tabs-container').style.display = 'flex';
+
+    const groupeProfesseur = document.getElementById('teacher-tabs-groupe-professeur');
+    const groupeInstituteur = document.getElementById('teacher-tabs-groupe-instituteur');
+    const separateur = document.getElementById('teacher-tabs-separateur');
+    // Le séparateur ne sert qu'à distinguer visuellement les 2 groupes
+    // quand ils sont affichés ensemble -- une seule catégorie visible à la
+    // fois ici, donc toujours masqué après un choix.
+    if (separateur) separateur.style.display = 'none';
+
+    if (categorie === 'instituteur') {
+        if (groupeProfesseur) groupeProfesseur.style.display = 'none';
+        if (groupeInstituteur) groupeInstituteur.style.display = 'flex';
+        afficherSasAteliersEnseignant('instituteur');
+    } else {
+        if (groupeInstituteur) groupeInstituteur.style.display = 'none';
+        if (groupeProfesseur) groupeProfesseur.style.display = 'flex';
+        afficherSasAteliersEnseignant('professeur');
+    }
+}
+
+// ❖ Filet de sécurité (27/09/2026) : appelé depuis les 3 autres endroits qui
+// quittent l'Espace Enseignant (changement de matière Sas/Académie, retour à
+// l'accueil, ouverture d'un Atelier) pour ne jamais laisser l'écran de
+// sélection Professeur/Instituteur visible en arrière-plan après un départ
+// de cet espace -- sans effet si le chooser n'était pas affiché.
+function masquerChooserCategorieEnseignant() {
+    const chooser = document.getElementById('teacher-categorie-chooser');
+    if (chooser) chooser.style.display = 'none';
+    masquerSasAteliersEnseignant();
+}
+
+// ❖ SAS DES ATELIERS (27/10/2026) : après le choix de catégorie, l'enseignant
+// choisit lui-même l'atelier où entrer (plus d'ouverture automatique sur
+// Évaluations, qui lançait l'amorçage IA et consommait des jetons pour rien).
+// ❖ 21/11/2026 : BANDEAU D'ACCUEIL ENSEIGNANT (prénom, fin d'accès, « Reprendre »).
+// Le prénom et la date de fin viennent de /verifier-sceau (mémorisés ici à chaque vérification) ; « Reprendre » rouvre
+// le dernier atelier utilisé. Tout est facultatif : sans donnée, la partie correspondante n'est simplement pas affichée.
+var ENS_NOMS_OUTILS = { atelier: 'Évaluations', forge: 'Leçons', cabinet: 'Cabinet', forge_primaire: 'Leçons', cabinet_primaire: 'Cabinet' };
+var ENS_OUTILS_PAR_CATEGORIE = { professeur: ['atelier', 'forge', 'cabinet'], instituteur: ['forge_primaire', 'cabinet_primaire'] };
+
+function memoriserInfosEnseignant(data) {
+    try {
+        if (!data) return;
+        var infos = JSON.parse(localStorage.getItem('eduka_ens_infos') || '{}');
+        // Remplacement complet : un autre code (ex. Créateur, sans prénom) ne doit pas garder le prénom du précédent.
+        infos = { prenom: data.prenom ? String(data.prenom).slice(0, 40) : '', date_fin: data.date_fin ? String(data.date_fin).slice(0, 10) : '' };
+        localStorage.setItem('eduka_ens_infos', JSON.stringify(infos));
+    } catch (e) { /* esthétique seulement */ }
+}
+
+function majBandeauEnseignant(categorie) {
+    try {
+        var groupe = document.getElementById(categorie === 'instituteur' ? 'sas-ateliers-instituteur' : 'sas-ateliers-professeur');
+        if (!groupe) return;
+        var ancien = document.getElementById('ens-bandeau');
+        if (ancien) ancien.remove();
+        var infos = {}, dernier = null;
+        try { infos = JSON.parse(localStorage.getItem('eduka_ens_infos') || '{}') || {}; } catch (e) { infos = {}; }
+        try { dernier = JSON.parse(localStorage.getItem('eduka_ens_dernier') || 'null'); } catch (e) { dernier = null; }
+
+        var bandeau = document.createElement('div');
+        bandeau.id = 'ens-bandeau';
+        bandeau.className = 'ens-bandeau';
+
+        var gauche = document.createElement('div');
+        gauche.className = 'ens-bandeau-texte';
+        var role = document.createElement('p');
+        role.className = 'ens-bandeau-role';
+        role.textContent = categorie === 'instituteur' ? 'Instituteur, primaire' : 'Professeur, secondaire';
+        var salut = document.createElement('h2');
+        salut.className = 'ens-bandeau-salut';
+        salut.textContent = infos.prenom ? 'Bonjour, ' + infos.prenom : 'Bonjour';
+        gauche.appendChild(role);
+        gauche.appendChild(salut);
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(infos.date_fin || '');
+        if (m && Number(m[1]) < 2090) {
+            var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+            var acces = document.createElement('p');
+            acces.className = 'ens-bandeau-acces';
+            acces.textContent = 'Votre accès est actif jusqu’au ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) + '.';
+            gauche.appendChild(acces);
+        }
+        bandeau.appendChild(gauche);
+
+        var permis = ENS_OUTILS_PAR_CATEGORIE[categorie === 'instituteur' ? 'instituteur' : 'professeur'];
+        if (dernier && dernier.outil && permis.indexOf(dernier.outil) !== -1) {
+            var carte = document.createElement('div');
+            carte.className = 'ens-bandeau-carte';
+            var etiquette = document.createElement('p');
+            etiquette.className = 'ens-bandeau-etiquette';
+            etiquette.textContent = 'Dernier atelier utilisé';
+            var nom = document.createElement('p');
+            nom.className = 'ens-bandeau-outil';
+            nom.textContent = ENS_NOMS_OUTILS[dernier.outil] || '';
+            var bouton = document.createElement('button');
+            bouton.type = 'button';
+            bouton.className = 'ens-bandeau-bouton';
+            bouton.textContent = 'Reprendre';
+            bouton.addEventListener('click', function () { switchTeacherTool(dernier.outil); });
+            carte.appendChild(etiquette);
+            carte.appendChild(nom);
+            carte.appendChild(bouton);
+            bandeau.appendChild(carte);
+        }
+        groupe.insertBefore(bandeau, groupe.firstChild);
+    } catch (e) { /* esthétique seulement */ }
+}
+
+function afficherSasAteliersEnseignant(categorie) {
+    ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].forEach((id) => {
+        const conteneur = document.getElementById(`container-${id}-custom`);
+        if (conteneur) conteneur.classList.remove('active');
+        const onglet = document.getElementById(`tab-${id}`);
+        if (onglet) onglet.classList.remove('active');
+    });
+    const sas = document.getElementById('teacher-atelier-chooser');
+    const prof = document.getElementById('sas-ateliers-professeur');
+    const inst = document.getElementById('sas-ateliers-instituteur');
+    if (prof) prof.style.display = categorie === 'instituteur' ? 'none' : 'flex';
+    if (inst) inst.style.display = categorie === 'instituteur' ? 'flex' : 'none';
+    majBandeauEnseignant(categorie);
+    if (sas) sas.style.display = 'flex';
+    if (typeof majMenuOutilsEnseignant === 'function') majMenuOutilsEnseignant();
+    if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('choix_atelier');
+}
+
+function masquerSasAteliersEnseignant() {
+    const sas = document.getElementById('teacher-atelier-chooser');
+    if (sas) sas.style.display = 'none';
+}
+
+function retourChoixCategorieEnseignant() {
+    masquerSasAteliersEnseignant();
+    document.getElementById('teacher-tabs-container').style.display = 'none';
+    ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].forEach((id) => {
+        const conteneur = document.getElementById(`container-${id}-custom`);
+        if (conteneur) conteneur.classList.remove('active');
+    });
+    document.getElementById('teacher-categorie-chooser').style.display = 'flex';
+}
+
+// =======================================================================
+// ❖ LA MODALE D'ACCÈS ESPACE ENSEIGNANT (CODE OPTIONNEL) ❖
+// =======================================================================
+function ouvrirModaleAccesEnseignant() {
+    const feedback = document.getElementById('modal-feedback-enseignant');
+    if (feedback) feedback.textContent = '';
+    const champ = document.getElementById('matricule-enseignant-input');
+    if (champ) champ.value = '';
+    document.getElementById('enseignant-code-modal').classList.add('active');
+}
+
+function fermerModaleAccesEnseignant() {
+    document.getElementById('enseignant-code-modal').classList.remove('active');
+}
+
+function handleMatriculeEnseignantKeyPress(event) {
+    if (event.key === 'Enter') {
+        verifyMatriculeEnseignant();
+    }
+}
+
+async function verifyMatriculeEnseignant() {
+    const matricule = document.getElementById('matricule-enseignant-input').value.trim();
+    const feedback = document.getElementById('modal-feedback-enseignant');
+
+    if (!matricule) {
+        feedback.textContent = "Le Code d'accès ne peut être vide.";
+        feedback.style.color = "#F87171";
+        return;
+    }
+
+    feedback.textContent = "Vérification de votre Code en cours...";
+    feedback.style.color = "#60A5FA";
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sceau: matricule, espace_cible: 'enseignant' })
+        });
+        const data = await response.json();
+
+        if (data.valide === true) {
+            feedback.textContent = data.message;
+            feedback.style.color = "#10B981";
+            localStorage.setItem('eduka_sceau_enseignant', matricule); memoriserInfosEnseignant(data); try { if (typeof chargerFonctionsActives === 'function') chargerFonctionsActives(); } catch (e) { /* menu : sans gravité */ }
+
+            setTimeout(() => {
+                fermerModaleAccesEnseignant();
+                entrerDansEspaceEnseignant();
+            }, 700);
+        } else {
+            feedback.textContent = data.message || "Code invalide.";
+            feedback.style.color = "#F87171";
+        }
+    } catch (error) {
+        console.error("Erreur de vérification enseignant", error);
+        feedback.textContent = "Le réseau est instable. Impossible de vérifier l'accès.";
+        feedback.style.color = "#F87171";
+    }
+}
+
+// ❖ continuerEnFreemiumEnseignant() a été retirée le 28/08/2026 : l'essai
+// gratuit sans code de l'Espace Enseignant a été supprimé (décision de
+// Constant, déconseillé sur le plan commercial). Le bouton correspondant
+// n'existe plus dans index.html -- seule la voie du Code d'accès
+// (verifyMatriculeEnseignant) mène désormais à entrerDansEspaceEnseignant().
+// Le palier gratuit de l'Espace de Préparation et des Ateliers de Maîtrise
+// côté élève, lui, reste inchangé (voir sendSasMessage / verifier_freemium
+// côté serveur pour ces deux-là).
+
+function fermerVestibule() {
+    document.getElementById('discipline-modal').classList.remove('active');
+}
+
+// =======================================================================
+// ❖ LE PLANIFICATEUR DE RÉVISION (PHOTO D'EMPLOI DU TEMPS) ❖
+// =======================================================================
+function ouvrirPlanningModal() {
+    // ❖ Fonctionnalité réservée aux porteurs de Sceau : sans matricule
+    // stable, le planning ne peut être rattaché à personne de façon
+    // durable (contrairement à une adresse IP, qui change).
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+    if (!sceau) {
+        openPremiumModal();
+        return;
+    }
+    const feedback = document.getElementById('planning-feedback');
+    if (feedback) { feedback.textContent = ""; }
+    document.getElementById('planning-modal').classList.add('active');
+}
+
+function fermerPlanningModal() {
+    document.getElementById('planning-modal').classList.remove('active');
+    const zoneRel = document.getElementById('planning-relecture');
+    if (zoneRel) zoneRel.style.display = 'none';
+}
+
+// =======================================================================
+// ❖ L'ESPACE PARENTS (CHOIX EDT TALLY / EDT PROGRESSION) ❖
+// =======================================================================
+function ouvrirParentsModal() {
+    parentAboEtape(1); // ❖ toujours repartir de l'étape 1 à l'ouverture
+    document.getElementById('parents-modal').classList.add('active');
+}
+
+function fermerParentsModal() {
+    document.getElementById('parents-modal').classList.remove('active');
+}
+
+function ouvrirEnseignantAboModal() {
+    enseignantAboEtape(1); // ❖ toujours repartir de l'étape 1 à l'ouverture
+    document.getElementById('enseignant-abo-modal').classList.add('active');
+}
+
+function fermerEnseignantAboModal() {
+    document.getElementById('enseignant-abo-modal').classList.remove('active');
+}
+
+// ❖ NAVIGATION PAR ÉTAPES DES MODALES D'ABONNEMENT (25/09/2026) ❖
+// Un seul modal par public, contenu remplacé par JS plutôt que d'empiler
+// toutes les étapes sur le même écran (l'ancienne mise en page mélangeait
+// WhatsApp + formulaire(s) d'un coup, ce qui perdait l'utilisateur — voir
+// CLAUDE.md, section dédiée). Petit helper générique partagé par les deux
+// modales : masque tous les blocs .abo-etape sauf celui visé, met à jour
+// l'indicateur "ÉTAPE X / Y".
+function afficherEtapeAbo(idsEtapes, idCible, texteIndicateur, idIndicateur) {
+    idsEtapes.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (id === idCible) ? '' : 'none';
+    });
+    const indicateur = document.getElementById(idIndicateur);
+    if (indicateur) indicateur.textContent = texteIndicateur;
+}
+
+function enseignantAboEtape(etape) {
+    const IDS = ['enseignant-abo-etape-1', 'enseignant-abo-etape-2'];
+    const cible = etape === 2 ? 'enseignant-abo-etape-2' : 'enseignant-abo-etape-1';
+    afficherEtapeAbo(IDS, cible, `ÉTAPE ${etape === 2 ? 2 : 1} / 2`, 'enseignant-abo-indicateur');
+}
+
+// ❖ Le fork parent (étape 2) mène vers l'une de deux étapes 3 distinctes
+// (progression/tally) plutôt qu'un simple numéro — même mécanique, cible
+// nommée directement par la méthode choisie.
+function parentAboEtape(etape) {
+    const IDS = ['parent-abo-etape-1', 'parent-abo-etape-2', 'parent-abo-etape-progression', 'parent-abo-etape-tally'];
+    let cible = 'parent-abo-etape-1';
+    let texte = 'ÉTAPE 1 / 3';
+    if (etape === 2) {
+        cible = 'parent-abo-etape-2';
+        texte = 'ÉTAPE 2 / 3';
+    } else if (etape === 'progression') {
+        cible = 'parent-abo-etape-progression';
+        texte = 'ÉTAPE 3 / 3';
+    } else if (etape === 'tally') {
+        cible = 'parent-abo-etape-tally';
+        texte = 'ÉTAPE 3 / 3';
+    }
+    afficherEtapeAbo(IDS, cible, texte, 'parent-abo-indicateur');
+}
+
+// ❖ EDT Progression, avant abonnement : la photo de l'emploi du temps est
+// envoyée AVANT le paiement (aucun Sceau/matricule n'existe encore), donc
+// on identifie la famille par son numéro WhatsApp. Une fois la photo lue
+// avec succès, on bascule directement vers la page de paiement Paystack ;
+// le webhook de paiement se chargera de récupérer ce planning dès que le
+// nouveau Sceau sera généré.
+const LIEN_PAIEMENT_PAYSTACK = "https://paystack.shop/pay/edukatchat-eleves-parents";
+
+// ❖ Caisse EdukaTchat (08/10/2026) : le serveur calcule le montant et appelle
+// Paystack (aucun e-mail demandé) ; on redirige vers l'URL renvoyée.
+// ❖ 24/11/2026 : PROGRAMME RELAIS. Le lien edukatchat.org/?ref=REL-XXX01 mémorise
+// le code 60 jours sur l'appareil ; un champ facultatif permet aussi de le saisir.
+// Un code absent ou faux ne bloque jamais le paiement (le serveur l'ignore).
+(function () {
+    try {
+        const p = new URLSearchParams(location.search).get('ref');
+        const c = (p || '').trim().toUpperCase();
+        if (/^REL-[A-Z0-9]{3,10}$/.test(c)) localStorage.setItem('eduka_ref', JSON.stringify({ c: c, t: Date.now() }));
+    } catch (e) { /* stockage indisponible : le champ manuel reste possible */ }
+})();
+function codeRelaisMemorise() {
+    try {
+        const o = JSON.parse(localStorage.getItem('eduka_ref') || 'null');
+        if (o && o.c && Date.now() - o.t < 60 * 86400000) return o.c;
+    } catch (e) {}
+    return '';
+}
+function preAboPrechargerCodeRelais() {
+    const champ = document.getElementById('pre-abo-code-relais');
+    if (champ && !champ.value) { const m = codeRelaisMemorise(); if (m) { champ.value = m; preAboVerifierCodeRelais(); } }
+}
+document.addEventListener('DOMContentLoaded', preAboPrechargerCodeRelais);
+async function preAboVerifierCodeRelais() {
+    const champ = document.getElementById('pre-abo-code-relais');
+    const msg = document.getElementById('pre-abo-code-relais-msg');
+    if (!champ || !msg) return;
+    const code = champ.value.trim().toUpperCase();
+    if (!code) { msg.textContent = ''; return; }
+    try {
+        const tel = (document.getElementById('pre-abo-telephone') || {}).value || '';
+        const r = await fetch('https://api.edukatchat.org/api/relais/verifier', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code, telephone: tel })
+        });
+        const d = await r.json();
+        if (d.status !== 'success') { msg.textContent = ''; return; }
+        msg.textContent = d.valide ? '✓ Code relais reconnu.' : 'Code non reconnu : vous pouvez continuer sans code.';
+        msg.style.color = d.valide ? '#059669' : '#B45309';
+    } catch (e) { msg.textContent = ''; }
+}
+document.addEventListener('change', function (ev) {
+    if (ev.target && ev.target.id === 'pre-abo-code-relais') preAboVerifierCodeRelais();
+});
+
+async function ouvrirPaiementAbonnement(donnees, feedback, repli) {
+    if (!donnees.code_relais) {
+        const champ = document.getElementById('pre-abo-code-relais');
+        const code = ((champ && champ.value) || '').trim().toUpperCase() || codeRelaisMemorise();
+        if (code) donnees.code_relais = code;
+    }
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/paiement/initialiser', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(donnees)
+        });
+        const d = await r.json();
+        if (d.status === 'success' && d.url) {
+            window.location.href = d.url;
+            return true;
+        }
+        // ❖ 12/11/2026 : si seul le calcul du tarif famille échoue (lecture du registre), on ne bloque
+        // pas le parent : on relance le paiement au tarif normal d'un enfant.
+        if (repli && /calculer le tarif/i.test(d.message || '')) {
+            return await ouvrirPaiementAbonnement(repli, feedback);
+        }
+        feedback.textContent = d.message || "Une erreur est survenue.";
+        feedback.style.color = "#F87171";
+    } catch (e) {
+        feedback.textContent = "Le réseau est instable. Réessayez dans un instant.";
+        feedback.style.color = "#F87171";
+    }
+    return false;
+}
+
+async function payerAbonnementEnseignant() {
+    const feedback = document.getElementById('ens-abo-feedback');
+    const bouton = document.getElementById('btn-ens-abonnement');
+    const prenom = document.getElementById('ens-abo-prenom').value.trim();
+    const nom = document.getElementById('ens-abo-nom').value.trim();
+    const telephone = document.getElementById('ens-abo-telephone').value.trim();
+    const duree = document.getElementById('ens-abo-duree').value;
+    if (!prenom || !nom || !telephone) {
+        feedback.textContent = "Prénom, nom et numéro WhatsApp sont requis.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+    bouton.disabled = true;
+    feedback.textContent = "Ouverture du paiement...";
+    feedback.style.color = "#60A5FA";
+    const ok = await ouvrirPaiementAbonnement({ profil: 'enseignant', duree, prenom, nom, telephone }, feedback);
+    if (!ok) bouton.disabled = false;
+}
+
+// =======================================================================
+// ❖ PAIEMENT FAMILLE : PLUSIEURS ENFANTS (12/11/2026, étape 4 du plan fratrie) ❖
+// Mode « Un enfant » (comportement d'avant, avec tarif famille automatique si le numéro a déjà
+// un enfant abonné) ou « Plusieurs enfants » (2 à 5, un seul paiement, un code par enfant).
+// Photo d'emploi du temps : obligatoire pour le 1er enfant (lue avant paiement), les autres
+// l'ajoutent plus tard depuis leur propre espace. Les prix ci-dessous sont un MIROIR de
+// REMISE_FRATRIE_POURCENT du serveur (gateway/main.py) : à tenir à jour ensemble.
+// =======================================================================
+let preAboMode = 'seul';
+const PRIX_FRATRIE_FCFA = [5000, 4250, 3750]; // 1er, 2e, 3e enfant et suivants
+const PRE_ABO_MAX_ENFANTS = 5;
+const STYLE_MODE_ACTIF = 'flex:1; padding:9px 6px; border-radius:8px; font-weight:700; font-size:0.82em; cursor:pointer; background:#1D4ED8; color:#fff; border:1px solid #1E3A8A;';
+const STYLE_MODE_INACTIF = 'flex:1; padding:9px 6px; border-radius:8px; font-weight:700; font-size:0.82em; cursor:pointer; background:#F1F5F9; color:#334155; border:1px solid #CBD5E1;';
+
+function preAboChoisirMode(mode) {
+    preAboMode = (mode === 'famille') ? 'famille' : 'seul';
+    const fam = preAboMode === 'famille';
+    const el = (id) => document.getElementById(id);
+    if (el('btn-mode-seul')) el('btn-mode-seul').style.cssText = fam ? STYLE_MODE_INACTIF : STYLE_MODE_ACTIF;
+    if (el('btn-mode-famille')) el('btn-mode-famille').style.cssText = fam ? STYLE_MODE_ACTIF : STYLE_MODE_INACTIF;
+    if (el('pre-abo-famille')) el('pre-abo-famille').style.display = fam ? 'block' : 'none';
+    if (el('pre-abo-duree')) el('pre-abo-duree').style.display = fam ? 'none' : '';
+    if (el('pre-abo-note-tarif')) el('pre-abo-note-tarif').style.display = fam ? 'none' : '';
+    if (el('pre-abo-nom-eleve')) el('pre-abo-nom-eleve').placeholder = fam ? "Nom et prénoms du 1er enfant" : "Nom et prénoms de l'élève";
+    if (el('pre-abo-label-photo')) el('pre-abo-label-photo').textContent = fam
+        ? "📸 Photo de l'emploi du temps du 1er enfant (obligatoire). Pour les autres enfants, elle s'ajoute plus tard depuis leur espace."
+        : "📸 Photo de l'emploi du temps de l'élève (obligatoire)";
+    if (fam && document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-sup').length === 0) preAboAjouterEnfant();
+    preAboMajPrixFamille();
+    preAboPlanifierApercu();
+}
+
+function preAboNumeroterEnfants() {
+    document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-nom').forEach((inp, i) => {
+        inp.placeholder = 'Nom et prénoms du ' + (i + 2) + 'ᵉ enfant';
+    });
+    const bouton = document.getElementById('btn-pre-abo-ajout-enfant');
+    const n = document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-sup').length;
+    if (bouton) bouton.style.display = (n + 1 >= PRE_ABO_MAX_ENFANTS) ? 'none' : '';
+}
+
+function preAboAjouterEnfant() {
+    const zone = document.getElementById('pre-abo-enfants-sup');
+    if (!zone) return;
+    if (zone.querySelectorAll('.pre-abo-enfant-sup').length + 1 >= PRE_ABO_MAX_ENFANTS) return;
+    const st = 'padding:8px; border-radius:5px; border:1px solid #D1D5DB; font-size:0.85em;';
+    zone.insertAdjacentHTML('beforeend',
+        '<div class="pre-abo-enfant-sup" style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">' +
+        '<input type="text" class="pre-abo-enfant-nom" placeholder="Nom et prénoms" style="' + st + ' flex:1; min-width:0;">' +
+        '<button type="button" onclick="preAboSupprimerEnfant(this)" title="Retirer cet enfant" style="background:#FEE2E2; color:#B91C1C; border:none; border-radius:6px; padding:7px 10px; cursor:pointer;">✕</button>' +
+        '</div>');
+    preAboNumeroterEnfants();
+    preAboMajPrixFamille();
+}
+
+function preAboSupprimerEnfant(bouton) {
+    const ligne = bouton.closest('.pre-abo-enfant-sup');
+    if (ligne) ligne.remove();
+    preAboNumeroterEnfants();
+    preAboMajPrixFamille();
+}
+
+function preAboMajPrixFamille() {
+    const p = document.getElementById('pre-abo-prix-famille');
+    if (!p) return;
+    const n = 1 + document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-sup').length;
+    const prix = [];
+    for (let i = 0; i < n; i++) prix.push(PRIX_FRATRIE_FCFA[Math.min(i, PRIX_FRATRIE_FCFA.length - 1)]);
+    const total = prix.reduce((s, x) => s + x, 0);
+    const f = (x) => x.toLocaleString('fr-FR').replace(/ /g, ' ');
+    preAboPlanifierApercu();
+    p.textContent = 'Total estimé : ' + f(total) + ' FCFA pour ' + n + ' enfant' + (n > 1 ? 's' : '') + ' (' + prix.map(f).join(' + ') + ')';
+}
+
+// ❖ 12/11/2026 : aperçu du VRAI tarif (serveur, lecture seule) dès que le numéro et le nom sont saisis.
+// En cas d'erreur ou de numéro incomplet, on n'affiche rien (le prix de base reste visible).
+let preAboApercuMinuteur = null;
+let preAboApercuSeq = 0;
+function preAboPlanifierApercu() {
+    clearTimeout(preAboApercuMinuteur);
+    preAboApercuMinuteur = setTimeout(preAboApercuTarif, 700);
+}
+async function preAboApercuTarif() {
+    const zone = document.getElementById('pre-abo-prix-reel');
+    const zoneFam = document.getElementById('pre-abo-prix-famille');
+    const tel = (document.getElementById('pre-abo-telephone') || {}).value || '';
+    const premier = ((document.getElementById('pre-abo-nom-eleve') || {}).value || '').trim();
+    const fam = preAboMode === 'famille';
+    const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
+    if (zone) zone.style.display = 'none';
+    if (tel.replace(/\D/g, '').length < 10 || !premier || (!fam && duree !== 'mensuel')) { return; }
+    const noms = [premier];
+    if (fam) document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-nom').forEach(i => { if (i.value.trim()) noms.push(i.value.trim()); });
+    const seq = ++preAboApercuSeq;
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/paiement/apercu_tarif', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telephone: tel, noms: noms })
+        });
+        const d = await r.json();
+        if (seq !== preAboApercuSeq || d.status !== 'success' || !Array.isArray(d.enfants) || !d.enfants.length) return;
+        const f = (x) => x.toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ');
+        if (fam) {
+            if (zoneFam && d.enfants.length === noms.length) zoneFam.textContent = 'Total à payer : ' + f(d.total) + ' FCFA pour ' + noms.length + ' enfants (' + d.enfants.map(e => f(e.montant)).join(' + ') + ')';
+        } else if (zone) {
+            const e = d.enfants[0];
+            const rg = e.rang === 1 ? '' : ' (' + e.rang + (e.rang === 2 ? 'ᵉ' : 'ᵉ') + ' enfant du numéro' + (e.rang === 2 ? ', −15 %' : ', −25 %') + ')';
+            zone.textContent = 'Tarif pour cet élève : ' + f(e.montant) + ' FCFA' + rg;
+            zone.style.display = 'block';
+        }
+    } catch (err) { /* silencieux : le prix de base reste affiché */ }
+}
+document.addEventListener('input', function (ev) {
+    const t = ev.target;
+    if (t && (t.id === 'pre-abo-telephone' || t.id === 'pre-abo-nom-eleve' || (t.classList && t.classList.contains('pre-abo-enfant-nom')))) preAboPlanifierApercu();
+});
+document.addEventListener('change', function (ev) {
+    if (ev.target && ev.target.id === 'pre-abo-duree') preAboPlanifierApercu();
+});
+
+function preAboNomNormalise(s) {
+    return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' ');
+}
+
+// Renvoie { enfants:[{prenom, nom}], erreur } ; le 1er enfant est le champ « nom de l'élève ».
+function preAboEnfantsFamille(nomPremier) {
+    const noms = [String(nomPremier || '').trim()];
+    document.querySelectorAll('#pre-abo-enfants-sup .pre-abo-enfant-nom').forEach(i => noms.push(i.value.trim()));
+    if (noms.some(n => !n)) return { enfants: [], erreur: "Renseignez le nom de chaque enfant, ou retirez la ligne vide avec ✕." };
+    if (noms.length < 2) return { enfants: [], erreur: "Ajoutez au moins un deuxième enfant, ou choisissez « Un enfant »." };
+    if (noms.length > PRE_ABO_MAX_ENFANTS) return { enfants: [], erreur: "Maximum " + PRE_ABO_MAX_ENFANTS + " enfants par paiement famille." };
+    const cles = noms.map(preAboNomNormalise);
+    if (new Set(cles).size < cles.length) return { enfants: [], erreur: "Deux enfants ont le même nom : ajoutez le nom de famille pour les différencier." };
+    const enfants = noms.map(n => { const m = n.split(/\s+/); return { prenom: m[0], nom: m.slice(1).join(' ') }; });
+    return { enfants: enfants, erreur: null };
+}
+
+async function preAboOuvrirPaiement(nomEleve, telephone, feedback) {
+    if (preAboMode === 'famille') {
+        const rf = preAboEnfantsFamille(nomEleve);
+        if (rf.erreur) { feedback.textContent = rf.erreur; feedback.style.color = '#F59E0B'; return false; }
+        // Le serveur exige aussi prénom/nom au premier niveau (ceux du 1er enfant) avant d'examiner la liste.
+        return await ouvrirPaiementAbonnement({ profil: 'eleve', duree: 'mensuel', fratrie: true, telephone: telephone, prenom: rf.enfants[0].prenom, nom: rf.enfants[0].nom || rf.enfants[0].prenom, enfants: rf.enfants }, feedback);
+    }
+    const mots = nomEleve.split(/\s+/);
+    const duree = (document.getElementById('pre-abo-duree') || {}).value || 'mensuel';
+    const donnees = { profil: 'eleve', duree: duree, prenom: mots[0], nom: mots.slice(1).join(' ') || mots[0], telephone: telephone };
+    if (duree === 'mensuel') {
+        // Tarif famille automatique si ce numéro a déjà un enfant abonné (calcul côté serveur).
+        const repli = Object.assign({}, donnees);
+        return await ouvrirPaiementAbonnement(Object.assign({}, donnees, { fratrie: true }), feedback, repli);
+    }
+    return await ouvrirPaiementAbonnement(donnees, feedback);
+}
+
+// ❖ RELECTURE DU PLANNING PAR LE PARENT AVANT PAIEMENT (27/10/2026) ❖
+function preAboAfficherRelecture(creneaux) { relectureAfficher('pre-abo', creneaux); }
+function preAboAjouterLigne() { relectureAjouter('pre-abo'); }
+function preAboReprendrePhoto() {
+    const zone = document.getElementById('pre-abo-relecture');
+    if (zone) zone.style.display = 'none';
+    const input = document.getElementById('pre-abo-photo-input');
+    if (input) input.value = '';
+    const feedback = document.getElementById('pre-abo-feedback');
+    if (feedback) { feedback.textContent = 'Choisissez une autre photo, plus nette si possible.'; feedback.style.color = '#F59E0B'; }
+}
+async function preAboValiderEtPayer() {
+    const telephone = document.getElementById('pre-abo-telephone').value.trim();
+    const nomEleve = document.getElementById('pre-abo-nom-eleve').value.trim();
+    const feedback = document.getElementById('pre-abo-feedback');
+    const bouton = document.getElementById('btn-pre-abo-valider');
+    const creneaux = Array.from(document.querySelectorAll('#pre-abo-lignes .planning-ligne')).map(l => ({
+        jour: l.querySelector('.pl-jour').value,
+        heure_debut: l.querySelector('.pl-debut').value,
+        heure_fin: l.querySelector('.pl-fin').value,
+        matiere: l.querySelector('.pl-matiere').value.trim()
+    })).filter(c => c.matiere);
+    if (!creneaux.length) {
+        feedback.textContent = "Ajoutez au moins un cours avant de continuer.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+    if (preAboMode === 'famille') {
+        const rf = preAboEnfantsFamille(nomEleve);
+        if (rf.erreur) { feedback.textContent = rf.erreur; feedback.style.color = "#F59E0B"; return; }
+    }
+    if (bouton) bouton.disabled = true;
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/planning/pre_abonnement_valider', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telephone, nom_eleve: nomEleve, creneaux })
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            feedback.textContent = "✔ Emploi du temps validé. Ouverture du paiement...";
+            feedback.style.color = "#10B981";
+            const ok = await preAboOuvrirPaiement(nomEleve, telephone, feedback);
+            if (!ok && bouton) bouton.disabled = false;
+        } else {
+            feedback.textContent = data.message || 'Une erreur est survenue.';
+            feedback.style.color = '#F87171';
+            if (bouton) bouton.disabled = false;
+        }
+    } catch (err) {
+        feedback.textContent = 'Le réseau est instable. Réessayez dans un instant.';
+        feedback.style.color = '#F87171';
+        if (bouton) bouton.disabled = false;
+    }
+}
+
+async function envoyerPhotoPreAbonnement() {
+    const telephone = document.getElementById('pre-abo-telephone').value.trim();
+    const nomEleve = document.getElementById('pre-abo-nom-eleve').value.trim();
+    const inputFichier = document.getElementById('pre-abo-photo-input');
+    const feedback = document.getElementById('pre-abo-feedback');
+    const bouton = document.getElementById('btn-pre-abonnement');
+
+    if (!telephone) {
+        feedback.textContent = "Le numéro WhatsApp du parent est requis.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+    if (!nomEleve) {
+        feedback.textContent = "Le nom de l'élève est requis.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+    if (preAboMode === 'famille') {
+        const rf = preAboEnfantsFamille(nomEleve);
+        if (rf.erreur) { feedback.textContent = rf.erreur; feedback.style.color = "#F59E0B"; return; }
+    }
+    if (!inputFichier || !inputFichier.files || inputFichier.files.length === 0) {
+        feedback.textContent = "Choisis d'abord une photo.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+
+    bouton.disabled = true;
+    feedback.textContent = "Lecture de la photo en cours...";
+    feedback.style.color = "#60A5FA";
+
+    const formulaire = new FormData();
+    formulaire.append('telephone', telephone);
+    formulaire.append('nom_eleve', nomEleve);
+    formulaire.append('apercu', '1');
+    formulaire.append('photo', inputFichier.files[0]);
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/planning/pre_abonnement', {
+            method: 'POST',
+            body: formulaire
+        });
+        const data = await response.json();
+
+        if (data.status === 'apercu') {
+            feedback.textContent = data.message;
+            feedback.style.color = "#2563EB";
+            preAboAfficherRelecture(data.creneaux || []);
+            bouton.disabled = false;
+        } else if (data.status === 'success') {
+            feedback.textContent = `✔ ${data.message}`;
+            feedback.style.color = "#10B981";
+            feedback.textContent = "✔ Photo reçue. Ouverture du paiement...";
+            const ok = await preAboOuvrirPaiement(nomEleve, telephone, feedback);
+            if (!ok) bouton.disabled = false;
+        } else {
+            feedback.textContent = data.message || "Une erreur est survenue.";
+            feedback.style.color = (data.status === 'vide') ? "#F59E0B" : "#F87171";
+            bouton.disabled = false;
+        }
+    } catch (err) {
+        feedback.textContent = "Le réseau est instable. Réessaie dans un instant.";
+        feedback.style.color = "#F87171";
+        bouton.disabled = false;
+    }
+}
+
+// ❖ RELECTURE DU PLANNING AVANT ENREGISTREMENT (27/10/2026) ❖
+const PLANNING_JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+function planningEchapper(t) {
+    return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+function planningLigneHTML(c) {
+    const opts = PLANNING_JOURS.map(j => `<option value="${j}"${j === c.jour ? ' selected' : ''}>${j.charAt(0).toUpperCase() + j.slice(1)}</option>`).join('');
+    const st = 'padding:5px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.85em;';
+    return `<div class="planning-ligne" style="display:flex; gap:4px; align-items:center; margin-bottom:6px;">
+        <select class="pl-jour" style="${st}" onchange="relectureRefiltrer(this)">${opts}</select>
+        <input class="pl-debut" type="time" value="${planningEchapper(c.heure_debut)}" style="${st} width:92px;">
+        <input class="pl-fin" type="time" value="${planningEchapper(c.heure_fin)}" style="${st} width:92px;">
+        <input class="pl-matiere" type="text" value="${planningEchapper(c.matiere)}" placeholder="Matière" style="${st} flex:1; min-width:0;">
+        <button type="button" onclick="relectureSupprimer(this)" title="Supprimer" style="background:#FEE2E2; color:#B91C1C; border:none; border-radius:6px; padding:5px 8px; cursor:pointer;">✕</button>
+    </div>`;
+}
+// ❖ 27/10/2026 (v2) : relecture PAR JOUR (onglets) + photo envoyée affichée à côté, agrandissable.
+const RELECTURE_CONFIG = {
+    'planning': { zone: 'planning-relecture', lignes: 'planning-lignes', photo: 'planning-photo-input' },
+    'pre-abo': { zone: 'pre-abo-relecture', lignes: 'pre-abo-lignes', photo: 'pre-abo-photo-input' }
+};
+const relectureJourActif = {};
+const RELECTURE_ABREV = { lundi: 'Lun', mardi: 'Mar', mercredi: 'Mer', jeudi: 'Jeu', vendredi: 'Ven', samedi: 'Sam', dimanche: 'Dim' };
+function relectureAfficher(prefixe, creneaux) {
+    const cfg = RELECTURE_CONFIG[prefixe];
+    const zone = document.getElementById(cfg.zone);
+    const lignes = document.getElementById(cfg.lignes);
+    if (!zone || !lignes) return;
+    lignes.dataset.relecture = prefixe;
+    lignes.innerHTML = creneaux.map(planningLigneHTML).join('');
+    ['-apercu', '-onglets'].forEach(suf => { const e = document.getElementById(prefixe + suf); if (e) e.remove(); });
+    let htmlPhoto = '';
+    const input = document.getElementById(cfg.photo);
+    if (input && input.files && input.files[0]) {
+        const url = URL.createObjectURL(input.files[0]);
+        htmlPhoto = `<div id="${prefixe}-apercu" style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+            <img src="${url}" alt="Photo envoyée" onclick="relectureAgrandirPhoto(this.src)" style="width:84px; height:84px; object-fit:cover; border-radius:8px; border:2px solid #93C5FD; cursor:zoom-in;">
+            <span style="font-size:0.78em; color:#1E3A8A;">📷 Votre photo. <strong>Touchez-la pour l'agrandir</strong> et comparez avec la liste ci-dessous.</span>
+        </div>`;
+    }
+    lignes.insertAdjacentHTML('beforebegin', htmlPhoto + `<div id="${prefixe}-onglets" style="display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px;"></div>`);
+    const premier = PLANNING_JOURS.find(j => creneaux.some(c => c.jour === j)) || 'lundi';
+    relectureJourActif[prefixe] = premier;
+    relectureRefiltrer(prefixe);
+    zone.style.display = 'block';
+}
+function relectureRefiltrer(arg) {
+    const prefixe = (typeof arg === 'string') ? arg : (arg.closest('[data-relecture]') || {dataset: {}}).dataset.relecture;
+    if (!prefixe) return;
+    const lignes = document.getElementById(RELECTURE_CONFIG[prefixe].lignes);
+    const onglets = document.getElementById(prefixe + '-onglets');
+    if (!lignes || !onglets) return;
+    const rangs = Array.from(lignes.querySelectorAll('.planning-ligne'));
+    const compte = {};
+    rangs.forEach(r => { const j = r.querySelector('.pl-jour').value; compte[j] = (compte[j] || 0) + 1; });
+    const actif = relectureJourActif[prefixe] || 'lundi';
+    rangs.forEach(r => { r.style.display = (r.querySelector('.pl-jour').value === actif) ? 'flex' : 'none'; });
+    onglets.innerHTML = PLANNING_JOURS.filter(j => ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].includes(j) || compte[j]).map(j => {
+        const n = compte[j] || 0;
+        const style = (j === actif)
+            ? 'background:#1D4ED8; color:#fff; border:1px solid #1E3A8A;'
+            : 'background:#F1F5F9; color:#334155; border:1px solid #CBD5E1;';
+        return `<button type="button" onclick="relectureChoisirJour('${prefixe}','${j}')" style="${style} border-radius:8px; padding:5px 9px; font-size:0.8em; cursor:pointer; font-weight:600;">${RELECTURE_ABREV[j]} (${n})</button>`;
+    }).join('');
+}
+function relectureChoisirJour(prefixe, jour) {
+    relectureJourActif[prefixe] = jour;
+    relectureRefiltrer(prefixe);
+}
+function relectureSupprimer(bouton) {
+    const ligne = bouton.closest('.planning-ligne');
+    const zone = bouton.closest('[data-relecture]');
+    const prefixe = zone ? zone.dataset.relecture : null;
+    if (ligne) ligne.remove();
+    if (prefixe) relectureRefiltrer(prefixe);
+}
+function relectureAjouter(prefixe) {
+    const lignes = document.getElementById(RELECTURE_CONFIG[prefixe].lignes);
+    if (!lignes) return;
+    lignes.insertAdjacentHTML('beforeend', planningLigneHTML({ jour: relectureJourActif[prefixe] || 'lundi', heure_debut: '', heure_fin: '', matiere: '' }));
+    relectureRefiltrer(prefixe);
+}
+function relectureAgrandirPhoto(src) {
+    let o = document.getElementById('relecture-photo-overlay');
+    if (!o) {
+        o = document.createElement('div');
+        o.id = 'relecture-photo-overlay';
+        o.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2147483000; display:flex; align-items:center; justify-content:center; padding:12px; cursor:zoom-out;';
+        o.onclick = () => { o.style.display = 'none'; };
+        o.innerHTML = '<img alt="Photo agrandie" style="max-width:100%; max-height:100%; border-radius:8px;">';
+        document.body.appendChild(o);
+    }
+    o.querySelector('img').src = src;
+    o.style.display = 'flex';
+}
+function planningAfficherRelecture(creneaux) { relectureAfficher('planning', creneaux); }
+function planningAjouterLigne() { relectureAjouter('planning'); }
+function planningReprendrePhoto() {
+    const zone = document.getElementById('planning-relecture');
+    if (zone) zone.style.display = 'none';
+    const input = document.getElementById('planning-photo-input');
+    if (input) input.value = '';
+    const feedback = document.getElementById('planning-feedback');
+    if (feedback) { feedback.textContent = 'Choisis une autre photo, plus nette si possible.'; feedback.style.color = '#F59E0B'; }
+}
+async function planningValiderRelecture() {
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    const feedback = document.getElementById('planning-feedback');
+    const bouton = document.getElementById('btn-valider-planning');
+    const creneaux = Array.from(document.querySelectorAll('#planning-lignes .planning-ligne')).map(l => ({
+        jour: l.querySelector('.pl-jour').value,
+        heure_debut: l.querySelector('.pl-debut').value,
+        heure_fin: l.querySelector('.pl-fin').value,
+        matiere: l.querySelector('.pl-matiere').value.trim()
+    })).filter(c => c.matiere);
+    if (!sceau) { openPremiumModal(); return; }
+    if (!creneaux.length) {
+        feedback.textContent = "Ajoute au moins un cours avant d'enregistrer.";
+        feedback.style.color = '#F59E0B';
+        return;
+    }
+    if (bouton) bouton.disabled = true;
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/planning/valider', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau, creneaux })
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            feedback.textContent = `✔ ${data.message}`;
+            feedback.style.color = '#10B981';
+            const zone = document.getElementById('planning-relecture');
+            if (zone) zone.style.display = 'none';
+            setTimeout(fermerPlanningModal, 2000);
+        } else {
+            feedback.textContent = data.message || 'Une erreur est survenue.';
+            feedback.style.color = '#F87171';
+        }
+    } catch (err) {
+        feedback.textContent = 'Le réseau est instable. Réessaie dans un instant.';
+        feedback.style.color = '#F87171';
+    } finally {
+        if (bouton) bouton.disabled = false;
+    }
+}
+
+async function envoyerPhotoEmploiDuTemps() {
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+    const inputFichier = document.getElementById('planning-photo-input');
+    const feedback = document.getElementById('planning-feedback');
+    const bouton = document.getElementById('btn-envoyer-planning');
+
+    if (!sceau) {
+        openPremiumModal();
+        return;
+    }
+    if (!inputFichier || !inputFichier.files || inputFichier.files.length === 0) {
+        feedback.textContent = "Choisis d'abord une photo.";
+        feedback.style.color = "#F59E0B";
+        return;
+    }
+
+    bouton.disabled = true;
+    feedback.textContent = "Lecture de la photo en cours...";
+    feedback.style.color = "#60A5FA";
+
+    const formulaire = new FormData();
+    formulaire.append('matricule', sceau);
+    formulaire.append('apercu', '1');
+    formulaire.append('photo', inputFichier.files[0]);
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/planning/lire_photo', {
+            method: 'POST',
+            body: formulaire
+        });
+        const data = await response.json();
+
+        if (data.status === 'apercu') {
+            feedback.textContent = data.message;
+            feedback.style.color = "#2563EB";
+            planningAfficherRelecture(data.creneaux || []);
+        } else if (data.status === 'success') {
+            feedback.textContent = `✔ ${data.message}`;
+            feedback.style.color = "#10B981";
+            setTimeout(fermerPlanningModal, 2000);
+        } else {
+            // ❖ 'vide' (rien lu) et 'error' partagent le même traitement
+            // visuel côté élève — seule la couleur diffère légèrement.
+            feedback.textContent = data.message || "Une erreur est survenue.";
+            feedback.style.color = (data.status === 'vide') ? "#F59E0B" : "#F87171";
+        }
+    } catch (err) {
+        feedback.textContent = "Le réseau est instable. Réessaie dans un instant.";
+        feedback.style.color = "#F87171";
+    } finally {
+        bouton.disabled = false;
+    }
+}
+
+// ❖ Le profil (classe, méthode de révision, gestion du stress) est
+// mémorisé par appareil dès la première saisie -- inutile de reposer les
+// mêmes questions à chaque connexion, l'IA connaît déjà l'élève. Voir
+// validerProfilEtEntrer() (qui l'enregistre) et ouvrirModificationProfil()
+// (qui permet de le corriger plus tard).
+function obtenirProfilEleveSauvegarde() {
+    try {
+        const brut = localStorage.getItem('eduka_profil_eleve');
+        if (!brut) return null;
+        const profil = JSON.parse(brut);
+        if (profil && profil.classe && profil.methode_travail && profil.gestion_stress) {
+            return profil;
+        }
+    } catch (e) {
+        // Profil corrompu : on redemande simplement, sans planter.
+    }
+    return null;
+}
+
+// Année scolaire ivoirienne (rentrée mi-septembre) : "2026-2027" dès septembre.
+function anneeScolaireCouranteClient() {
+    const d = new Date();
+    const a = d.getFullYear();
+    return d.getMonth() >= 8 ? `${a}-${a + 1}` : `${a - 1}-${a}`;
+}
+
+function entrerDansLeChat(matiereChoisie) {
+    disciplineEnAttente = matiereChoisie;
+    fermerVestibule();
+
+    const profilSauvegarde = obtenirProfilEleveSauvegarde();
+    // ❖ 10/10/2026 : un profil enregistré une année scolaire passée (ou
+    // avant l'ajout de la date) peut porter une classe périmée -- un élève
+    // s'est vu traiter en 6e alors qu'il est en 2nde C. On redemande donc
+    // la classe une fois par année scolaire, champs pré-remplis.
+    if (profilSauvegarde && profilSauvegarde.annee_scolaire === anneeScolaireCouranteClient()) {
+        appliquerProfilEtEntrerDansEspace(profilSauvegarde.classe, profilSauvegarde.methode_travail, profilSauvegarde.gestion_stress);
+        return;
+    }
+
+    if (profilSauvegarde) {
+        const cc = document.getElementById('niveau-classe');
+        const cm = document.getElementById('habitudes-revision');
+        const cs = document.getElementById('gestion-stress');
+        if (cc) cc.value = profilSauvegarde.classe;
+        if (cm) cm.value = profilSauvegarde.methode_travail;
+        if (cs) cs.value = profilSauvegarde.gestion_stress;
+        if (typeof verifierFormulaire === 'function') verifierFormulaire();
+    }
+    document.getElementById('profil-modal').classList.add('active');
+}
+
+// ❖ Rouvre "Configuration de la session" pré-remplie avec le profil déjà
+// enregistré, pour le corriger (changement de classe en cours d'année,
+// etc.) sans que cela ne déclenche par effet de bord un changement de
+// matière : si un avatar est déjà actif, on le préserve explicitement.
+function ouvrirModificationProfil() {
+    const profil = obtenirProfilEleveSauvegarde();
+    const champClasse = document.getElementById('niveau-classe');
+    const champMethode = document.getElementById('habitudes-revision');
+    const champStress = document.getElementById('gestion-stress');
+    if (profil) {
+        if (champClasse) champClasse.value = profil.classe;
+        if (champMethode) champMethode.value = profil.methode_travail;
+        if (champStress) champStress.value = profil.gestion_stress;
+    }
+    if (typeof verifierFormulaire === 'function') verifierFormulaire();
+    if (avatarActif) {
+        disciplineEnAttente = avatarActif;
+    }
+    fermerVestibule();
+    document.getElementById('profil-modal').classList.add('active');
+}
+
+function validerProfilEtEntrer() {
+    document.getElementById('profil-modal').classList.remove('active');
+
+    const champClasse = document.getElementById('niveau-classe');
+    const classe = champClasse ? champClasse.value : "";
+    const methode = document.getElementById('habitudes-revision').value;
+    const stress = document.getElementById('gestion-stress').value;
+
+    localStorage.setItem('eduka_profil_eleve', JSON.stringify({
+        classe: classe,
+        methode_travail: methode,
+        gestion_stress: stress,
+        annee_scolaire: anneeScolaireCouranteClient()
+    }));
+
+    appliquerProfilEtEntrerDansEspace(classe, methode, stress);
+}
+
+function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
+    classeActive = classe;
+    methodeTravailActive = methode;
+    gestionStressActive = stress;
+
+    avatarActif = disciplineEnAttente;
+    mettreAJourBanniereMatiere();
+
+    document.getElementById('home-view').style.display = 'none';
+    document.getElementById('app-view').style.display = 'flex';
+
+    document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+    document.getElementById('container-sas-custom').classList.remove('active');
+    document.getElementById('container-atelier-custom').classList.remove('active');
+    document.getElementById('container-forge-custom').classList.remove('active');
+    document.getElementById('container-cabinet-custom').classList.remove('active');
+    document.getElementById('teacher-tabs-container').style.display = 'none';
+    masquerChooserCategorieEnseignant();
+
+    // ❖ 01/11/2026 : le bouton "Changer de matière" est désormais visible aussi dans l'Espace de
+    // Préparation freemium ("sas"), comme dans l'Académie ("eleve"). Le quota gratuit étant compté
+    // par appareil (et non par matière), changer de matière ne contourne aucune limite.
+    const btnMatieres = document.getElementById('btn-matieres');
+    if (btnMatieres) {
+        btnMatieres.style.display = (espaceActuel === 'eleve' || espaceActuel === 'sas') ? 'flex' : 'none';
+    }
+    if (typeof majRaccourcisEleve === 'function') majRaccourcisEleve();
+
+    if(espaceActuel === 'sas' || espaceActuel === 'eleve') {
+        document.getElementById('container-sas-custom').classList.add('active');
+
+        const chatHistory = document.getElementById('sas-chat-history');
+        chatHistory.innerHTML = '';
+
+        // ❖ Isolation par avatar : chaque matière a son propre historique,
+        // pour qu'une conversation de SVT ne se mélange jamais à celle de Français.
+        const historiqueSauvegarde = localStorage.getItem(`eduka_chat_sas_${avatarActif}`);
+
+        if (historiqueSauvegarde) {
+            chatHistory.innerHTML = historiqueSauvegarde;
+        } else {
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'message system-message';
+
+            // ❖ Le nom de la matière n'a plus besoin d'être répété ici :
+            // la bannière persistante au-dessus du fil (voir
+            // #banniere-matiere) le montre déjà en grand, en permanence.
+            // Ce message se concentre donc sur l'invitation à démarrer.
+            if (espaceActuel === 'eleve') {
+                welcomeDiv.innerHTML = `<span class="accueil-eleve"><span class="accueil-titre">👋 Bienvenue !</span><span class="accueil-texte">Sur quel chapitre ou quelle leçon travailles-tu en ce moment ? Écris-le-moi, ou choisis une porte d'entrée&nbsp;:</span><span class="accueil-liste"><button type="button" class="nom-bouton nb-principal" data-sug="Guide-moi">🧭 Guide-moi</button><span class="al-desc">on avance pas à pas, à partir de ton besoin</span><button type="button" class="nom-bouton nb-outil" data-sug="Réviser un chapitre">📖 Réviser un chapitre</button><span class="al-desc">je t'aide à revoir une leçon et à la retenir</span><button type="button" class="nom-bouton nb-vert" data-sug="Un exercice précis">✏️ Un exercice précis</button><span class="al-desc">on le résout ensemble, étape par étape</span></span></span>`;
+            } else {
+                welcomeDiv.innerHTML = `<span class="accueil-eleve"><span class="accueil-titre">👋 Bienvenue !</span><span class="accueil-texte">L'espace est prêt. Écris ta première question, ou choisis une porte d'entrée&nbsp;:</span><span class="accueil-liste"><button type="button" class="nom-bouton nb-principal" data-sug="Guide-moi">🧭 Guide-moi</button><span class="al-desc">on avance pas à pas, à partir de ton besoin</span><button type="button" class="nom-bouton nb-outil" data-sug="Réviser un chapitre">📖 Réviser un chapitre</button><span class="al-desc">je t'aide à revoir une leçon et à la retenir</span><button type="button" class="nom-bouton nb-vert" data-sug="Un exercice précis">✏️ Un exercice précis</button><span class="al-desc">on le résout ensemble, étape par étape</span></span></span>`;
+            }
+
+            chatHistory.appendChild(welcomeDiv);
+
+            // ❖ 01/11/2026 : plus d'amorçage automatique (économie de jetons) : le message d'accueil
+            // ci-dessus est figé et invite à utiliser les boutons rapides.
+            sasPremierEchangeEnAttente = false;
+        }
+
+        scrollToBottom('sas-chat-history');
+        if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto('sas');
+        const revisionLancee = !!window._reviserFiche;
+        try { lancerRevisionFiche(); } catch (e) { /* jamais bloquant */ }
+        const schemaLance = !!window._schemaEnAttente;
+        try { lancerQuestionSchema(); } catch (e) { /* jamais bloquant */ }
+        if (!revisionLancee && !schemaLance) { try { afficherRappelsRevision(); } catch (e) { /* jamais bloquant */ } }
+    }
+}
+
+function formaterNomMatiere(code) {
+    const noms = {
+        'maths': 'Mathématiques', 'physique': 'Physique-Chimie', 'svt': 'SVT',
+        'tice': 'TICE (Informatique)',
+        'francais': 'Français', 'philosophie': 'Philosophie', 'histoire_geo': 'Histoire-Géo',
+        'edhc': 'EDHC', 'anglais': 'Anglais', 'espagnol': 'Espagnol', 'allemand': 'Allemand',
+        'musique': 'Éducation Musicale', 'arts_plastiques': 'Arts Plastiques'
+    };
+    return noms[code] || 'cette discipline';
+}
+
+// ❖ Icônes vectorielles au trait fin (style feather-icons : stroke
+// currentColor, sans remplissage), en remplacement des émojis colorés
+// d'origine -- demande de Constant du 27/08/2026 pour un rendu plus
+// sobre et "intellectuel" du bandeau de discipline. currentColor permet
+// à chaque icône d'hériter automatiquement de la couleur du texte
+// (.banniere-matiere-icone), sans déclaration de couleur ici.
+const SVG_MATIERE_DEFAUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5c-2-1.3-4.5-2-7-2v14c2.5 0 5 .7 7 2 2-1.3 4.5-2 7-2V3c-2.5 0-5 .7-7 2Z"/><path d="M12 5v14"/></svg>';
+
+const ICONES_MATIERES = {
+    'maths': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 21 19 3 19Z"/><circle cx="12" cy="14" r="4"/></svg>',
+    'physique': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-3.5L14 9V3"/></svg>',
+    'svt': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20c9 0 14-5 14-14 0-1 0-2-.3-3C9 3.5 5 8 5 17c0 1 0 2 0 3Z"/><path d="M5 20c3-6 6-9 12-13"/></svg>',
+    'tice': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>',
+    'francais': SVG_MATIERE_DEFAUT,
+    'philosophie': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9c0-3 2.5-6 7-6s7 3 7 6"/><circle cx="8.5" cy="10" r="2.4"/><circle cx="15.5" cy="10" r="2.4"/><path d="M12 12.2 10.7 14h2.6Z"/><path d="M6 15c0 3 2.5 5 6 5s6-2 6-5"/></svg>',
+    'histoire_geo': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 2.5 4.5 5.8 4.5 9s-1.7 6.5-4.5 9c-2.8-2.5-4.5-5.8-4.5-9s1.7-6.5 4.5-9Z"/></svg>',
+    'edhc': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>',
+    'anglais': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4v-4H4Z"/><path d="M8 10h8M8 13h5"/></svg>',
+    'espagnol': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4v-4H4Z"/><path d="M8 10h8M8 13h5"/></svg>',
+    'allemand': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4v-4H4Z"/><path d="M8 10h8M8 13h5"/></svg>',
+    'musique': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="18" r="2.5"/><circle cx="16" cy="16" r="2.5"/><path d="M9.5 18V6l9-1.8V14"/></svg>',
+    'arts_plastiques': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 8 0 1 0 0 16c1 0 1.8-.7 1.8-1.6 0-.4-.2-.8-.4-1.1-.2-.3-.4-.6-.4-1 0-.7.6-1.3 1.3-1.3H16a5 4.5 0 0 0 5-4.5C21 5.9 17 3 12 3Z"/><circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.8" r="1" fill="currentColor" stroke="none"/></svg>'
+};
+
+function iconePourMatiere(code) {
+    return ICONES_MATIERES[code] || SVG_MATIERE_DEFAUT;
+}
+
+// ❖ Met à jour la bannière persistante d'identité de matière (voir
+// #banniere-matiere dans index.html). Appelée dès que avatarActif
+// change -- première entrée dans l'espace ou changement de matière en
+// cours de route via le bouton "📚" -- pour que le repère visuel reste
+// toujours synchronisé avec la matière réellement active.
+function mettreAJourBanniereMatiere() {
+    const nomEl = document.getElementById('banniere-matiere-nom');
+    const iconeEl = document.getElementById('banniere-matiere-icone');
+    if (nomEl) nomEl.textContent = formaterNomMatiere(avatarActif);
+    // ❖ innerHTML (pas textContent) : ces icônes sont du SVG, pas du texte
+    // brut. Toutes les valeurs viennent du dictionnaire fixe ci-dessus
+    // (jamais d'entrée utilisateur), donc aucun risque d'injection.
+    if (iconeEl) iconeEl.innerHTML = iconePourMatiere(avatarActif);
+}
+
+function switchTeacherTool(toolID) {
+    try { localStorage.setItem('eduka_ens_dernier', JSON.stringify({ outil: toolID, t: Date.now() })); } catch (e) { /* sans gravité */ }
+    masquerSasAteliersEnseignant();
+    document.getElementById('container-atelier-custom').classList.remove('active');
+    document.getElementById('container-forge-custom').classList.remove('active');
+    document.getElementById('container-cabinet-custom').classList.remove('active');
+    document.getElementById('container-forge_primaire-custom').classList.remove('active');
+    document.getElementById('container-cabinet_primaire-custom').classList.remove('active');
+
+    document.getElementById('tab-atelier').classList.remove('active');
+    document.getElementById('tab-forge').classList.remove('active');
+    document.getElementById('tab-cabinet').classList.remove('active');
+    document.getElementById('tab-forge_primaire').classList.remove('active');
+    document.getElementById('tab-cabinet_primaire').classList.remove('active');
+
+    if (toolID === 'atelier') {
+        document.getElementById('container-atelier-custom').classList.add('active');
+        document.getElementById('tab-atelier').classList.add('active');
+    } else if (toolID === 'forge') {
+        document.getElementById('container-forge-custom').classList.add('active');
+        document.getElementById('tab-forge').classList.add('active');
+    } else if (toolID === 'cabinet') {
+        document.getElementById('container-cabinet-custom').classList.add('active');
+        document.getElementById('tab-cabinet').classList.add('active');
+    } else if (toolID === 'forge_primaire') {
+        document.getElementById('container-forge_primaire-custom').classList.add('active');
+        document.getElementById('tab-forge_primaire').classList.add('active');
+    } else if (toolID === 'cabinet_primaire') {
+        document.getElementById('container-cabinet_primaire-custom').classList.add('active');
+        document.getElementById('tab-cabinet_primaire').classList.add('active');
+    }
+
+    scrollToBottom(`${toolID}-chat-history`);
+
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+        let activeContainer = document.querySelector('.custom-chat-container.active') || document.querySelector('iframe.active');
+        if (activeContainer && activeContainer.requestFullscreen) {
+            activeContainer.requestFullscreen();
+        } else if (activeContainer && activeContainer.webkitRequestFullscreen) {
+            activeContainer.webkitRequestFullscreen();
+        }
+    }
+
+    // ❖ 01/11/2026 : l'amorçage automatique (message caché envoyé à l'IA à la première visite) est
+    // SUPPRIMÉ pour économiser les jetons : chaque atelier affiche désormais un message d'accueil
+    // figé (voir index.html) qui invite à utiliser les boutons rapides / formulaires guidés.
+    if (typeof demarrerVisiteAuto === 'function') demarrerVisiteAuto(toolID);
+}
+
+function goHome() {
+    document.getElementById('app-view').style.display = 'none';
+    document.getElementById('home-view').style.display = 'flex';
+
+    document.querySelectorAll('iframe').forEach(frame => frame.classList.remove('active'));
+    document.getElementById('container-sas-custom').classList.remove('active');
+    document.getElementById('container-atelier-custom').classList.remove('active');
+    document.getElementById('container-forge-custom').classList.remove('active');
+    document.getElementById('container-cabinet-custom').classList.remove('active');
+    document.getElementById('teacher-tabs-container').style.display = 'none';
+    masquerChooserCategorieEnseignant();
+    const btnMatieresAccueil = document.getElementById('btn-matieres');
+    if (btnMatieresAccueil) btnMatieresAccueil.style.display = 'none';
+    if (typeof majRaccourcisEleve === 'function') majRaccourcisEleve();
+}
+
+// ❖ LE MENU DE NAVIGATION (remplace le simple bouton "Retour") : chaque
+// destination de l'accueil est déjà une fonction autonome (ouvertes
+// jusqu'ici uniquement depuis les cartes de l'accueil) -- on les réutilise
+// telles quelles, sans dupliquer leur logique. Volontairement identique
+// dans tous les espaces (pas de cloisonnement élève/enseignant) : les
+// espaces protégés (Académie, Espace Enseignant) restent de toute façon
+// filtrés par le code d'accès, et un enseignant curieux qui explore le Sas
+// n'est pas un problème -- plutôt un bon ambassadeur du projet.
+// ❖ MENU CONTEXTUEL (08/11/2026) ❖ Même liste d'éléments, rangée selon l'espace où l'on se trouve :
+// élève (Préparation / Académie), enseignant, ou ordre d'origine (visiteur sans espace choisi).
+// On ne fait que DÉPLACER les éléments existants (mêmes ids, mêmes actions) ; un groupe dont tous les
+// éléments sont masqués n'est pas affiché.
+const MENU_NAV_DISPOSITIONS = {
+    eleve: [
+        ['Mon parcours', ['sas', 'fiches', 'casier-bloc', 'salle-bloc', 'excellence-bloc']],
+        ['Ateliers', ['orateur', 'philo', 'sciences', 'elan']],
+        ['Orientation', ['eleve', 'boussole', 'boussole-univ']],
+        ['Autres espaces', ['enseignant', 'parents']],
+        ['', ['aide', 'avis', 'deconnexion-bloc']]
+    ],
+    enseignant: [
+        ['Mon travail', ['enseignant', 'seance-bloc', 'biblio-bloc', 'fiches']],
+        ['Ateliers', ['orateur', 'philo', 'sciences', 'elan']],
+        ['Orientation', ['eleve', 'boussole', 'boussole-univ']],
+        ['Autres espaces', ['sas', 'parents']],
+        ['', ['aide', 'avis', 'deconnexion-bloc']]
+    ]
+};
+// Raccourcis élèves (11/11/2026) : « Mon casier » et « Salle d'étude » en boutons visibles dans la barre d'outils,
+// à côté du thème et du plein écran (les enfants ne pensent pas toujours à ouvrir le menu). Ils suivent exactement
+// la même règle que les entrées du menu (blocs menu-nav-casier-bloc / menu-nav-salle-bloc : fonction ouverte par
+// le serveur, visibles aussi pour l'accès libre, la page explique alors « réservé aux abonnés ») et disparaissent
+// dans l'Espace Enseignant.
+function majRaccourcisEleve() {
+    try {
+        const enseignant = codeEnseignantPresent() || (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant');
+        // Les règles sont recalculées ici (et non lues dans le menu) : au retour du casier / de la salle, l'espace
+        // s'ouvre avant que le serveur ait répondu, et le menu n'est pas encore à jour (bug vu le 11/11/2026).
+        const regles = [['btn-raccourci-fiches', true, true], ['btn-raccourci-casier', true], ['btn-raccourci-salle', fonctionActive('salle')]];   // 3e valeur : aussi visible pour l'enseignant
+        regles.forEach(function (c) {
+            const bouton = document.getElementById(c[0]);
+            if (!bouton) return;
+            bouton.style.display = ((!enseignant || c[2]) && c[1]) ? 'flex' : 'none';
+        });
+    } catch (e) { /* la barre d'outils ne doit jamais gêner l'application */ }
+}
+document.addEventListener('fonctions-actives', function () { majRaccourcisEleve(); });
+
+function organiserMenuNavigation() {
+    try {
+        const panel = document.getElementById('menu-navigation-panel');
+        if (!panel) return;
+        if (!panel._ordreInitial) panel._ordreInitial = Array.from(panel.children);
+        const ctx = (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant') ? 'enseignant'
+            : ((typeof espaceActuel !== 'undefined' && (espaceActuel === 'sas' || espaceActuel === 'eleve')) ? 'eleve' : 'defaut');
+        const dispo = MENU_NAV_DISPOSITIONS[ctx];
+        panel.querySelectorAll('.sep-interne').forEach(function (s) { s.style.display = dispo ? 'none' : ''; });
+        if (!dispo) { panel.replaceChildren.apply(panel, panel._ordreInitial); return; }
+        const sortie = [];
+        const accueil = document.getElementById('menu-nav-home');
+        if (accueil) sortie.push(accueil);
+        dispo.forEach(function (groupe) {
+            const elements = groupe[1].map(function (k) { return document.getElementById('menu-nav-' + k); }).filter(Boolean);
+            if (!elements.some(function (e) { return e.style.display !== 'none'; })) return;
+            const sep = document.createElement('div'); sep.className = 'menu-nav-separateur';
+            sortie.push(sep);
+            if (groupe[0]) { const t = document.createElement('div'); t.className = 'menu-nav-titre'; t.textContent = groupe[0]; sortie.push(t); }
+            elements.forEach(function (e) { sortie.push(e); });
+        });
+        // Les éléments non retenus pour cet espace restent dans le DOM (réserve masquée) : leurs ids restent trouvables.
+        let reserve = document.getElementById('menu-nav-reserve');
+        if (!reserve) { reserve = document.createElement('div'); reserve.id = 'menu-nav-reserve'; reserve.style.display = 'none'; }
+        panel._ordreInitial.forEach(function (n) {
+            if (n.id && sortie.indexOf(n) === -1) reserve.appendChild(n);
+        });
+        sortie.push(reserve);
+        panel.replaceChildren.apply(panel, sortie);
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+}
+
+function toggleMenuNavigation() {
+    const panel = document.getElementById('menu-navigation-panel');
+    const btn = document.getElementById('btn-menu-nav');
+    if (!panel || !btn) return;
+    if (typeof majBoutonDeconnexion === 'function') majBoutonDeconnexion();
+    organiserMenuNavigation();
+    const estOuvert = panel.classList.toggle('ouvert');
+    btn.setAttribute('aria-expanded', estOuvert ? 'true' : 'false');
+    if (estOuvert && typeof majBoutonDeconnexion === 'function') majBoutonDeconnexion();
+}
+
+function fermerMenuNavigation() {
+    const panel = document.getElementById('menu-navigation-panel');
+    const btn = document.getElementById('btn-menu-nav');
+    if (panel) panel.classList.remove('ouvert');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('click', function(event) {
+    const wrapper = document.querySelector('.menu-navigation-wrapper');
+    if (wrapper && !wrapper.contains(event.target)) {
+        fermerMenuNavigation();
+    }
+});
+
+function naviguerVers(destination) {
+    fermerMenuNavigation();
+    if (destination === 'home') {
+        goHome();
+    } else if (destination === 'sas' || destination === 'eleve' || destination === 'enseignant') {
+        openSpace(destination);
+    } else if (destination === 'orateur') {
+        ouvrirAtelier();
+    } else if (destination === 'philo') {
+        ouvrirPhilo();
+    } else if (destination === 'sciences') {
+        ouvrirSciences();
+    } else if (destination === 'elan') {
+        ouvrirElan();
+    } else if (destination === 'boussole') {
+        ouvrirBoussole();
+    } else if (destination === 'boussole-univ') {
+        ouvrirBoussoleUniv();
+    } else if (destination === 'parents') {
+        ouvrirParentsModal();
+    }
+}
+
+// ❖ "DONNER MON AVIS" — WHATSAPP PRÉ-REMPLI VERS LE FONDATEUR (PAS LE
+// GARDIEN DE L'ACCUEIL) ❖
+// Distinct du bouton "Besoin d'aide ?" (qui pointe vers le numéro
+// professionnel, géré par l'agent Gardien de l'Accueil) : celui-ci
+// pointe vers le numéro personnel de Constant, pour que les retours
+// arrivent directement chez lui, sans qu'un agent IA ne réponde à la
+// place avec un message d'accueil générique. Rien n'est envoyé
+// automatiquement -- WhatsApp s'ouvre avec le message déjà rempli,
+// l'utilisateur reste libre de le modifier avant d'envoyer.
+const NUMERO_AVIS_FONDATEUR = "2250748337699"; // 07 48 33 76 99 -- le 0 initial est CONSERVÉ après l'indicatif
+// 225, à l'identique du numéro "Besoin d'aide ?" déjà en place (2250142674315) : contrairement à
+// la règle E.164 habituelle, WhatsApp Business ne reconnaît ce numéro que sous cette forme ici.
+
+const NOMS_ESPACES_POUR_AVIS = {
+    atelier: "L'Atelier des Évaluations",
+    forge: "La Forge des Leçons",
+    cabinet: "Le Cabinet d'Étude",
+    forge_primaire: "La Forge (Primaire)",
+    cabinet_primaire: "Le Cabinet (Primaire)"
+};
+
+function detecterEspaceActuelPourAvis() {
+    for (const [outil, nom] of Object.entries(NOMS_ESPACES_POUR_AVIS)) {
+        const conteneur = document.getElementById(`container-${outil}-custom`);
+        if (conteneur && conteneur.classList.contains('active')) return nom;
+    }
+    const conteneurSas = document.getElementById('container-sas-custom');
+    if (conteneurSas && conteneurSas.classList.contains('active')) {
+        return "Espace Élève";
+    }
+    // Repli générique : l'espace n'a pas pu être identifié précisément
+    // (accueil, Espace Parents, Boussole, etc.) -- pas bloquant, le
+    // message reste utile même sans cette précision.
+    return "EdukaTchat";
+}
+
+function donnerAvisWhatsApp() {
+    const espace = detecterEspaceActuelPourAvis();
+    const texte = `Bonjour ! Je donne mon avis sur EdukaTchat 😊\nEspace : ${espace}\nMon impression : `;
+    const url = `https://wa.me/${NUMERO_AVIS_FONDATEUR}?text=${encodeURIComponent(texte)}`;
+    window.open(url, '_blank', 'noopener');
+}
+
+// ❖ LE FONDU PROGRESSIF DE LA RÉPONSE ❖
+// botLoadingDiv.innerHTML est réécrit en entier à chaque fragment reçu du
+// flux SSE (nécessaire pour que marked.parse() reforme correctement le
+// markdown au fur et à mesure — gras, listes, etc.). Une simple
+// réaffectation d'innerHTML ne déclenche aucune animation CSS, même si la
+// classe "apparition-fluide" est déjà posée : elle n'a joué qu'une fois, à
+// la création de la bulle. Cette fonction retire puis repose la classe de
+// fondu à chaque mise à jour (avec un reflow forcé entre les deux pour que
+// l'animation CSS soit bien relancée), pour que l'arrivée de chaque
+// fragment de texte se fasse en fondu, comme souhaité, au lieu d'un
+// remplacement sec.
+// ❖ Le bloc de propriété intellectuelle (❖ Architecture Pédagogique
+// EdukaTchat ❖ ...) que l'agent Enseignant ajoute en fin de document est
+// utile à l'impression/la copie, mais alourdit visuellement la bulle de
+// discussion. On l'entoure de jetons sentinelles AVANT le passage par
+// marked.parse() (pour rester du texte brut, jamais interprété comme du
+// Markdown), puis on remplace ces jetons par un <span> discret une fois le
+// HTML généré -- le texte lui-même n'est jamais retiré, seulement restylé.
+const JETON_SIGNATURE_DEBUT = '§§SIGNATURE_DEBUT§§';
+const JETON_SIGNATURE_FIN = '§§SIGNATURE_FIN§§';
+
+function attenuerSignatureDocument(texteMarkdown) {
+    // ❖ Le prompt demande explicitement que rien ne suive la signature,
+    // mais le modèle s'en affranchit parfois (« Si cette fiche vous
+    // convient, je peux préparer la suivante... N'hésitez pas... »). Comme
+    // la regex ci-dessous capture tout ce qui suit le losange ❖ pour le
+    // restyler en bloc signature, une phrase d'accompagnement placée APRÈS
+    // la signature se retrouvait entraînée avec elle et s'affichait quand
+    // même, restylée mais bien visible. On applique donc le même nettoyage
+    // que celui utilisé pour la trace écrite (retirerPhrasesAccompagnementFiche)
+    // sur le texte entier avant de repérer la signature, pour intercepter
+    // ce cas comme celui, plus courant, où la phrase précède la signature.
+    const texteNettoye = retirerPhrasesAccompagnementFiche(texteMarkdown);
+    return texteNettoye.replace(
+        /(❖\s*Architecture Pédagogique EdukaTchat[\s\S]*)/,
+        `${JETON_SIGNATURE_DEBUT}$1${JETON_SIGNATURE_FIN}`
+    );
+}
+
+// =======================================================================
+// ❖ LA CARTE "FICHE DE LEÇON" — RESKIN VISUEL (FORGE / FORGE PRIMAIRE) ❖
+// =======================================================================
+// La Forge (secondaire et primaire) répond en texte structuré par des
+// libellés de section (EN-TÊTE ADMINISTRATIF, TABLEAU DES HABILETÉS ET
+// CONTENUS, SITUATION D'APPRENTISSAGE, DÉROULEMENT DU COURS, puis pour
+// chaque phase ACTIVITÉ DU PROFESSEUR / ACTIVITÉ DE LA CLASSE / TRACE
+// ÉCRITE VALIDÉE) -- jamais de tableau Markdown (interdit par le prompt).
+// Plutôt que de laisser ce texte s'afficher comme un simple bloc de
+// paragraphes, on le découpe ici en sections reconnues pour le présenter
+// en badges de métadonnées, cartes arrondies et lignes horizontales
+// discrètes (voir les classes .fiche-* dans style.css).
+//
+// Ces libellés existent aussi en anglais/espagnol/allemand depuis la
+// règle de langue des langues vivantes -- les motifs ci-dessous
+// reconnaissent les quatre variantes. Le TEXTE AFFICHÉ pour chaque titre
+// de section, lui, n'est jamais traduit ici : on réutilise tel quel le
+// libellé écrit par le modèle (déjà dans la bonne langue), ce qui évite
+// tout dictionnaire de traduction à maintenir côté interface.
+//
+// Sécurité : si l'en-tête ou le déroulement ne sont pas identifiés sans
+// ambiguïté, analyserFicheLecon() renvoie null et l'appelant se replie
+// silencieusement sur le rendu standard (marked.parse) -- cette carte ne
+// remplace jamais un contenu qu'elle ne comprend pas complètement.
+
+// ❖ Titres de GRANDE section : toujours seuls sur leur ligne dans les
+// exemples observés ("HEADER", "EN-TÊTE ADMINISTRATIF :", "LEARNING
+// SITUATION", etc.) -- on exige donc que la ligne entière (une fois les
+// puces/# et le ':' final retirés) corresponde exactement au libellé.
+const ALTERNATIVES_SECTION_FICHE = {
+    header: ["EN-?T[ÊE]TE ADMINISTRATIF", "HEADER", "ENCABEZADO", "KOPFDATEN"],
+    tableau: [
+        "TABLEAU DES HABIL[ÉE]T[ÉE]S ET CONTENUS",
+        "TABLE OF SKILLS AND CONTENTS",
+        "TABLA DE HABILIDADES Y CONTENIDOS",
+        "TABELLE DER F[ÄA]HIGKEITEN UND INHALTE"
+    ],
+    situation: [
+        "SITUATION D['’]APPRENTISSAGE",
+        "LEARNING SITUATION",
+        "SITUACI[ÓO]N DE APRENDIZAJE",
+        "LERNSITUATION"
+    ],
+    deroulement: [
+        "D[ÉE]ROULEMENT DU COURS(?:\\s*\\([^)]*\\))?",
+        "LESSON (?:PROCEDURE|PROCESS|DEVELOPMENT|PROGRESSION|FLOW)",
+        "DESARROLLO DE LA CLASE",
+        "UNTERRICHTSABLAUF"
+    ],
+    // ❖ 24/11/2026 : tableau récapitulatif du déroulement (Forge secondaire,
+    // section 4 TER du prompt), placé entre le déroulement et le plan du cahier
+    // de texte. Sans ce type, il serait avalé par la dernière TRACE ÉCRITE.
+    recap: [
+        "TABLEAU R[ÉE]CAPITULATIF(?:\\s+DU\\s+D[ÉE]ROULEMENT)?",
+        "(?:LESSON\\s+PROCEDURE\\s+)?SUMMARY\\s+TABLE(?:\\s+OF\\s+THE\\s+LESSON\\s+PROCEDURE)?",
+        "TABLA\\s+(?:RESUMEN|RECAPITULATIVA)(?:\\s+DEL\\s+DESARROLLO\\s+DE\\s+LA\\s+CLASE)?",
+        "(?:ZUSAMMENFASSENDE\\s+TABELLE|[ÜU]BERSICHTSTABELLE)(?:\\s+DES\\s+UNTERRICHTSABLAUFS)?"
+    ],
+    // ❖ Section ajoutée le 25/09/2026 (Forge secondaire uniquement) : un
+    // résumé compact A./a./b./c. au format habituellement utilisé pour
+    // remplir le cahier de texte physique de la classe -- voir
+    // PROMPT_COMPLET_Forge.md, section 5. Toujours en français, même pour
+    // une fiche en langue vivante (consigne explicite du prompt) : un seul
+    // libellé à reconnaître, pas de variantes traduites à ajouter ici.
+    // 12/10/2026 : en Anglais, le modèle traduit parfois ce titre malgré la
+    // consigne ("PLAN FOR THE CAHIER DE TEXTE", "LESSON PLAN FOR THE
+    // CAHIER DE TEXTE"...) -> variantes tolérées, sinon le plan est avalé
+    // par la dernière TRACE ÉCRITE et la carte « Copier » disparaît.
+    planCahierTexte: [
+        "PLAN POUR LE CAHIER DE TEXTE",
+        "(?:LESSON\\s+)?PLAN\\s+(?:FOR|OF|FOR\\s+THE|OF\\s+THE)\\s+(?:THE\\s+)?(?:CAHIER\\s+DE\\s+TEXTE|TEXTBOOK|LOGBOOK|CLASS\\s+LOGBOOK)",
+        "PLAN\\s+DU\\s+CAHIER\\s+DE\\s+TEXTE",
+        "PLAN\\s+PARA\\s+EL\\s+CAHIER\\s+DE\\s+TEXTE",
+        "PLAN\\s+F[ÜU]R\\s+DAS\\s+CAHIER\\s+DE\\s+TEXTE"
+    ]
+};
+
+// ❖ Libellés de PHASE : d'après la structure exigée par le prompt
+// ("- ACTIVITÉ DU PROFESSEUR : [...]"), le modèle écrit le libellé ET son
+// contenu sur la MÊME ligne, séparés par ':'. Ces motifs ne matchent donc
+// que le DÉBUT de la ligne (pas la ligne entière) -- tout ce qui suit le
+// ':' est capturé comme contenu par analyserFicheLecon().
+const ALTERNATIVES_PHASE_FICHE = {
+    // 17/10/2026 : variantes anglaises élargies (Luna écrit parfois « Teacher
+    // Activity », « Learners' Activity », « Validated Notes (Trace) »...).
+    prof: ["ACTIVIT[ÉE] DU PROFESSEUR", "TEACHER['’]?S?\\s+ACTIVITY", "TEACHER['’]?S?\\s+ACTIVITIES", "ACTIVIDAD DEL PROFESOR", "LEHRERAKTIVIT[ÄA]T"],
+    classe: ["ACTIVIT[ÉE] DE LA CLASSE", "(?:STUDENTS?|LEARNERS?|PUPILS?|CLASS)['’]?S?\\s+ACTIVIT(?:Y|IES)", "ACTIVIDAD DE LA CLASE", "SCH[ÜU]LERAKTIVIT[ÄA]T"],
+    trace: ["TRACE [ÉE]CRITE VALID[ÉE]E", "VALIDATED\\s+(?:NOTES|TRACE|SUMMARY)", "APUNTES VALIDADOS", "G[ÜU]LTIGE MITSCHRIFT"]
+};
+
+function nettoyerLigneFiche(ligne) {
+    return ligne.trim()
+        .replace(/^[#*>\-•\s]+/, '')
+        .replace(/^\d+[.)]\s*/, '') // ex: "1. IDENTIFICATION" -> "IDENTIFICATION" (numérotation du canevas primaire)
+        .replace(/[\s:]+$/, '');
+}
+
+// Repère, dans le TEXTE ENTIER (pas ligne par ligne), toutes les
+// occurrences de libellés de section et de phase, avec leur position
+// exacte (utile pour ensuite découper le contenu associé à chacune par
+// simple différence de position avec l'occurrence suivante -- quel que
+// soit son type). Triées par ordre d'apparition dans le document.
+function trouverOccurrencesFiche(texte) {
+    const occurrences = [];
+
+    Object.entries(ALTERNATIVES_SECTION_FICHE).forEach(([type, variantes]) => {
+        // ❖ Permissif à dessein : le modèle ne se limite pas toujours au
+        // libellé nu ("PARTIE A") -- il écrit parfois "PARTIE A :
+        // ÉVALUATION DES RESSOURCES (10 POINTS)" sur la même ligne. On
+        // exige seulement que la ligne COMMENCE par le libellé recherché ;
+        // tout ce qui suit sur cette même ligne est absorbé dans la
+        // légende affichée plutôt que de faire échouer la détection.
+        // ❖ Numérotation ("1. EN-TÊTE ADMINISTRATIF :") observée le
+        // 19/09/2026 sur une fiche Forge secondaire (3e Maths, racines
+        // carrées) -- ce préfixe n'était pas toléré ici (seul un bullet
+        // -•#*> l'était), contrairement au parseur primaire (voir
+        // trouverOccurrencesFichePrimaire) qui accepte déjà "\d+[.)]\s*".
+        // aHeader ET aDeroulement échouaient tous deux (les deux grandes
+        // sections numérotées "1." et "4."), faisant retomber toute la
+        // fiche sur l'affichage brut générique (pas de carte colorée).
+        // Alignée ici sur le même motif que le parseur primaire.
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++; // garde-fou anti-boucle infinie
+        }
+    });
+
+    Object.entries(ALTERNATIVES_PHASE_FICHE).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•]\\s*)?(?:${variantes.join('|')})[ \\t]*(?::[ \\t]*|$)`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+// ❖ Le prompt de la Forge n'interdit pas non plus les séparateurs visuels
+// ("---", "***", parfois un vrai tableau Markdown "| A | B |" avec sa ligne
+// "|---|---|") : sans ce filtre, ces lignes se seraient affichées telles
+// quelles comme un badge/une ligne de contenu vide ou du charabia à
+// pipes ("| Habiletés | Contenus |" littéral) une fois sorties du contexte
+// où marked.parse les interprétait auparavant comme un <hr>/<table>.
+function estLigneSeparatriceFiche(ligne) {
+    return /^[\s\-_*|:]{3,}$/.test(ligne);
+}
+
+// ❖ Champs d'identification reconnus. Le prompt exige "un champ par ligne"
+// (Classe, Matière, Leçon, Semaine, Documents de référence, etc.), mais le
+// modèle agglutine parfois plusieurs champs sur une seule ligne malgré
+// cette consigne ("Leçon : X : Semaine : Y Documents de référence : Z").
+// Comme la règle est déterministe (l'ordre des champs n'a pas besoin
+// d'interprétation), on la fait respecter ici plutôt que d'empiler encore
+// des reformulations de prompt qui ne changent rien à ce genre d'oubli
+// ponctuel du modèle.
+const CHAMPS_IDENTIFICATION_CONNUS_FICHE = [
+    'Classe', 'Mati[èe]re', 'Effectif', 'Dur[ée]e', 'Le[çc]on', 'Semaine',
+    'S[ée]quence', 'S[ée]ance', 'Support', 'Documents?\\s+de\\s+r[ée]f[ée]rence',
+    'Th[èe]me', 'Comp[ée]tence',
+    // ❖ Champs propres au canevas "Plan de session hebdomadaire" (PNAPAS,
+    // classe hétérogène) -- voir analyserFichePlanHebdo().
+    'Groupe de niveau', 'Objectif mensuel', 'Objectif de la semaine'
+];
+
+// Sépare une ligne d'identification qui agglutine plusieurs champs connus
+// ("Label : valeur Label2 : valeur2") en autant de lignes "Label : valeur"
+// distinctes. Ligne sans agglutination (0 ou 1 champ reconnu) -> renvoyée
+// telle quelle, dans un tableau à un seul élément : aucun changement de
+// comportement pour le cas normal, déjà correctement géré ligne par ligne.
+function decouperChampsAgglutinesLigneFiche(ligne) {
+    const motif = new RegExp(`(?:${CHAMPS_IDENTIFICATION_CONNUS_FICHE.join('|')})\\s*:`, 'gi');
+    const positions = [];
+    let m;
+    while ((m = motif.exec(ligne)) !== null) {
+        positions.push(m.index);
+        if (m[0].length === 0) motif.lastIndex++;
+    }
+    if (positions.length <= 1) return [ligne];
+    return positions.map((debut, i) => {
+        const fin = i + 1 < positions.length ? positions[i + 1] : ligne.length;
+        return ligne.slice(debut, fin).trim().replace(/[\s:]+$/, '');
+    });
+}
+
+// ❖ Filet de sécurité pour les valeurs "creuses" (placeholders) que le
+// modèle glisse parfois malgré la consigne explicite de les omettre
+// ("Effectif : (à compléter)", "Semaine : (à préciser)"...) — y compris
+// pour Effectif, alors même que le prompt cite déjà cet exemple précis
+// comme interdit. Plutôt que d'empiler une énième reformulation de
+// prompt pour un cas déjà nommé explicitement, on neutralise ici le
+// symptôme visible, de façon déterministe : si la valeur entière n'est
+// qu'un tel commentaire, elle est vidée. Le badge garde son étiquette
+// ("Effectif :") mais reste vide -- exactement le rendu voulu pour un
+// champ que l'instituteur remplit lui-même à la main.
+const MOTIF_VALEUR_CREUSE_FICHE = /^\(?\s*[àa]\s*(compl[ée]ter|pr[ée]ciser|remplir|d[ée]finir|ajuster)\b[^)]*\)?\.?\s*$/i;
+function nettoyerValeurChampCreuseFiche(valeur) {
+    return MOTIF_VALEUR_CREUSE_FICHE.test((valeur || '').trim()) ? '' : valeur;
+}
+
+// Si le modèle a malgré tout écrit une vraie ligne de tableau Markdown
+// ("| Expliquer | La formation... |"), on retire les pipes et on
+// recompose une ligne lisible plutôt que d'afficher les barres verticales
+// littéralement.
+function nettoyerLigneTableauFiche(ligne) {
+    if (/^\s*\|.*\|\s*$/.test(ligne)) {
+        const cellules = ligne.replace(/\\\|/g, '\uE000').split('|').map(c => c.trim().replace(/\uE000/g, '|')).filter(Boolean);
+        return cellules.join('  —  ');
+    }
+    return ligne;
+}
+
+function echapperHTMLFiche(s) {
+    return (s || "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ❖ Préfixe des URLs du catalogue d'illustrations EdukaTchat (voir
+// ILLUSTRATIONS_BASE_URL côté gateway/main.py). Sert de garde-fou : une
+// image markdown ![alt](url) n'est convertie en vraie balise <img> que si
+// son URL pointe vers ce catalogue connu -- jamais une URL arbitraire que
+// l'IA aurait pu inventer (même principe anti-hallucination que
+// illustrations_disponibles_pour_agent côté serveur). Une URL non reconnue
+// reste simplement du texte échappé, inerte -- jamais une image cassée.
+const PREFIXE_URL_ILLUSTRATIONS_SURES = 'https://edukatchat.org/images/illustrations/';
+
+// Extrait les images markdown ![alt](url) d'un bloc de texte AVANT
+// l'échappement HTML (echapperHTMLFiche échapperait sinon les crochets/
+// parenthèses de façon à casser la syntaxe, et de toute façon on ne veut
+// jamais afficher ce motif tel quel). Remplace chaque image reconnue par
+// un jeton temporaire (caractère de contrôle improbable en collision avec
+// du texte réel) et retourne la liste à réinjecter après coup, une fois le
+// HTML des paragraphes/listes construit.
+function extraireImagesFicheSures(bloc) {
+    const images = [];
+    const texte = (bloc || '').replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, (motif, alt, url) => {
+        if (!url.startsWith(PREFIXE_URL_ILLUSTRATIONS_SURES)) {
+            return motif;
+        }
+        const jeton = ` IMG${images.length} `;
+        images.push({ alt, url });
+        return jeton;
+    });
+    return { texte, images };
+}
+
+function reinjecterImagesFiche(html, images) {
+    let resultat = html;
+    images.forEach((img, i) => {
+        const jeton = ` IMG${i} `;
+        const altEchappe = echapperHTMLFiche(img.alt).replace(/"/g, '&quot;');
+        resultat = resultat.split(jeton).join(`<img src="${img.url}" alt="${altEchappe}">`);
+    });
+    return resultat;
+}
+
+// Conversion très légère (paragraphes/listes) sans passer par marked.parse
+// en entier -- les astérisques de gras résiduels sont déjà neutralisés en
+// amont par analyserFicheLecon(), il ne reste ici qu'à filtrer les lignes
+// purement séparatrices ("---", etc., voir estLigneSeparatriceFiche) et à
+// reconstituer paragraphes/listes. Les images markdown du catalogue connu
+// (voir extraireImagesFicheSures) traversent cette conversion à l'abri
+// derrière un jeton, pour ressortir en vraies balises <img> à la fin --
+// c'est ce qui permet à un enseignant de coller le lien copié depuis la
+// Bibliothèque d'illustrations directement dans une fiche générée.
+//
+// ❖ Bug réel trouvé le 29/09/2026 : les portées musicales (blocs ```abc)
+// ne s'affichaient JAMAIS dans les fiches Forge/Forge Primaire ni dans les
+// évaluations de l'Atelier des Évaluations -- même quand le modèle avait
+// bien produit un bloc ```abc syntaxiquement correct (confirmé par deux
+// exports PDF, le rythme et la mélodie étaient désormais bien encodés
+// depuis les correctifs de prompt du 29/09/2026), il s'affichait tel quel,
+// en texte brut. Cause : extraireEtRendreABC/reinjecterABC (voir plus bas
+// dans ce fichier) n'avaient été câblés que dans le chemin de rendu du Sas/
+// Cabinet/Ateliers de Maîtrise (afficherReponseAvecFondu, via marked.parse)
+// -- jamais dans ce convertisseur léger, qui est un pipeline ENTIÈREMENT
+// SÉPARÉ utilisé par la Forge/Forge Primaire/Atelier des Évaluations. Même
+// principe déjà appliqué aux images (voir extraireImagesFicheSures juste
+// au-dessus) : extraction AVANT l'échappement HTML/la construction des
+// paragraphes (sinon la syntaxe ```abc serait détruite ou éclatée en
+// plusieurs paragraphes), réinjection du SVG rendu par abcjs après coup.
+function texteVersHtmlLegerFiche(bloc) {
+    if (!bloc) return '';
+    const { texte: sansGraph, jetons: jetonsGraph } = extraireEtRendreGraphique(bloc);
+    const { texte: sansABC, jetons: jetonsABC } = extraireEtRendreABC(sansGraph);
+    const { texte: blocProtege, images } = extraireImagesFicheSures(sansABC);
+    // \| (barre de valeur absolue échappée par le modèle) : jeton neutre pendant le découpage des tableaux, restitué en | à la fin
+    const echappe = echapperHTMLFiche(blocProtege).replace(/\\\|/g, '\uE000');
+    const paragraphes = echappe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+
+    // ❖ Le modèle produit souvent des listes "aérées" : une puce isolée
+    // par paragraphe, séparée de la suivante par une ligne vide (plutôt
+    // que des puces collées sur des lignes consécutives). Sans ce
+    // regroupement, chaque puce isolée retombait dans la branche <p>
+    // ci-dessous avec son "- " laissé tel quel au lieu de devenir une
+    // vraie liste -- visible par ex. sur OBJECTIFS DE L'ÉVALUATION
+    // (Forge Primaire) ou BARÈME.
+    const blocs = [];
+    paragraphes.forEach(p => {
+        const lignes = p.split('\n').map(l => l.trim()).filter(l => l && !estLigneSeparatriceFiche(l));
+        if (!lignes.length) return;
+        const estPuceUnique = lignes.length === 1 && /^[-•]\s+/.test(lignes[0]);
+        const dernier = blocs[blocs.length - 1];
+        if (estPuceUnique && dernier && dernier.estListe) {
+            dernier.lignes.push(lignes[0]);
+        } else if (estPuceUnique) {
+            blocs.push({ estListe: true, lignes: [lignes[0]] });
+        } else {
+            blocs.push({ estListe: false, lignes });
+        }
+    });
+
+    // ❖ Tableaux Markdown (lignes "| a | b |") : rendus en vraie table HTML
+    // (15/10/2026, évaluation HG « commentaire de document » : le tableau
+    // statistique s'affichait en lignes de pipes brutes). Les lignes de
+    // texte autour du tableau restent des lignes normales.
+    const estLigneTableau = l => /^\|.*\|$/.test(l);
+    const construireTableFiche = rangs => {
+        const cellules = rangs.map(r => r.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()));
+        const entete = '<tr>' + cellules[0].map(c => `<th>${c}</th>`).join('') + '</tr>';
+        const corps = cellules.slice(1).map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+        return `<div class="fiche-table-wrap"><table class="fiche-table-simple"><thead>${entete}</thead><tbody>${corps}</tbody></table></div>`;
+    };
+    const rendreLignesAvecTables = lignes => {
+        const sortie = [];
+        let texteCourant = [];
+        let rangs = [];
+        const viderTexte = () => { if (texteCourant.length) { sortie.push(`<p>${texteCourant.join('<br>')}</p>`); texteCourant = []; } };
+        const viderRangs = () => { if (rangs.length) { sortie.push(rangs.length >= 2 ? construireTableFiche(rangs) : `<p>${rangs.join('<br>')}</p>`); rangs = []; } };
+        lignes.forEach(l => {
+            if (estLigneTableau(l)) { viderTexte(); rangs.push(l); }
+            else { viderRangs(); texteCourant.push(l); }
+        });
+        viderTexte(); viderRangs();
+        return sortie.join('');
+    };
+
+    const html = blocs.map(b => {
+        if (!b.estListe && b.lignes.some(estLigneTableau)) return rendreLignesAvecTables(b.lignes);
+        const toutesEnListe = b.estListe || (b.lignes.length > 1 && b.lignes.every(l => /^[-•]\s+/.test(l)));
+        if (toutesEnListe) {
+            return '<ul>' + b.lignes.map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('') + '</ul>';
+        }
+        return `<p>${b.lignes.join('<br>')}</p>`;
+    }).filter(Boolean).join('').replace(/\uE000/g, '|');
+
+    const htmlAvecImages = images.length ? reinjecterImagesFiche(html, images) : html;
+    const htmlAvecABC = jetonsABC.length ? reinjecterABC(htmlAvecImages, jetonsABC) : htmlAvecImages;
+    return jetonsGraph.length ? reinjecterGraphique(htmlAvecABC, jetonsGraph) : htmlAvecABC;
+}
+
+// Sépare un segment de texte (contenu entre la fin d'une "TRACE ÉCRITE
+// VALIDÉE" et le début de la phase suivante) entre la trace elle-même et
+// le titre de la phase suivante (ex: "2. Développement :"), sur la base
+// du dernier paragraphe s'il est court -- heuristique volontairement
+// prudente : en cas de doute, tout reste dans la trace plutôt que de
+// risquer de tronquer un titre au mauvais endroit.
+function separerTraceEtTitreSuivant(segment) {
+    const paragraphes = segment.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    if (paragraphes.length === 0) return { trace: '', titreSuivant: '' };
+    if (paragraphes.length === 1) return { trace: paragraphes[0], titreSuivant: '' };
+    // ❖ 14/11/2026 : plusieurs titres consécutifs (« Séance 2 — … » puis « I. Constat… », ou « III. Vérification… »
+    // puis « Activité 1 — … ») : tous sont réunis dans le titre de la phase suivante, au lieu de rester collés
+    // en texte brut à la fin de la trace écrite précédente.
+    // 24/11/2026 : « Séquence N » et les moments chiffrés (« Développement (85 min) ») comptent aussi
+    // comme titres d'étape, pour ne plus rester collés à la fin de la trace écrite précédente.
+    const reTitreEtape = /^(?:S[ée](?:ance|quence)\s+\d+|Activit[ée]\s+\d+|[IVX]{1,4}\.|(?:Pr[ée]sentation|D[ée]veloppement|[ÉE]valuation|R[ée]investissement)\s*\(\s*\d)\s*\S/i;
+    let debutTitres = paragraphes.length;
+    while (debutTitres > 1 && paragraphes[debutTitres - 1].length <= 110 && !paragraphes[debutTitres - 1].includes('\n')
+           && reTitreEtape.test(paragraphes[debutTitres - 1]) && !/[.!?]$/.test(paragraphes[debutTitres - 1])) debutTitres--;
+    if (paragraphes.length - debutTitres >= 2) {
+        return {
+            trace: paragraphes.slice(0, debutTitres).join('\n\n'),
+            titreSuivant: paragraphes.slice(debutTitres).join(' — ')
+        };
+    }
+    const dernier = paragraphes[paragraphes.length - 1];
+    if (dernier.length <= 80 && !dernier.includes('\n')) {
+        return { trace: paragraphes.slice(0, -1).join('\n\n'), titreSuivant: dernier.replace(/^[-•\s]+/, '') };
+    }
+    // Bloc final de 2 à 3 lignes courtes (ex: "II. Développement" puis "A. Caractéristiques…") :
+    // deux titres consécutifs, reconnus à un préfixe de numérotation sur la première ligne
+    // et à l'absence de ponctuation de fin de phrase -- fusionnés en un seul titre.
+    const lignes = dernier.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lignes.length >= 2 && lignes.length <= 3
+        && lignes.every(l => l.length <= 80 && !/[.!?;]$/.test(l.replace(/^[IVX]+\.|^[A-Z]\.|^\d+\./, '').trim()))
+        && /^(?:[IVX]+\.|[A-Z]\.|\d+[.)]|[-•])\s*\S/.test(lignes[0])) {
+        return {
+            trace: paragraphes.slice(0, -1).join('\n\n'),
+            titreSuivant: lignes.map(l => l.replace(/^[-•\s]+/, '')).join(' — ')
+        };
+    }
+    return { trace: paragraphes.join('\n\n'), titreSuivant: '' };
+}
+
+// ❖ Filet de sécurité, ajouté le 30/09/2026 (Forge secondaire uniquement --
+// voir le chantier Musique dans CLAUDE.md). Le modèle place parfois un bloc
+// ```abc``` (portée musicale) AVANT la section TABLEAU DES HABILETÉS ET
+// CONTENUS -- typiquement dans l'EN-TÊTE ADMINISTRATIF ou dans les toutes
+// premières lignes de la SITUATION D'APPRENTISSAGE. Rendu à cet endroit, le
+// SVG de la portée s'affiche collé aux badges de l'en-tête (chevauchement
+// confirmé par capture le 30/09/2026, MALGRÉ le correctif CSS overflow:
+// hidden du même jour -- ce n'était donc pas seulement un problème
+// d'affichage, mais un problème de PLACEMENT du contenu par le modèle, que
+// le CSS seul ne pouvait pas corriger). Après plusieurs correctifs de
+// prompt sans effet sur ce type de défaut (voir "limite acceptée"), ce
+// filet MÉCANIQUE déplace tout bloc ```abc``` trouvé avant le début du
+// TABLEAU DES HABILÉTÉS vers la fin du document généré (juste avant PLAN
+// POUR LE CAHIER DE TEXTE s'il existe, sinon tout à la fin, dans la Trace
+// écrite) -- la portée reste donc TOUJOURS visible pour l'enseignant,
+// simplement déplacée à un endroit où elle ne peut plus chevaucher l'en-
+// tête. Un bloc déjà bien placé (après le Tableau) n'est jamais touché.
+function reordonnerPorteesAbcHorsSectionFiche(texte) {
+    const reTableau = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${ALTERNATIVES_SECTION_FICHE.tableau.join('|')})`, 'im');
+    const mTableau = reTableau.exec(texte);
+    if (!mTableau) return texte; // pas de repère sûr -> on ne touche à rien
+
+    const borne = mTableau.index;
+    const reABC = /```abc\s*\n[\s\S]*?```/g;
+    const blocsADeplacer = [];
+    let resultat = texte.replace(reABC, (motifEntier, offset) => {
+        if (offset < borne) {
+            blocsADeplacer.push(motifEntier.trim());
+            return ''; // retiré de sa position d'origine, fautive
+        }
+        return motifEntier; // déjà bien placé (après le Tableau) : inchangé
+    });
+    if (!blocsADeplacer.length) return texte;
+
+    const reCahierTexte = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${ALTERNATIVES_SECTION_FICHE.planCahierTexte.join('|')})`, 'im');
+    const mCahierTexte = reCahierTexte.exec(resultat);
+    const ajout = '\n\n' + blocsADeplacer.join('\n\n') + '\n\n';
+    return mCahierTexte
+        ? resultat.slice(0, mCahierTexte.index) + ajout + resultat.slice(mCahierTexte.index)
+        : resultat + ajout;
+}
+
+// ❖ Filet mécanique (30/09/2026) : une mélodie nommée en toutes lettres
+// (ex. "Sol-La-Sol") laissée en pure prose, sans le bloc ```abc``` que le
+// prompt exige pourtant explicitement -- défaut réel constaté à 3
+// reprises malgré 2 citations déjà présentes dans le prompt ("UNE MÉLODIE
+// NOMMÉE... EXIGE ELLE AUSSI UN BLOC ```abc" et "CHAQUE PHRASE
+// MÉLODIQUE... A BESOIN DE SON PROPRE BLOC"). Plutôt qu'une 4e
+// reformulation de la même consigne, cette fonction traduit elle-même la
+// séquence de notes françaises en notation ABC (Do=C, Ré=D, Mi=E, Fa=F,
+// Sol=G, La=A, Si=B, correspondance directe et sans ambiguïté) et insère
+// le bloc juste après -- contrairement à "Nombres premiers" (contenu
+// manquant, jamais rien à convertir), le contenu à représenter existe
+// déjà dans le texte généré ici : une conversion mécanique est donc
+// réellement possible.
+const NOTE_FR_VERS_ABC = { do: 'C', re: 'D', mi: 'E', fa: 'F', sol: 'G', la: 'A', si: 'B' };
+const MOTIF_NOTE_FR = '(?:Do|R[ée]|Mi|Fa|Sol|La|Si)';
+function genererAbcPourMelodiesNommeesFiche(texte) {
+    const reSequence = new RegExp(`\\b${MOTIF_NOTE_FR}(?:\\s*-\\s*${MOTIF_NOTE_FR})+\\b`, 'gi');
+    const sequences = [];
+    let m;
+    while ((m = reSequence.exec(texte)) !== null) {
+        sequences.push({ texteMatch: m[0], debut: m.index, fin: m.index + m[0].length });
+    }
+    if (!sequences.length) return texte;
+
+    // Une séquence déjà proche (fenêtre large, la mise en page variant
+    // selon l'endroit choisi par l'agent) d'un bloc ```abc``` existant est
+    // considérée comme déjà représentée -- on n'en ajoute jamais un
+    // second, quitte à laisser passer un cas où le bloc voisin représente
+    // en réalité autre chose.
+    const FENETRE = 400;
+    const blocsExistants = [];
+    const reAbc = /```abc\s*\n[\s\S]*?```/g;
+    let mb;
+    while ((mb = reAbc.exec(texte)) !== null) {
+        blocsExistants.push({ debut: mb.index, fin: mb.index + mb[0].length });
+    }
+    function dejaRepresentee(seq) {
+        return blocsExistants.some(b => (seq.debut - b.fin) < FENETRE && (b.debut - seq.fin) < FENETRE);
+    }
+
+    // Insertion de la fin vers le début : ne décale jamais les index déjà
+    // calculés des séquences précédentes dans la même passe.
+    let resultat = texte;
+    for (let i = sequences.length - 1; i >= 0; i--) {
+        const seq = sequences[i];
+        if (dejaRepresentee(seq)) continue;
+        const notes = seq.texteMatch.split('-').map(n => n.trim());
+        const notesAbc = notes.map(n => {
+            const cle = n.toLowerCase().replace(/[éè]/g, 'e');
+            return NOTE_FR_VERS_ABC[cle] || '';
+        });
+        if (notesAbc.some(n => !n)) continue; // sécurité : jamais de note non reconnue
+        const blocAbc = '\n```abc\nL:1/4\nK:C\n' + notesAbc.join(' ') + ' |\n```\n';
+        resultat = resultat.slice(0, seq.fin) + blocAbc + resultat.slice(seq.fin);
+    }
+    return resultat;
+}
+
+function analyserFicheLecon(texteBrut) {
+    // ❖ Le prompt de la Forge n'interdit pas explicitement le Markdown
+    // (contrairement à celui de l'Atelier des Évaluations) : le modèle
+    // décore parfois ses propres titres de section avec des "**" (gras).
+    // Comme la détection des libellés ci-dessous exige une correspondance
+    // exacte de la ligne, un seul "**" résiduel suffisait à la faire
+    // échouer entièrement (repli silencieux vers l'affichage brut). On
+    // neutralise donc toute étoile avant l'analyse -- la fiche ne contient
+    // jamais de vrai Markdown à préserver, cette perte est sans risque.
+    let texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
+        // titre ("### BARÈME", "#### EXERCICE 1 : ...") -- la détection de
+        // libellé ci-dessous ne tolérait qu'UN SEUL "#" en préfixe, donc
+        // un "###"/"####" faisait échouer le repérage de toute la section
+        // (repli silencieux vers l'affichage brut, "###"/"####" laissés
+        // tels quels dans le texte). On retire toute suite de "#" en
+        // début de ligne, comme pour les "*" ci-dessus.
+        .replace(/^#+\s*/gm, '')
+        .trim();
+    if (!texte) return null;
+    // ❖ Filet mécanique mélodies nommées (voir la fonction juste au-
+    // dessus) -- appliqué AVANT le repositionnement des portées, pour que
+    // ce dernier voie déjà les blocs ```abc``` nouvellement générés et les
+    // replace si besoin comme n'importe quel autre bloc.
+    texte = genererAbcPourMelodiesNommeesFiche(texte);
+    // ❖ Filet de sécurité portées ABC hors-section (voir la fonction
+    // juste au-dessus) -- doit s'appliquer AVANT trouverOccurrencesFiche,
+    // pour que le découpage en sections voie déjà le texte corrigé.
+    texte = reordonnerPorteesAbcHorsSectionFiche(texte);
+
+    let occurrences = trouverOccurrencesFiche(texte);
+    // ❖ Le plan pour le cahier de texte est la DERNIÈRE section : toute
+    // occurrence reconnue après son titre appartient au plan lui-même, pas à
+    // la fiche (06/10/2026 : les lignes "Situation d'apprentissage" et
+    // "Situation d'évaluation" du plan hiérarchique étaient prises pour de
+    // vraies sections et coupaient le plan après "A. <titre>").
+    const idxPlanCahier = occurrences.findIndex(o => o.type === 'planCahierTexte');
+    if (idxPlanCahier >= 0) occurrences = occurrences.slice(0, idxPlanCahier + 1);
+    const aHeader = occurrences.some(o => o.type === 'header');
+    const aDeroulement = occurrences.some(o => o.type === 'deroulement');
+    if (!aHeader || !aDeroulement) return null;
+
+    // Le contenu associé à une occurrence s'arrête pile au début de la
+    // PROCHAINE occurrence (quel que soit son type) -- fonctionne aussi
+    // bien pour les grandes sections (contenu jusqu'au prochain titre) que
+    // pour les libellés de phase (contenu jusqu'au libellé suivant).
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
+    }
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    const occHeader = occurrences.find(o => o.type === 'header');
+    const occTableau = occurrences.find(o => o.type === 'tableau');
+    const occSituation = occurrences.find(o => o.type === 'situation');
+    const occDeroulement = occurrences.find(o => o.type === 'deroulement');
+
+    // --- En-tête : lignes "Label : Valeur" -> badges. Les lignes
+    // purement séparatrices ("---" utilisé par le modèle comme délimiteur
+    // visuel entre sections) sont ignorées plutôt que de devenir un badge
+    // vide.
+    const badges = [];
+    if (occHeader) {
+        contenuApres(occHeader).split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
+            // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
+            // AVANT de chercher le ":" -- sinon il reste collé au libellé
+            // du badge ("- Classe" au lieu de "Classe").
+            // ❖ "+" et non un seul caractère : une ligne séparatrice ("---")
+            // ne perdait qu'UN tiret ("- Classe" -> "Classe" fonctionnait,
+            // mais "---" -> "--" ne faisait plus les 3 caractères exigés par
+            // estLigneSeparatriceFiche ci-dessous, et survivait comme badge
+            // fantôme vide en fin d'identification.
+            const l2 = l.trim().replace(/^[-•]+\s*/, '');
+            if (!l2 || estLigneSeparatriceFiche(l2)) return;
+            const sepIdx = l2.indexOf(':');
+            if (sepIdx > -1 && sepIdx < 60) {
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
+            } else if (badges.length) {
+                // Valeur écrite sur plusieurs lignes (ex. "Objectives :" puis
+                // une ligne par objectif) : rattachée au champ précédent au
+                // lieu de devenir une pastille sans libellé.
+                const prec = badges[badges.length - 1];
+                prec.valeur = prec.valeur ? prec.valeur + ' ; ' + l2 : l2;
+            } else {
+                badges.push({ label: '', valeur: l2 });
+            }
+        });
+    }
+
+    // --- Tableau des habiletés : liste simple (une ligne = une rangée),
+    // sans grille -- exactement l'esprit "ligne horizontale subtile"
+    // demandé plutôt qu'un vrai tableau à colonnes. Si le modèle a quand
+    // même produit un vrai tableau Markdown ("| A | B |" + sa ligne
+    // "|---|---|"), on retire les pipes/séparateurs plutôt que de les
+    // afficher tels quels.
+    // ❖ Les deux mots de l'en-tête (ex: "Habiletés" / "Contenus") sont
+    // parfois écrits sur deux lignes SÉPARÉES plutôt que combinées sur une
+    // seule -- le second mot, seul sur sa ligne, ne matchait alors jamais
+    // (le groupe 1 exigeait "Habiletés", le groupe 2 "Contenus" était
+    // optionnel mais ne pouvait pas apparaître seul) et se glissait comme
+    // fausse ligne de tableau. Les deux mots sont donc désormais acceptés
+    // indifféremment en position 1 OU 2, seuls ou combinés.
+    const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?|Habilidades?|F[äa]higkeiten|Contenus?|Contents?|Contenidos?|Inhalte)\s*[:\-]?\s*(Habilet[ée]s?|Skills?|Habilidades?|F[äa]higkeiten|Contenus?|Contents?|Contenidos?|Inhalte)?$/i;
+    const lignesTableau = occTableau
+        ? contenuApres(occTableau)
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l && !estLigneSeparatriceFiche(l))
+            .map(l => nettoyerLigneTableauFiche(l))
+            .filter(l => !motifEnTeteColonnes.test(l.replace(/\s*—\s*/g, ' ').trim()))
+        : [];
+
+    // --- Situation d'apprentissage
+    const situationTexte = occSituation ? contenuApres(occSituation) : '';
+
+    // --- Déroulement : repérage des triples prof/classe/trace, dans
+    // l'ordre, sans supposer un nombre fixe de phases (le bouton "Ajouter
+    // des activités" peut en générer davantage). Le déroulement est
+    // normalement la dernière grande section du document -- SAUF si la
+    // fiche se termine par un "PLAN POUR LE CAHIER DE TEXTE" (Forge
+    // secondaire, voir plus haut) : sans cette borne, le contenu de ce
+    // plan se ferait avaler dans la dernière TRACE ÉCRITE VALIDÉE au lieu
+    // d'être reconnu comme sa propre section.
+    const occPlanCahierTexte = occurrences.find(o => o.type === 'planCahierTexte');
+    const deroulementDebut = occDeroulement.end;
+    const occRecap = occurrences.find(o => o.type === 'recap' && o.start >= deroulementDebut);
+    const deroulementFin = occRecap ? occRecap.start : (occPlanCahierTexte ? occPlanCahierTexte.start : texte.length);
+    const marqueursPhase = occurrences.filter(o =>
+        ['prof', 'classe', 'trace'].includes(o.type) && o.start >= deroulementDebut && o.start < deroulementFin
+    );
+
+    const phases = [];
+    let titreCourant = (() => {
+        const premierProf = marqueursPhase.find(m => m.type === 'prof');
+        if (!premierProf) return '';
+        return texte.slice(deroulementDebut, premierProf.start).replace(/^[\s\-•]+/, '').trim();
+    })();
+
+    for (let k = 0; k < marqueursPhase.length;) {
+        const mProf = marqueursPhase[k];
+        if (!mProf || mProf.type !== 'prof') { k++; continue; }
+        const mClasse = marqueursPhase[k + 1] && marqueursPhase[k + 1].type === 'classe' ? marqueursPhase[k + 1] : null;
+        const mTrace = mClasse && marqueursPhase[k + 2] && marqueursPhase[k + 2].type === 'trace' ? marqueursPhase[k + 2] : null;
+
+        const contenuProf = texte.slice(mProf.end, mClasse ? mClasse.start : deroulementFin).trim();
+        const contenuClasse = mClasse ? texte.slice(mClasse.end, mTrace ? mTrace.start : deroulementFin).trim() : '';
+
+        let contenuTrace = '';
+        let titreSuivant = '';
+        if (mTrace) {
+            const prochainProf = marqueursPhase.slice(k + 3).find(m => m.type === 'prof');
+            const finSegment = prochainProf ? prochainProf.start : deroulementFin;
+            // On ne coupe pas juste avant le prochain "prof" : il faut
+            // englober aussi son titre de phase pour pouvoir l'en extraire.
+            const separation = separerTraceEtTitreSuivant(texte.slice(mTrace.end, finSegment).trim());
+            contenuTrace = separation.trace;
+            titreSuivant = separation.titreSuivant;
+        }
+
+        // Un second triplet Prof/Classe/Trace sans titre propre (ex. deux
+        // activités sous « IV. Additional Activities ») est fusionné dans
+        // l'étape précédente au lieu d'apparaître comme une carte orpheline.
+        if (!titreCourant && phases.length) {
+            const prec = phases[phases.length - 1];
+            const joindre = (a, b) => (a && b) ? a + '\n\n' + b : (a || b);
+            prec.prof = joindre(prec.prof, contenuProf);
+            prec.classe = joindre(prec.classe, contenuClasse);
+            prec.trace = joindre(prec.trace, contenuTrace);
+        } else {
+            phases.push({ titre: titreCourant, prof: contenuProf, classe: contenuClasse, trace: contenuTrace });
+        }
+        titreCourant = titreSuivant;
+        k += mTrace ? 3 : (mClasse ? 2 : 1);
+    }
+
+    if (!phases.length) return null;
+
+    // --- Plan pour le cahier de texte (Forge secondaire uniquement,
+    // absent des fiches Forge Primaire/PNAPAS -- occPlanCahierTexte reste
+    // alors undefined et ce champ vide, sans aucun effet sur le reste).
+    const planCahierTexte = occPlanCahierTexte ? contenuApres(occPlanCahierTexte) : '';
+
+    // ❖ Tableau récapitulatif : extrait brut (pas de contenuApres, qui convertit
+    // les <br> en retours à la ligne et casserait les lignes du tableau).
+    let recapTexte = '';
+    if (occRecap) {
+        const iRecap = occurrences.indexOf(occRecap);
+        const finRecap = iRecap + 1 < occurrences.length ? occurrences[iRecap + 1].start : texte.length;
+        recapTexte = texte.slice(occRecap.end, finRecap).trim();
+    }
+
+    return { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte, recapTexte };
+}
+
+function construireHTMLFiche(analyse, classeAccent) {
+    const { badges, lignesTableau, situationTexte, phases, titres, planCahierTexte, recapTexte } = analyse;
+    let html = '';
+
+    if (badges.length) {
+        html += `<div class="fiche-section-titre">🧭 ${echapperHTMLFiche(titres.header || '')}</div>`;
+        html += '<div class="fiche-bloc-entete">';
+        badges.forEach(b => {
+            const estCompetence = /comp[ée]t|competenc|kompetenz/i.test(b.label);
+            html += `<span class="fiche-badge${estCompetence ? ' fiche-badge-competence' : ''}">`;
+            if (b.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(b.label)} :</span> `;
+            html += `${echapperHTMLFiche(b.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    if (lignesTableau.length) {
+        html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titres.tableau || '')}</div>`;
+        html += '<div class="fiche-carte fiche-liste-simple">';
+        lignesTableau.forEach(l => {
+            html += `<div>${echapperHTMLFiche(l).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`;
+        });
+        html += '</div>';
+    }
+
+    if (situationTexte) {
+        html += `<div class="fiche-section-titre">💡 ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
+    }
+
+    if (phases.length) {
+        html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
+        phases.forEach(p => {
+            html += '<div class="fiche-carte fiche-phase">';
+            if (p.titre) html += `<div class="fiche-phase-titre">${echapperHTMLFiche(p.titre)}</div>`;
+            if (p.prof) html += `<div class="fiche-phase-ligne"><span class="fiche-phase-legende legende-prof">🗣️ ${echapperHTMLFiche(titres.prof || '')}</span>${texteVersHtmlLegerFiche(p.prof)}</div>`;
+            if (p.classe) html += `<div class="fiche-phase-ligne"><span class="fiche-phase-legende">✍️ ${echapperHTMLFiche(titres.classe || '')}</span>${texteVersHtmlLegerFiche(p.classe)}</div>`;
+            if (p.trace) html += `<div class="fiche-phase-ligne"><span class="fiche-phase-legende legende-trace">📌 ${echapperHTMLFiche(titres.trace || '')}</span>${texteVersHtmlLegerFiche(p.trace)}</div>`;
+            html += '</div>';
+        });
+    }
+
+    // ❖ Tableau récapitulatif du déroulement (24/11/2026) : vue d'ensemble en
+    // un coup d'œil, rendue en vrai tableau (défilement horizontal sur mobile).
+    if (recapTexte) {
+        html += `<div class="fiche-section-titre">📊 ${echapperHTMLFiche(titres.recap || '')}</div>`;
+        html += `<div class="fiche-carte fiche-recap">${marked.parse(recapTexte)}</div>`;
+    }
+
+    // ❖ Plan pour le cahier de texte (Forge secondaire uniquement, voir
+    // PROMPT_COMPLET_Forge.md section 5) -- rendu en <pre> brut plutôt que
+    // via texteVersHtmlLegerFiche : l'indentation des lignes "a./b./c."
+    // fait partie du format attendu par l'enseignant au moment du copier-
+    // coller, elle ne doit pas être aplatie en simples paragraphes HTML.
+    // ❖ Emplacement de la page « Illustrations » (08/10/2026) : vide et
+    // masqué tant que /api/illustrations/pour_fiche n'a rien renvoyé (voir
+    // hydraterIllustrationsFiche). Placé juste avant le plan. Les trois
+    // données d'appariement viennent des badges de l'EN-TÊTE ADMINISTRATIF.
+    if (planCahierTexte) {
+        const trouver = (re) => (badges.find(b => re.test(b.label || '')) || {}).valeur || '';
+        const discipline = trouver(/discipline|mati[eè]re|subject|asignatura|fach/i);
+        const niveauFiche = trouver(/niveau|classe|level|nivel|klasse/i);
+        const titreFiche = trouver(/^\s*(titre|title|t[ií]tulo|titel)/i) || trouver(/th[eè]me|theme|tema/i);
+        if (discipline && niveauFiche && titreFiche) {
+            html += `<div class="fiche-illustrations-slot" hidden data-discipline="${echapperHTMLFiche(discipline)}" data-niveau="${echapperHTMLFiche(niveauFiche)}" data-titre="${echapperHTMLFiche(titreFiche)}"></div>`;
+        }
+    }
+
+    if (planCahierTexte) {
+        html += `<div class="fiche-section-titre">📓 Plan pour le cahier de texte</div>`;
+        html += '<div class="fiche-carte fiche-plan-cahier-texte">';
+        html += `<pre class="fiche-plan-cahier-texte-contenu">${echapperHTMLFiche(planCahierTexte)}</pre>`;
+        html += `<button class="btn-action-doc fiche-plan-cahier-texte-bouton" type="button" onclick="copierPlanCahierTexte(this)" title="Copier le plan pour le cahier de texte" aria-label="Copier le plan pour le cahier de texte">📋 Copier</button>`;
+        html += '</div>';
+        // ❖ 24/11/2026 : invitation à générer le second document (fiche de cours
+        // pour les élèves). Retirée de la copie et de l'impression.
+        html += '<div class="fiche-carte fiche-invite-cours-eleve">';
+        html += '<div class="fiche-invite-texte"><strong>📘 Document complémentaire : fiche de cours pour les élèves</strong><br>Cours rédigé à partir de cette leçon, avec exercices d\'application et corrigés, prêt à copier ou à imprimer.</div>';
+        html += '<button class="btn-action-doc fiche-invite-bouton" type="button" onclick="demanderFicheCoursEleve(this)">📘 Générer la fiche de cours élève</button>';
+        html += '</div>';
+    }
+
+    return `<div class="fiche-lecon${classeAccent || ''}">${html}</div>`;
+}
+
+// ❖ Copie ciblée du seul "Plan pour le cahier de texte" (pas toute la
+// fiche, contrairement à copierTexte/"Copier pour Word") -- même principe
+// que copierFormule (bibliothèque de fiches-formules) : lecture directe du
+// texte affiché au clic, écriture presse-papiers en texte brut, petit
+// retour visuel sur le bouton lui-même sans dépendre d'animerBoutonCopie
+// (dont le texte "Document et Sceau copiés !" ne conviendrait pas ici).
+function copierPlanCahierTexte(bouton) {
+    const carte = bouton.closest('.fiche-plan-cahier-texte');
+    const pre = carte ? carte.querySelector('.fiche-plan-cahier-texte-contenu') : null;
+    const texte = pre ? pre.innerText : '';
+    navigator.clipboard.writeText(texte).then(() => {
+        const original = bouton.innerHTML;
+        bouton.innerHTML = '✅ Copié !';
+        setTimeout(() => { bouton.innerHTML = original; }, 2000);
+    }).catch(() => {
+        bouton.innerHTML = '⚠️ Échec de la copie';
+    });
+}
+
+// ❖ 24/11/2026 : demande du second document (fiche de cours pour les élèves)
+// depuis la carte d'invitation en bas de la fiche. On joint la fiche de CETTE
+// bulle (et non la dernière de la conversation) pour que le cours corresponde
+// bien à la leçon sur laquelle l'enseignant a cliqué.
+function demanderFicheCoursEleve(bouton) {
+    const champ = document.getElementById('forge-user-input');
+    if (!champ || champ.disabled) return;
+    const bulle = bouton ? bouton.closest('.bot-message') : null;
+    const source = (bulle && bulle.dataset && bulle.dataset.sourceBrute) || '';
+    outilsDejaAmorces.add('forge');
+    champ.value = "Fais la fiche de cours pour les élèves à partir de la dernière fiche.";
+    sendTeacherMessage('forge', (source.length > 200 ? source.slice(0, 12000) : derniereReponseEnseignant('forge')));
+}
+
+// Point d'entrée : tente le rendu enrichi, ou renvoie null pour laisser
+// l'appelant se replier sur marked.parse (comportement historique).
+function construireRenduFiche(source, outil) {
+    let corps = source;
+    let signatureHTML = '';
+    const idxDebut = corps.indexOf(JETON_SIGNATURE_DEBUT);
+    if (idxDebut !== -1) {
+        signatureHTML = corps.slice(idxDebut);
+        corps = corps.slice(0, idxDebut);
+    }
+
+    const analyse = analyserFicheLecon(corps);
+    if (!analyse) return null;
+
+    const classeAccent = outil === 'forge_primaire' ? ' accent-vert' : '';
+    let html = construireHTMLFiche(analyse, classeAccent);
+
+    if (signatureHTML) {
+        let sigParsed = marked.parse(signatureHTML);
+        sigParsed = sigParsed
+            .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+            .replace(JETON_SIGNATURE_FIN, '</span>');
+        html += sigParsed;
+    }
+    return html;
+}
+
+// =======================================================================
+// ❖ LA CARTE "FICHE PRIMAIRE" — RESKIN VISUEL (FORGE PRIMAIRE) ❖
+// =======================================================================
+// La Forge Primaire suit un canevas propre au primaire ivoirien, distinct
+// de celui du secondaire : 8 sections numérotées (IDENTIFICATION,
+// COMPÉTENCE, THÈME, LEÇON, SITUATION D'APPRENTISSAGE, TABLEAU
+// HABILÉTÉS/CONTENUS, MATÉRIEL DIDACTIQUE, DÉROULEMENT PÉDAGOGIQUE), ce
+// dernier se déclinant en trois moments simples (PRÉSENTATION,
+// DÉVELOPPEMENT, ÉVALUATION/RÉINVESTISSEMENT) -- PAS le triple ACTIVITÉ DU
+// PROFESSEUR / ACTIVITÉ DE LA CLASSE / TRACE ÉCRITE du secondaire. Toutes
+// ces sections sont des titres seuls sur leur ligne (parfois précédés
+// d'un numéro "1.", "8."), jamais des libellés en ligne avec leur
+// contenu -- un seul type de motif suffit donc ici, pas de distinction
+// majeures/inline comme pour le secondaire.
+const ALTERNATIVES_SECTION_FICHE_PRIMAIRE = {
+    // ❖ "FICHE DE PR[ÉE]PARATION" ajouté le 29/08/2026 : le modèle renomme
+    // parfois tout le bloc d'en-tête ainsi au lieu de "IDENTIFICATION"
+    // (observé sur une fiche CE1 Français "La phrase" qui ne comportait
+    // aucun titre IDENTIFICATION du tout -- toute la fiche échouait alors
+    // silencieusement à être reconnue, repli sur l'affichage brut
+    // générique). Risque théorique non observé en pratique : si une fiche
+    // portait un jour un titre de couverture "FICHE DE PRÉPARATION" suivi
+    // PLUS LOIN d'un vrai titre IDENTIFICATION distinct, seul le premier
+    // (la couverture) serait retenu comme zone d'identification -- à
+    // surveiller si ce cas se présente un jour.
+    identification: ["IDENTIFICATION", "FICHE DE PR[ÉE]PARATION"],
+    competence: ["COMP[ÉE]TENCE"],
+    theme: ["TH[ÈE]ME"],
+    lecon: ["LE[ÇC]ON"],
+    situation: ["SITUATION D['’]APPRENTISSAGE"],
+    // ❖ "CONTENUS" seul est accepté en plus des deux libellés complets :
+    // au CE2 en français, le PNAPAS supprime le tableau des habiletés et
+    // rebaptise la section "Contenus" (phrases verbales). Sans cet alias,
+    // la ligne n'était pas reconnue comme un titre de section et son
+    // contenu se retrouvait absorbé dans la SITUATION D'APPRENTISSAGE.
+    tableau: ["TABLEAU HABIL[ÉE]T[ÉE]S\\s*/?\\s*CONTENUS", "TABLEAU DES HABIL[ÉE]T[ÉE]S ET CONTENUS", "CONTENUS\\s*:?\\s*$"],
+    materiel: ["MAT[ÉE]RIEL DIDACTIQUE"],
+    deroulement: ["D[ÉE]ROULEMENT P[ÉE]DAGOGIQUE"],
+    presentation: ["PR[ÉE]SENTATION"],
+    developpement: ["D[ÉE]VELOPPEMENT"],
+    evaluationPhase: ["[ÉE]VALUATION\\s*/?\\s*R[ÉE]INVESTISSEMENT", "R[ÉE]INVESTISSEMENT", "[ÉE]VALUATION"],
+    // ❖ La trace écrite n'était reconnue nulle part dans la carte APC :
+    // faute d'être un titre de section, elle était absorbée dans le contenu
+    // de la phase qui la précédait (le plus souvent ÉVALUATION) et
+    // s'affichait noyée à l'intérieur de celle-ci. Or c'est ce que
+    // l'instituteur recopie au tableau : il doit la retrouver d'un coup
+    // d'œil. La déclarer ici la borne proprement et lui rend sa section.
+    trace: ["TRACE [ÉE]CRITE"]
+};
+
+function trouverOccurrencesFichePrimaire(texte) {
+    const occurrences = [];
+    Object.entries(ALTERNATIVES_SECTION_FICHE_PRIMAIRE).forEach(([type, variantes]) => {
+        // ❖ Préfixe élargi par rapport au secondaire : le canevas primaire
+        // numérote explicitement chaque section ("1. IDENTIFICATION",
+        // "8. DÉROULEMENT PÉDAGOGIQUE").
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+// ❖ Le canevas officiel PNAPAS présente le déroulement sous forme de
+// tableau à quatre colonnes (Phases didactiques / Activités de
+// l'enseignant.e / Stratégies pédagogiques / Activités des apprenant.e.s).
+// Les trois moments s'y trouvent donc DANS des cellules
+// ("| PRÉSENTATION | ... |"), alors que trouverOccurrencesFichePrimaire()
+// exige un titre seul en début de ligne (préfixes tolérés : -, •, #, *, >
+// ou un numéro, mais pas "|"). Sans conversion préalable, `phases` restait
+// vide et, le rendu du déroulement étant conditionné à `if (phases.length)`,
+// TOUT le bloc disparaissait de la carte alors que le texte était bien là.
+// On réécrit donc chaque ligne de tableau dont la première cellule est un
+// nom de phase en "titre de phase + contenu étiqueté" ; le reste du
+// parseur est inchangé.
+const MOTIF_PHASE_CELLULE_FICHE = /^(PR[ÉE]SENTATION|D[ÉE]VELOPPEMENT|[ÉE]VALUATION(?:\s*\/?\s*R[ÉE]INVESTISSEMENT)?|R[ÉE]INVESTISSEMENT)$/i;
+const ETIQUETTES_DEFAUT_DEROULEMENT_FICHE = [
+    "Activités de l'enseignant.e",
+    'Stratégies pédagogiques',
+    'Activités des apprenant.e.s'
+];
+
+function decouperCellulesTableauFiche(ligne) {
+    return ligne.trim().replace(/\\\|/g, '\uE000').replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim().replace(/\uE000/g, '|'));
+}
+
+function normaliserTableauDeroulementFiche(texte) {
+    const lignes = texte.split('\n');
+    const sortie = [];
+    // Libellés de colonnes du dernier en-tête de tableau rencontré : ils
+    // servent à étiqueter les cellules des lignes de phase qui suivent,
+    // pour ne pas perdre l'information "qui fait quoi".
+    let etiquettes = null;
+
+    lignes.forEach(ligne => {
+        if (!/^\s*\|.*\|\s*$/.test(ligne)) { sortie.push(ligne); return; }
+
+        const cellules = decouperCellulesTableauFiche(ligne);
+        const premiere = (cellules[0] || '').trim();
+
+        if (!MOTIF_PHASE_CELLULE_FICHE.test(premiere)) {
+            // En-tête de tableau (au moins trois colonnes, et pas une
+            // ligne de séparation "|---|---|") -> on mémorise ses libellés.
+            if (cellules.length >= 3 && !/^[\s\-:|]+$/.test(ligne)) etiquettes = cellules.slice(1);
+            sortie.push(ligne);
+            return;
+        }
+
+        sortie.push(premiere);
+        cellules.slice(1).forEach((cellule, i) => {
+            // Les cellules multi-lignes sont écrites avec des <br> : on les
+            // rend au parseur sous forme de vraies lignes.
+            const contenu = cellule.replace(/<br\s*\/?>/gi, '\n').trim();
+            if (!contenu) return;
+            const etiquette = (etiquettes && etiquettes[i]) || ETIQUETTES_DEFAUT_DEROULEMENT_FICHE[i] || '';
+            if (etiquette) sortie.push(`${etiquette} :`);
+            contenu.split('\n').forEach(l => {
+                const l2 = l.trim();
+                if (l2) sortie.push(/^[-•]/.test(l2) ? l2 : `- ${l2}`);
+            });
+        });
+    });
+
+    return sortie.join('\n');
+}
+
+function analyserFichePrimaire(texteBrut) {
+    const texteNettoye = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
+        // titre ("### BARÈME", "#### EXERCICE 1 : ...") -- la détection de
+        // libellé ci-dessous ne tolérait qu'UN SEUL "#" en préfixe, donc
+        // un "###"/"####" faisait échouer le repérage de toute la section
+        // (repli silencieux vers l'affichage brut, "###"/"####" laissés
+        // tels quels dans le texte). On retire toute suite de "#" en
+        // début de ligne, comme pour les "*" ci-dessus.
+        .replace(/^#+\s*/gm, '')
+        .trim();
+    if (!texteNettoye) return null;
+
+    const texte = normaliserTableauDeroulementFiche(texteNettoye);
+
+    // ❖ Même ambiguïté que la fiche PNAPAS (voir analyserFichePNAPAS) : la
+    // fiche APC a ses propres sections COMPÉTENCE / THÈME / LEÇON, mais le
+    // modèle les glisse parfois comme simples champs dans le bloc
+    // IDENTIFICATION ("Leçon : La multiplication : Semaine : …"). Sans
+    // filtre, cette ligne est détectée comme le TITRE d'une section
+    // "LEÇON" à part entière, ce qui tronque l'identification en plein
+    // milieu et fait disparaître tous les champs suivants (Semaine,
+    // Documents de référence...). Distinction retenue : un titre de
+    // section est seul sur sa ligne, un champ d'identification porte sa
+    // valeur après un deux-points.
+    const occurrences = trouverOccurrencesFichePrimaire(texte).filter(o => {
+        if (!['competence', 'theme', 'lecon'].includes(o.type)) return true;
+        const apresDeuxPoints = (o.texte || '').split(':').slice(1).join(':').trim();
+        return !apresDeuxPoints;
+    });
+    const aIdentification = occurrences.some(o => o.type === 'identification');
+    // ❖ Une fiche d'ÉVALUATION primaire suit un canevas différent (pas de
+    // DÉROULEMENT PÉDAGOGIQUE) -- son propre parseur dédié prend le relais
+    // dans ce cas, voir analyserEvaluationPrimaire() et son appel depuis
+    // construireRenduFichePrimaire().
+    const aDeroulement = occurrences.some(o => o.type === 'deroulement');
+    if (!aIdentification || !aDeroulement) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
+    }
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    function contenuDe(type) {
+        const occ = occurrences.find(o => o.type === type);
+        return occ ? contenuApres(occ) : '';
+    }
+
+    // --- En-tête : IDENTIFICATION (Classe/Matière/Effectif/Durée) fournit
+    // déjà des lignes "Label : Valeur" -> badges. On y ajoute Compétence,
+    // Thème et Leçon comme badges supplémentaires plutôt que d'ouvrir
+    // trois mini-sections séparées, pour garder une vue d'ensemble
+    // compacte (dans l'esprit "respiration visuelle" demandé).
+    const badges = [];
+    const occIdentification = occurrences.find(o => o.type === 'identification');
+    if (occIdentification) {
+        contenuApres(occIdentification).split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
+            // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
+            // AVANT de chercher le ":" -- sinon il reste collé au libellé
+            // du badge ("- Classe" au lieu de "Classe").
+            // ❖ "+" et non un seul caractère : une ligne séparatrice ("---")
+            // ne perdait qu'UN tiret ("- Classe" -> "Classe" fonctionnait,
+            // mais "---" -> "--" ne faisait plus les 3 caractères exigés par
+            // estLigneSeparatriceFiche ci-dessous, et survivait comme badge
+            // fantôme vide en fin d'identification.
+            const l2 = l.trim().replace(/^[-•]+\s*/, '');
+            if (!l2 || estLigneSeparatriceFiche(l2)) return;
+            const sepIdx = l2.indexOf(':');
+            if (sepIdx > -1 && sepIdx < 60) {
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
+            } else {
+                badges.push({ label: '', valeur: l2 });
+            }
+        });
+    }
+    ['competence', 'theme', 'lecon'].forEach(type => {
+        // ❖ Le modèle intercale volontiers une règle horizontale Markdown
+        // ("---") entre deux sections. Sans filtrage, elle restait collée à
+        // la valeur du badge ("Le groupement par 10 et la notion de
+        // dizaine. ---"). On écarte donc les lignes purement séparatrices,
+        // et on recompose la valeur sur une seule ligne.
+        const valeur = contenuDe(type)
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l && !estLigneSeparatriceFiche(l))
+            .join(' ')
+            .trim();
+        if (valeur) badges.push({ label: titres[type] || type, valeur });
+    });
+
+    // ❖ Même correctif que la Forge secondaire (voir trouverOccurrencesFiche
+    // ci-dessus) : "Habiletés" et "Contenus" acceptés seuls ou combinés,
+    // dans n'importe quel ordre.
+    const motifEnTeteColonnes = /^(Habilet[ée]s?|Skills?|Contenus?|Contents?)\s*[:\-]?\s*(Habilet[ée]s?|Skills?|Contenus?|Contents?)?$/i;
+    const lignesTableau = occurrences.some(o => o.type === 'tableau')
+        ? contenuDe('tableau')
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l && !estLigneSeparatriceFiche(l))
+            .map(l => nettoyerLigneTableauFiche(l))
+            .filter(l => !motifEnTeteColonnes.test(l.replace(/\s*—\s*/g, ' ').trim()))
+        : [];
+
+    const situationTexte = contenuDe('situation');
+    const materielTexte = contenuDe('materiel');
+
+    // --- Déroulement pédagogique : trois moments simples (titre + texte
+    // libre), pas de triple à décoder comme au secondaire.
+    // ❖ Bug réel trouvé le 29/08/2026 (fiche CE1 Français "La phrase") : le
+    // modèle scinde parfois DÉVELOPPEMENT en plusieurs sous-blocs titrés
+    // séparément ("DÉVELOPPEMENT … Je fais" puis "DÉVELOPPEMENT … Nous
+    // faisons", convention PNAPAS -- section "Je fais/Nous faisons/Tu fais"
+    // du prompt Forge Primaire). L'ancien code ne retenait que la PREMIÈRE
+    // occurrence de chaque type (via contenuDe, qui fait occurrences.find),
+    // donc le second bloc DÉVELOPPEMENT disparaissait silencieusement --
+    // son contenu n'était capté nulle part, y compris pas absorbé par la
+    // section suivante. On construit donc désormais une carte par
+    // OCCURRENCE de phase (contenuApres, borné par l'occurrence suivante
+    // quel que soit son type), pas une carte par type fixe : le cas normal
+    // (une seule occurrence par type) produit exactement le même résultat
+    // qu'avant, le cas à sous-blocs répétés produit désormais une carte par
+    // sous-bloc au lieu d'en perdre le contenu.
+    const TYPES_PHASE_FICHE_PRIMAIRE = ['presentation', 'developpement', 'evaluationPhase'];
+    const phases = occurrences
+        .filter(o => TYPES_PHASE_FICHE_PRIMAIRE.includes(o.type))
+        .map(o => ({ type: o.type, titre: o.texte, contenu: contenuApres(o) }))
+        .filter(p => p.contenu);
+
+    const traceTexte = contenuDe('trace');
+
+    return { badges, lignesTableau, situationTexte, materielTexte, phases, traceTexte, titres };
+}
+
+// ❖ Coloration douce du déroulement de la Fiche APC Primaire par grande
+//   phase (28/08/2026 -> 29/08/2026, demande de Constant après la
+//   coloration par niveau du Plan de session hebdomadaire) -- volontairement
+//   limitée à construireHTMLFichePrimaire (le canevas APC général, cartes
+//   empilées) et jamais à .fiche-deroulement-table (le vrai tableau à 4
+//   colonnes, partagé par la carte PNAPAS native et l'évaluation, qui n'a
+//   pas été demandé ici). Classification par le TITRE de la phase, déjà
+//   fiable puisque le prompt impose "PRÉSENTATION", "DÉVELOPPEMENT" et
+//   "ÉVALUATION / RÉINVESTISSEMENT" comme intitulés (section 5 du prompt
+//   Forge Primaire) -- un titre non reconnu (cas rare) retombe simplement
+//   sur l'apparence neutre déjà existante, sans erreur.
+function classerPhaseFichePrimaire(titre) {
+    const t = (titre || '').toUpperCase();
+    if (/PR[ÉE]SENTATION|ROUTINE|CALCULINE/.test(t)) return 'fiche-phase-presentation';
+    if (/D[ÉE]VELOPPEMENT/.test(t)) return 'fiche-phase-developpement';
+    if (/[ÉE]VALUATION|R[ÉE]INVESTISSEMENT/.test(t)) return 'fiche-phase-evaluation';
+    return '';
+}
+
+function construireHTMLFichePrimaire(analyse) {
+    const { badges, lignesTableau, situationTexte, materielTexte, phases, traceTexte, titres } = analyse;
+    let html = '';
+
+    if (badges.length) {
+        html += `<div class="fiche-section-titre">🧭 ${echapperHTMLFiche(titres.identification || '')}</div>`;
+        html += '<div class="fiche-bloc-entete">';
+        badges.forEach(b => {
+            const estCompetence = /comp[ée]t/i.test(b.label);
+            html += `<span class="fiche-badge${estCompetence ? ' fiche-badge-competence' : ''}">`;
+            if (b.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(b.label)} :</span> `;
+            html += `${echapperHTMLFiche(b.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    if (situationTexte) {
+        html += `<div class="fiche-section-titre">💡 ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
+    }
+
+    if (lignesTableau.length) {
+        html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titres.tableau || '')}</div>`;
+        html += '<div class="fiche-carte fiche-liste-simple">';
+        lignesTableau.forEach(l => {
+            html += `<div>${echapperHTMLFiche(l)}</div>`;
+        });
+        html += '</div>';
+    }
+
+    if (materielTexte) {
+        html += `<div class="fiche-section-titre">🧰 ${echapperHTMLFiche(titres.materiel || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
+    }
+
+    if (phases.length) {
+        html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
+        phases.forEach(p => {
+            const classePhase = classerPhaseFichePrimaire(p.titre);
+            html += `<div class="fiche-carte fiche-phase${classePhase ? ' ' + classePhase : ''}">`;
+            html += `<div class="fiche-phase-titre">${echapperHTMLFiche(p.titre)}</div>`;
+            html += `<div class="fiche-phase-ligne">${texteVersHtmlLegerFiche(p.contenu)}</div>`;
+            html += '</div>';
+        });
+    }
+
+    // Section à part entière, après le déroulement -- même traitement que
+    // dans la carte PNAPAS, pour que les deux canevas se ressemblent.
+    if (traceTexte) {
+        html += `<div class="fiche-section-titre">✍️ ${echapperHTMLFiche(titres.trace || 'TRACE ÉCRITE')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(traceTexte)}</div>`;
+    }
+
+    return `<div class="fiche-lecon accent-vert">${html}</div>`;
+}
+
+// =======================================================================
+// ❖ LA CARTE "FICHE PNAPAS NATIVE" (FORGE PRIMAIRE) ❖
+// =======================================================================
+// Le canevas officiel PNAPAS diffère de celui de l'APC sur trois points :
+// son identification regroupe thème, séquence, séance, durée, support,
+// matériel et documents (là où l'APC ouvre une section COMPÉTENCE, absente
+// du modèle PNAPAS) ; son déroulement est un tableau à quatre colonnes
+// (Phases didactiques / Activités de l'enseignant.e / Stratégies
+// pédagogiques / Activités des apprenant.e.s) ; et au CE2 en français le
+// tableau des habiletés disparaît au profit de « Contenus » en phrases
+// verbales.
+//
+// On rend donc ce canevas tel quel plutôt que de le replier dans la carte
+// APC : c'est la forme que l'instituteur a sous les yeux en formation, et
+// celle que son conseiller pédagogique attend.
+//
+// Déclencheur : la présence d'un vrai tableau de déroulement à au moins
+// trois colonnes dont la première cellule porte un nom de phase. Si le
+// modèle n'a pas produit ce tableau, ou si le niveau relève du CM (où le
+// PNAPAS n'est pas en vigueur), on renvoie null et la carte APC reprend la
+// main -- silencieusement, comme partout ailleurs ici.
+
+const NIVEAUX_HORS_PNAPAS_FICHE = /\bCM\s*[12]\b/i;
+
+// ❖ Le modèle referme volontiers sa réponse par une phrase adressée à
+// l'instituteur (« Cette fiche est prête à être utilisée en classe. Si vous
+// avez besoin d'une autre séance, n'hésitez pas… »). Placée avant la
+// signature, elle atterrissait dans la carte de la trace écrite et se
+// retrouvait imprimée au milieu du document que l'instituteur range dans
+// son cahier de préparation. On retire donc les derniers paragraphes qui
+// s'adressent visiblement au lecteur -- jamais ceux du milieu, pour ne pas
+// amputer un contenu pédagogique qui emploierait « vous ».
+const MOTIF_PHRASE_ACCOMPAGNEMENT_FICHE = /n'h[ée]sitez pas|si vous (?:avez besoin|souhaitez|voulez|le souhaitez)|cette fiche est pr[êe]te|dites-moi si|je (?:peux|reste) (?:vous|[àa] votre)|souhaitez-vous (?:que|des|une)/i;
+
+function retirerPhrasesAccompagnementFiche(texte) {
+    const paragraphes = texte.split(/\n\s*\n/);
+    // ❖ Un simple séparateur ("---") qui introduisait la phrase
+    // d'accompagnement devient orphelin une fois celle-ci retirée : on le
+    // retire lui aussi, sans quoi il s'affiche tel quel (marked.parse ne le
+    // reconnaît plus comme ligne horizontale une fois collé au jeton de fin
+    // de signature).
+    const estParagrapheAccessoire = p =>
+        MOTIF_PHRASE_ACCOMPAGNEMENT_FICHE.test(p) || estLigneSeparatriceFiche(p.trim());
+    while (paragraphes.length && estParagrapheAccessoire(paragraphes[paragraphes.length - 1])) {
+        paragraphes.pop();
+    }
+    return paragraphes.join('\n\n').trim();
+}
+
+function extraireLignesTableauDeroulementFiche(region) {
+    const lignes = region.split('\n').map(l => l.trim()).filter(Boolean);
+    const enTetes = [];
+    const rangs = [];
+
+    lignes.forEach(ligne => {
+        if (!/^\|.*\|$/.test(ligne)) return;
+        if (/^[\s\-:|]+$/.test(ligne)) return;
+        const cellules = decouperCellulesTableauFiche(ligne);
+        if (cellules.length < 3) return;
+
+        // ❖ La cellule de phase porte souvent un sous-titre sur une seconde
+        // ligne ("PRÉSENTATION <br> Routine", "DÉVELOPPEMENT <br>
+        // J'apprends") : on teste donc sa PREMIÈRE ligne, une fois les
+        // <br> convertis, et non la cellule entière.
+        const premiereLigne = (cellules[0] || '').replace(/<br\s*\/?>/gi, '\n').split('\n')[0].trim();
+        if (MOTIF_PHASE_CELLULE_FICHE.test(premiereLigne)) {
+            rangs.push(cellules.map(c => c.replace(/<br\s*\/?>/gi, '\n').trim()));
+        } else if (!enTetes.length && !rangs.length) {
+            enTetes.push(...cellules);
+        }
+    });
+
+    return { enTetes, rangs };
+}
+
+function analyserFichePNAPAS(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        .replace(/^#+\s*/gm, '')
+        .trim();
+    if (!texte) return null;
+
+    // ❖ L'identification PNAPAS contient des champs « Thème : … » et
+    // « Leçon : … » qui, dans le canevas APC, sont des TITRES de section.
+    // Sans ce filtre, la première de ces lignes clôturait l'identification
+    // et avalait tous les champs suivants (séquence, séance, support,
+    // documents) comme s'ils étaient le contenu de la section THÈME.
+    // Distinction retenue : un titre de section est seul sur sa ligne
+    // ("3. THÈME"), un champ d'identification porte sa valeur après un
+    // deux-points ("- Thème : Nombres et opérations").
+    const occurrences = trouverOccurrencesFichePrimaire(texte).filter(o => {
+        if (o.type !== 'theme' && o.type !== 'lecon') return true;
+        const apresDeuxPoints = (o.texte || '').split(':').slice(1).join(':').trim();
+        return !apresDeuxPoints;
+    });
+    const occIdentification = occurrences.find(o => o.type === 'identification');
+    const occDeroulement = occurrences.find(o => o.type === 'deroulement');
+    if (!occIdentification || !occDeroulement) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
+    }
+    function contenuDe(type) {
+        const occ = occurrences.find(o => o.type === type);
+        return occ ? contenuApres(occ) : '';
+    }
+
+    // La région de déroulement court jusqu'à la fin du texte : les phases y
+    // sont des cellules, pas des titres de section, donc aucune occurrence
+    // ne vient la borner.
+    const region = texte.slice(occDeroulement.end);
+    const { enTetes, rangs } = extraireLignesTableauDeroulementFiche(region);
+    if (!rangs.length) return null;
+
+    const identificationTexte = contenuApres(occIdentification);
+    if (NIVEAUX_HORS_PNAPAS_FICHE.test(identificationTexte)) return null;
+
+    const champs = [];
+    identificationTexte.split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
+        const l2 = l.trim().replace(/^[-•]+\s*/, '');
+        // ❖ estLigneSeparatriceFiche exige au moins trois caractères : une
+        // règle courte ("--") passait donc au travers et s'affichait comme
+        // un badge vide en fin d'identification. Le "+" ci-dessus (plutôt
+        // qu'un seul caractère) traite la cause à la racine : "---" ne perd
+        // plus qu'UN tiret ("---" -> "--", toujours trop court) mais la
+        // totalité de la ligne séparatrice.
+        if (!l2 || estLigneSeparatriceFiche(l2) || /^[\s\-_—–]+$/.test(l2)) return;
+        const sepIdx = l2.indexOf(':');
+        if (sepIdx > -1 && sepIdx < 60) {
+            const label = l2.slice(0, sepIdx).trim();
+            let valeur = l2.slice(sepIdx + 1).trim();
+            // ❖ Le modèle répète volontiers le libellé dans sa valeur
+            // ("Séance : Séance 1 : Lecture de…"), ce qui donne un badge
+            // bègue. On retire la répétition en gardant le numéro, qui lui
+            // porte une information : "Séance : 1 — Lecture de…".
+            // ❖ Numéro au format « 1/4 » accepté (03/10/2026) : les séances de
+            // français PNAPAS se numérotent ainsi (« Séance 1/4 : Lecture-
+            // prononciation ») ; seul le « 1 » était capturé, d'où un badge
+            // « Séance : 1 — /4 — Lecture-prononciation ».
+            const motifRepetition = new RegExp(
+                '^' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*(\\d+(?:\\s*\\/\\s*\\d+)?)?\\s*[:.\\-—]?\\s*', 'i');
+            valeur = valeur.replace(motifRepetition, (m, num) => (num ? num + ' — ' : ''));
+            champs.push({ label, valeur: nettoyerValeurChampCreuseFiche(valeur.trim() || l2.slice(sepIdx + 1).trim()) });
+        } else {
+            champs.push({ label: '', valeur: l2 });
+        }
+    });
+
+    // Le thème et la leçon peuvent figurer À LA FOIS comme champ
+    // d'identification PNAPAS et comme section APC : on ne les ajoute en
+    // badge que s'ils n'ont pas déjà été relevés plus haut.
+    const clef = v => v.toLowerCase().replace(/[\s.;:,]+/g, ' ').trim();
+    const dejaPresents = new Set(champs.map(c => clef(c.valeur)));
+    ['theme', 'lecon'].forEach(type => {
+        const valeur = contenuDe(type)
+            .split('\n').map(l => l.trim())
+            .filter(l => l && !estLigneSeparatriceFiche(l))
+            .join(' ').trim();
+        if (valeur && !dejaPresents.has(clef(valeur))) {
+            champs.push({ label: (titresDe(occurrences, type) || type), valeur });
+            dejaPresents.add(clef(valeur));
+        }
+    });
+
+    // Le reste du déroulement après la dernière ligne de tableau (trace
+    // écrite, remarques) : on le conserve plutôt que de le perdre. Si le
+    // tableau termine le texte, il n'y a pas de retour à la ligne après le
+    // dernier pipe -- sans ce garde-fou, indexOf renvoie -1 et l'on
+    // récupérerait le tableau entier en guise de « suite ».
+    const idxDernierPipe = region.lastIndexOf('|');
+    const idxFinTableau = idxDernierPipe === -1 ? -1 : region.indexOf('\n', idxDernierPipe);
+    const apresTableau = idxFinTableau === -1
+        ? ''
+        : retirerPhrasesAccompagnementFiche(region.slice(idxFinTableau + 1).trim());
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    // ❖ Les habiletés/contenus arrivent tantôt en liste, tantôt en tableau
+    // Markdown : on décompose les lignes de tableau comme le fait la carte
+    // APC, pour ne pas afficher de barres verticales à l'écran.
+    const motifEnTeteHabiletes = /^(Habilet[ée]s?|Contenus?)\s*[:\-]?\s*(Habilet[ée]s?|Contenus?)?$/i;
+    const contenusTexte = contenuDe('tableau')
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !estLigneSeparatriceFiche(l))
+        .map(l => (/^\|.*\|$/.test(l) ? nettoyerLigneTableauFiche(l) : l))
+        .filter(l => !motifEnTeteHabiletes.test(l.replace(/\s*—\s*/g, ' ').trim()))
+        .join('\n');
+
+    return {
+        champs,
+        situationTexte: contenuDe('situation'),
+        contenusTexte,
+        materielTexte: contenuDe('materiel'),
+        enTetes: enTetes.length >= 3 ? enTetes : ['Phases didactiques', "Activités de l'enseignant.e", 'Stratégies pédagogiques', 'Activités des apprenant.e.s'],
+        rangs,
+        apresTableau: apresTableau && !/^[\s\-:|]+$/.test(apresTableau) ? apresTableau : '',
+        titres,
+        // ❖ Coloration par phase (29/08/2026) : une vraie fiche PNAPAS ne
+        // comporte jamais de section COMPÉTENCE (section 6 du prompt Forge
+        // Primaire) -- sa présence, détectée ici via la même reconnaissance
+        // de titres de section que le reste de ce parseur, signale donc
+        // sans ambiguïté une fiche APC qui s'est simplement rédigée sous
+        // forme de tableau plutôt que de cartes.
+        estFicheAPC: occurrences.some(o => o.type === 'competence')
+    };
+}
+
+function titresDe(occurrences, type) {
+    const occ = occurrences.find(o => o.type === type);
+    return occ ? occ.texte : '';
+}
+
+// ❖ Exception PNAPAS : au CE2 en français, le tableau des habiletés a été
+// supprimé au profit d'une simple rubrique « CONTENUS » rédigée en phrases
+// verbales. La règle est fixe et sans jugement à porter -- or le modèle
+// retombe régulièrement sur le titre par défaut malgré des consignes
+// répétées (trois échecs mesurés). On l'impose donc ici, où le résultat est
+// déterministe, plutôt que de continuer à le demander au modèle.
+// ❖ Étendu le 03/10/2026 aux MATHÉMATIQUES CE2 : l'annexe officielle de
+// juillet 2026 (fiche pratique maths CE2) titre elle aussi cette rubrique
+// « CONTENUS », en phrases verbales -- ce n'était pas une exception propre
+// au français. Au CP et au CE1, le tableau des habiletés et contenus reste.
+function titreContenusFichePNAPAS(champs, titreParDefaut) {
+    const valeurDe = motifLabel => {
+        const champ = (champs || []).find(c => motifLabel.test(c.label || ''));
+        return champ ? (champ.valeur || '') : '';
+    };
+    const estCE2 = /\bCE\s*2\b/i.test(valeurDe(/classe/i));
+    const matiere = valeurDe(/mati[èe]re/i);
+    const estMatierePNAPAS = /fran[çc]ais|math[ée]matiques/i.test(matiere);
+    return (estCE2 && estMatierePNAPAS) ? 'CONTENUS' : titreParDefaut;
+}
+
+// ❖ Sections « bonus EdukaTchat » (03/10/2026) : la fiche pratique officielle
+// PNAPAS ne comporte ni situation d'apprentissage rédigée, ni matériel
+// détaillé, ni trace écrite -- EdukaTchat les ajoute en complément, et
+// Constant a choisi de les garder en les signalant comme telles, pour que
+// l'instituteur sache qu'il peut les retirer sans s'écarter du canevas
+// officiel. Sur une fiche APC rendue par ce même tableau (estFicheAPC),
+// ces sections sont officielles : aucune mention dans ce cas.
+function titreSectionBonusFichePNAPAS(titre, estFicheAPC) {
+    const t = echapperHTMLFiche(titre || '');
+    return estFicheAPC ? t : `${t} <span class="fiche-mention-bonus">Bonus EdukaTchat</span>`;
+}
+
+// ❖ En lecture, la fiche officielle déroule « Je fais / Nous faisons / Tu
+// fais » à l'intérieur de chaque étape (03/10/2026) : on met ces trois
+// repères en évidence en tête de ligne dans les cellules du tableau. Le
+// texte est déjà échappé à ce stade -- aucune balise venant du modèle.
+function marquerMomentsLectureFiche(html) {
+    return html.replace(/(^|<p>|<br>|<li>)\s*(Je fais|Nous faisons|Tu fais)\s*:/g,
+        '$1<strong class="fiche-moment-lecture">$2 :</strong>');
+}
+
+function construireHTMLFichePNAPAS(analyse) {
+    const { champs, situationTexte, contenusTexte, materielTexte, enTetes, rangs, apresTableau, titres, estFicheAPC } = analyse;
+    let html = '';
+
+    if (champs.length) {
+        html += `<div class="fiche-section-titre">🧭 ${echapperHTMLFiche(titres.identification || '')}</div>`;
+        html += '<div class="fiche-bloc-entete">';
+        champs.forEach(c => {
+            html += '<span class="fiche-badge">';
+            if (c.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(c.label)} :</span> `;
+            html += `${echapperHTMLFiche(c.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    if (situationTexte) {
+        html += `<div class="fiche-section-titre">💡 ${titreSectionBonusFichePNAPAS(titres.situation, estFicheAPC)}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
+    }
+
+    if (contenusTexte) {
+        const titreContenus = titreContenusFichePNAPAS(champs, titres.tableau || '');
+        html += `<div class="fiche-section-titre">📋 ${echapperHTMLFiche(titreContenus)}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(contenusTexte)}</div>`;
+    }
+
+    if (materielTexte) {
+        html += `<div class="fiche-section-titre">🧰 ${titreSectionBonusFichePNAPAS(titres.materiel, estFicheAPC)}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
+    }
+
+    // ❖ Coloration par phase du tableau à 4 colonnes (29/08/2026, étendue le
+    // 29/08/2026 aux vraies fiches PNAPAS elles-mêmes à la demande de
+    // Constant -- "on n'a pas prévu d'embellir ici aussi ?"). Ce même
+    // tableau sert à la fois à la vraie fiche PNAPAS (maths/français
+    // CP-CE2, jamais de section COMPÉTENCE) et à une fiche APC dont l'agent
+    // a spontanément rédigé le déroulement sous forme de tableau plutôt que
+    // de cartes (ex. ESC -- voir CLAUDE.md). classerPhaseFichePrimaire ne
+    // regarde que le nom de la phase (PRÉSENTATION/DÉVELOPPEMENT/
+    // ÉVALUATION), identique dans les deux canevas -- estFicheAPC ne sert
+    // donc plus à restreindre la coloration, seulement conservé au cas où
+    // un autre usage en aurait besoin plus tard.
+    html += `<div class="fiche-section-titre">🧑‍🏫 ${echapperHTMLFiche(titres.deroulement || '')}</div>`;
+    html += '<div class="fiche-carte fiche-carte-tableau">';
+    html += '<table class="fiche-deroulement-table"><thead><tr>';
+    enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
+    html += '</tr></thead><tbody>';
+    rangs.forEach(rang => {
+        const classePhase = classerPhaseFichePrimaire(rang[0]);
+        html += classePhase ? `<tr class="${classePhase}">` : '<tr>';
+        enTetes.forEach((enTete, i) => {
+            const cellule = rang[i] || '';
+            // data-libelle porte le nom de la colonne : c'est lui qui
+            // s'affiche en étiquette quand le tableau se replie en cartes
+            // sur les petits écrans (voir style.css).
+            html += `<td data-libelle="${echapperHTMLFiche(enTete)}">${marquerMomentsLectureFiche(texteVersHtmlLegerFiche(cellule))}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    if (apresTableau) {
+        // ❖ La trace écrite est la seule section qui suivait le tableau sans
+        // titre : elle s'affichait en carte nue au milieu de sections toutes
+        // coiffées d'un intitulé. On la détecte pour lui rendre le sien.
+        // ❖ Tolère aussi (03/10/2026) une ou plusieurs lignes de séparation
+        // (« --- ») avant le titre, une numérotation (« 6. ») ou un émoji :
+        // observé sur deux fiches maths CE2/CP1 où le titre, précédé d'un
+        // « --- », n'était plus reconnu et s'affichait en texte nu dans la
+        // carte, sans son intitulé ni sa pastille « Bonus EdukaTchat ».
+        const motifTrace = /^\s*(?:[-—–_*=]{3,}\s*\n\s*)*(?:\d+[.)]\s*)?(?:[^\p{L}\p{N}\s]+\s*)?(TRACE\s+[ÉE]CRITE)\s*:?\s*\n?/iu;
+        const correspondance = apresTableau.match(motifTrace);
+        if (correspondance) {
+            html += `<div class="fiche-section-titre">✍️ ${titreSectionBonusFichePNAPAS(correspondance[1], estFicheAPC)}</div>`;
+            html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(apresTableau.slice(correspondance[0].length).trim())}</div>`;
+        } else {
+            html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(apresTableau)}</div>`;
+        }
+    }
+
+    return `<div class="fiche-lecon accent-vert fiche-lecon-pnapas">${html}</div>`;
+}
+
+// =======================================================================
+// ❖ LA CARTE "PLAN DE SESSION HEBDOMADAIRE" (FORGE PRIMAIRE, REMÉDIATION
+// PNAPAS, CLASSE HÉTÉROGÈNE) ❖
+// =======================================================================
+// Ajoutée le 28/08/2026 : ce canevas n'a rien à voir avec une fiche de
+// leçon quotidienne -- c'est le plan d'une semaine entière (répartition
+// par jour, plusieurs catégories d'activités détaillées, matériel,
+// points d'observation), tel que décrit dans le "Guide de Remédiation
+// Mathématiques CE-CM" du PNAPAS. Jusqu'ici affiché en Markdown brut,
+// faute d'un parseur dédié.
+// ❖ Deux variantes réelles observées pour ce canevas (28/08/2026) :
+// 1. Une SEULE semaine, détaillée : titre + champs + "DÉTAIL DU PLAN PAR
+//    JOUR" (titre explicite) + tableau 7 colonnes + Détail des activités +
+//    Matériel + Points d'observation.
+// 2. UN MOIS entier, condensé : titre unique, puis plusieurs blocs
+//    "Semaine : N" à la suite, chacun avec ses propres champs et son
+//    propre tableau (5 colonnes, PAS de titre "DÉTAIL DU PLAN PAR JOUR"),
+//    sans Détail des activités/Matériel/Points d'observation.
+// "semaine" sert de frontière entre blocs répétés -- "tableau" reste un
+// simple titre optionnel À L'INTÉRIEUR d'un bloc (jamais une frontière),
+// pour rester transparent dans les deux cas (voir analyserFichePlanHebdo).
+const ALTERNATIVES_SECTION_PLAN_HEBDO = {
+    identification: ["PLAN DE SESSION HEBDOMADAIRE"],
+    semaine: ["Semaine\\b"],
+    tableau: ["D[ÉE]TAIL DU PLAN PAR JOUR", "Tableau\\s+hebdomadaire"],
+    activites: ["D[ÉE]TAIL DES ACTIVIT[ÉE]S"],
+    materiel: ["MAT[ÉE]RIEL N[ÉE]CESSAIRE(?:\\s+POUR\\s+LA\\s+SEMAINE)?"],
+    observations: ["POINTS\\s+D['’]OBSERVATION(?:\\s+POUR\\s+L['’]ENSEIGNANT)?"]
+};
+
+// Types d'occurrence qui délimitent un bloc "semaine" (jamais "tableau",
+// qui n'est qu'un titre optionnel transparent à l'intérieur d'un bloc --
+// voir le commentaire ci-dessus).
+const TYPES_FRONTIERE_SEMAINE_PLAN_HEBDO = ['semaine', 'activites', 'materiel', 'observations'];
+
+// Une ligne qui est en réalité un TITRE de section connu (ex. "DÉTAIL DU
+// PLAN PAR JOUR" isolé dans le bloc d'une semaine, cas de la variante 1)
+// ne doit jamais être avalée comme un champ "Label : valeur" -- elle est
+// déjà repérée par ailleurs comme occurrence de type 'tableau'.
+function estTitreSectionPlanHebdoConnu(ligne) {
+    return Object.values(ALTERNATIVES_SECTION_PLAN_HEBDO).some(variantes => {
+        const re = new RegExp(`^(?:${variantes.join('|')})\\s*:?\\s*$`, 'i');
+        return re.test(ligne.trim());
+    });
+}
+
+function trouverOccurrencesPlanHebdo(texte) {
+    const occurrences = [];
+    Object.entries(ALTERNATIVES_SECTION_PLAN_HEBDO).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+// Contrairement au tableau de déroulement (dont la 1ère colonne porte des
+// libellés de PHASE reconnus, voir MOTIF_PHASE_CELLULE_FICHE), le tableau
+// hebdomadaire n'a pas de vocabulaire fixe en 1ère colonne (ce sont des
+// jours de la semaine) : la 1ère ligne de tableau rencontrée est donc
+// toujours l'en-tête, toutes les suivantes sont des rangs de données.
+function extraireLignesTableauPlanHebdo(region) {
+    const lignes = region.split('\n').map(l => l.trim()).filter(Boolean);
+    const enTetes = [];
+    const rangs = [];
+    lignes.forEach(ligne => {
+        if (!/^\|.*\|$/.test(ligne)) return;
+        if (/^[\s\-:|]+$/.test(ligne)) return;
+        const cellules = decouperCellulesTableauFiche(ligne);
+        if (cellules.length < 3) return;
+        if (!enTetes.length) {
+            enTetes.push(...cellules);
+        } else {
+            rangs.push(cellules.map(c => c.replace(/<br\s*\/?>/gi, '\n').trim()));
+        }
+    });
+    return { enTetes, rangs };
+}
+
+// Découpe le bloc "DÉTAIL DES ACTIVITÉS" en sa hiérarchie réelle :
+// catégories numérotées ("1. Lecture des nombres de deux chiffres :") ->
+// activités ("- Activité 1 : Lecture du tableau des nombres.") -> points
+// (puces libres sous chaque activité). Aucun des découpeurs génériques
+// existants (texteVersHtmlLegerFiche) ne préserve cette hiérarchie à trois
+// niveaux -- elle est propre à ce canevas.
+function structurerActivitesPlanHebdo(texte) {
+    if (!texte) return [];
+    const lignes = texte.split('\n').map(l => l.trim()).filter(Boolean);
+    const categories = [];
+    let categorieCourante = null;
+    let activiteCourante = null;
+
+    const motifCategorie = /^\d+[.)]\s*(.+?)\s*:?\s*$/;
+    const motifActivite = /^[-•]\s*Activit[ée]\s*\d*\s*:\s*(.+)$/i;
+    const motifPuce = /^[-•]\s*(.+)$/;
+
+    lignes.forEach(ligne => {
+        if (estLigneSeparatriceFiche(ligne)) return;
+
+        const mCategorie = ligne.match(motifCategorie);
+        if (mCategorie) {
+            categorieCourante = { titre: mCategorie[1].trim(), activites: [] };
+            categories.push(categorieCourante);
+            activiteCourante = null;
+            return;
+        }
+        if (!categorieCourante) return; // texte avant la première catégorie numérotée -- ignoré
+
+        const mActivite = ligne.match(motifActivite);
+        if (mActivite) {
+            activiteCourante = { titre: mActivite[1].trim(), points: [] };
+            categorieCourante.activites.push(activiteCourante);
+            return;
+        }
+
+        const mPuce = ligne.match(motifPuce);
+        if (mPuce) {
+            if (!activiteCourante) {
+                // Puce orpheline directement sous la catégorie (pas
+                // d'activité nommée) : on lui crée un conteneur sans titre
+                // plutôt que de la perdre.
+                activiteCourante = { titre: '', points: [] };
+                categorieCourante.activites.push(activiteCourante);
+            }
+            activiteCourante.points.push(mPuce[1].trim());
+        }
+    });
+
+    return categories;
+}
+
+// Découpe le contenu d'UN bloc "Semaine : ..." (déjà isolé par
+// analyserFichePlanHebdo, frontières incluses) en ses champs
+// d'identification (Groupe de niveau / Objectif mensuel / Objectif de la
+// semaine, éventuellement un titre "DÉTAIL DU PLAN PAR JOUR" à ignorer) et
+// son propre tableau -- la 1ère ligne "| ... |" rencontrée marque la
+// bascule de l'un vers l'autre.
+function decouperBlocSemaine(texteBloc) {
+    const lignes = texteBloc.split('\n');
+    const idxPremiereLigneTableau = lignes.findIndex(l => /^\s*\|.*\|\s*$/.test(l.trim()));
+    const champsBrut = idxPremiereLigneTableau === -1 ? texteBloc : lignes.slice(0, idxPremiereLigneTableau).join('\n');
+    const tableauBrut = idxPremiereLigneTableau === -1 ? '' : lignes.slice(idxPremiereLigneTableau).join('\n');
+
+    const champs = [];
+    champsBrut.split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
+        const l2 = l.trim().replace(/^[-•]+\s*/, '');
+        if (!l2 || estLigneSeparatriceFiche(l2) || /^[\s\-_—–]+$/.test(l2)) return;
+        if (estTitreSectionPlanHebdoConnu(l2)) return;
+        const sepIdx = l2.indexOf(':');
+        if (sepIdx > -1 && sepIdx < 60) {
+            champs.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
+        } else if (champs.length) {
+            // ❖ Ligne sans deux-points : presque toujours la suite d'une
+            // valeur rédigée sur plusieurs lignes par l'agent (ex. "Objectif
+            // mensuel : ..." suivi d'une deuxième phrase sur sa propre
+            // ligne), jamais un nouveau champ indépendant dans cette zone
+            // d'identification -- on la rattache donc au champ précédent
+            // plutôt que d'en faire une pastille fantôme sans étiquette.
+            const dernier = champs[champs.length - 1];
+            dernier.valeur = dernier.valeur ? `${dernier.valeur} ${l2}` : l2;
+        } else {
+            champs.push({ label: '', valeur: l2 });
+        }
+    });
+
+    // ❖ Même prudence que dans analyserFichePlanHebdo : on ne convertit les
+    // <br> qu'à l'intérieur des cellules, jamais avant, sous peine de
+    // casser les lignes "| ... |" du tableau en plein milieu.
+    const { enTetes, rangs } = extraireLignesTableauPlanHebdo(tableauBrut);
+
+    return { champs, enTetes, rangs };
+}
+
+function htmlActivitesPlanHebdo(categories) {
+    if (!categories || !categories.length) return '';
+    let html = '<div class="plan-hebdo-activites">';
+    categories.forEach(cat => {
+        html += '<div class="plan-hebdo-categorie">';
+        html += `<div class="plan-hebdo-categorie-titre">${echapperHTMLFiche(cat.titre)}</div>`;
+        cat.activites.forEach(act => {
+            html += '<div class="plan-hebdo-activite">';
+            if (act.titre) html += `<div class="plan-hebdo-activite-titre">${echapperHTMLFiche(act.titre)}</div>`;
+            if (act.points.length) {
+                html += '<ul class="plan-hebdo-activite-points">';
+                act.points.forEach(p => { html += `<li>${echapperHTMLFiche(p)}</li>`; });
+                html += '</ul>';
+            }
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function analyserFichePlanHebdo(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        .replace(/^#+\s*/gm, '')
+        .trim();
+    if (!texte) return null;
+
+    const occurrences = trouverOccurrencesPlanHebdo(texte);
+    const occIdentification = occurrences.find(o => o.type === 'identification');
+    const occsSemaine = occurrences.filter(o => o.type === 'semaine');
+    // Signature exigée : sans le titre du canevas ET au moins un bloc
+    // "Semaine", ce n'est presque certainement pas un plan de session --
+    // repli silencieux vers l'affichage brut.
+    if (!occIdentification || !occsSemaine.length) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
+    }
+    function contenuDe(type) {
+        const occ = occurrences.find(o => o.type === type);
+        return occ ? contenuApres(occ) : '';
+    }
+
+    // Le titre principal ("PLAN DE SESSION HEBDOMADAIRE — MATHÉMATIQUES CE2")
+    // porte souvent la matière/le niveau après le tiret : on le garde comme
+    // sous-titre de la carte plutôt que de le perdre. Absent dans la
+    // variante "plan mensuel", où le titre est nu -- titrePrincipal reste
+    // alors vide, ce que le rendu gère déjà.
+    const titrePrincipal = occIdentification.texte
+        .replace(/^PLAN\s+DE\s+SESSION\s+HEBDOMADAIRE\s*[—\-:]*\s*/i, '')
+        .trim();
+
+    // Chaque bloc "Semaine" s'étend jusqu'à la PROCHAINE frontière (une
+    // autre "Semaine", ou Détail des activités/Matériel/Points
+    // d'observation) -- jamais jusqu'à une occurrence "tableau", qui n'est
+    // qu'un titre optionnel transparent À L'INTÉRIEUR du bloc (variante 1).
+    // On tranche le texte BRUT (pas contenuApres, qui convertirait les
+    // <br> et casserait les lignes "| ... |" du tableau en plein milieu) --
+    // decouperBlocSemaine() et extraireLignesTableauPlanHebdo() se
+    // chargent de cette conversion cellule par cellule, une fois les
+    // colonnes déjà découpées.
+    const semaines = occsSemaine.map(occSem => {
+        const idx = occurrences.indexOf(occSem);
+        const suivante = occurrences.slice(idx + 1).find(o => TYPES_FRONTIERE_SEMAINE_PLAN_HEBDO.includes(o.type));
+        const finBloc = suivante ? suivante.start : texte.length;
+        const bloc = decouperBlocSemaine(texte.slice(occSem.end, finBloc));
+
+        // ❖ Le champ "Semaine" lui-même (ex. "Semaine : n°--- du -- au --"
+        // ou "Semaine : 3") est porté par l'occurrence-frontière, pas par
+        // decouperBlocSemaine -- on le réinjecte en tête des champs pour ne
+        // jamais perdre l'information (numéro, date). construireHTMLFiche-
+        // PlanHebdo() décide ensuite de l'afficher en badge (une seule
+        // semaine) ou en sous-titre (plusieurs semaines, où libelleSemaine
+        // sert de numéro affiché plutôt que la simple position dans la
+        // liste).
+        const sepIdx = occSem.texte.indexOf(':');
+        const libelleSemaine = (sepIdx > -1 ? occSem.texte.slice(sepIdx + 1) : '').trim();
+        bloc.champs.unshift({ label: 'Semaine', valeur: libelleSemaine });
+        bloc.libelleSemaine = libelleSemaine;
+        return bloc;
+    }).filter(s => s.rangs.length); // garde-fou : une "semaine" sans tableau n'est pas exploitable
+
+    if (!semaines.length) return null;
+
+    return {
+        titrePrincipal,
+        semaines,
+        activites: structurerActivitesPlanHebdo(contenuDe('activites')),
+        materielTexte: contenuDe('materiel'),
+        observationsTexte: contenuDe('observations')
+    };
+}
+
+function construireHTMLFichePlanHebdo(analyse) {
+    const { titrePrincipal, semaines, activites, materielTexte, observationsTexte } = analyse;
+    let html = '';
+
+    html += '<div class="fiche-section-titre">🗓️ PLAN DE SESSION HEBDOMADAIRE'
+        + (titrePrincipal ? ' — ' + echapperHTMLFiche(titrePrincipal) : '') + '</div>';
+
+    html += '<div class="fiche-section-titre">📅 Détail du plan par jour</div>';
+    semaines.forEach((sem, index) => {
+        html += '<div class="plan-hebdo-semaine">';
+        // ❖ Le sous-titre "Semaine N" n'apparaît que s'il y a plusieurs
+        // semaines (variante "plan mensuel") -- pour une seule semaine
+        // (variante détaillée), le badge "Semaine" (avec sa date, ex.
+        // "n°--- du -- au --") suffit à s'identifier, un sous-titre
+        // répétitif n'apporterait rien. Le libellé réel (numéro déclaré
+        // par l'agent) est préféré à la simple position dans la liste,
+        // au cas où la numérotation ne serait pas parfaitement séquentielle.
+        // Une fois affiché en sous-titre, le badge "Semaine" redondant est
+        // retiré des badges pour ne pas répéter l'information deux fois.
+        let champsAffiches = sem.champs;
+        if (semaines.length > 1) {
+            html += `<div class="plan-hebdo-semaine-titre">Semaine ${echapperHTMLFiche(sem.libelleSemaine || String(index + 1))}</div>`;
+            champsAffiches = sem.champs.filter(c => c.label !== 'Semaine');
+        }
+        if (champsAffiches.length) {
+            html += '<div class="fiche-bloc-entete">';
+            champsAffiches.forEach(c => {
+                html += '<span class="fiche-badge">';
+                if (c.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(c.label)} :</span> `;
+                html += `${echapperHTMLFiche(c.valeur)}</span>`;
+            });
+            html += '</div>';
+        }
+        html += '<div class="fiche-carte fiche-carte-tableau">';
+        html += '<table class="fiche-deroulement-table tableau-plan-hebdo"><thead><tr>';
+        sem.enTetes.forEach(t => { html += `<th>${echapperHTMLFiche(t)}</th>`; });
+        html += '</tr></thead><tbody>';
+        // ❖ Coloration douce par niveau (cas hétérogène uniquement, quand une
+        // colonne "Groupes de niveau" existe) : la 1ère colonne "Jour" n'est
+        // renseignée que sur le 1er rang d'une journée (les rangs suivants
+        // l'ont vide) -- ce vide sert de repère naturel pour détecter le
+        // début d'une nouvelle journée, sans dépendre d'un nombre de rangs
+        // fixe. Le cycle niveau 1/2/3 repart à zéro à chaque journée et
+        // tourne indéfiniment si jamais une journée en compte plus de trois,
+        // plutôt que de casser l'affichage.
+        const idxGroupesNiveau = sem.enTetes.findIndex(t => /groupes?\s+de\s+niveau/i.test(t));
+        let niveauCycle = 0;
+        sem.rangs.forEach(rang => {
+            const nouvelleJournee = (rang[0] || '').trim() !== '';
+            if (nouvelleJournee) niveauCycle = 0;
+            const classesRang = [];
+            if (nouvelleJournee) classesRang.push('plan-hebdo-jour-debut');
+            if (idxGroupesNiveau !== -1) classesRang.push(`plan-hebdo-niveau-${(niveauCycle % 3) + 1}`);
+            niveauCycle++;
+            html += classesRang.length ? `<tr class="${classesRang.join(' ')}">` : '<tr>';
+            sem.enTetes.forEach((enTete, i) => {
+                const cellule = rang[i] || '';
+                const classeCellule = i === idxGroupesNiveau ? ' class="plan-hebdo-cellule-groupe"' : '';
+                html += `<td data-libelle="${echapperHTMLFiche(enTete)}"${classeCellule}>${texteVersHtmlLegerFiche(cellule)}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        html += '</div>';
+    });
+
+    if (activites.length) {
+        html += '<div class="fiche-section-titre">🧩 Détail des activités</div>';
+        html += '<div class="fiche-carte">' + htmlActivitesPlanHebdo(activites) + '</div>';
+    }
+
+    if (materielTexte) {
+        html += '<div class="fiche-section-titre">🧰 Matériel nécessaire pour la semaine</div>';
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(materielTexte)}</div>`;
+    }
+
+    if (observationsTexte) {
+        html += '<div class="fiche-section-titre">🔎 Points d\'observation pour l\'enseignant</div>';
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(observationsTexte)}</div>`;
+    }
+
+    return `<div class="fiche-lecon accent-vert fiche-lecon-plan-hebdo">${html}</div>`;
+}
+
+// =======================================================================
+// ❖ LA CARTE "ÉVALUATION PRIMAIRE" (FORGE PRIMAIRE) ❖
+// =======================================================================
+// La Forge Primaire ne produit pas que des fiches de préparation : sur
+// demande ("Nouvelle fiche d'évaluation"), elle suit un second canevas,
+// distinct de celui de la préparation (IDENTIFICATION/.../DÉROULEMENT
+// PÉDAGOGIQUE) ET de l'Atelier des Évaluations secondaire (PARTIE A/B) :
+// 1. IDENTIFICATION, 2. OBJECTIFS DE L'ÉVALUATION, 3. EXERCICES
+// D'ÉVALUATION, 4. BARÈME, 5. CORRIGÉ -- numérotées comme le reste du
+// canevas primaire.
+// ❖ "exercices" doit repérer le DÉBUT du bloc d'exercices même quand le
+// modèle omet le titre de section formel "EXERCICES D'ÉVALUATION" et
+// enchaîne directement sur "EXERCICE 1 : ...", "EXERCICE 2 : ...", etc.
+// -- cas réel observé. On ajoute donc "EXERCICE 1" (au singulier, avec le
+// numéro 1 précisément) comme ancre de repli : elle marque le début du
+// bloc SANS créer une nouvelle occurrence à chaque "EXERCICE 2/3/4"
+// suivant (qui casserait la découpe en s'arrêtant après le premier
+// exercice) -- ceux-ci restent de simples lignes de contenu.
+const ALTERNATIVES_SECTION_EVALUATION_PRIMAIRE = {
+    identification: ["IDENTIFICATION"],
+    objectifs: ["OBJECTIFS DE L['’]?[ÉE]VALUATION", "OBJECTIFS"],
+    exercices: ["EXERCICES D['’]?[ÉE]VALUATION", "EXERCICE\\s*(?:N|n)?°?\\s*1\\b"],
+    bareme: ["BAR[ÈE]ME"],
+    corrige: ["CORRIG[ÉE]"]
+};
+
+function trouverOccurrencesEvaluationPrimaire(texte) {
+    const occurrences = [];
+    Object.entries(ALTERNATIVES_SECTION_EVALUATION_PRIMAIRE).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*|\\d+[.)]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+    occurrences.sort((a, b) => a.start - b.start);
+
+    // ❖ "EXERCICE 1" (ancre de repli, voir ALTERNATIVES_SECTION_EVALUATION_
+    // PRIMAIRE) réapparaît presque toujours une seconde fois, bien plus
+    // loin dans le texte -- le BARÈME et le CORRIGÉ listent chacun "EXERCICE
+    // 1 : ..." comme simple sous-point. Sans ce filtre, cette répétition
+    // était détectée comme une NOUVELLE occurrence "exercices", ce qui
+    // coupait le BARÈME en plein milieu et faisait perdre le CORRIGÉ
+    // (absorbé dans le mauvais bloc). Seule la toute première occurrence
+    // "exercices" -- la vraie, en tête du bloc -- doit compter.
+    let dejaVuExercices = false;
+    return occurrences.filter(o => {
+        if (o.type !== 'exercices') return true;
+        if (dejaVuExercices) return false;
+        dejaVuExercices = true;
+        return true;
+    });
+}
+
+function analyserEvaluationPrimaire(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
+        // titre ("### BARÈME", "#### EXERCICE 1 : ...") -- la détection de
+        // libellé ci-dessous ne tolérait qu'UN SEUL "#" en préfixe, donc
+        // un "###"/"####" faisait échouer le repérage de toute la section
+        // (repli silencieux vers l'affichage brut, "###"/"####" laissés
+        // tels quels dans le texte). On retire toute suite de "#" en
+        // début de ligne, comme pour les "*" ci-dessus.
+        .replace(/^#+\s*/gm, '')
+        .trim();
+    if (!texte) return null;
+
+    const occurrences = trouverOccurrencesEvaluationPrimaire(texte);
+    // ❖ IDENTIFICATION n'est PAS une ancre fiable ici : le modèle omet
+    // parfois cette section et enchaîne directement sur un titre libre
+    // ("ÉVALUATION DE MATHÉMATIQUES - CM2", Thème/Durée en lignes libres)
+    // avant EXERCICE 1 -- ce texte reste alors capté par preambuleTexte
+    // (voir plus bas). Seul EXERCICES est systématiquement présent :
+    // c'est la seule ancre requise pour reconnaître ce canevas.
+    const aExercices = occurrences.some(o => o.type === 'exercices');
+    if (!aExercices) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
+    }
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    function contenuDe(type) {
+        const occ = occurrences.find(o => o.type === type);
+        return occ ? contenuApres(occ) : '';
+    }
+
+    // ❖ Même filet de sécurité que l'Atelier des Évaluations : le modèle
+    // introduit parfois librement la fiche avant "1. IDENTIFICATION"
+    // ("Voici une fiche d'évaluation de mathématiques pour le niveau
+    // CM2..."), sans quoi cette phrase disparaîtrait silencieusement.
+    const preambuleTexte = texte.slice(0, occurrences[0].start).trim();
+
+    const badges = [];
+    const occIdentification = occurrences.find(o => o.type === 'identification');
+    if (occIdentification) {
+        contenuApres(occIdentification).split('\n').flatMap(decouperChampsAgglutinesLigneFiche).forEach(l => {
+            // ❖ Retire un éventuel marqueur de liste ("- Classe : CM2")
+            // AVANT de chercher le ":" -- sinon il reste collé au libellé
+            // du badge ("- Classe" au lieu de "Classe").
+            // ❖ "+" et non un seul caractère : une ligne séparatrice ("---")
+            // ne perdait qu'UN tiret ("- Classe" -> "Classe" fonctionnait,
+            // mais "---" -> "--" ne faisait plus les 3 caractères exigés par
+            // estLigneSeparatriceFiche ci-dessous, et survivait comme badge
+            // fantôme vide en fin d'identification.
+            const l2 = l.trim().replace(/^[-•]+\s*/, '');
+            if (!l2 || estLigneSeparatriceFiche(l2)) return;
+            const sepIdx = l2.indexOf(':');
+            if (sepIdx > -1 && sepIdx < 60) {
+                badges.push({ label: l2.slice(0, sepIdx).trim(), valeur: nettoyerValeurChampCreuseFiche(l2.slice(sepIdx + 1).trim()) });
+            } else {
+                badges.push({ label: '', valeur: l2 });
+            }
+        });
+    }
+
+    const objectifsTexte = contenuDe('objectifs');
+    const exercicesTexte = contenuDe('exercices');
+    const baremeTexte = contenuDe('bareme');
+
+    // ❖ Même précaution que l'Atelier des Évaluations (secondaire) : le
+    // corrigé reprend souvent ses propres numéros d'exercices en
+    // sous-titres, qui seraient sinon redétectés comme de nouvelles
+    // occurrences et tronqueraient le corrigé après quelques mots -- on
+    // va donc jusqu'à la fin du texte plutôt que jusqu'à la prochaine
+    // occurrence.
+    const occCorrige = occurrences.find(o => o.type === 'corrige');
+    const corrigeTexte = occCorrige ? texte.slice(occCorrige.end).trim() : '';
+
+    return { preambuleTexte, badges, objectifsTexte, exercicesTexte, baremeTexte, corrigeTexte, titres };
+}
+
+function construireHTMLEvaluationPrimaire(analyse) {
+    const { preambuleTexte, badges, objectifsTexte, exercicesTexte, baremeTexte, corrigeTexte, titres } = analyse;
+    let html = '';
+
+    if (preambuleTexte) {
+        html += `<div class="fiche-preambule">${texteVersHtmlLegerFiche(preambuleTexte)}</div>`;
+    }
+
+    if (badges.length) {
+        html += `<div class="fiche-section-titre">🧭 ${echapperHTMLFiche(titres.identification || '')}</div>`;
+        html += '<div class="fiche-bloc-entete">';
+        badges.forEach(b => {
+            html += `<span class="fiche-badge">`;
+            if (b.label) html += `<span class="fiche-badge-label">${echapperHTMLFiche(b.label)} :</span> `;
+            html += `${echapperHTMLFiche(b.valeur)}</span>`;
+        });
+        html += '</div>';
+    }
+
+    if (objectifsTexte) {
+        html += `<div class="fiche-section-titre">🎯 ${echapperHTMLFiche(titres.objectifs || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(objectifsTexte)}</div>`;
+    }
+
+    if (exercicesTexte) {
+        html += `<div class="fiche-section-titre">✏️ ${echapperHTMLFiche(titres.exercices || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(exercicesTexte)}</div>`;
+    }
+
+    if (baremeTexte) {
+        html += `<div class="fiche-section-titre">📊 ${echapperHTMLFiche(titres.bareme || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(baremeTexte)}</div>`;
+    }
+
+    if (corrigeTexte) {
+        html += `<div class="fiche-section-titre">🔑 ${echapperHTMLFiche(titres.corrige || '')}</div>`;
+        html += `<div class="fiche-carte fiche-corrige">${texteVersHtmlLegerFiche(corrigeTexte)}</div>`;
+    }
+
+    return `<div class="fiche-lecon accent-vert">${html}</div>`;
+}
+
+function construireRenduFichePrimaire(source) {
+    let corps = source;
+    let signatureHTML = '';
+    const idxDebut = corps.indexOf(JETON_SIGNATURE_DEBUT);
+    if (idxDebut !== -1) {
+        signatureHTML = corps.slice(idxDebut);
+        corps = corps.slice(0, idxDebut);
+    }
+
+    // ❖ Deux canevas possibles pour un même outil (forge_primaire) : on
+    // tente d'abord la fiche de préparation (la plus fréquente), puis la
+    // fiche d'évaluation si la première échoue -- silencieusement, sans
+    // jamais afficher d'erreur : si aucune des deux ne correspond, on se
+    // replie sur le rendu Markdown standard (voir afficherReponseAvecFondu).
+    // ❖ Le plan de session hebdomadaire est tenté en tout premier : son
+    // titre ("PLAN DE SESSION HEBDOMADAIRE") est une signature tellement
+    // distinctive qu'il n'y a aucun risque de confusion avec les autres
+    // canevas -- pas besoin d'attendre que les autres échouent par
+    // élimination (ajouté le 28/08/2026).
+    const anaPlanHebdo = analyserFichePlanHebdo(corps);
+    let html = anaPlanHebdo ? construireHTMLFichePlanHebdo(anaPlanHebdo) : null;
+
+    // ❖ On tente ensuite le canevas PNAPAS natif : il est le plus exigeant
+    // (il réclame un vrai tableau de déroulement à quatre colonnes et un
+    // niveau du CP au CE2), donc s'il accepte, c'est à coup sûr la bonne
+    // carte. La carte APC, plus tolérante, prendrait sinon la main sur des
+    // fiches PNAPAS et les afficherait dans le mauvais canevas.
+    if (html === null) {
+        const anaPnapas = analyserFichePNAPAS(corps);
+        html = anaPnapas ? construireHTMLFichePNAPAS(anaPnapas) : null;
+    }
+
+    if (html === null) {
+        const anaPreparation = analyserFichePrimaire(corps);
+        if (anaPreparation) html = construireHTMLFichePrimaire(anaPreparation);
+    }
+
+    if (html === null) {
+        const anaEvaluation = analyserEvaluationPrimaire(corps);
+        if (anaEvaluation) html = construireHTMLEvaluationPrimaire(anaEvaluation);
+    }
+
+    if (html === null) return null;
+
+    if (signatureHTML) {
+        let sigParsed = marked.parse(signatureHTML);
+        sigParsed = sigParsed
+            .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+            .replace(JETON_SIGNATURE_FIN, '</span>');
+        html += sigParsed;
+    }
+    return html;
+}
+
+// =======================================================================
+// ❖ LA CARTE "ÉVALUATION" — RESKIN VISUEL (ATELIER DES ÉVALUATIONS) ❖
+// =======================================================================
+// Même principe que la carte "fiche de leçon" ci-dessus, mais adapté à la
+// structure propre à l'Atelier des Évaluations : PARTIE A / PARTIE B
+// (terminée par un "BARÈME TOTAL : XX points" en ligne, pas un titre à
+// part) / CORRIGÉ. Réutilise les mêmes fonctions génériques
+// (echapperHTMLFiche, texteVersHtmlLegerFiche, estLigneSeparatriceFiche,
+// nettoyerLigneFiche) -- seuls les libellés reconnus changent.
+
+const ALTERNATIVES_SECTION_EVALUATION = {
+    partieA: ["PARTIE A(?:\\s*\\([^)]*\\))?", "PART A(?:\\s*\\([^)]*\\))?", "PARTE A(?:\\s*\\([^)]*\\))?", "TEIL A(?:\\s*\\([^)]*\\))?"],
+    partieB: ["PARTIE B(?:\\s*\\([^)]*\\))?", "PART B(?:\\s*\\([^)]*\\))?", "PARTE B(?:\\s*\\([^)]*\\))?", "TEIL B(?:\\s*\\([^)]*\\))?"],
+    // ❖ Second canevas valide, propre à l'EDHC (voir PROMPT_COMPLET_
+    // Atelier_Evaluations.md, "RÈGLE POUR L'EDHC") : pas de PARTIE A/B, mais
+    // une SITUATION D'ÉVALUATION unique suivie de QUESTIONS/CONSIGNES --
+    // sans ces deux entrées, le 24/09/2026 a montré qu'une évaluation EDHC
+    // correcte tombait dans le repli texte brut (aPartieA/aPartieB jamais
+    // vrais), perdant tout l'habillage visuel malgré un contenu conforme.
+    situation: ["SITUATION D['’]?[ÉE]VALUATION(?:\\s*\\([^)]*\\))?"],
+    questions: ["QUESTIONS\\s*/\\s*CONSIGNES(?:\\s*\\([^)]*\\))?", "QUESTIONS\\s+ET\\s+CONSIGNES(?:\\s*\\([^)]*\\))?"],
+    // ❖ Troisième canevas valide, propre à une épreuve de dissertation
+    // (Français/Philosophie -- voir PROMPT_COMPLET_Atelier_Evaluations.md,
+    // "RÈGLE POUR UNE ÉPREUVE DE DISSERTATION") : ni PARTIE A/B ni
+    // SITUATION/QUESTIONS -- un sujet unique suivi d'une grille de
+    // critères analytiques, jamais d'un barème question par question.
+    sujet: ["LE SUJET(?:\\s*\\([^)]*\\))?"],
+    grilleCriteres: ["GRILLE DE CRIT[ÈE]RES D['’]?[ÉE]VALUATION(?:\\s*\\([^)]*\\))?"],
+    // ❖ Quatrième canevas valide (22/10/2026) : ÉPREUVE AU FORMAT OFFICIEL
+    // (BEPC/Bac blanc) -- une suite d'EXERCICE 1, EXERCICE 2... suivie du
+    // BARÈME TOTAL et du CORRIGÉ. Utilisé seulement si aucun des trois
+    // canevas ci-dessus n'est reconnu (voir analyserEvaluation).
+    exercice: ["EXERCICE\\s+\\d+(?:\\s*\\([^)]*\\))?", "EXERCISE\\s+\\d+(?:\\s*\\([^)]*\\))?", "EJERCICIO\\s+\\d+(?:\\s*\\([^)]*\\))?", "AUFGABE\\s+\\d+(?:\\s*\\([^)]*\\))?"],
+    corrige: ["CORRIG[ÉE]", "ANSWER KEY", "SOLUCIONARIO", "L[ÖO]SUNGEN"]
+};
+
+// ❖ Le barème n'est pas un titre à part : le prompt demande explicitement
+// "la PARTIE B se termine par 'BARÈME TOTAL : XX points'" -- un libellé en
+// tête de ligne suivi de son contenu sur la même ligne, comme les
+// libellés de phase de la Forge.
+const ALTERNATIVES_INLINE_EVALUATION = {
+    bareme: ["BAR[ÈE]ME TOTAL", "TOTAL SCORE", "PUNTUACI[ÓO]N TOTAL", "GESAMTPUNKTZAHL"]
+};
+
+function trouverOccurrencesEvaluation(texte) {
+    const occurrences = [];
+
+    Object.entries(ALTERNATIVES_SECTION_EVALUATION).forEach(([type, variantes]) => {
+        // ❖ Permissif à dessein : le modèle ne se limite pas toujours au
+        // libellé nu ("PARTIE A") -- il écrit parfois "PARTIE A :
+        // ÉVALUATION DES RESSOURCES (10 POINTS)" sur la même ligne. On
+        // exige seulement que la ligne COMMENCE par le libellé recherché ;
+        // tout ce qui suit sur cette même ligne est absorbé dans la
+        // légende affichée plutôt que de faire échouer la détection.
+        const re = new RegExp(`^[ \\t]*(?:[-•#*>]\\s*)?(?:${variantes.join('|')}).*$`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+
+    Object.entries(ALTERNATIVES_INLINE_EVALUATION).forEach(([type, variantes]) => {
+        const re = new RegExp(`^[ \\t]*(?:[-•]\\s*)?(?:${variantes.join('|')})[ \\t]*:[ \\t]*`, 'gim');
+        let m;
+        while ((m = re.exec(texte)) !== null) {
+            occurrences.push({ type, start: m.index, end: m.index + m[0].length, texte: nettoyerLigneFiche(m[0]) });
+            if (m[0].length === 0) re.lastIndex++;
+        }
+    });
+
+    occurrences.sort((a, b) => a.start - b.start);
+    return occurrences;
+}
+
+function analyserEvaluation(texteBrut) {
+    const texte = (texteBrut || '')
+        .replace(/❖\s*Architecture Pédagogique EdukaTchat[\s\S]*/, '')
+        .replace(/\*/g, '')
+        // ❖ Le modèle décore parfois ses titres avec du vrai Markdown de
+        // titre ("### BARÈME", "#### EXERCICE 1 : ...") -- la détection de
+        // libellé ci-dessous ne tolérait qu'UN SEUL "#" en préfixe, donc
+        // un "###"/"####" faisait échouer le repérage de toute la section
+        // (repli silencieux vers l'affichage brut, "###"/"####" laissés
+        // tels quels dans le texte). On retire toute suite de "#" en
+        // début de ligne, comme pour les "*" ci-dessus.
+        .replace(/^#+\s*/gm, '')
+        .trim();
+    if (!texte) return null;
+
+    let occurrences = trouverOccurrencesEvaluation(texte);
+    const aPartieA = occurrences.some(o => o.type === 'partieA');
+    const aPartieB = occurrences.some(o => o.type === 'partieB');
+    const aSituation = occurrences.some(o => o.type === 'situation');
+    const aQuestions = occurrences.some(o => o.type === 'questions');
+    const aSujet = occurrences.some(o => o.type === 'sujet');
+    const aGrille = occurrences.some(o => o.type === 'grilleCriteres');
+    // ❖ Canevas "épreuve au format officiel" : seulement si aucun des trois
+    // autres n'est reconnu. Les EXERCICE n'comptent qu'avant le CORRIGÉ (le
+    // corrigé répète ses propres sous-titres), et on écarte alors les types
+    // des autres canevas (une "SITUATION D'ÉVALUATION" peut n'être qu'un
+    // sous-titre à l'intérieur d'un exercice).
+    const canevasClassique = (aPartieA && aPartieB) || (aSituation && aQuestions) || (aSujet && aGrille);
+    // ❖ Correctif 22/10/2026 : dans un canevas PARTIE A/B, la PARTIE B
+    // commence souvent par une ligne "Situation d'évaluation : ..." (ou
+    // contient "Questions : ..."). Reconnue comme section du canevas EDHC,
+    // elle coupait la PARTIE B juste après son titre (carte vide). Quand
+    // PARTIE A et B sont présentes, ces libellés ne sont que du contenu.
+    if (aPartieA && aPartieB) {
+        occurrences = occurrences.filter(o =>
+            !['situation', 'questions', 'sujet', 'grilleCriteres', 'exercice'].includes(o.type));
+        // ❖ Correctif 26/10/2026 : avec un nombre d'exercices demandé (formulaire guidé),
+        // la PARTIE A s'écrit « PARTIE A … / EXERCICE 1 / Question 1… ». L'intitulé
+        // « EXERCICE 1 » coupait la PARTIE A juste après son titre (carte vide, énoncé
+        // perdu). Dans un canevas PARTIE A/B, « EXERCICE n » n'est que du contenu.
+    }
+    let modeExercices = false;
+    if (!canevasClassique) {
+        const occCorr = occurrences.find(o => o.type === 'corrige');
+        const finExos = occCorr ? occCorr.start : Infinity;
+        const nbExos = occurrences.filter(o => o.type === 'exercice' && o.start < finExos).length;
+        if (nbExos >= 2) {
+            modeExercices = true;
+            occurrences = occurrences.filter(o =>
+                (o.type === 'exercice' && o.start < finExos) || o.type === 'bareme' || o.type === 'corrige');
+        }
+    }
+    // ❖ Trois canevas valides désormais : PARTIE A/PARTIE B (générique),
+    // SITUATION D'ÉVALUATION/QUESTIONS-CONSIGNES (EDHC), ou LE SUJET/GRILLE
+    // DE CRITÈRES D'ÉVALUATION (épreuve de dissertation) -- voir le
+    // commentaire sur ALTERNATIVES_SECTION_EVALUATION ci-dessus.
+    if (!canevasClassique && !modeExercices) return null;
+
+    function contenuApres(occ) {
+        const idx = occurrences.indexOf(occ);
+        const finBorne = idx + 1 < occurrences.length ? occurrences[idx + 1].start : texte.length;
+        // ❖ Un <br> littéral s'infiltre parfois hors du tableau de
+        // déroulement (le seul endroit où il est légitime, cf.
+        // nettoyerLigneTableauFiche) -- notamment dans le TABLEAU
+        // HABILETÉS/CONTENUS -- et s'affichait alors comme du texte brut
+        // ("... <br> - Calculer...") au lieu d'un retour à la ligne. On le
+        // convertit ici, au point d'extraction partagé par toutes les
+        // sections hors tableau.
+        return texte.slice(occ.end, finBorne).replace(/<br\s*\/?>/gi, '\n').trim();
+    }
+
+    const titres = {};
+    occurrences.forEach(o => { if (!(o.type in titres)) titres[o.type] = o.texte; });
+
+    // ❖ Le prompt n'impose aucun en-tête formel : le modèle écrit souvent
+    // librement un titre avant "PARTIE A" (ex: "DEVOIR DE SVT - NIVEAU 6E
+    // / THÈME : ..."). Sans cette capture, ce texte disparaissait
+    // silencieusement -- perte d'information plutôt qu'un simple défaut
+    // esthétique.
+    const preambuleTexte = texte.slice(0, occurrences[0].start).trim();
+
+    const occPartieA = occurrences.find(o => o.type === 'partieA');
+    const occPartieB = occurrences.find(o => o.type === 'partieB');
+    const occSituation = occurrences.find(o => o.type === 'situation');
+    const occQuestions = occurrences.find(o => o.type === 'questions');
+    const occSujet = occurrences.find(o => o.type === 'sujet');
+    const occGrille = occurrences.find(o => o.type === 'grilleCriteres');
+    const occBareme = occurrences.find(o => o.type === 'bareme');
+    const occCorrige = occurrences.find(o => o.type === 'corrige');
+
+    const partieATexte = occPartieA ? contenuApres(occPartieA) : '';
+    const partieBTexte = occPartieB ? contenuApres(occPartieB) : '';
+    const situationTexte = occSituation ? contenuApres(occSituation) : '';
+    const questionsTexte = occQuestions ? contenuApres(occQuestions) : '';
+    const sujetTexte = occSujet ? contenuApres(occSujet) : '';
+    const grilleTexte = occGrille ? contenuApres(occGrille) : '';
+    const baremeTexte = occBareme ? contenuApres(occBareme).split('\n')[0].trim() : '';
+    // ❖ Le CORRIGÉ est toujours la toute dernière partie du document (règle
+    // explicite du prompt) et reprend souvent ses propres sous-titres
+    // "PARTIE A"/"PARTIE B" à l'identique -- on prend donc tout ce qui
+    // suit jusqu'à la fin du texte plutôt que jusqu'à la PROCHAINE
+    // occurrence, qui serait alors l'un de ces sous-titres dupliqués (et
+    // couperait le corrigé après seulement quelques mots).
+    const corrigeTexte = occCorrige ? texte.slice(occCorrige.end).trim() : '';
+
+    const exercices = modeExercices
+        ? occurrences.filter(o => o.type === 'exercice').map(o => ({ titre: o.texte, texte: contenuApres(o) }))
+        : [];
+
+    return { preambuleTexte, partieATexte, partieBTexte, situationTexte, questionsTexte, sujetTexte, grilleTexte, baremeTexte, corrigeTexte, titres, exercices };
+}
+
+function construireHTMLEvaluation(analyse, classeAccent) {
+    const { preambuleTexte, partieATexte, partieBTexte, situationTexte, questionsTexte, sujetTexte, grilleTexte, baremeTexte, corrigeTexte, titres } = analyse;
+    const exercices = analyse.exercices || [];
+    let html = '';
+
+    if (preambuleTexte) {
+        html += `<div class="fiche-preambule">${texteVersHtmlLegerFiche(preambuleTexte)}</div>`;
+    }
+
+    // ❖ Quatrième canevas : épreuve au format officiel (EXERCICE 1…N).
+    // Une carte par exercice, puis barème et corrigé comme les autres.
+    if (exercices.length) {
+        exercices.forEach(ex => {
+            html += `<div class="fiche-section-titre"><span class="fiche-emoji">📝</span> ${echapperHTMLFiche(ex.titre || '')}</div>`;
+            html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(ex.texte)}</div>`;
+        });
+        if (baremeTexte) {
+            html += `<div class="fiche-bloc-entete"><span class="fiche-badge fiche-badge-competence">${echapperHTMLFiche(titres.bareme || 'BARÈME TOTAL')} : ${echapperHTMLFiche(baremeTexte)}</span></div>`;
+        }
+        if (corrigeTexte) {
+            html += `<div class="fiche-section-titre"><span class="fiche-emoji">🔑</span> ${echapperHTMLFiche(titres.corrige || '')}</div>`;
+            html += `<div class="fiche-carte fiche-corrige">${texteVersHtmlLegerFiche(corrigeTexte)}</div>`;
+        }
+        return `<div class="fiche-lecon fiche-eval${classeAccent || ''}">${html}</div>`;
+    }
+
+    // ❖ Trois canevas possibles : PARTIE A/B (générique), SITUATION D'ÉVALUATION
+    // / QUESTIONS-CONSIGNES (EDHC), ou LE SUJET/GRILLE DE CRITÈRES (épreuve de
+    // dissertation) -- un seul est présent selon la matière/demande, voir
+    // analyserEvaluation().
+    if (partieATexte) {
+        html += `<div class="fiche-section-titre"><span class="fiche-emoji">📄</span> ${echapperHTMLFiche(titres.partieA || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieATexte)}</div>`;
+    } else if (situationTexte) {
+        html += `<div class="fiche-section-titre"><span class="fiche-emoji">📄</span> ${echapperHTMLFiche(titres.situation || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(situationTexte)}</div>`;
+    } else if (sujetTexte) {
+        html += `<div class="fiche-section-titre"><span class="fiche-emoji">📄</span> ${echapperHTMLFiche(titres.sujet || '')}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(sujetTexte)}</div>`;
+    }
+
+    if (partieBTexte || questionsTexte || grilleTexte || baremeTexte) {
+        const titreSecondaire = titres.partieB || titres.questions || titres.grilleCriteres || '';
+        html += `<div class="fiche-section-titre fiche-titre-b"><span class="fiche-emoji">🧩</span> ${echapperHTMLFiche(titreSecondaire)}</div>`;
+        html += `<div class="fiche-carte">${texteVersHtmlLegerFiche(partieBTexte || questionsTexte || grilleTexte)}</div>`;
+        if (baremeTexte) {
+            html += `<div class="fiche-bloc-entete"><span class="fiche-badge fiche-badge-competence">${echapperHTMLFiche(titres.bareme || 'BARÈME TOTAL')} : ${echapperHTMLFiche(baremeTexte)}</span></div>`;
+        }
+    }
+
+    if (corrigeTexte) {
+        html += `<div class="fiche-section-titre"><span class="fiche-emoji">🔑</span> ${echapperHTMLFiche(titres.corrige || '')}</div>`;
+        html += `<div class="fiche-carte fiche-corrige">${texteVersHtmlLegerFiche(corrigeTexte)}</div>`;
+    }
+
+    return `<div class="fiche-lecon fiche-eval${classeAccent || ''}">${html}</div>`;
+}
+
+function construireRenduEvaluation(source) {
+    let corps = source;
+    let signatureHTML = '';
+    const idxDebut = corps.indexOf(JETON_SIGNATURE_DEBUT);
+    if (idxDebut !== -1) {
+        signatureHTML = corps.slice(idxDebut);
+        corps = corps.slice(0, idxDebut);
+    }
+
+    const analyse = analyserEvaluation(corps);
+    if (!analyse) return null;
+
+    let html = construireHTMLEvaluation(analyse, '');
+
+    if (signatureHTML) {
+        let sigParsed = marked.parse(signatureHTML);
+        sigParsed = sigParsed
+            .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+            .replace(JETON_SIGNATURE_FIN, '</span>');
+        html += sigParsed;
+    }
+    return html;
+}
+
+// ❖ LA CARTE "MISSION" (DEVOIR) — ESPACE ÉLÈVE ❖
+// Remplace le bloc de code brut (gris, monospace, généré par
+// marked.parse pour un ```...```) par une carte arrondie identifiable,
+// sans changer le contenu texte du devoir lui-même. Opère sur le HTML déjà
+// généré par marked.parse -- pas de parsing du texte source, juste un
+// habillage visuel du bloc <pre><code> qu'il a produit.
+function habillerBlocsDevoirs(html) {
+    return html.replace(
+        /<pre><code(?:\s+class="[^"]*")?>([\s\S]*?)<\/code><\/pre>/g,
+        (correspondanceComplete, contenu) =>
+            `<div class="mission-devoir"><div class="mission-devoir-titre">📘 Devoir</div><pre class="mission-devoir-contenu"><code>${contenu}</code></pre></div>`
+    );
+}
+
+// ❖ TAILLE DES ILLUSTRATIONS (grande / compacte) ❖
+// L'IA ne connaît QUE l'URL de l'image (voir illustrations_disponibles côté
+// gateway) et se contente de la recopier en Markdown ![alt](url) -- elle ne
+// choisit jamais elle-même le format. La taille est décidée par nous, au
+// niveau du catalogue (champ "taille" de illustrations_manifest.json), puis
+// appliquée ici côté client par simple correspondance d'URL, une fois le
+// HTML déjà généré. Ce choix délibéré évite de dépendre d'une consigne de
+// formatage que l'IA devrait suivre à la lettre (cf. le bouton de
+// prononciation, où une consigne de ce type s'est révélée peu fiable).
+let tailleIllustrationsParUrl = new Map();
+
+async function chargerTaillesIllustrations() {
+    try {
+        const reponse = await fetch('https://api.edukatchat.org/api/illustrations');
+        const data = await reponse.json();
+        (data.illustrations || []).forEach((img) => {
+            if (img.url && img.taille) {
+                tailleIllustrationsParUrl.set(img.url, img.taille);
+            }
+        });
+    } catch (error) {
+        // Silencieux : en cas d'échec, toutes les images restent au format
+        // "grande" par défaut (comportement actuel, aucune régression).
+    }
+}
+chargerTaillesIllustrations();
+
+// ❖ Page « Illustrations » des fiches Forge : remplit les emplacements
+// laissés par construireHTMLFiche avec les images du catalogue qui
+// correspondent à la leçon (appariement serveur déterministe). Si rien ne
+// correspond, ou en cas d'erreur, l'emplacement reste masqué.
+const cacheIllustrationsFiche = new Map();
+async function hydraterIllustrationsFiche(element) {
+    const slots = element.querySelectorAll('.fiche-illustrations-slot:not([data-charge])');
+    for (const slot of slots) {
+        slot.dataset.charge = '1';
+        try {
+            const params = new URLSearchParams({
+                discipline: slot.dataset.discipline || '',
+                niveau: slot.dataset.niveau || '',
+                titre: slot.dataset.titre || ''
+            });
+            // Cache par requête : element.innerHTML peut être réécrit
+            // plusieurs fois pendant l'affichage progressif.
+            const cle = params.toString();
+            if (!cacheIllustrationsFiche.has(cle)) {
+                cacheIllustrationsFiche.set(cle, fetch(`https://api.edukatchat.org/api/illustrations/pour_fiche?${cle}`).then(r => r.json()));
+            }
+            const data = await cacheIllustrationsFiche.get(cle);
+            const images = (data.illustrations || []).filter(i => i.url && i.url.startsWith('https://edukatchat.org/images/illustrations/'));
+            if (!images.length) continue;
+            let html = '<div class="fiche-section-titre">🖼️ Illustrations</div><div class="fiche-carte fiche-illustrations">';
+            images.forEach(i => {
+                html += `<figure class="fiche-illustration"><img src="${echapperHTMLFiche(i.url)}" alt="${echapperHTMLFiche(i.legende)}" loading="lazy"><figcaption>${echapperHTMLFiche(i.legende)}</figcaption></figure>`;
+            });
+            html += '</div>';
+            slot.innerHTML = html;
+            slot.hidden = false;
+        } catch (e) { /* silencieux : la fiche reste valable sans illustrations */ }
+    }
+}
+
+function appliquerTailleIllustrations(element) {
+    element.querySelectorAll('img').forEach((img) => {
+        const taille = tailleIllustrationsParUrl.get(img.getAttribute('src'));
+        if (taille === 'compacte') {
+            img.classList.add('illustration-compacte');
+        }
+    });
+}
+
+// =======================================================================
+// ❖ RENDU LATEX DANS LE CHAT (KATEX) ❖
+// =======================================================================
+// Bug réel du 25/09/2026 (Sas, avatar Physique-Chimie) : l'agent écrit
+// parfois des formules au format LaTeX ("\vec{i}", "$x^2$") sans qu'aucun
+// moteur ne les affiche -- elles apparaissaient telles quelles, backslashs
+// et accolades compris. Même principe que extraireImagesFicheSures/
+// reinjecterImagesFiche (fiches Forge) : on extrait les segments LaTeX
+// AVANT marked.parse -- sinon Markdown/CommonMark mange le backslash des
+// délimiteurs "\(" "\)" (les parenthèses font partie des caractères
+// échappables CommonMark) -- on les remplace par un jeton inerte pour
+// Markdown, puis on les réinjecte en HTML déjà rendu par KaTeX après coup.
+//
+// Deux familles de motifs reconnues :
+// 1. Délimiteurs explicites -- $$...$$ / \[...\] (bloc, formule seule sur
+//    sa ligne) et $...$ / \(...\) (en ligne, insérée dans une phrase).
+// 2. Filet de sécurité : une commande LaTeX connue (ex. "\vec{i}") écrite
+//    SANS AUCUN délimiteur -- le vrai défaut observé le 25/09/2026. Liste
+//    volontairement limitée aux commandes utiles au programme ivoirien
+//    (vecteurs, fractions, racines, lettres grecques, comparateurs) --
+//    jamais une liste LaTeX exhaustive, pour ne jamais confondre un texte
+//    normal (un backslash n'apparaît quasiment jamais dans une phrase
+//    française) avec une formule.
+const LATEX_COMMANDES_CONNUES = [
+    'vec', 'overrightarrow', 'hat', 'widehat', 'bar', 'overline', 'dot', 'ddot',
+    'frac', 'dfrac', 'tfrac', 'sqrt',
+    'sum', 'int', 'iint', 'prod', 'lim', 'infty', 'partial', 'nabla',
+    'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'theta', 'lambda', 'mu',
+    'pi', 'sigma', 'phi', 'omega',
+    'Delta', 'Sigma', 'Omega', 'Gamma', 'Lambda', 'Phi', 'Psi',
+    'times', 'div', 'cdot', 'pm', 'mp',
+    'leq', 'geq', 'neq', 'approx', 'equiv',
+    'rightarrow', 'Rightarrow', 'leftrightarrow', 'forall', 'exists', 'in', 'subset'
+];
+const RE_LATEX_COMMANDE_BRUTE = new RegExp(
+    '\\\\(?:' + LATEX_COMMANDES_CONNUES.join('|') + ')(?:\\{[^{}]*\\}(?:\\{[^{}]*\\})?)?',
+    'g'
+);
+
+function extraireEtRendreLatex(texte) {
+    const jetons = [];
+    let compteur = 0;
+
+    function extraireMotif(source, regex, display) {
+        return source.replace(regex, (motifEntier, expression) => {
+            const jeton = `@@LATEX${compteur}@@`;
+            jetons.push({ jeton, expression, display });
+            compteur++;
+            return jeton;
+        });
+    }
+
+    let resultat = texte;
+    // ❖ Ordre important : les blocs $$...$$ d'abord (sinon les "$" internes
+    // seraient consommés deux par deux comme de l'inline avant d'atteindre
+    // le bloc), puis \[...\], puis l'inline $...$ et \(...\).
+    resultat = extraireMotif(resultat, /\$\$([\s\S]+?)\$\$/g, true);
+    resultat = extraireMotif(resultat, /\\\[([\s\S]+?)\\\]/g, true);
+    resultat = extraireMotif(resultat, /\$([^$\n]+?)\$/g, false);
+    // [\s\S]+? (et non [^)]+?) : une formule comme \( \vec{u}(-3, 4) \) contient des parenthèses.
+    resultat = extraireMotif(resultat, /\\\(([\s\S]+?)\\\)/g, false);
+    // ❖ Filet de sécurité : une commande connue écrite sans délimiteur du
+    // tout -- chaque occurrence devient sa propre petite formule en ligne.
+    resultat = resultat.replace(RE_LATEX_COMMANDE_BRUTE, (motifEntier) => {
+        const jeton = `@@LATEX${compteur}@@`;
+        jetons.push({ jeton, expression: motifEntier, display: false });
+        compteur++;
+        return jeton;
+    });
+
+    return { texte: resultat, jetons };
+}
+
+function reinjecterLatex(html, jetons) {
+    if (!jetons.length) return html;
+    const katexDisponible = (typeof katex !== 'undefined');
+    let resultat = html;
+    jetons.forEach(({ jeton, expression, display }) => {
+        let rendu;
+        if (katexDisponible) {
+            try {
+                rendu = katex.renderToString(expression, { throwOnError: false, displayMode: display });
+            } catch (e) {
+                rendu = echapperHTMLFiche(expression);
+            }
+        } else {
+            // ❖ KaTeX pas encore chargé (ou échec du CDN) : on ne perd
+            // jamais le contenu -- on restitue la formule délimitée telle
+            // quelle plutôt qu'un jeton "@@LATEX0@@" incompréhensible.
+            rendu = echapperHTMLFiche(display ? `$$${expression}$$` : `$${expression}$`);
+        }
+        resultat = resultat.split(jeton).join(rendu);
+    });
+    return resultat;
+}
+
+// =======================================================================
+// ❖ RENDU D'UNE PORTÉE MUSICALE DANS LE CHAT (ABCJS) ❖
+// =======================================================================
+// Bug réel du 26/09/2026 (Sas, avatar Éducation Musicale) : l'agent a tenté
+// de représenter une portée avec des tirets/barres verticales en texte brut
+// ("---|---|---|---|---" avec des noms de notes placés au hasard sur les
+// lignes) -- illisible, une portée ne se représente pas en ASCII. Même
+// principe que extraireEtRendreLatex/reinjecterLatex ci-dessus : on extrait
+// AVANT marked.parse (sinon le bloc ```abc serait transformé en <pre><code>
+// générique par marked.parse, puis habillé en carte "Devoir" par
+// habillerBlocsDevoirs -- ce n'est pas un devoir, c'est une portée), on
+// remplace par un jeton inerte, puis on réinjecte le rendu SVG d'abcjs
+// après coup.
+//
+// Syntaxe attendue du prompt : un bloc ```abc ... ``` contenant de la
+// notation ABC standard (ex. "K:C" puis "C D E F | G A B c"). C'est un
+// format texte compact que le modèle connaît déjà (pas une syntaxe inventée
+// pour ce projet), contrairement à une portée dessinée à la main.
+function extraireEtRendreABC(texte) {
+    const jetons = [];
+    let compteur = 0;
+    const resultat = texte.replace(/```abc\s*\n([\s\S]*?)```/g, (motifEntier, source) => {
+        const jeton = `@@ABC${compteur}@@`;
+        jetons.push({ jeton, source: source.trim() });
+        compteur++;
+        return jeton;
+    });
+    return { texte: resultat, jetons };
+}
+
+function reinjecterABC(html, jetons) {
+    if (!jetons.length) return html;
+    const abcjsDisponible = (typeof ABCJS !== 'undefined' && typeof ABCJS.renderAbc === 'function');
+    let resultat = html;
+    jetons.forEach(({ jeton, source }) => {
+        let rendu;
+        if (abcjsDisponible) {
+            try {
+                // ❖ Bug réel observé le 26/09/2026 : quand la source ABC
+                // contient une ligne "T:<titre>", abcjs dessine ce titre EN
+                // SURIMPRESSION de la portée elle-même (chevauchement visuel
+                // confirmé par capture -- le calcul de hauteur du SVG en mode
+                // "responsive: resize" ne réserve pas toujours correctement
+                // l'espace du titre). Le titre est de toute façon déjà
+                // redondant : le modèle l'annonce toujours en prose juste
+                // avant le bloc ```abc```. On retire donc toute ligne T: (et
+                // les champs d'en-tête C:/O: d'auteur/origine, jamais
+                // pertinents ici) avant de rendre, sans jamais y toucher pour
+                // le texte affiché en cas d'échec (repli fidèle à la source
+                // réelle envoyée par l'agent).
+                const sourceSansEnTetesRedondants = source
+                    .split('\n')
+                    .filter(ligne => !/^[TCO]:/.test(ligne.trim()))
+                    .join('\n');
+                //
+                // ❖ Second bug réel observé le 26/09/2026 (persistant malgré
+                // paddingtop/paddingbottom -- confirmé par Constant sur deux
+                // navigateurs différents en navigation privée : chevauchement
+                // présent sur l'un, absent sur l'autre). Cause réelle trouvée
+                // en relisant ce code : le conteneur était jusqu'ici créé SANS
+                // JAMAIS être attaché au DOM ("conteneur détaché"), alors que
+                // l'option "responsive: 'resize'" demande à abcjs de MESURER
+                // la largeur réelle de ce conteneur (clientWidth) pour décider
+                // comment mettre en page/à l'échelle la portée. Un élément
+                // jamais inséré dans la page a une largeur indéfinie (souvent
+                // 0), et le comportement d'abcjs face à cette largeur nulle
+                // n'est pas garanti identique d'un moteur de rendu à l'autre --
+                // explique précisément l'incohérence observée entre deux
+                // navigateurs avec le MÊME code. Corrigé en attachant
+                // réellement le conteneur à la page (hors-écran, invisible,
+                // avec une largeur de référence fixe) avant d'appeler
+                // renderAbc, puis en le retirant juste après avoir récupéré
+                // son HTML -- abcjs mesure alors toujours la même largeur
+                // réelle, quel que soit le navigateur.
+                const conteneur = document.createElement('div');
+                conteneur.style.position = 'absolute';
+                conteneur.style.visibility = 'hidden';
+                conteneur.style.left = '-9999px';
+                conteneur.style.top = '0';
+                conteneur.style.width = '600px';
+                document.body.appendChild(conteneur);
+                try {
+                    ABCJS.renderAbc(conteneur, sourceSansEnTetesRedondants, {
+                        responsive: 'resize',
+                        paddingtop: 15,
+                        paddingbottom: 15
+                    });
+                    rendu = `<div class="partition-musicale">${conteneur.innerHTML}</div>`;
+                } finally {
+                    document.body.removeChild(conteneur);
+                }
+            } catch (e) {
+                // ❖ Notation ABC invalide (erreur de syntaxe de l'agent) :
+                // on ne perd jamais le contenu, on l'affiche en texte brut
+                // plutôt qu'un jeton "@@ABC0@@" incompréhensible.
+                rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
+            }
+        } else {
+            // ❖ abcjs pas encore chargé (ou échec du CDN) : même filet de
+            // sécurité que reinjecterLatex.
+            rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
+        }
+        resultat = resultat.split(jeton).join(rendu);
+    });
+    return resultat;
+}
+
+// ❖ QUIZ CLIQUABLES (Sas, 10/10/2026) ❖
+// L'agent peut proposer une question à choix multiples ou vrai/faux sous la
+// forme d'un bloc ```quiz contenant un JSON :
+//   {"question":"...","options":["...","..."],"bonne":1,"explication":"..."}
+// ("bonne" = index de la bonne réponse, à partir de 0). Même principe que
+// les blocs ```abc : extraction AVANT marked.parse (sinon le bloc deviendrait
+// une carte "Devoir"), jeton inerte, réinjection d'un rendu en boutons. La
+// correction est faite entièrement côté navigateur (aucun appel API, aucun
+// coût) ; elle n'alimente PAS le Carnet de progression. Bloc invalide ->
+// repli sur du texte brut, jamais de perte de contenu.
+// ❖ GRAPHIQUES (15/10/2026) : bloc ```graphique contenant un JSON
+//   {"type":"histogramme|courbe|secteurs|pyramide","titre":"...","unite":"...",
+//    "categories":["..."],"series":[{"nom":"...","valeurs":[..]}]}
+// Rendu en SVG par le navigateur (aucune librairie, aucun appel API). Même
+// principe que ```abc / ```quiz : extraction avant échappement, jeton inerte,
+// réinjection. JSON invalide -> bloc affiché en texte brut. Le modèle ne
+// produit jamais d'image : seulement des données, tracées de façon déterministe.
+function extraireEtRendreGraphique(texte) {
+    const jetons = [];
+    let compteur = 0;
+    const resultat = texte.replace(/```graphique\s*\n([\s\S]*?)```/g, (m, source) => {
+        const jeton = `@@GRAPH${compteur}@@`;
+        jetons.push({ jeton, source: source.trim() });
+        compteur++;
+        return jeton;
+    });
+    return { texte: resultat, jetons };
+}
+
+function svgGraphique(g) {
+    const esc = s => echapperHTMLFiche(String(s));
+    const cats = Array.isArray(g.categories) ? g.categories.map(String) : [];
+    const series = Array.isArray(g.series) ? g.series : [];
+    if (!cats.length || !series.length) throw new Error('graphique invalide');
+    series.forEach(s => {
+        if (!Array.isArray(s.valeurs) || s.valeurs.length !== cats.length ||
+            s.valeurs.some(v => typeof v !== 'number' || !isFinite(v) || v < 0)) throw new Error('valeurs invalides');
+    });
+    const couleurs = ['#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EF4444', '#14B8A6', '#EC4899', '#64748B'];
+    const W = 560, H = 340;
+    const unite = g.unite ? ' (' + esc(g.unite) + ')' : '';
+    let corps = '';
+    const titre = `<text x="${W / 2}" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">${esc(g.titre || '')}${unite}</text>`;
+    const nice = max => { const p = Math.pow(10, Math.floor(Math.log10(max || 1))); const f = max / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; };
+    const legende = noms => noms.map((n, i) =>
+        `<rect x="${20 + i * 150}" y="${H - 16}" width="12" height="12" fill="${couleurs[i % 8]}"/><text x="${37 + i * 150}" y="${H - 6}" font-size="12" fill="#334155">${esc(n)}</text>`).join('');
+
+    if (g.type === 'secteurs') {
+        const vals = series[0].valeurs, total = vals.reduce((a, b) => a + b, 0);
+        if (!total) throw new Error('total nul');
+        const cx = 170, cy = 180, r = 105;
+        let ang = -Math.PI / 2;
+        let parts = '', leg = '';
+        vals.forEach((v, i) => {
+            const a2 = ang + (v / total) * 2 * Math.PI;
+            const x1 = cx + r * Math.cos(ang), y1 = cy + r * Math.sin(ang), x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+            const grand = (a2 - ang) > Math.PI ? 1 : 0;
+            parts += v / total >= 0.9999
+                ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${couleurs[i % 8]}"/>`
+                : `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${grand} 1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${couleurs[i % 8]}" stroke="#fff" stroke-width="2"/>`;
+            if (v / total >= 0.05) {
+                const am = (ang + a2) / 2;
+                parts += `<text x="${(cx + r * 0.62 * Math.cos(am)).toFixed(1)}" y="${(cy + r * 0.62 * Math.sin(am) + 4).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">${(v / total * 100).toFixed(0)} %</text>`;
+            }
+            leg += `<rect x="330" y="${70 + i * 24}" width="12" height="12" fill="${couleurs[i % 8]}"/><text x="349" y="${81 + i * 24}" font-size="12" fill="#334155">${esc(cats[i])} (${v})</text>`;
+            ang = a2;
+        });
+        corps = parts + leg;
+        return `<svg viewBox="0 0 ${W} ${H}" class="graphique-svg" role="img" aria-label="${esc(g.titre || 'Graphique')}">${titre}${corps}</svg>`;
+    }
+
+    if (g.type === 'pyramide') {
+        if (series.length < 2) throw new Error('pyramide : 2 séries');
+        const gauche = series[0].valeurs, droite = series[1].valeurs;
+        const max = nice(Math.max(...gauche, ...droite));
+        const cx = W / 2, demi = 200, top = 44, bas = H - 44;
+        const n = cats.length, h = (bas - top) / n;
+        for (let i = 0; i < n; i++) {
+            const y = bas - (i + 1) * h;
+            const lw = gauche[i] / max * demi, rw = droite[i] / max * demi;
+            corps += `<rect x="${(cx - lw).toFixed(1)}" y="${(y + 1).toFixed(1)}" width="${lw.toFixed(1)}" height="${(h - 2).toFixed(1)}" fill="${couleurs[0]}"/>`;
+            corps += `<rect x="${cx}" y="${(y + 1).toFixed(1)}" width="${rw.toFixed(1)}" height="${(h - 2).toFixed(1)}" fill="${couleurs[4]}"/>`;
+            corps += `<text x="${cx}" y="${(y + h / 2 + 4).toFixed(1)}" text-anchor="middle" font-size="10" fill="#0f172a" style="paint-order:stroke;stroke:#fff;stroke-width:3px">${esc(cats[i])}</text>`;
+        }
+        corps += `<line x1="${cx}" y1="${top}" x2="${cx}" y2="${bas}" stroke="#94a3b8"/>`;
+        corps += `<text x="${cx - demi}" y="${bas + 14}" font-size="11" fill="#475569">${max}</text><text x="${cx + demi}" y="${bas + 14}" text-anchor="end" font-size="11" fill="#475569">${max}</text>`;
+        corps += legende([series[0].nom || 'Hommes', series[1].nom || 'Femmes'].map((x, i) => i === 1 ? x : x)).replace(`fill="${couleurs[1]}"`, `fill="${couleurs[4]}"`);
+        return `<svg viewBox="0 0 ${W} ${H}" class="graphique-svg" role="img" aria-label="${esc(g.titre || 'Pyramide')}">${titre}${corps}</svg>`;
+    }
+
+    // histogramme (barres groupées) et courbe : axes communs
+    const tous = series.flatMap(s => s.valeurs);
+    const max = nice(Math.max(...tous));
+    const gx = 56, gy = 40, gw = W - gx - 20, gh = H - gy - 70;
+    for (let k = 0; k <= 5; k++) {
+        const y = gy + gh - (k / 5) * gh;
+        corps += `<line x1="${gx}" y1="${y.toFixed(1)}" x2="${gx + gw}" y2="${y.toFixed(1)}" stroke="#e2e8f0"/><text x="${gx - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#475569">${+(max * k / 5).toFixed(2)}</text>`;
+    }
+    const n = cats.length, pas = gw / n;
+    cats.forEach((c, i) => {
+        corps += `<text x="${(gx + pas * (i + 0.5)).toFixed(1)}" y="${gy + gh + 16}" text-anchor="middle" font-size="11" fill="#334155">${esc(c)}</text>`;
+    });
+    if (g.type === 'courbe') {
+        series.forEach((s, k) => {
+            const pts = s.valeurs.map((v, i) => `${(gx + pas * (i + 0.5)).toFixed(1)},${(gy + gh - v / max * gh).toFixed(1)}`);
+            corps += `<polyline points="${pts.join(' ')}" fill="none" stroke="${couleurs[k % 8]}" stroke-width="2.5"/>`;
+            pts.forEach(p => { const [x, y] = p.split(','); corps += `<circle cx="${x}" cy="${y}" r="3.5" fill="${couleurs[k % 8]}"/>`; });
+        });
+    } else {
+        const m = series.length, bw = Math.min(46, (pas * 0.8) / m);
+        series.forEach((s, k) => {
+            s.valeurs.forEach((v, i) => {
+                const x = gx + pas * (i + 0.5) - (bw * m) / 2 + k * bw;
+                const hh = v / max * gh;
+                corps += `<rect x="${x.toFixed(1)}" y="${(gy + gh - hh).toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${hh.toFixed(1)}" fill="${couleurs[k % 8]}"/>`;
+                corps += `<text x="${(x + (bw - 2) / 2).toFixed(1)}" y="${(gy + gh - hh - 4).toFixed(1)}" text-anchor="middle" font-size="10" fill="#334155">${v}</text>`;
+            });
+        });
+    }
+    corps += `<line x1="${gx}" y1="${gy}" x2="${gx}" y2="${gy + gh}" stroke="#64748b"/><line x1="${gx}" y1="${gy + gh}" x2="${gx + gw}" y2="${gy + gh}" stroke="#64748b"/>`;
+    if (series.length > 1 || series[0].nom) corps += legende(series.map(s => s.nom || ''));
+    return `<svg viewBox="0 0 ${W} ${H}" class="graphique-svg" role="img" aria-label="${esc(g.titre || 'Graphique')}">${titre}${corps}</svg>`;
+}
+
+function reinjecterGraphique(html, jetons) {
+    if (!jetons.length) return html;
+    let resultat = html;
+    jetons.forEach(({ jeton, source }) => {
+        let rendu;
+        try {
+            rendu = `<div class="graphique-fiche">${svgGraphique(JSON.parse(source))}</div>`;
+        } catch (e) {
+            rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
+        }
+        resultat = resultat.split(jeton).join(rendu);
+    });
+    return resultat;
+}
+
+function extraireEtRendreQuiz(texte, enCours) {
+    const jetons = [];
+    let compteur = 0;
+    // ❖ 29/10/2026 : l'agent écrit parfois une clôture abîmée (« ``} » au lieu de
+    // « ``` ») ou oublie l'étiquette « quiz » (bloc « ```json » ou sans étiquette) :
+    // le quiz s'affichait alors en code brut dans une carte « Devoir ». On
+    // tolère donc ces écarts ; un bloc sans étiquette « quiz » n'est transformé
+    // que si son contenu est réellement un quiz valide (jamais un autre code).
+    const mettreEnJeton = (source) => {
+        const jeton = `@@QUIZ${compteur}@@`;
+        jetons.push({ jeton, source: source.trim() });
+        compteur++;
+        return jeton;
+    };
+    let resultat = texte.replace(/```quiz\s*\n([\s\S]*?)(?:```|``\})/g, (motifEntier, source) => mettreEnJeton(source));
+    resultat = resultat.replace(/```(?:json)?[ \t]*\n(\{[\s\S]*?\})[ \t]*\n?(?:```|``\})/g, (motifEntier, source) => {
+        try {
+            const q = JSON.parse(source.trim());
+            if (q && typeof q.question === 'string' && Array.isArray(q.options) && 'bonne' in q) {
+                return mettreEnJeton(source);
+            }
+        } catch (e) { /* pas un quiz : on laisse le bloc tel quel */ }
+        return motifEntier;
+    });
+    // ❖ 29/10/2026 : PENDANT la frappe, un bloc de quiz pas encore refermé s'affichait
+    // brièvement en code brut avant de devenir une carte. On le masque derrière une
+    // ligne douce jusqu'à ce qu'il soit complet (les blocs déjà complets, eux, sont
+    // déjà devenus des cartes ci-dessus). Au rendu final (enCours faux), rien ne change.
+    if (enCours) {
+        const masque = '\n\n🎯 *Préparation du quiz…*\n';
+        resultat = resultat.replace(/```quiz[\s\S]*$/, masque);
+        resultat = resultat.replace(/```(?:json)?[ \t]*\n[ \t]*\{(?:(?!```)[\s\S])*$/, (m) => (/"question"/.test(m) || m.length < 40) ? masque : m);
+        resultat = resultat.replace(/`{1,3}(?:q|qu|qui|quiz|j|js|jso|json)?[ \t]*$/, '');
+    }
+    return { texte: resultat, jetons };
+}
+
+// Texte d'un quiz (question, option, explication) : échappé en HTML, avec les
+// formules LaTeX rendues par KaTeX (le quiz est extrait avant l'étape LaTeX
+// principale, il doit donc faire son propre rendu).
+function texteQuizAvecLatex(s) {
+    const { texte, jetons } = extraireEtRendreLatex(String(s));
+    return reinjecterLatex(echapperHTMLFiche(texte), jetons);
+}
+
+// ❖ 30/10/2026 : l'agent place presque toujours la bonne réponse en première position
+// (A). On mélange donc les options au rendu, de façon DÉTERMINISTE (graine tirée du
+// texte de la question : le même quiz garde le même ordre à chaque réaffichage).
+// Pas de mélange pour Vrai/Faux ni pour les options qui renvoient aux autres
+// (« toutes les réponses… », « aucune… », « A et B »…). Le JSON mélangé remplace
+// la source : le bouton « Défier » transmet donc le même ordre au serveur.
+function melangerOptionsQuiz(q) {
+    try {
+        if (!q || !Array.isArray(q.options)) return q;
+        const options = q.options.map(String);
+        const bonne = Number(q.bonne);
+        if (options.length < 3 || options.length > 6 || !Number.isInteger(bonne) || bonne < 0 || bonne >= options.length) return q;
+        const norm = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (options.some(o => /\b(toutes?|tous|aucune?|les deux|ci-dessus|ci-dessous|autre)\b|^\s*[a-f]\s*(et|,)\s*[a-f]\s*$/.test(norm(o)))) return q;
+        let h = 2166136261;
+        const graine = String(q.question || '') + '|' + options.join('|');
+        for (let i = 0; i < graine.length; i++) { h ^= graine.charCodeAt(i); h = Math.imul(h, 16777619); }
+        const alea = () => { h += 0x6D2B79F5; let t = Math.imul(h ^ (h >>> 15), 1 | h); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+        const ordre = options.map((_, i) => i);
+        for (let i = ordre.length - 1; i > 0; i--) { const j = Math.floor(alea() * (i + 1)); [ordre[i], ordre[j]] = [ordre[j], ordre[i]]; }
+        return Object.assign({}, q, { options: ordre.map(i => options[i]), bonne: ordre.indexOf(bonne) });
+    } catch (e) { return q; }
+}
+
+function reinjecterQuiz(html, jetons) {
+    if (!jetons.length) return html;
+    let resultat = html;
+    jetons.forEach(({ jeton, source }) => {
+        let rendu;
+        try {
+            const q = melangerOptionsQuiz(JSON.parse(source));
+            source = JSON.stringify(q);
+            const options = Array.isArray(q.options) ? q.options.map(String) : [];
+            const bonne = Number(q.bonne);
+            if (!q.question || options.length < 2 || options.length > 6 ||
+                !Number.isInteger(bonne) || bonne < 0 || bonne >= options.length) {
+                throw new Error('quiz invalide');
+            }
+            const lettres = 'ABCDEF';
+            const boutons = options.map((opt, i) =>
+                `<button type="button" class="quiz-option" data-i="${i}" onclick="repondreQuiz(this)"><span class="quiz-lettre">${lettres[i]}</span><span class="quiz-texte">${texteQuizAvecLatex(opt)}</span></button>`
+            ).join('');
+            const explication = q.explication ? texteQuizAvecLatex(q.explication) : '';
+            rendu = `<div class="quiz-carte" data-bonne="${bonne}" data-quiz-source="${source.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"><div class="quiz-etiquette">Quiz</div><div class="quiz-question">${texteQuizAvecLatex(q.question)}</div><div class="quiz-options">${boutons}</div><div class="quiz-retour" style="display:none"></div><div class="quiz-explication" style="display:none">${explication}</div></div>`;
+        } catch (e) {
+            rendu = `<pre class="partition-musicale-erreur">${echapperHTMLFiche(source)}</pre>`;
+        }
+        resultat = resultat.split(jeton).join(rendu);
+    });
+    return resultat;
+}
+
+// ❖ RÉSULTATS D'ÉVALUATION TRANSMIS AU BILAN (27/10/2026) ❖
+// L'agent ne voit pas les clics sur les cartes de quiz (ils restent dans le
+// navigateur) : sans ce relais, il notait le bilan sur la seule conversation
+// écrite (18/20 alors que le quiz donnait 1/5). On compte donc ici les
+// résultats par matière et on les joint au message de fin de session / de
+// demande de bilan.
+function cleResultatsEval(avatar) { return 'eduka_resultats_eval_' + (avatar || 'general'); }
+function enregistrerResultatEvaluation(type, juste, avatar) {
+    try {
+        const cle = cleResultatsEval(avatar);
+        const etat = JSON.parse(localStorage.getItem(cle) || '{}');
+        const e = etat[type] || { juste: 0, total: 0 };
+        e.total += 1;
+        if (juste) e.juste += 1;
+        etat[type] = e;
+        localStorage.setItem(cle, JSON.stringify(etat));
+    } catch (err) {}
+}
+function resumeResultatsEvaluations(avatar) {
+    try {
+        const etat = JSON.parse(localStorage.getItem(cleResultatsEval(avatar)) || '{}');
+        const noms = { quiz: 'Quiz' };
+        const parties = Object.keys(etat).filter(k => etat[k] && etat[k].total > 0)
+            .map(k => (noms[k] || k) + ' : ' + etat[k].juste + ' bonne(s) réponse(s) sur ' + etat[k].total);
+        if (!parties.length) return '\n[RÉSULTATS ÉVALUÉS DE LA SESSION : aucun quiz répondu sur l\'application]';
+        return '\n[RÉSULTATS ÉVALUÉS DE LA SESSION : ' + parties.join(' ; ') + ']';
+    } catch (err) { return ''; }
+}
+function reinitialiserResultatsEvaluations(avatar) {
+    try { localStorage.removeItem(cleResultatsEval(avatar)); } catch (err) {}
+}
+
+function repondreQuiz(bouton) {
+    const carte = bouton.closest('.quiz-carte');
+    if (!carte || carte.classList.contains('quiz-repondu')) return;
+    carte.classList.add('quiz-repondu');
+    const choix = Number(bouton.dataset.i);
+    const bonne = Number(carte.dataset.bonne);
+    carte.querySelectorAll('.quiz-option').forEach(b => {
+        b.disabled = true;
+        const i = Number(b.dataset.i);
+        if (i === bonne) b.classList.add('quiz-juste');
+        else if (i === choix) b.classList.add('quiz-faux');
+    });
+    const retour = carte.querySelector('.quiz-retour');
+    retour.textContent = (choix === bonne) ? 'Bravo, bonne réponse !' : 'Pas tout à fait. La bonne réponse est en vert.';
+    retour.classList.add(choix === bonne ? 'quiz-retour-juste' : 'quiz-retour-faux');
+    retour.style.display = 'block';
+    enregistrerResultatEvaluation('quiz', choix === bonne, (typeof avatarActif !== 'undefined') ? avatarActif : 'general');
+    const expl = carte.querySelector('.quiz-explication');
+    if (expl && expl.textContent.trim()) expl.style.display = 'block';
+    try { mettreAJourBoutonDefi(carte); } catch (e) { /* le défi ne doit jamais gêner le quiz */ }
+    const historique = carte.closest('[id$="-chat-history"]');
+    if (historique) saveChatHistory(historique.id.replace('-chat-history', ''));
+}
+
+// ❖ 24/11/2026 : mise en page de la FICHE DE COURS ÉLÈVE (second document de la Forge secondaire).
+// Le texte reste du Markdown standard ; on regroupe simplement les éléments en blocs (en-tête, objectifs,
+// parties du cours, « Ce que je retiens », exercices, corrigés) que style.css habille.
+function habillerFicheCoursEleve(html) {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    const noeuds = Array.from(tpl.content.childNodes);
+    const sortie = document.createElement('div');
+    sortie.className = 'fiche-cours-eleve';
+    const typeDe = (txt) => {
+        const t = txt.replace(/[:\s]+$/, '').trim();
+        if (/^FICHE DE COURS$/i.test(t)) return 'entete';
+        if (/^ce que je dois savoir faire$/i.test(t)) return 'savoir';
+        if (/^ce que je retiens$/i.test(t)) return 'retiens';
+        if (/^exercices?\b/i.test(t)) return 'exercices';
+        if (/^corrig[ée]s?$/i.test(t)) return 'corriges';
+        if (/^(?:[IVX]{1,4})\.\s*\S/.test(t)) return 'partie';
+        return '';
+    };
+    const estTitre = (n) => {
+        if (n.nodeType !== 1) return false;
+        if (/^H[1-4]$/.test(n.tagName)) return true;
+        return n.tagName === 'P' && n.children.length <= 1 && !!typeDe(n.textContent) && n.textContent.trim().length < 60;
+    };
+    let courant = null;
+    const notes = [];
+    const signatures = [];
+    noeuds.forEach(n => {
+        if (n.nodeType === 3 && !n.textContent.trim()) return;
+        if (n.nodeType === 1 && n.tagName === 'HR') return;
+        if (n.nodeType === 1 && (n.querySelector('.signature-doc') || (n.classList && n.classList.contains('signature-doc')))) { signatures.push(n); return; }
+        if (estTitre(n)) {
+            const type = typeDe(n.textContent);
+            if (type) {
+                courant = document.createElement('div');
+                courant.className = 'fce-bloc fce-' + type;
+                const h = document.createElement(type === 'entete' ? 'h1' : 'h2');
+                h.className = 'fce-titre';
+                h.textContent = n.textContent.trim();
+                courant.appendChild(h);
+                sortie.appendChild(courant);
+                return;
+            }
+        }
+        if (!courant) { courant = document.createElement('div'); courant.className = 'fce-bloc fce-entete'; sortie.appendChild(courant); }
+        courant.appendChild(n.cloneNode(true));
+    });
+    // Dernière phrase d'invitation à ajuster : sortie du bloc « Corrigés », rendue en simple note.
+    const dernierBloc = sortie.lastElementChild;
+    if (dernierBloc) {
+        const derniers = Array.from(dernierBloc.children);
+        const dernier = derniers[derniers.length - 1];
+        if (dernier && dernier.tagName === 'P' && /(peut|peuvent|sur demande|ajust|compl[ée]t|raccourci)/i.test(dernier.textContent) && derniers.length > 2) {
+            const note = document.createElement('p');
+            note.className = 'fce-note';
+            note.textContent = dernier.textContent.trim();
+            dernier.remove();
+            notes.push(note);
+        }
+    }
+    notes.forEach(n => sortie.appendChild(n));
+    const conteneur = document.createElement('div');
+    conteneur.appendChild(sortie);
+    signatures.forEach(sg => conteneur.appendChild(sg.cloneNode(true)));
+    return conteneur.innerHTML;
+}
+
+// ❖ 24/11/2026 : pastille « rédaction en cours / document prêt » au-dessus de la zone de saisie.
+// Pendant la rédaction, la fiche s'affiche en texte brut et ne prend sa forme finale qu'à la fin :
+// sans signal, l'enseignant ne sait pas si le document est terminé.
+const minuteursStatutRedaction = {};
+function statutRedaction(outil, etat, bulle) {
+    if (!['forge', 'forge_primaire', 'atelier'].includes(outil)) return;
+    const histo = document.getElementById(`${outil}-chat-history`);
+    const zone = histo && histo.nextElementSibling && histo.nextElementSibling.classList.contains('chat-input-area')
+        ? histo.nextElementSibling : (histo && histo.parentElement ? histo.parentElement.querySelector('.chat-input-area') : null);
+    if (!zone) return;
+    let pastille = document.getElementById(`${outil}-statut-redaction`);
+    clearTimeout(minuteursStatutRedaction[outil]);
+    if (etat === 'retirer') { if (pastille) pastille.remove(); return; }
+    if (!pastille) {
+        pastille = document.createElement('div');
+        pastille.id = `${outil}-statut-redaction`;
+        pastille.setAttribute('role', 'status');
+        pastille.setAttribute('aria-live', 'polite');
+        zone.insertBefore(pastille, zone.firstChild);
+    }
+    if (etat === 'encours') {
+        pastille.className = 'statut-redaction encours';
+        pastille.onclick = null;
+        pastille.innerHTML = '<span class="statut-points" aria-hidden="true"><i></i><i></i><i></i></span><span>Rédaction en cours — le document se complète, merci de patienter.</span>';
+    } else {
+        pastille.className = 'statut-redaction pret';
+        pastille.innerHTML = '<span>✅ Document prêt</span><span class="statut-lien">Afficher le début</span>';
+        pastille.onclick = () => { if (bulle) scrollToElementTop(`${outil}-chat-history`, bulle); pastille.remove(); };
+        minuteursStatutRedaction[outil] = setTimeout(() => { if (pastille.parentNode) pastille.remove(); }, 25000);
+    }
+}
+
+// ❖ RESTITUTION DU FLUX — style « professionnel » (ChatGPT/Claude/Gemini) ❖
+// Ancien comportement : chaque fragment reçu rejouait le fondu CSS sur TOUT
+// le texte déjà affiché (remove/reflow/add à chaque appel), ce qui provoquait
+// un scintillement continu et peu soigné le temps que la réponse s'écrive.
+// Nouveau comportement : le fondu d'entrée ne joue plus qu'UNE fois, au tout
+// premier fragment (transition douce depuis la bulle de réflexion) ; les
+// fragments suivants mettent simplement le texte à jour sans réanimation.
+// Pendant la frappe, un curseur clignotant (▍) marque la fin du texte déjà
+// reçu -- signal de frappe en cours standard, retiré au rendu final.
+function afficherReponseAvecFondu(element, texteMarkdown, attenuerSignature, enCoursDeFrappe, outil, styliserDevoir) {
+    const source = attenuerSignature ? attenuerSignatureDocument(texteMarkdown) : texteMarkdown;
+
+    // ❖ Reskin visuel enrichi : tenté uniquement une fois la réponse
+    // entièrement reçue (jamais pendant la frappe, pour ne pas afficher
+    // une structure encore incomplète), et uniquement pour les outils
+    // dont la structure est connue (Forge/Forge Primaire = fiche de
+    // leçon, Atelier = évaluation). Repli automatique sur le rendu
+    // standard sinon.
+    let html = null;
+    if (!enCoursDeFrappe && outil === 'forge') {
+        html = construireRenduFiche(source, outil);
+    } else if (!enCoursDeFrappe && outil === 'forge_primaire') {
+        html = construireRenduFichePrimaire(source);
+    } else if (!enCoursDeFrappe && outil === 'atelier') {
+        html = construireRenduEvaluation(source);
+    }
+
+    if (html === null) {
+        // ❖ Extraction/réinjection LaTeX (KaTeX) -- voir extraireEtRendreLatex
+        // ci-dessus. Fait AVANT marked.parse, sinon Markdown mangerait les
+        // délimiteurs "\(" "\)". Ne concerne que ce chemin de rendu standard
+        // (Sas, Cabinet, Ateliers...) -- les fiches Forge/Forge Primaire/
+        // Atelier des Évaluations passent par leur propre convertisseur
+        // (texteVersHtmlLegerFiche), jamais par marked.parse, et leur prompt
+        // interdit déjà le LaTeX (dictionnaire mathématique en exposants
+        // réels) -- rien à changer côté fiche.
+        // ❖ Extraction/réinjection ABC (portée musicale) -- voir
+        // extraireEtRendreABC ci-dessus. Faite AVANT le LaTeX et AVANT
+        // marked.parse, pour la même raison que le LaTeX : un bloc ```abc
+        // laissé tel quel serait transformé en <pre><code> générique par
+        // marked.parse puis habillé en carte "Devoir", ce qui n'a aucun
+        // rapport avec son contenu réel.
+        const { texte: sourceSansGraph, jetons: jetonsGraph } = extraireEtRendreGraphique(source);
+        const { texte: sourceSansQuiz, jetons: jetonsQuiz } = extraireEtRendreQuiz(sourceSansGraph, enCoursDeFrappe);
+        const { texte: sourceSansABC, jetons: jetonsABC } = extraireEtRendreABC(sourceSansQuiz);
+        const { texte: sourceSansLatex, jetons: jetonsLatex } = extraireEtRendreLatex(sourceSansABC);
+        html = marked.parse(sourceSansLatex);
+        if (jetonsLatex.length) html = reinjecterLatex(html, jetonsLatex);
+        if (jetonsABC.length) html = reinjecterABC(html, jetonsABC);
+        if (jetonsQuiz.length) html = reinjecterQuiz(html, jetonsQuiz);
+        if (jetonsGraph.length) html = reinjecterGraphique(html, jetonsGraph);
+        if (attenuerSignature) {
+            html = html
+                .replace(JETON_SIGNATURE_DEBUT, '<span class="signature-doc">')
+                .replace(JETON_SIGNATURE_FIN, '</span>');
+        }
+        // 24/11/2026 : fiche de cours pour les élèves (Forge secondaire) -> mise en page dédiée.
+        if (!enCoursDeFrappe && outil === 'forge' && /^\s*(?:#+\s*)?\**\s*FICHE DE COURS\b/i.test(source)) {
+            try { html = habillerFicheCoursEleve(html); } catch (e) { /* repli : rendu standard */ }
+        }
+        // ❖ "Mission" (Espace Élève) : le prompt du Sas est délibérément
+        // conversationnel et sans structure (ni listes, ni emoji hors
+        // clôture) -- on ne touche pas à cette philosophie. Le seul
+        // élément régulier et détectable est le devoir, que le prompt
+        // demande explicitement de générer "à l'intérieur d'un bloc de
+        // code en texte brut" : marked.parse le transforme en
+        // <pre><code>...</code></pre>, qu'on habille ici en carte
+        // "Mission" plutôt que de le laisser en bloc de code brut gris.
+        // N'agit que sur la réponse finale (jamais pendant la frappe, un
+        // bloc de code encore ouvert se parse mal) et seulement si un tel
+        // bloc est réellement présent.
+        if (styliserDevoir && !enCoursDeFrappe) {
+            html = habillerBlocsDevoirs(html);
+        }
+    }
+    if (enCoursDeFrappe) {
+        html += '<span class="curseur-frappe">▍</span>';
+    }
+    element.innerHTML = html;
+    // ❖ Texte brut conservé (Forge seulement) : les boutons « dernière fiche »
+    // le renvoient au modèle. Le texte affiché (innerText) aurait perdu la
+    // structure « Libellé : valeur » et fait échouer la mise en forme.
+    if (!enCoursDeFrappe && outil === 'forge') {
+        element.dataset.sourceBrute = texteMarkdown;
+    }
+    appliquerTailleIllustrations(element);
+    hydraterIllustrationsFiche(element);
+    if (!element.dataset.fonduJoue) {
+        element.dataset.fonduJoue = "1";
+        element.classList.remove('fondu-reponse');
+        void element.offsetWidth; // force le reflow : lance l'animation CSS
+        element.classList.add('fondu-reponse');
+    }
+}
+
+function scrollToBottom(elementId) {
+    const el = document.getElementById(elementId);
+    if(el) {
+        el.scrollTop = el.scrollHeight;
+    }
+}
+
+// ❖ POSITIONNEMENT SUR LE DÉBUT D'UNE RÉPONSE (et non sur sa fin) ❖
+// Une réponse longue qui dépasse la hauteur visible forçait jusqu'ici
+// l'utilisateur à remonter manuellement pour en lire le début, puisque le
+// défilement suivait le bas du flux à chaque fragment reçu. On aligne
+// désormais le haut de la bulle de réponse avec le haut de la zone visible
+// dès qu'elle commence à s'afficher, et on la maintient à cette position
+// pendant tout le flux (au lieu de continuer à suivre le bas) -- l'élève
+// lit sa réponse depuis le début, comme un texte normal, sans manipulation.
+function scrollToElementTop(elementId, element) {
+    const conteneur = document.getElementById(elementId);
+    if (!conteneur || !element) return;
+    const rectConteneur = conteneur.getBoundingClientRect();
+    const rectElement = element.getBoundingClientRect();
+    const decalage = rectElement.top - rectConteneur.top;
+    conteneur.scrollTop += decalage - 8; // légère marge de respiration en haut
+}
+
+// =======================================================================
+// ❖ LA MÉMOIRE LOCALE (HISTORIQUE) ❖
+// =======================================================================
+function saveChatHistory(outil) {
+    const historyDiv = document.getElementById(`${outil}-chat-history`);
+    if(historyDiv) {
+        // ❖ Le Sas est sauvegardé sous une clé propre à l'avatar actif,
+        // pour ne jamais mélanger les matières entre elles.
+        const cle = (outil === 'sas') ? `eduka_chat_sas_${avatarActif}` : `eduka_chat_${outil}`;
+        localStorage.setItem(cle, historyDiv.innerHTML);
+
+        if (outil === 'sas') {
+            localStorage.setItem(`eduka_conv_sas`, JSON.stringify(sasConversationIds));
+        } else {
+            localStorage.setItem(`eduka_conv_${outil}`, teacherConversationIds[outil]);
+        }
+    }
+}
+
+// =======================================================================
+// ❖ HISTORIQUE DES SESSIONS DU SAS (appareil seulement, lecture seule) ❖
+// Une "session" archivée = le fil d'une matière figé au moment où l'élève
+// clique sur "Nouvelle session". Stocké dans localStorage (jamais envoyé au
+// serveur, aucun coût d'API). Consultation en lecture seule : reprendre une
+// ancienne conversation relancerait un contexte long et coûteux, on repart
+// donc d'une session neuve (prompt frais + mémoire de suivi).
+// =======================================================================
+const HIST_SAS_MAX = 15;
+
+function lireHistoriqueSas(avatar) {
+    try { return JSON.parse(localStorage.getItem(`eduka_hist_sas_${avatar}`) || '[]'); }
+    catch (e) { return []; }
+}
+
+function ecrireHistoriqueSas(avatar, liste) {
+    // Quota localStorage (~5 Mo) : en cas de dépassement, on retire
+    // la plus ancienne session jusqu'à ce que l'écriture passe.
+    while (true) {
+        try { localStorage.setItem(`eduka_hist_sas_${avatar}`, JSON.stringify(liste)); return true; }
+        catch (e) {
+            if (liste.length <= 1) return false;
+            liste.pop();
+        }
+    }
+}
+
+function archiverSessionSas(avatar, html, convId) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const premier = tmp.querySelector('.user-message');
+    if (!premier) return false; // rien d'échangé : inutile d'archiver
+    const copiePremier = premier.cloneNode(true);
+    copiePremier.querySelectorAll('button, .message-actions, [class*="action"]').forEach(n => n.remove());
+    let titre = (copiePremier.textContent || '').replace(/[↻⟳🔄]/g, '').trim().replace(/\s+/g, ' ');
+    if (titre.length > 70) titre = titre.slice(0, 70) + '…';
+    const liste = lireHistoriqueSas(avatar);
+    liste.unshift({ id: Date.now(), date: new Date().toISOString(), titre: titre || 'Session', html: html, conversation_id: convId || '' });
+    return ecrireHistoriqueSas(avatar, liste.slice(0, HIST_SAS_MAX));
+}
+
+function nouvelleSessionSas() {
+    const chatHistory = document.getElementById('sas-chat-history');
+    if (!chatHistory) return;
+    const aEchange = !!chatHistory.querySelector('.user-message');
+    if (aEchange && !confirm("Terminer cette session et en commencer une nouvelle ?\nLa session actuelle sera classée dans l'Historique.")) return;
+
+    if (aEchange) {
+        declencherClotureAutomatiqueSas('nouvelle_session'); // envoie le rapport avec l'ancien conversation_id
+        reinitialiserResultatsEvaluations(avatarActif);
+        archiverSessionSas(avatarActif, chatHistory.innerHTML, sasConversationIds[avatarActif] || '');
+    }
+    sasConversationIds[avatarActif] = '';
+    sasSessionOuverte = false;
+    sasClotureDejaEnvoyee = false;
+    localStorage.removeItem(`eduka_chat_sas_${avatarActif}`);
+    localStorage.setItem('eduka_conv_sas', JSON.stringify(sasConversationIds));
+
+    chatHistory.innerHTML = '';
+    const w = document.createElement('div');
+    w.className = 'message system-message';
+    w.textContent = "Nouvelle discussion. Posez votre première question pour commencer.";
+    chatHistory.appendChild(w);
+}
+
+// ❖ Reprise d'une conversation archivée (23/11/2026) : l'élève qui a quitté
+// une discussion par inadvertance peut y revenir. On réutilise le même
+// conversation_id Dify : l'assistant se souvient de tout le fil.
+function reprendreSessionSas(convId, remplir) {
+    const chat = document.getElementById('sas-chat-history');
+    if (!chat || !convId) { alert("Ouvrez d'abord votre matière, puis reprenez la conversation."); return; }
+    if (sasConversationIds[avatarActif] === convId) { fermerModaleHistoriqueSas(); return; }
+    const aEchange = !!chat.querySelector('.user-message');
+    if (aEchange) {
+        if (!confirm("Reprendre cette conversation ?\nLa discussion en cours sera classée dans l'Historique.")) return;
+        declencherClotureAutomatiqueSas('nouvelle_session');
+        reinitialiserResultatsEvaluations(avatarActif);
+        archiverSessionSas(avatarActif, chat.innerHTML, sasConversationIds[avatarActif] || '');
+    }
+    chat.innerHTML = '';
+    remplir(chat);
+    sasConversationIds[avatarActif] = convId;
+    localStorage.setItem('eduka_conv_sas', JSON.stringify(sasConversationIds));
+    sasSessionOuverte = true;
+    sasClotureDejaEnvoyee = false;
+    try { localStorage.setItem(`eduka_chat_sas_${avatarActif}`, chat.innerHTML); } catch (e) {}
+    fermerModaleHistoriqueSas();
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function boutonReprendreSas(onClick) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'hist-sas-reprendre';
+    b.textContent = '▶ Reprendre cette conversation';
+    b.onclick = onClick;
+    return b;
+}
+
+function fermerModaleHistoriqueSas() {
+    const m = document.getElementById('hist-sas-modal');
+    if (m) m.remove();
+}
+
+function ouvrirHistoriqueSas(idOuvert) {
+    fermerModaleHistoriqueSas();
+    const liste = lireHistoriqueSas(avatarActif);
+    const m = document.createElement('div');
+    m.id = 'hist-sas-modal';
+    m.className = 'modal-overlay active';
+    const boite = document.createElement('div');
+    boite.className = 'modal-content hist-sas-boite';
+    m.appendChild(boite);
+    m.addEventListener('click', (e) => { if (e.target === m) fermerModaleHistoriqueSas(); });
+
+    const fermer = document.createElement('button');
+    fermer.type = 'button'; fermer.className = 'hist-sas-fermer'; fermer.textContent = '✕';
+    fermer.onclick = fermerModaleHistoriqueSas;
+    boite.appendChild(fermer);
+
+    const ouverte = idOuvert ? liste.find(x => x.id === idOuvert) : null;
+    if (ouverte) {
+        const retour = document.createElement('button');
+        retour.type = 'button'; retour.className = 'hist-sas-lien'; retour.textContent = '← Retour à la liste';
+        retour.onclick = () => ouvrirHistoriqueSas();
+        boite.appendChild(retour);
+        const h = document.createElement('h3');
+        h.textContent = new Date(ouverte.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+        boite.appendChild(h);
+        const note = document.createElement('p');
+        note.textContent = ouverte.conversation_id
+            ? "Vous pouvez relire cette conversation ou la reprendre là où vous vous êtes arrêté."
+            : "Lecture seule. Pour continuer ce sujet, démarrez une nouvelle session et reprenez-le.";
+        boite.appendChild(note);
+        if (ouverte.conversation_id) {
+            boite.appendChild(boutonReprendreSas(() => reprendreSessionSas(ouverte.conversation_id, (chat) => { chat.innerHTML = ouverte.html; })));
+        }
+        const fil = document.createElement('div');
+        fil.className = 'chat-history hist-sas-fil';
+        fil.innerHTML = ouverte.html;
+        boite.appendChild(fil);
+    } else {
+        const h = document.createElement('h3');
+        h.textContent = `Historique — ${formaterNomMatiere(avatarActif)}`;
+        boite.appendChild(h);
+        if (!liste.length) {
+            const p = document.createElement('p');
+            p.textContent = "Aucune session archivée pour l'instant. Elles apparaissent ici quand vous cliquez sur « Nouvelle discussion ». L'historique reste sur cet appareil.";
+            boite.appendChild(p);
+        } else {
+            liste.forEach(item => {
+                const ligne = document.createElement('div');
+                ligne.className = 'hist-sas-ligne';
+                const ouvrir = document.createElement('button');
+                ouvrir.type = 'button'; ouvrir.className = 'hist-sas-item';
+                const d = document.createElement('span'); d.className = 'hist-sas-date';
+                d.textContent = new Date(item.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+                const t = document.createElement('span'); t.className = 'hist-sas-titre';
+                t.textContent = item.titre;
+                ouvrir.appendChild(d); ouvrir.appendChild(t);
+                ouvrir.onclick = () => ouvrirHistoriqueSas(item.id);
+                const sup = document.createElement('button');
+                sup.type = 'button'; sup.className = 'hist-sas-suppr'; sup.title = 'Supprimer'; sup.textContent = '🗑';
+                sup.onclick = () => {
+                    if (!confirm('Supprimer définitivement cette session ?')) return;
+                    ecrireHistoriqueSas(avatarActif, lireHistoriqueSas(avatarActif).filter(x => x.id !== item.id));
+                    ouvrirHistoriqueSas();
+                };
+                ligne.appendChild(ouvrir); ligne.appendChild(sup);
+                boite.appendChild(ligne);
+            });
+            const note = document.createElement('p');
+            note.className = 'hist-sas-note';
+            note.textContent = "Sauvegardé sur cet appareil uniquement.";
+            boite.appendChild(note);
+        }
+    }
+    document.body.appendChild(m);
+    if (!ouverte) chargerHistoriqueSasServeur(boite);
+}
+
+// Historique serveur (Code ELV-) : titres et dates stockés côté serveur,
+// textes relus à la demande depuis Dify. Complète l'historique local.
+async function chargerHistoriqueSasServeur(boite) {
+    const sceau = localStorage.getItem('eduka_sceau');
+    if (!sceau || !sceau.startsWith('ELV-')) return;
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/sas/historique/liste', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau, avatar: avatarActif })
+        });
+        const d = await r.json();
+        if (d.status !== 'success' || !d.sessions.length || !boite.isConnected) return;
+        const h = document.createElement('h4');
+        h.textContent = 'Sessions liées à votre Code (tous appareils)';
+        boite.appendChild(h);
+        d.sessions.forEach(s => {
+            const ligne = document.createElement('div');
+            ligne.className = 'hist-sas-ligne';
+            const ouvrir = document.createElement('button');
+            ouvrir.type = 'button'; ouvrir.className = 'hist-sas-item';
+            const dt = document.createElement('span'); dt.className = 'hist-sas-date';
+            dt.textContent = new Date((s.date_maj || '').replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+            const t = document.createElement('span'); t.className = 'hist-sas-titre';
+            t.textContent = s.titre || 'Session';
+            ouvrir.appendChild(dt); ouvrir.appendChild(t);
+            ouvrir.onclick = () => lireSessionSasServeur(boite, sceau, s);
+            const sup = document.createElement('button');
+            sup.type = 'button'; sup.className = 'hist-sas-suppr'; sup.title = 'Retirer de la liste'; sup.textContent = '🗑';
+            sup.onclick = async () => {
+                if (!confirm('Retirer cette session de la liste ?')) return;
+                await fetch('https://api.edukatchat.org/api/sas/historique/supprimer', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matricule: sceau, conversation_id: s.conversation_id })
+                });
+                ouvrirHistoriqueSas();
+            };
+            ligne.appendChild(ouvrir); ligne.appendChild(sup);
+            boite.appendChild(ligne);
+        });
+    } catch (e) { /* silencieux : l'historique local reste disponible */ }
+}
+
+async function lireSessionSasServeur(boite, sceau, s) {
+    boite.innerHTML = '<p>Chargement…</p>';
+    let d;
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/sas/historique/lire', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau, conversation_id: s.conversation_id })
+        });
+        d = await r.json();
+    } catch (e) { d = { status: 'error', message: 'Connexion impossible.' }; }
+    boite.innerHTML = '';
+    const fermer = document.createElement('button');
+    fermer.type = 'button'; fermer.className = 'hist-sas-fermer'; fermer.textContent = '✕';
+    fermer.onclick = fermerModaleHistoriqueSas;
+    boite.appendChild(fermer);
+    const retour = document.createElement('button');
+    retour.type = 'button'; retour.className = 'hist-sas-lien'; retour.textContent = '← Retour à la liste';
+    retour.onclick = () => ouvrirHistoriqueSas();
+    boite.appendChild(retour);
+    if (d.status !== 'success') {
+        const p = document.createElement('p'); p.textContent = d.message || 'Session indisponible.';
+        boite.appendChild(p); return;
+    }
+    const h = document.createElement('h3'); h.textContent = d.titre || 'Session';
+    boite.appendChild(h);
+    const note = document.createElement('p');
+    note.textContent = 'Vous pouvez relire cette conversation ou la reprendre là où vous vous êtes arrêté.';
+    boite.appendChild(note);
+    boite.appendChild(boutonReprendreSas(() => reprendreSessionSas(s.conversation_id, (chat) => {
+        d.echanges.forEach(e => {
+            const q = document.createElement('div'); q.className = 'message user-message'; q.textContent = e.question;
+            const a = document.createElement('div'); a.className = 'message ai-message';
+            if (typeof marked !== 'undefined') a.innerHTML = marked.parse(e.reponse); else a.textContent = e.reponse;
+            chat.appendChild(q); chat.appendChild(a);
+        });
+    })));
+    d.echanges.forEach(e => {
+        const q = document.createElement('div'); q.className = 'message user-message'; q.textContent = e.question;
+        const a = document.createElement('div'); a.className = 'message ai-message';
+        a.innerHTML = (typeof marked !== 'undefined') ? marked.parse(e.reponse) : '';
+        if (typeof marked === 'undefined') a.textContent = e.reponse;
+        boite.appendChild(q); boite.appendChild(a);
+    });
+}
+
+function restoreChatHistories() {
+    // ❖ Le Sas n'est plus restauré ici : son historique dépend de l'avatar
+    // choisi, connu seulement une fois le portail de matière franchi
+    // (voir validerProfilEtEntrer). On restaure ici uniquement les outils
+    // de l'espace enseignant, qui n'ont qu'un seul historique chacun.
+    const outils = ['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'];
+
+    outils.forEach(outil => {
+        const savedHtml = localStorage.getItem(`eduka_chat_${outil}`);
+        const historyDiv = document.getElementById(`${outil}-chat-history`);
+
+        if (savedHtml && historyDiv) {
+            historyDiv.innerHTML = savedHtml;
+        }
+
+        const savedConvId = localStorage.getItem(`eduka_conv_${outil}`);
+        if (savedConvId) {
+            teacherConversationIds[outil] = savedConvId;
+        }
+    });
+
+    const savedConvSas = localStorage.getItem('eduka_conv_sas');
+    if (savedConvSas) {
+        try {
+            sasConversationIds = JSON.parse(savedConvSas);
+        } catch (e) {
+            sasConversationIds = {};
+        }
+    }
+}
+
+function initTheme() {
+    // ❖ Clair = base par défaut, désormais directement dans le CSS (plus
+    // besoin d'ajouter de classe) -- le sombre devient l'exception,
+    // activée via la classe 'dark-theme' (voir style.css : chaque règle
+    // "body.dark-theme .xxx" est posée juste après sa règle de base).
+    // Un visiteur sans préférence enregistrée démarre donc en clair ; seul
+    // un choix explicite 'dark' (bouton ☀️/🌙) ajoute la classe.
+    const savedTheme = localStorage.getItem('eduka_theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        updateThemeButtonUI(false);
+    } else {
+        updateThemeButtonUI(true);
+    }
+}
+
+// ❖ Mode Mascotte : purement visuel, optionnel, mémorisé par appareil
+// (même mécanisme que le thème). Désactivé par défaut -- chacun choisit
+// l'habillage qui lui convient plutôt que de l'imposer.
+// ❖ La mascotte n'est plus optionnelle : elle accompagne systématiquement
+// les réponses de l'IA dans l'Espace de Préparation, pour tous les enfants
+// -- plus de bouton dédié dans la barre d'outils (voir historique Git pour
+// toggleMascotte()/updateMascotteButtonUI(), conservées mais plus reliées
+// à aucun bouton, au cas où l'idée d'un réglage reviendrait un jour).
+function initMascotte() {
+    document.body.classList.add('mode-mascotte');
+}
+
+function toggleMascotte() {
+    const actif = document.body.classList.toggle('mode-mascotte');
+    localStorage.setItem('eduka_mascotte', actif ? 'on' : 'off');
+    updateMascotteButtonUI(actif);
+}
+
+function updateMascotteButtonUI(actif) {
+    const btn = document.getElementById('btn-mascotte');
+    if (btn) {
+        btn.style.opacity = actif ? '1' : '0.45';
+        btn.title = actif ? "Mascotte activée (cliquer pour désactiver)" : "Activer la mascotte";
+    }
+}
+
+// ❖ Le visage du hibou compagnon : trois expressions simples (réflexion,
+// succès, erreur) obtenues en ne faisant varier que les sourcils, les
+// pupilles et la bouche -- le reste du dessin (yeux, bec) reste
+// identique, pour une lecture claire même en tout petit format.
+function creerAvatarMascotte(etat) {
+    const expressions = {
+        reflexion: {
+            pupilleY: 9.4,
+            sourcils: '<path d="M6,7.3 h4" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,7.3 h4" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M9.5,17 h5" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>'
+        },
+        succes: {
+            pupilleY: 11,
+            sourcils: '<path d="M6,7 q2,-1.4 4,0" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,7 q2,-1.4 4,0" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M7.5,15.5 Q12,19.5 16.5,15.5" stroke="#78350F" stroke-width="1.3" stroke-linecap="round" fill="none"/>'
+        },
+        erreur: {
+            pupilleY: 11.6,
+            sourcils: '<path d="M6,7.6 q2,1.6 4,0.6" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M14,8.2 q2,-1.6 4,-0.6" stroke="#78350F" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+            bouche: '<path d="M8,17.5 Q12,15 16,17.5" stroke="#78350F" stroke-width="1.3" stroke-linecap="round" fill="none"/>'
+        }
+    };
+    const c = expressions[etat] || expressions.reflexion;
+    return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="8" cy="11" r="3.2" fill="#FFFFFF" stroke="#92400E" stroke-width="1"/>
+        <circle cx="16" cy="11" r="3.2" fill="#FFFFFF" stroke="#92400E" stroke-width="1"/>
+        <circle cx="8" cy="${c.pupilleY}" r="1.3" fill="#451A03"/>
+        <circle cx="16" cy="${c.pupilleY}" r="1.3" fill="#451A03"/>
+        ${c.sourcils}
+        <path d="M11,13.3 L13,13.3 L12,15.3 Z" fill="#92400E"/>
+        ${c.bouche}
+    </svg>`;
+}
+
+// ❖ Attache (ou met à jour) le médaillon-mascotte sur une bulle de
+// réponse -- ne fait rien si le Mode Mascotte est désactivé. Doit
+// toujours être appelé APRÈS toute réaffectation de innerHTML/textContent
+// sur la bulle (qui effacerait sinon l'avatar déjà posé).
+function ajouterMascotte(bulleDiv, etat) {
+    if (!document.body.classList.contains('mode-mascotte') || !bulleDiv) return;
+    let avatar = bulleDiv.querySelector('.mascotte-avatar');
+    if (!avatar) {
+        avatar = document.createElement('div');
+        avatar.className = 'mascotte-avatar';
+        bulleDiv.appendChild(avatar);
+    }
+    avatar.innerHTML = creerAvatarMascotte(etat);
+}
+
+// ❖ Petite étincelle d'encouragement, discrète et non-infantilisante --
+// une seule apparition brève au succès d'une réponse, jamais répétée ni
+// intrusive. Disparaît d'elle-même, aucune trace ne persiste dans
+// l'historique sauvegardé au-delà de son animation.
+function declencherEtincelleMascotte(bulleDiv) {
+    if (!document.body.classList.contains('mode-mascotte') || !bulleDiv) return;
+    const avatar = bulleDiv.querySelector('.mascotte-avatar');
+    if (!avatar) return;
+    const etincelle = document.createElement('span');
+    etincelle.className = 'mascotte-etincelle';
+    etincelle.textContent = '✨';
+    avatar.appendChild(etincelle);
+    setTimeout(() => { etincelle.remove(); }, 1500);
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-theme');
+    localStorage.setItem('eduka_theme', isDark ? 'dark' : 'light');
+    updateThemeButtonUI(!isDark);
+}
+
+function updateThemeButtonUI(isLight) {
+    const themeBtn = document.getElementById('btn-theme');
+    if (themeBtn) {
+        var emo = themeBtn.querySelector('.ico-emoji');   // ❖ 21/11/2026 : on ne remplace plus tout le bouton (il contient aussi les icônes au trait)
+        if (emo) emo.textContent = isLight ? "🌙" : "☀️"; else themeBtn.textContent = isLight ? "🌙" : "☀️";
+        themeBtn.title = isLight ? "Passer en mode sombre" : "Passer en mode clair";
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initMascotte();
+    restoreChatHistories();
+    // ❖ Rattrape une éventuelle session Sas laissée ouverte par un appareil
+    // qui n'a jamais réussi à envoyer sa sentinelle de clôture normale
+    // (voir verifierRattrapageClotureSas, définie plus bas dans ce fichier).
+    if (typeof verifierRattrapageClotureSas === 'function') {
+        verifierRattrapageClotureSas();
+    }
+});
+
+// =======================================================================
+// ❖ GESTION DU CODE D'ACCÈS ET DES MODALES ❖
+// =======================================================================
+function openPremiumModal() {
+    // ❖ Correction : ce lien pointait auparavant directement vers un
+    // formulaire Tally figé (Révision d'Emploi du Temps pour les parents,
+    // Cabinet brut pour les enseignants) — désormais périmé depuis la
+    // création des modales dédiées (Espace Parents avec choix EDT
+    // Tally/Progression + rappel WhatsApp, et Abonnement Espace Enseignant).
+    // Le lien ouvre maintenant la bonne modale au lieu de sauter directement
+    // sur un formulaire.
+    const lien = document.getElementById('lien-abonnement-dynamique');
+    if (lien) {
+        lien.href = "#";
+        lien.removeAttribute('target');
+        if (espaceActuel === 'enseignant') {
+            lien.textContent = "Accéder au Cabinet (Enseignants)";
+            lien.onclick = function(e) {
+                e.preventDefault();
+                closePremiumModal();
+                ouvrirEnseignantAboModal();
+            };
+        } else {
+            lien.textContent = "Accéder au Bureau des Parents";
+            lien.onclick = function(e) {
+                e.preventDefault();
+                closePremiumModal();
+                ouvrirParentsModal();
+            };
+        }
+    }
+
+    document.getElementById('premium-modal').classList.add('active');
+    // ❖ Sur mobile (Android en particulier), un focus() déclenché par
+    // script -- même via un simple setTimeout -- n'est pas considéré comme
+    // un geste utilisateur "de confiance" par le navigateur : le clavier
+    // virtuel ne s'affiche alors pas, et le champ reste bloqué en focus
+    // "silencieux" (souvent impossible d'y écrire même en le retouchant).
+    // On réserve donc l'auto-focus au clavier/souris (desktop) ; sur
+    // tactile, l'utilisateur touche lui-même le champ, ce qui est un vrai
+    // geste utilisateur et fait apparaître le clavier de façon fiable.
+    const estTactile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    if (!estTactile) {
+        setTimeout(() => document.getElementById('matricule-input').focus(), 100);
+    }
+}
+
+function closePremiumModal() {
+    document.getElementById('premium-modal').classList.remove('active');
+    document.getElementById('modal-feedback').textContent = '';
+    document.getElementById('matricule-input').value = '';
+}
+
+function handleMatriculeKeyPress(event) {
+    if (event.key === 'Enter') {
+        verifyMatricule();
+    }
+}
+
+async function verifyMatricule() {
+    const matricule = document.getElementById('matricule-input').value.trim();
+    const feedback = document.getElementById('modal-feedback');
+
+    if(!matricule) {
+        feedback.textContent = "Le Code d'accès ne peut être vide.";
+        feedback.style.color = "#F87171";
+        return;
+    }
+
+    feedback.textContent = "Vérification de votre Code en cours...";
+    feedback.style.color = "#60A5FA";
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/verifier-sceau', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // On utilise ta variable 'espaceActuel' pour déclarer la provenance
+            body: JSON.stringify({
+                sceau: matricule,
+                espace_cible: espaceActuel
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.valide === true) {
+            feedback.textContent = data.message;
+            feedback.style.color = "#10B981";
+
+            localStorage.setItem('eduka_sceau', matricule); try { if (typeof chargerFonctionsActives === 'function') chargerFonctionsActives(); } catch (e) { /* menu : sans gravité */ }
+            if (typeof chargerFonctionsActives === 'function') setTimeout(chargerFonctionsActives, 0);
+
+            setTimeout(() => {
+                closePremiumModal();
+                if (pendingSpaceToOpen) {
+                    openSpace(pendingSpaceToOpen);
+                    pendingSpaceToOpen = null;
+                }
+            }, 1500);
+        } else {
+            feedback.textContent = data.message;
+            feedback.style.color = "#F87171";
+        }
+    } catch (error) {
+        feedback.textContent = "La connexion au serveur a échoué. Veuillez vérifier votre réseau.";
+        feedback.style.color = "#F87171";
+    }
+}
+
+function triggerVisionUpsell(chatHistoryId) {
+    const chatHistory = document.getElementById(chatHistoryId);
+
+    const botUpsellDiv = document.createElement('div');
+    botUpsellDiv.className = 'message bot-message';
+    botUpsellDiv.innerHTML = `
+        <div style="font-size: 0.9em; line-height: 1.4;">
+            <strong>📸 Analyse visuelle restreinte</strong><br>
+            Cette fonction avancée requiert l'accès complet.<br>
+            <button onclick='openPremiumModal()' style='margin-top: 8px; padding: 6px 12px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9em;'>Saisir le Code</button>
+        </div>
+    `;
+
+    chatHistory.appendChild(botUpsellDiv);
+    scrollToBottom(chatHistoryId);
+
+    const outil = chatHistoryId.split('-')[0];
+    saveChatHistory(outil);
+}
+
+// =======================================================================
+// ❖ L'ANALYSE VISUELLE RÉELLE (JOINDRE UNE IMAGE) ❖
+// =======================================================================
+// ❖ Jusqu'ici, le bouton trombone de chaque outil se contentait toujours
+// d'afficher l'upsell ci-dessus, sans jamais vérifier le vrai statut
+// Premium ni proposer d'envoi réel. Corrigé le 27/08/2026 : un Sceau local
+// présent déclenche désormais un vrai sélecteur de fichier puis un
+// téléversement vers /api/chat/televerser_image (voir gateway/main.py,
+// section 9.4) ; l'upsell ci-dessus ne s'affiche plus que si le serveur
+// confirme l'absence de droit Premium (ou si aucun Sceau n'est enregistré
+// localement, ce qui évite un aller-retour serveur inutile).
+
+// ❖ Un seul input file caché, réutilisé par tous les outils.
+let inputFichierImageCache = null;
+
+// ❖ Formats acceptés par le trombone (01/09/2026) : étendu au-delà des
+// photos aux documents (PDF, Word, TXT, CSV, Excel) -- voir
+// gateway/main.py, type_fichier_dify, qui reste la source de vérité côté
+// serveur (ce simple attribut "accept" ne fait que présélectionner les
+// fichiers dans le sélecteur du navigateur, il n'empêche pas d'en choisir
+// un autre via "Tous les fichiers"). L'attribut "capture" (ouverture
+// directe de l'appareil photo) reste sans effet sur les documents -- les
+// navigateurs l'ignorent silencieusement en dehors des images/vidéos.
+// ❖ 17/10/2026 : restreint aux photos (jpg/jpeg/png) -- aucun modèle OpenAI
+// n'expose la capacité "Document" dans Dify, un PDF/Word était donc toujours
+// rejeté. À rouvrir le jour où un modèle compatible est activé.
+const EXTENSIONS_FICHIER_ACCEPTEES = 'image/jpeg,image/png,.jpg,.jpeg,.png';
+
+function obtenirInputFichierImage() {
+    if (!inputFichierImageCache) {
+        inputFichierImageCache = document.createElement('input');
+        inputFichierImageCache.type = 'file';
+        inputFichierImageCache.accept = EXTENSIONS_FICHIER_ACCEPTEES;
+        inputFichierImageCache.capture = 'environment';
+        inputFichierImageCache.style.display = 'none';
+        document.body.appendChild(inputFichierImageCache);
+    }
+    return inputFichierImageCache;
+}
+
+// ❖ fichiersEnAttente[chatHistoryId] = { id: <upload_file_id Dify>, nom,
+// type: <"image"|"document", voir type_fichier_dify côté serveur> } --
+// vidé après l'envoi du message suivant, ou par annulation manuelle.
+const fichiersEnAttente = {};
+
+function declencherJoindreImage(chatHistoryId, contexte) {
+    const sceau = contexte === 'sas'
+        ? (localStorage.getItem('eduka_sceau') || "")
+        : (localStorage.getItem('eduka_sceau_enseignant') || "");
+
+    if (!sceau) {
+        // ❖ Sans Sceau local, le serveur refuserait de toute façon --
+        // inutile de solliciter le réseau pour afficher l'upsell.
+        triggerVisionUpsell(chatHistoryId);
+        return;
+    }
+
+    const input = obtenirInputFichierImage();
+    input.value = ''; // permet de resélectionner le même fichier deux fois de suite
+    input.onchange = () => {
+        const fichier = input.files && input.files[0];
+        if (!fichier) return;
+        televerserImageChat(chatHistoryId, contexte, sceau, fichier);
+    };
+    input.click();
+}
+
+async function televerserImageChat(chatHistoryId, contexte, sceau, fichier) {
+    const chatHistory = document.getElementById(chatHistoryId);
+
+    const bulleEnvoi = document.createElement('div');
+    bulleEnvoi.className = 'message bot-message';
+    bulleEnvoi.innerHTML = `<div style="font-size: 0.9em;">📎 Envoi du fichier en cours...</div>`;
+    chatHistory.appendChild(bulleEnvoi);
+    scrollToBottom(chatHistoryId);
+
+    try {
+        const formData = new FormData();
+        formData.append('fichier', fichier);
+        formData.append('contexte', contexte);
+        formData.append('matricule', sceau);
+        if (contexte === 'sas') formData.append('conversation_id', sasConversationIds[avatarActif] || '');
+
+        const response = await fetch('https://api.edukatchat.org/api/chat/televerser_image', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        bulleEnvoi.remove();
+
+        if (data.success) {
+            // ❖ data.type ("image" ou "document", voir type_fichier_dify côté
+            // serveur) est conservé ici pour être retransmis tel quel dans
+            // fichier_type au moment de l'envoi du message (voir sendSasMessage
+            // / sendTeacherMessage) -- c'est le serveur qui a déterminé le type
+            // au moment du téléversement, le frontend se contente de le
+            // reporter plutôt que de deviner à partir de l'extension.
+            fichiersEnAttente[chatHistoryId] = { id: data.id, nom: fichier.name, type: data.type || 'image' };
+            const bulleConfirmation = document.createElement('div');
+            bulleConfirmation.className = 'message bot-message';
+            bulleConfirmation.innerHTML = `<div style="font-size: 0.9em;">📎 Fichier joint (« ${fichier.name} ») — il sera envoyé avec ton prochain message. <a href="#" onclick="annulerImageJointe('${chatHistoryId}', this); return false;" style="color:#EF4444;">Annuler</a></div>`;
+            chatHistory.appendChild(bulleConfirmation);
+            scrollToBottom(chatHistoryId);
+        } else if (data.premium_requis) {
+            triggerVisionUpsell(chatHistoryId);
+        } else {
+            const bulleErreur = document.createElement('div');
+            bulleErreur.className = 'message bot-message';
+            bulleErreur.textContent = data.message || "L'envoi du fichier a échoué. Réessaie dans un instant.";
+            chatHistory.appendChild(bulleErreur);
+            scrollToBottom(chatHistoryId);
+        }
+    } catch (e) {
+        bulleEnvoi.remove();
+        const bulleErreur = document.createElement('div');
+        bulleErreur.className = 'message bot-message';
+        bulleErreur.textContent = "L'envoi du fichier a échoué. Vérifie ta connexion et réessaie.";
+        chatHistory.appendChild(bulleErreur);
+        scrollToBottom(chatHistoryId);
+    }
+}
+
+function annulerImageJointe(chatHistoryId, lien) {
+    delete fichiersEnAttente[chatHistoryId];
+    const bulle = lien.closest('.message');
+    if (bulle) bulle.remove();
+}
+
+// =======================================================================
+// ❖ LOGIQUE DE L'ESPACE DE PRÉPARATION (LE SAS) ❖
+// =======================================================================
+let sasConversationIds = {};
+
+// ❖ CLÔTURE AUTOMATIQUE DE SESSION — Le protocole de clôture (bilan,
+// mémoire, rapport aux parents) ne doit plus dépendre du seul jugement
+// de l'agent quant à la "fin" d'une conversation : un élève qui ferme
+// l'onglet, met l'application en arrière-plan, ou s'arrête simplement
+// de répondre après une seule question, ne dit jamais explicitement
+// "au revoir". On détecte donc ces trois cas côté interface et on
+// envoie un message sentinelle que le prompt Sas est instruit à
+// reconnaître pour déclencher immédiatement la clôture.
+const SENTINEL_FIN_SESSION_SAS = "[FIN_DE_SESSION_AUTOMATIQUE]";
+const DELAI_INACTIVITE_CLOTURE_MS = 15 * 60 * 1000; // 15 minutes sans nouveau message
+let sasSessionOuverte = false;       // vrai dès qu'un premier échange a réussi
+let sasClotureDejaEnvoyee = false;   // évite les doublons de rapport
+let minuteurInactiviteSas = null;
+
+function reinitialiserMinuteurInactiviteSas() {
+    if (minuteurInactiviteSas) clearTimeout(minuteurInactiviteSas);
+    minuteurInactiviteSas = setTimeout(() => {
+        declencherClotureAutomatiqueSas('inactivite');
+    }, DELAI_INACTIVITE_CLOTURE_MS);
+}
+
+// ❖ RATTRAPAGE DE CLÔTURE PAR HORLOGE PERSISTÉE (ajouté le 03/09/2026)
+//
+// Incident réel : une session de 21 minutes (14 messages, matricule
+// ELV-IV1JA) n'a jamais été clôturée -- ni bilan, ni ligne dans
+// Journal_Sessions -- alors que les trois déclencheurs ci-dessus existent
+// déjà (fermeture d'onglet, mise en arrière-plan, inactivité). Diagnostic
+// confirmé par les journaux du serveur : la sentinelle de clôture n'a
+// JAMAIS atteint le serveur, dans aucune des heures qui ont suivi. Cause
+// probable : ces trois déclencheurs dépendent tous d'un minuteur
+// JavaScript programmé pendant que l'onglet est actif -- sur mobile en
+// particulier, le système peut suspendre l'exécution d'un onglet mis en
+// arrière-plan avant que ce minuteur n'ait la moindre chance de se
+// déclencher, surtout après une mise en veille prolongée.
+//
+// Le correctif : au lieu de compter sur un minuteur qui doit rester vivant
+// pendant l'absence de l'élève, on enregistre l'heure du dernier message
+// dans localStorage (qui survit, lui, à la mise en veille) à chaque
+// échange réussi. Au prochain réveil de l'application -- rechargement de
+// page ou retour au premier plan --, on compare l'heure actuelle à cette
+// dernière heure connue : si l'écart dépasse le délai d'inactivité, on
+// envoie la sentinelle de clôture à ce moment-là, rétroactivement, pour la
+// session laissée en suspens. Cela ne dépend plus que d'un calcul fait une
+// fois que le JavaScript tourne à nouveau, ce qui est garanti dès que
+// l'élève rouvre l'application -- contrairement à un minuteur en
+// arrière-plan. Les trois déclencheurs existants restent en place comme
+// premier filet, plus rapide quand ils fonctionnent ; celui-ci n'est qu'un
+// filet de secours qui rattrape les cas où ils ont silencieusement échoué.
+const CLE_DERNIERE_ACTIVITE_SAS = 'eduka_sas_derniere_activite';
+
+function enregistrerActiviteSasPourRattrapage() {
+    // ⚠️ Ne jamais référencer une variable "sceau" ici : contrairement à
+    // avatarActif/classeActive/etc. (globales, déclarées en tête de
+    // fichier), "sceau" est systématiquement une const LOCALE à chaque
+    // fonction qui la lit depuis localStorage -- cette fonction, définie au
+    // niveau global, ne verrait aucune de ces constantes locales et lèverait
+    // une ReferenceError silencieusement avalée par le catch ci-dessous,
+    // rendant tout le mécanisme inopérant. On relit donc directement
+    // localStorage, comme le fait déjà declencherClotureAutomatiqueSas.
+    try {
+        localStorage.setItem(CLE_DERNIERE_ACTIVITE_SAS, JSON.stringify({
+            timestamp: Date.now(),
+            conversation_id: sasConversationIds[avatarActif] || "",
+            matricule: localStorage.getItem('eduka_sceau') || "",
+            avatar: avatarActif,
+            device_id: (typeof obtenirDeviceId === 'function') ? obtenirDeviceId() : "",
+            classe: classeActive,
+            methode_travail: (typeof methodeTravailActive !== 'undefined') ? methodeTravailActive : "",
+            gestion_stress: (typeof gestionStressActive !== 'undefined') ? gestionStressActive : ""
+        }));
+    } catch (e) {
+        // localStorage indisponible (navigation privée très restrictive, quota
+        // plein...) : tant pis, les trois déclencheurs existants restent actifs.
+    }
+}
+
+function effacerActiviteSasRattrapage() {
+    try { localStorage.removeItem(CLE_DERNIERE_ACTIVITE_SAS); } catch (e) {}
+}
+
+function verifierRattrapageClotureSas() {
+    // À exécuter tôt (chargement de page, retour au premier plan) : rattrape
+    // une session laissée ouverte par un appareil qui n'a jamais réussi à
+    // envoyer la sentinelle de clôture normale (voir le commentaire ci-dessus).
+    let etat;
+    try {
+        const brut = localStorage.getItem(CLE_DERNIERE_ACTIVITE_SAS);
+        if (!brut) return;
+        etat = JSON.parse(brut);
+    } catch (e) {
+        return;
+    }
+    if (!etat || !etat.timestamp || !etat.matricule) {
+        effacerActiviteSasRattrapage();
+        return;
+    }
+    if (Date.now() - etat.timestamp < DELAI_INACTIVITE_CLOTURE_MS) {
+        return; // encore dans la fenêtre normale, rien à rattraper
+    }
+
+    // Effacé AVANT l'envoi, pour ne jamais renvoyer deux fois la même
+    // clôture en cas d'appels concurrents (chargement de page + visibilitychange).
+    effacerActiviteSasRattrapage();
+
+    try {
+        const payload = JSON.stringify({
+            query: SENTINEL_FIN_SESSION_SAS + resumeResultatsEvaluations(etat.avatar || 'general'),
+            conversation_id: etat.conversation_id || "",
+            matricule: etat.matricule,
+            avatar: etat.avatar || "general",
+            device_id: etat.device_id || "",
+            classe: etat.classe || "",
+            methode_travail: etat.methode_travail || "",
+            gestion_stress: etat.gestion_stress || ""
+        });
+        fetch('https://api.edukatchat.org/api/sas/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload
+        }).catch(() => {});
+    } catch (e) {
+        console.warn("Rattrapage de clôture impossible :", e);
+    }
+}
+
+function declencherClotureAutomatiqueSas(raison) {
+    if (!sasSessionOuverte || sasClotureDejaEnvoyee) return;
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+    if (!sceau) return; // pas d'abonné identifié, rien à clôturer/rapporter
+
+    sasClotureDejaEnvoyee = true;
+    if (minuteurInactiviteSas) clearTimeout(minuteurInactiviteSas);
+    effacerActiviteSasRattrapage(); // cette clôture "normale" rend le rattrapage inutile
+
+    try {
+        const payload = JSON.stringify({
+            query: SENTINEL_FIN_SESSION_SAS + resumeResultatsEvaluations(avatarActif),
+            conversation_id: sasConversationIds[avatarActif] || "",
+            matricule: sceau,
+            avatar: avatarActif,
+            device_id: (typeof obtenirDeviceId === 'function') ? obtenirDeviceId() : "",
+            classe: classeActive,
+            methode_travail: (typeof methodeTravailActive !== 'undefined') ? methodeTravailActive : "",
+            gestion_stress: (typeof gestionStressActive !== 'undefined') ? gestionStressActive : ""
+        });
+        reinitialiserResultatsEvaluations(avatarActif); // le score est parti avec la clôture
+
+        // fetch({keepalive:true}) plutôt que sendBeacon : autorise un
+        // Content-Type JSON explicite tout en survivant à la fermeture
+        // de l'onglet, ce que sendBeacon ne garantit pas aussi proprement.
+        fetch('https://api.edukatchat.org/api/sas/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true
+        }).catch(() => {});
+    } catch (e) {
+        console.warn("Clôture automatique impossible :", e);
+    }
+}
+
+window.addEventListener('beforeunload', () => declencherClotureAutomatiqueSas('fermeture'));
+
+// ❖ Délai de grâce avant de clôturer sur mise en arrière-plan : un
+// verrouillage d'écran ou un changement furtif d'application pendant que
+// l'élève réfléchit à sa réponse (sans toucher à rien) déclenchait la
+// même clôture qu'un abandon réel -- la session semblait "se déconnecter"
+// en pleine réflexion, alors que l'élève n'était jamais parti. On
+// n'envoie la sentinelle que si l'onglet reste caché au-delà de ce délai.
+const DELAI_GRACE_ARRIERE_PLAN_MS = 5 * 60 * 1000; // 5 minutes -- le minuteur d'inactivité (15 min) reste le vrai filet contre un abandon réel, celui-ci n'est qu'un raccourci plus rapide
+let minuteurGraceArrierePlan = null;
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        if (minuteurGraceArrierePlan) clearTimeout(minuteurGraceArrierePlan);
+        minuteurGraceArrierePlan = setTimeout(() => {
+            declencherClotureAutomatiqueSas('arriere-plan');
+        }, DELAI_GRACE_ARRIERE_PLAN_MS);
+    } else if (document.visibilityState === 'visible') {
+        if (minuteurGraceArrierePlan) {
+            clearTimeout(minuteurGraceArrierePlan);
+            minuteurGraceArrierePlan = null;
+        }
+        // ❖ Retour au premier plan : si la mise en arrière-plan a duré assez
+        // longtemps pour dépasser le délai d'inactivité sans qu'aucun des
+        // déclencheurs habituels n'ait réussi à clôturer la session (le cas
+        // qui a motivé ce mécanisme, voir verifierRattrapageClotureSas),
+        // on la rattrape ici plutôt que d'attendre un futur rechargement.
+        verifierRattrapageClotureSas();
+    }
+});
+
+function handleSasKeyPress(event) {
+    if (event.key === 'Enter') sendSasMessage();
+}
+
+// ❖ LE PASSE-UNIQUE — Identifiant d'appareil persistant.
+// Généré une seule fois par navigateur/appareil et conservé dans
+// localStorage. Transmis avec chaque requête premium pour permettre au
+// serveur de reconnaître un changement d'appareil (remplacement
+// silencieux : le nouvel appareil prend le relais).
+// ❖ LA BULLE DE RÉFLEXION VIVANTE — remplace l'ancien texte statique
+// immobile par trois points animés, façon "en train d'écrire". Le style
+// n'est injecté qu'une seule fois dans la page. Dès que le premier
+// fragment de la réponse arrive, cette bulle est naturellement écrasée
+// par le texte réel (aucune logique supplémentaire n'est nécessaire).
+function injecterStyleReflexion() {
+    if (document.getElementById('eduka-style-reflexion')) return;
+    const style = document.createElement('style');
+    style.id = 'eduka-style-reflexion';
+    style.textContent = `
+        @keyframes edukaTypingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        .eduka-typing {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            vertical-align: middle;
+        }
+        .eduka-typing-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #6B7280;
+            animation: edukaTypingBounce 1.2s infinite ease-in-out;
+        }
+        .eduka-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+        .eduka-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+        .eduka-typing-texte { margin-left: 8px; opacity: 0.75; color: #6B7280; }
+    `;
+    document.head.appendChild(style);
+}
+injecterStyleReflexion();
+
+function creerBulleReflexion(texte) {
+    return `<span class="eduka-typing">
+        <span class="eduka-typing-dot"></span>
+        <span class="eduka-typing-dot"></span>
+        <span class="eduka-typing-dot"></span>
+    </span><span class="eduka-typing-texte">${texte}</span>`;
+}
+
+// ❖ Réutiliser une question déjà posée : plutôt qu'un simple copier-coller
+// vers le presse-papiers (qui exige ensuite un collage manuel), ce bouton
+// reverse directement le texte dans le champ de saisie correspondant --
+// l'élève/enseignant n'a plus qu'à cliquer "Envoyer" (ou modifier avant).
+// Construit en DOM pur (pas d'innerHTML avec le texte interpolé) pour ne
+// jamais casser si la question contient des caractères spéciaux.
+function creerBoutonReutiliser(message, champSaisieId) {
+    const bouton = document.createElement('button');
+    bouton.type = 'button';
+    bouton.className = 'btn-reutiliser-question';
+    bouton.title = 'Réutiliser cette question';
+    bouton.textContent = '↻';
+    bouton.onclick = function (evenement) {
+        evenement.stopPropagation();
+        const champ = document.getElementById(champSaisieId);
+        if (champ) {
+            champ.value = message;
+            champ.focus();
+        }
+    };
+    return bouton;
+}
+
+function obtenirDeviceId() {
+    let deviceId = localStorage.getItem('eduka_device_id');
+    if (!deviceId) {
+        deviceId = (crypto.randomUUID && crypto.randomUUID()) ||
+            'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+        localStorage.setItem('eduka_device_id', deviceId);
+    }
+    return deviceId;
+}
+
+// ❖ LE MICRO — transcription vocale sur le site (jamais WhatsApp) ❖
+// Un élève qui présente mal sa pensée par écrit peut enregistrer sa
+// question à l'oral : le texte transcrit vient simplement pré-remplir la
+// zone de saisie, sans envoi automatique — il garde la main pour relire.
+// (Exception voulue : si l'élève appuie sur « Envoyer » PENDANT l'enregistrement,
+// le message est transcrit puis envoyé directement — voir envoiPendantMicro.)
+// Cible "sas" (Espace de Préparation + Académie, mêmes champs) ou "arene"
+// (Ateliers Orateur/Philo/Sciences) : les deux partagent la même logique
+// d'enregistrement, seuls les identifiants de bouton/champ diffèrent.
+const CIBLES_MICRO = {
+    sas: { bouton: 'btn-micro-sas', champ: 'sas-user-input' },
+    arene: { bouton: 'btn-micro-arene', champ: 'arene-user-input' }
+};
+
+let mediaRecorderVocal = null;
+let chunksAudioVocal = [];
+let enregistrementVocalEnCours = false;
+let cibleMicroActive = null;
+// ❖ Envoi direct pendant le micro : si l'élève appuie sur « Envoyer » alors que
+// l'enregistrement est en cours (ou que la transcription se termine), on arrête
+// l'enregistrement, on transcrit, puis le message part tout seul.
+// Le bouton « Arrêter » garde son rôle : il pré-remplit seulement la zone de saisie.
+let envoiAutoApresVocal = null;
+let transcriptionVocaleEnCours = false;
+
+function envoiPendantMicro(cible) {
+    if (cibleMicroActive !== cible) return false;
+    if (enregistrementVocalEnCours) {
+        envoiAutoApresVocal = cible;
+        toggleEnregistrementVocal(cible);
+        return true;
+    }
+    if (transcriptionVocaleEnCours) {
+        envoiAutoApresVocal = cible;
+        return true;
+    }
+    return false;
+}
+
+async function toggleEnregistrementVocal(cible) {
+    const infosCible = CIBLES_MICRO[cible];
+    if (!infosCible) return;
+    const bouton = document.getElementById(infosCible.bouton);
+    if (!bouton) return;
+
+    if (!enregistrementVocalEnCours) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Ce navigateur ne permet pas l'enregistrement vocal. Écris directement ta question.");
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            chunksAudioVocal = [];
+            cibleMicroActive = cible;
+            mediaRecorderVocal = new MediaRecorder(stream);
+            mediaRecorderVocal.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksAudioVocal.push(e.data); };
+            mediaRecorderVocal.onstop = () => {
+                stream.getTracks().forEach(track => track.stop());
+                envoyerVocalPourTranscription(cible);
+            };
+            mediaRecorderVocal.start();
+            enregistrementVocalEnCours = true;
+            bouton.style.backgroundColor = '#EF4444';
+            bouton.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.35)';
+            bouton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>';
+            bouton.title = "Arrêter l'enregistrement";
+        } catch (err) {
+            alert("Impossible d'accéder au microphone. Vérifie les autorisations de ton navigateur pour ce site.");
+        }
+    } else {
+        mediaRecorderVocal.stop();
+        enregistrementVocalEnCours = false;
+        bouton.style.backgroundColor = '#8B5CF6';
+        bouton.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.35)';
+        bouton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>';
+        bouton.title = (cible === 'arene') ? "Parler au lieu d'écrire" : "Poser ma question à l'oral";
+    }
+}
+
+async function envoyerVocalPourTranscription(cible) {
+    const infosCible = CIBLES_MICRO[cible];
+    if (!infosCible) return;
+    const inputField = document.getElementById(infosCible.champ);
+    if (!inputField) return;
+    const placeholderOriginal = inputField.placeholder;
+    inputField.placeholder = "Transcription de ta voix en cours...";
+    inputField.disabled = true;
+    transcriptionVocaleEnCours = true;
+    let envoyerMaintenant = false;
+
+    try {
+        const blobAudio = new Blob(chunksAudioVocal, { type: (mediaRecorderVocal && mediaRecorderVocal.mimeType) || 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', blobAudio, 'vocal.webm');
+
+        const response = await fetch('https://api.edukatchat.org/api/sas/transcrire_vocal', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.status === 'success' && data.texte) {
+            inputField.value = data.texte;
+            inputField.placeholder = placeholderOriginal;
+            envoyerMaintenant = (envoiAutoApresVocal === cible);
+        } else {
+            inputField.placeholder = data.message || "La transcription a échoué. Réessaie ou écris ta question.";
+            setTimeout(() => { inputField.placeholder = placeholderOriginal; }, 4000);
+        }
+    } catch (err) {
+        inputField.placeholder = "Le réseau est instable. Réessaie dans un instant.";
+        setTimeout(() => { inputField.placeholder = placeholderOriginal; }, 4000);
+    } finally {
+        transcriptionVocaleEnCours = false;
+        envoiAutoApresVocal = null;
+        inputField.disabled = false;
+        inputField.focus();
+    }
+    if (envoyerMaintenant) {
+        if (cible === 'arene') sendAreneMessage(); else sendSasMessage();
+    }
+}
+
+async function sendSasMessage() {
+    if (envoiPendantMicro('sas')) return;
+    const inputField = document.getElementById('sas-user-input');
+    const button = inputField.nextElementSibling;
+    const message = inputField.value.trim();
+
+    if (!message) return;
+
+    // ❖ L'AJUSTEMENT DU SCEAU — Étape 2 : extraction anticipée du sceau.
+    // On récupère l'identité premium AVANT toute logique de quota, afin
+    // qu'elle puisse neutraliser le compteur local dès son origine.
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+
+    const QUOTA_MAX = 10;
+    const aujourdhui = new Date().toLocaleDateString();
+
+    // ❖ L'AJUSTEMENT DU SCEAU — Étape 3 : le mur Freemium local ne
+    // s'applique désormais QUE si aucun sceau n'est présent. Un porteur
+    // de Sceau (EDU-CREATEUR ou tout Premium valide) traverse sans
+    // jamais toucher ce compteur.
+    if (!sceau) {
+        let suiviQuota = JSON.parse(localStorage.getItem('eduka_quota_sas')) || { date: aujourdhui, requetes: 0 };
+
+        if (suiviQuota.date !== aujourdhui) {
+            suiviQuota = { date: aujourdhui, requetes: 0 };
+        }
+
+        if (suiviQuota.requetes >= QUOTA_MAX) {
+            const chatHistory = document.getElementById('sas-chat-history');
+            const botUpsellDiv = document.createElement('div');
+            botUpsellDiv.className = 'message bot-message apparition-fluide';
+
+            botUpsellDiv.innerHTML = `
+                <div style="font-size: 0.95em; line-height: 1.5; color: #B45309; background: #FEF3C7; padding: 15px; border-radius: 8px; border-left: 4px solid #F59E0B;">
+                    <strong>⏳ L'Énergie du jour est épuisée</strong><br><br>
+                    Tu as atteint ta limite de ${QUOTA_MAX} requêtes gratuites pour aujourd'hui. L'esprit a besoin de repos pour assimiler le savoir.<br><br>
+                    Reviens <strong>demain dès 00h00</strong> pour un nouveau cycle de préparation, ou demande à tes parents de déverrouiller l'Académie Premium pour un accompagnement sans limite.
+                    <button onclick='openPremiumModal()' style='display: block; width: 100%; margin-top: 15px; padding: 10px; background-color: #F59E0B; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center;'>Déverrouiller l'Accès Complet</button>
+                </div>
+            `;
+
+            chatHistory.appendChild(botUpsellDiv);
+            scrollToBottom('sas-chat-history');
+            inputField.value = '';
+            return;
+        }
+
+        suiviQuota.requetes++;
+        localStorage.setItem('eduka_quota_sas', JSON.stringify(suiviQuota));
+    }
+
+    inputField.disabled = true;
+    button.disabled = true;
+    button.style.opacity = '0.5';
+    button.style.cursor = 'not-allowed';
+
+    const chatHistory = document.getElementById('sas-chat-history');
+
+    const userMsgDiv = document.createElement('div');
+    userMsgDiv.className = 'message user-message';
+    userMsgDiv.textContent = message;
+    userMsgDiv.appendChild(creerBoutonReutiliser(message, 'sas-user-input'));
+    chatHistory.appendChild(userMsgDiv);
+
+    inputField.value = '';
+    scrollToBottom('sas-chat-history');
+
+    const botLoadingDiv = document.createElement('div');
+    botLoadingDiv.className = 'message bot-message apparition-fluide';
+    botLoadingDiv.innerHTML = creerBulleReflexion("L'Assistant rassemble son savoir...");
+    ajouterMascotte(botLoadingDiv, 'reflexion');
+    chatHistory.appendChild(botLoadingDiv);
+    scrollToElementTop('sas-chat-history', botLoadingDiv);
+
+    try {
+        // ❖ Une image jointe via le trombone (voir declencherJoindreImage)
+        // reste en attente jusqu'à l'envoi du prochain message -- inclue
+        // ici puis effacée juste après, pour ne pas la réenvoyer avec les
+        // messages suivants.
+        const imageJointeSas = fichiersEnAttente['sas-chat-history'];
+
+        const response = await fetch('https://api.edukatchat.org/api/sas/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: message + consommerContexteReviser() + (/bilan|termine (la|cette) session|fin de (la |cette )?session/i.test(message) ? resumeResultatsEvaluations(avatarActif) : ''),
+                conversation_id: sasConversationIds[avatarActif] || "",
+                matricule: sceau,
+                avatar: avatarActif,
+                device_id: obtenirDeviceId(),
+                classe: classeActive,
+                methode_travail: methodeTravailActive,
+                gestion_stress: gestionStressActive,
+                fichier_id: (imageJointeSas && imageJointeSas.id) || "",
+                fichier_type: (imageJointeSas && imageJointeSas.type) || "image"
+            })
+        });
+        // ❖ Correction (27/08/2026) : l'image jointe n'est plus effacée
+        // ici, juste après l'envoi -- elle ne l'était pas seulement en cas
+        // de vrai succès, mais aussi quand Dify répondait en erreur (message
+        // de repli "L'Assistant est momentanément indisponible..."),
+        // faisant perdre silencieusement l'image jointe et obligeant à la
+        // rejoindre avant de pouvoir réessayer. On ne l'efface désormais
+        // qu'une fois un vrai conversation_id Dify obtenu (voir plus bas),
+        // signe que le message -- et l'image -- ont bien été reçus.
+        let imageEnvoyeeAvecSucces = false;
+
+        // 1. Vérification de la stabilité
+        if (!response.ok) {
+            throw new Error(`Le serveur a répondu avec l'état : ${response.status}`);
+        }
+
+        // ❖ Un échange a bien eu lieu : la session est "ouverte" et pourra
+        // donc être clôturée automatiquement (fermeture d'onglet, mise en
+        // arrière-plan, ou inactivité prolongée) même si l'élève ne dit
+        // jamais explicitement au revoir.
+        sasSessionOuverte = true;
+        sasClotureDejaEnvoyee = false;
+        reinitialiserMinuteurInactiviteSas();
+        enregistrerActiviteSasPourRattrapage();
+
+        const contentType = response.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            botLoadingDiv.textContent = data.answer || "Le silence est la seule réponse obtenue.";
+            if (data.answer) {
+                ajouterMascotte(botLoadingDiv, 'succes');
+                declencherEtincelleMascotte(botLoadingDiv);
+            } else {
+                ajouterMascotte(botLoadingDiv, 'erreur');
+            }
+            if (data.conversation_id) {
+                sasConversationIds[avatarActif] = data.conversation_id;
+                imageEnvoyeeAvecSucces = true;
+            }
+        }
+        else {
+            // ❖ La bulle de réflexion (points animés) reste affichée telle
+            // quelle ici — on ne l'efface plus par avance. Elle ne sera
+            // remplacée qu'au moment où un vrai fragment de texte arrive
+            // (voir plus bas), pour ne jamais laisser un vide entre
+            // l'animation et la restitution de la pensée de l'agent.
+            let texteIntegralSas = "";
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = ""; // 2. Le réceptacle des fragments
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Protège le fragment en cours
+
+                for (let line of lines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('data: ')) {
+                        const payload = trimmedLine.substring(6).trim();
+                        if (payload === "[DONE]") continue;
+
+                        try {
+                            const dataObj = JSON.parse(payload);
+                            if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
+                                texteIntegralSas += (dataObj.answer || "");
+                                if (dataObj.message_id) window._eduMsgIdSas = dataObj.message_id;
+                                // On ne remplace la bulle animée que lorsqu'il y a
+                                // vraiment quelque chose à montrer.
+                                if (texteIntegralSas.length > 0) {
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas, false, true);
+                                    scrollToElementTop('sas-chat-history', botLoadingDiv);
+                                }
+                            }
+                            if (dataObj.conversation_id) {
+                                sasConversationIds[avatarActif] = dataObj.conversation_id;
+                                imageEnvoyeeAvecSucces = true;
+                            }
+                            // ❖ Rejet PERMANENT du fichier joint signalé par
+                            // le serveur (voir murmure_systeme côté main.py) :
+                            // on le retire tout de suite, sinon il resterait
+                            // dans fichiersEnAttente et se retransmettrait à
+                            // chaque message suivant -- bug réel du
+                            // 08/09/2026 (l'erreur persistait même sur un
+                            // message sans rapport comme "salut").
+                            if (dataObj.fichier_rejete) {
+                                delete fichiersEnAttente['sas-chat-history'];
+                            }
+                        } catch(e) {
+                            console.warn("L'équilibre se rétablit : un fragment de conscience a été réassemblé.");
+                        }
+                    }
+                }
+            }
+
+            // Filet de sécurité : si le flux s'est terminé sans jamais
+            // produire le moindre texte, on arrête l'animation et on
+            // l'explique plutôt que de la laisser tourner indéfiniment.
+            if (!texteIntegralSas) {
+                botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta question ?";
+                ajouterMascotte(botLoadingDiv, 'erreur');
+            } else {
+                afficherReponseAvecFondu(botLoadingDiv, texteIntegralSas, false, false, undefined, true); // rendu final, curseur retiré, carte "Mission" pour un éventuel devoir
+                ajouterMascotte(botLoadingDiv, 'succes');
+                declencherEtincelleMascotte(botLoadingDiv);
+            }
+        }
+
+        if (imageJointeSas && imageEnvoyeeAvecSucces) delete fichiersEnAttente['sas-chat-history'];
+
+        // ❖ Prononciation ciblée : on insère un petit haut-parleur juste
+        // après chaque phrase entre guillemets (c'est déjà la convention que
+        // l'agent utilise pour citer les mots/phrases en langue étrangère),
+        // plutôt qu'un bouton unique qui lirait tout le message français
+        // compris. Seulement pour les avatars de langue.
+        if (['anglais', 'espagnol', 'allemand'].includes(avatarActif)) {
+            ajouterBoutonsPrononciationInline(botLoadingDiv);
+        }
+
+        const midSas = window._eduMsgIdSas || ""; window._eduMsgIdSas = "";
+        const convSas = sasConversationIds[avatarActif] || "";
+        if (botLoadingDiv.textContent.length > 50) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = `
+                <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
+                <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+            `;
+            botLoadingDiv.appendChild(actionsDiv);
+            if (!window._rappelEnCours) ajouterBoutonCasier(actionsDiv, midSas, convSas); // pas de « Ranger » sur les questions d'un mini-quiz de rappel
+            try { proposerFicheRevision(botLoadingDiv); } catch (e) { /* jamais bloquant */ }
+            try { traiterScoreRappel(botLoadingDiv); } catch (e) { /* jamais bloquant */ }
+        }
+        saveChatHistory('sas');
+
+    } catch (error) {
+        console.error("Détail de la perturbation :", error);
+        botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Le lien avec la source a été interrompu (${error.message}). Reprenez votre respiration et essayez à nouveau.</span>`;
+        ajouterMascotte(botLoadingDiv, 'erreur');
+        saveChatHistory('sas');
+    } finally {
+        inputField.disabled = false;
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        inputField.focus();
+        // ❖ Volontairement pas de scrollToBottom ici : on reste ancré sur le
+        // début de la réponse (voir scrollToElementTop plus haut) plutôt que
+        // de sauter à la fin une fois le flux terminé.
+    }
+}
+
+// =======================================================================
+// ❖ LOGIQUE DES OUTILS ENSEIGNANT ❖
+// =======================================================================
+let teacherConversationIds = {
+    'atelier': "",
+    'forge': "",
+    'cabinet': "",
+    'forge_primaire': "",
+    'cabinet_primaire': ""
+};
+
+// ❖ Repartir d'une conversation Dify vierge.
+// Sans cela, le conversation_id d'un outil enseignant est créé au premier
+// message puis conservé indéfiniment (persisté dans localStorage par
+// saveChatHistory, restauré par restoreChatHistories) : toutes les fiches
+// jamais produites par cet instituteur s'accumulaient dans UN SEUL fil
+// Dify. Conséquences observées en production :
+//   - le modèle reste cohérent avec ses propres réponses antérieures et
+//     recopie leur structure au lieu de suivre le contexte fraîchement
+//     récupéré -- une fiche fautive se reproduisait ainsi mot pour mot,
+//     même après correction du prompt, du modèle et des bases ;
+//   - le coût en jetons croît à chaque fiche, l'historique étant renvoyé
+//     en entier à chaque appel.
+// On remet donc le compteur à zéro quand l'instituteur demande une
+// NOUVELLE fiche. « Ajouter des exercices », en revanche, se rapporte à la
+// fiche précédente : ce bouton doit conserver le fil.
+function reinitialiserConversationEnseignant(outil) {
+    if (!(outil in teacherConversationIds)) return;
+    teacherConversationIds[outil] = "";
+    try {
+        localStorage.removeItem(`eduka_conv_${outil}`);
+    } catch (e) {
+        // localStorage indisponible (navigation privée stricte) : le
+        // simple reset en mémoire ci-dessus suffit pour la session.
+    }
+}
+
+function handleTeacherKeyPress(event, outil) {
+    if (event.key === 'Enter') sendTeacherMessage(outil);
+}
+
+// Texte de la dernière vraie réponse (fiche/évaluation) d'un outil enseignant.
+function derniereReponseEnseignant(outil) {
+    const histo = document.getElementById(`${outil}-chat-history`);
+    if (!histo) return "";
+    // 17/10/2026 : on part de la DERNIÈRE bulle substantielle, pas du dernier
+    // élément portant data-source-brute (après un rechargement de page cet
+    // attribut peut manquer sur la fiche récente : on renvoyait alors une
+    // ancienne fiche, d'une autre matière).
+    const bulles = Array.from(histo.querySelectorAll('.bot-message'));
+    for (let i = bulles.length - 1; i >= 0; i--) {
+        const brute = (bulles[i].dataset && bulles[i].dataset.sourceBrute) || "";
+        if (brute.length > 200) return brute.slice(0, 12000);
+        const t = (bulles[i].innerText || "").trim();
+        if (t.length > 400) return t.slice(0, 12000);
+    }
+    return "";
+}
+
+// Rangée d'actions sous une fiche de l'espace enseignant (crayon, copier, imprimer, enregistrer).
+function modeleActionsFicheEnseignant(outil, botLoadingDiv) {
+    return `
+                <button class="btn-action-doc btn-modifier-fiche" onclick="basculerEditionFiche(this)" title="Modifier le texte avant impression" aria-label="Modifier le texte avant impression"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
+                <button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button>
+                <button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+                ${boutonBibliotheque(outil, botLoadingDiv)}
+                <span class="note-relire-fiche">Proposition à relire et adapter avant usage — le crayon vous permet de la modifier.</span>
+            `;
+}
+
+// ❖ RÉUTILISER UNE FICHE DE LA BIBLIOTHÈQUE (31/10/2026) : la fiche est ré-affichée dans son outil d'origine,
+// comme si elle venait d'être générée ; le prochain envoi la joint comme document de référence.
+const reutilisationEnCours = {};
+
+async function reutiliserFicheBibliotheque(id) {
+    const sceau = localStorage.getItem('eduka_sceau_enseignant') || '';
+    if (!sceau) { ouvrirModaleAccesEnseignant(); return; }
+    let fiche = null;
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/bibliotheque/lire', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau, id: Number(id) })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.fiche) fiche = d.fiche;
+    } catch (e) { /* réseau */ }
+    if (!fiche || !['atelier', 'forge', 'cabinet', 'forge_primaire', 'cabinet_primaire'].includes(fiche.outil)) {
+        alert("Cette fiche n'a pas pu être rouverte. Retrouvez-la dans « Ma bibliothèque ».");
+        return;
+    }
+    const outil = fiche.outil;
+    outilsDejaAmorces.add(outil); // pas d'amorçage automatique : on ne consomme rien
+    entrerDansEspaceEnseignant();
+    choisirCategorieEnseignant(outil.endsWith('_primaire') ? 'instituteur' : 'professeur');
+    switchTeacherTool(outil);
+    reinitialiserConversationEnseignant(outil);
+
+    const histo = document.getElementById(`${outil}-chat-history`);
+    if (!histo) return;
+    const bulle = document.createElement('div');
+    bulle.className = 'message bot-message apparition-fluide';
+    const note = document.createElement('p');
+    note.className = 'note-relire-fiche';
+    note.style.margin = '0 0 8px';
+    note.textContent = '📚 Fiche rouverte depuis votre bibliothèque : ' + fiche.titre;
+    bulle.appendChild(note);
+    if (fiche.contenu_html) {
+        const doc = new DOMParser().parseFromString('<!doctype html><body>' + fiche.contenu_html, 'text/html');
+        doc.body.querySelectorAll('script, style, iframe, object, embed, link, meta, form, base').forEach(e => e.remove());
+        doc.body.querySelectorAll('*').forEach(e => {
+            Array.from(e.attributes).forEach(a => {
+                const n = a.name.toLowerCase();
+                if (n.startsWith('on') || ((n === 'href' || n === 'src' || n === 'xlink:href') && /^\s*javascript:/i.test(a.value))) e.removeAttribute(a.name);
+            });
+        });
+        while (doc.body.firstChild) bulle.appendChild(doc.body.firstChild);
+    } else {
+        const pre = document.createElement('div');
+        pre.style.whiteSpace = 'pre-wrap';
+        pre.textContent = fiche.contenu;
+        bulle.appendChild(pre);
+    }
+    if (fiche.contenu_source && fiche.contenu_source.length > 200) bulle.dataset.sourceBrute = fiche.contenu_source;
+    else bulle.dataset.sourceBrute = fiche.contenu.slice(0, 12000);
+    bulle.dataset.demande = fiche.demande || '';
+    const actions = document.createElement('div');
+    actions.className = 'message-actions';
+    actions.innerHTML = modeleActionsFicheEnseignant(outil, bulle).replace(/<button class="btn-action-doc btn-biblio"[\s\S]*?<\/button>/, '');
+    bulle.appendChild(actions);
+    histo.appendChild(bulle);
+    reutilisationEnCours[outil] = true;
+    const champ = document.getElementById(`${outil}-user-input`);
+    if (champ) {
+        champ.value = 'Modifie cette fiche : ';
+        champ.focus();
+        try { champ.setSelectionRange(champ.value.length, champ.value.length); } catch (e) {}
+    }
+    try { histo.scrollTop = histo.scrollHeight; } catch (e) {}
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        const id = new URLSearchParams(location.search).get('reutiliser');
+        if (!id || !/^\d{1,9}$/.test(id)) return;
+        history.replaceState(null, '', location.pathname);
+        setTimeout(() => reutiliserFicheBibliotheque(id), 400);
+    } catch (e) { /* jamais bloquant */ }
+});
+
+async function sendTeacherMessage(outil, contexteJoint) {
+    const inputField = document.getElementById(`${outil}-user-input`);
+    const button = inputField.nextElementSibling;
+    const message = inputField.value.trim();
+
+    if (!message) return;
+    if (reutilisationEnCours[outil]) {
+        reutilisationEnCours[outil] = false;
+        if (!contexteJoint) contexteJoint = derniereReponseEnseignant(outil);
+    }
+
+    inputField.disabled = true;
+    button.disabled = true;
+    button.style.opacity = '0.5';
+    button.style.cursor = 'not-allowed';
+
+    const chatHistory = document.getElementById(`${outil}-chat-history`);
+    const userMsgDiv = document.createElement('div');
+    userMsgDiv.className = 'message user-message';
+    userMsgDiv.textContent = message;
+    userMsgDiv.appendChild(creerBoutonReutiliser(message, `${outil}-user-input`));
+    chatHistory.appendChild(userMsgDiv);
+
+    inputField.value = '';
+    scrollToBottom(`${outil}-chat-history`);
+
+    const botLoadingDiv = document.createElement('div');
+    botLoadingDiv.className = 'message bot-message apparition-fluide';
+    botLoadingDiv.dataset.demande = message.slice(0, 400);
+    botLoadingDiv.innerHTML = creerBulleReflexion("Le Cabinet compile les données. L'esprit rassemble le savoir...");
+    chatHistory.appendChild(botLoadingDiv);
+    scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
+    statutRedaction(outil, 'encours');
+
+    // ❖ Sceau propre à l'espace enseignant (voir ouvrirModaleAccesEnseignant),
+    // distinct de 'eduka_sceau' (élève) -- vide si l'enseignant a choisi
+    // l'essai Freemium, auquel cas le serveur applique de lui-même son quota.
+    const sceau = localStorage.getItem('eduka_sceau_enseignant') || "";
+
+    // ❖ Voir la note équivalente dans sendSasMessage.
+    const imageJointeTeacher = fichiersEnAttente[`${outil}-chat-history`];
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/enseignant/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: contexteJoint
+                    ? ((outil === 'forge' && /fiche de cours pour les [ée]l[èe]ves/i.test(message))
+                        ? `${message}\n\n[FICHE DE LEÇON SOURCE — rédige UNIQUEMENT le second document demandé (la FICHE DE COURS ÉLÈVE) à partir d'elle, sans réécrire la fiche de leçon :]\n${contexteJoint}`
+                        : outil === 'forge'
+                        ? `${message}\n\n[DOCUMENT PRÉCÉDENT À MODIFIER — réécris la fiche complète avec exactement la même structure, les mêmes titres de section et la même mise en forme, en intégrant la demande ci-dessus :]\n${contexteJoint}`
+                        : `${message}\n\n[DOCUMENT DE RÉFÉRENCE — dernier document généré dans cette conversation ; appuie-toi dessus pour répondre à la demande ci-dessus, sans me redemander de le rappeler :]\n${contexteJoint}`)
+                    : message,
+                conversation_id: teacherConversationIds[outil] || "",
+                outil: outil,
+                matricule: sceau,
+                device_id: obtenirDeviceId(),
+                fichier_id: (imageJointeTeacher && imageJointeTeacher.id) || "",
+                fichier_type: (imageJointeTeacher && imageJointeTeacher.type) || "image"
+            })
+        });
+        // ❖ Voir la note équivalente dans sendSasMessage : l'image jointe
+        // n'est effacée qu'une fois un vrai conversation_id Dify obtenu,
+        // jamais juste après l'envoi (sinon un échec Dify fait perdre
+        // l'image en silence).
+        let imageEnvoyeeAvecSucces = false;
+        let documentPret = false; // 24/11/2026 : vrai quand un document complet a été reçu
+
+        // 1. Vérification de la stabilité du serveur
+        if (!response.ok) {
+            throw new Error(`Le serveur a répondu avec l'état : ${response.status}`);
+        }
+
+        const contentType = response.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (data.answer && (data.answer.includes("votre quota") || data.answer.includes("épuisé"))) {
+                botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='ouvrirModaleAccesEnseignant()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Saisir le Code d'accès</button>";
+            } else {
+                botLoadingDiv.textContent = data.answer || "La source est silencieuse.";
+            }
+            if (data.conversation_id) {
+                teacherConversationIds[outil] = data.conversation_id;
+                imageEnvoyeeAvecSucces = true;
+            }
+        }
+        else {
+            // ❖ Voir la note équivalente dans sendSasMessage : la bulle
+            // animée n'est plus effacée par avance.
+            let texteIntegralTeacher = "";
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = ""; // 2. Le réceptacle des fragments
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Protège le fragment incomplet pour le cycle suivant
+
+                for (let line of lines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('data: ')) {
+                        const payload = trimmedLine.substring(6).trim();
+                        if (payload === "[DONE]") continue;
+
+                        try {
+                            const dataObj = JSON.parse(payload);
+                            if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
+                                texteIntegralTeacher += (dataObj.answer || "");
+                                if (texteIntegralTeacher.length > 0) {
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, true, outil);
+                                    scrollToElementTop(`${outil}-chat-history`, botLoadingDiv);
+                                }
+                            }
+                            if (dataObj.conversation_id) {
+                                teacherConversationIds[outil] = dataObj.conversation_id;
+                                imageEnvoyeeAvecSucces = true;
+                            }
+                            // ❖ Voir la note équivalente dans sendSasMessage.
+                            if (dataObj.fichier_rejete) {
+                                delete fichiersEnAttente[`${outil}-chat-history`];
+                            }
+                        } catch(e) {
+                            console.warn("L'équilibre se rétablit : un fragment de conscience a été réassemblé.");
+                        }
+                    }
+                }
+            }
+
+            if (!texteIntegralTeacher) {
+                botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ta demande ?";
+            } else {
+                afficherReponseAvecFondu(botLoadingDiv, texteIntegralTeacher, true, false, outil); // rendu final, curseur retiré
+                documentPret = texteIntegralTeacher.length > 400;
+            }
+        }
+
+        if (imageJointeTeacher && imageEnvoyeeAvecSucces) delete fichiersEnAttente[`${outil}-chat-history`];
+
+        if (botLoadingDiv.textContent.length > 50) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = modeleActionsFicheEnseignant(outil, botLoadingDiv);
+            botLoadingDiv.appendChild(actionsDiv);
+        }
+        statutRedaction(outil, documentPret ? 'pret' : 'retirer', botLoadingDiv);
+        saveChatHistory(outil);
+
+    } catch (error) {
+        statutRedaction(outil, 'retirer');
+        console.error("Détail de la perturbation :", error);
+        botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Une perturbation traverse l'Espace (${error.message}). Reprenez votre souffle et essayez à nouveau.</span>`;
+        saveChatHistory(outil);
+    } finally {
+        inputField.disabled = false;
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        inputField.focus();
+        // ❖ Volontairement pas de scrollToBottom ici : voir sendSasMessage.
+    }
+}
+
+// =======================================================================
+// ❖ OUTILS D'ÉDITION PURES ET VALIDATION ❖
+// =======================================================================
+// ❖ Cause probable de l'affichage intermittent du logo signalé en test réel :
+// ce lien pointait vers la page "blob" de GitHub avec ?raw=true, qui répond
+// par une redirection 302 vers raw.githubusercontent.com -- suivie de façon
+// peu fiable selon le contexte de rendu (impression, export PDF, connexion
+// mobile instable), et parfois soumise aux limites/anti-hotlinking de GitHub.
+// logo-entete.png (utilisé pour l'en-tête du site) fonctionne de façon fiable
+// via un chemin relatif local -- même logique appliquée ici. IMPORTANT :
+// s'assurer que le fichier logo-signature-doc.png est bien déployé à la
+// racine du site (même dossier que logo-entete.png) sous ce nom exact.
+const urlSceau = "logo-signature-doc.png";
+
+// ❖ ÉDITION D'UNE FICHE AVANT IMPRESSION (outils enseignants) ❖
+// Rend le texte de la carte modifiable sur place (contenteditable). Impression
+// et copie lisent déjà le DOM affiché (clone du message) : elles reprennent donc
+// automatiquement le texte modifié. Les portées (SVG), images et boutons restent
+// non éditables. À la fin de l'édition, le fil est sauvegardé (localStorage).
+function basculerEditionFiche(bouton) {
+    const message = bouton.closest('.bot-message');
+    if (!message) return;
+    const enCours = message.classList.toggle('fiche-en-edition');
+    message.querySelectorAll('.partition-musicale, .message-actions, img, svg, button, .fiche-illustrations-slot')
+        .forEach(el => el.setAttribute('contenteditable', 'false'));
+    if (enCours) {
+        message.setAttribute('contenteditable', 'true');
+        bouton.classList.add('actif');
+        bouton.title = 'Terminer la modification';
+        bouton.setAttribute('aria-label', 'Terminer la modification');
+        bouton.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        message.focus();
+    } else {
+        message.removeAttribute('contenteditable');
+        message.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+        bouton.classList.remove('actif');
+        bouton.title = 'Modifier le texte avant impression';
+        bouton.setAttribute('aria-label', 'Modifier le texte avant impression');
+        bouton.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+        const historique = message.closest('[id$="-chat-history"]');
+        if (historique) saveChatHistory(historique.id.replace('-chat-history', ''));
+    }
+}
+
+function imprimerDocument(bouton) {
+    const documentDiv = bouton.closest('.bot-message');
+    const clone = documentDiv.cloneNode(true);
+    const actions = clone.querySelector('.message-actions');
+    if (actions) actions.remove();
+    clone.querySelectorAll('.fiche-invite-cours-eleve').forEach(e => e.remove());
+    clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+
+    const contenuHTML = clone.innerHTML;
+
+    const printArea = document.getElementById('print-area');
+
+    printArea.innerHTML = `
+        <style>
+            .document-aere {
+                font-family: Arial, sans-serif;
+                font-size: 12pt;
+                color: #000;
+                background: #fff;
+                padding: 20px;
+                line-height: 1.6;
+                white-space: pre-wrap;
+            }
+            .document-aere h1, .document-aere h2, .document-aere h3, .document-aere h4 {
+                margin-top: 1.5em;
+                margin-bottom: 0.5em;
+                color: #1F2937;
+            }
+            .document-aere p {
+                margin-bottom: 1em;
+            }
+            .document-aere ul, .document-aere ol {
+                margin-top: 0.5em;
+                margin-bottom: 1em;
+                padding-left: 20px;
+            }
+            .document-aere li {
+                margin-bottom: 0.5em;
+            }
+            /* ❖ Reskin "fiche de leçon" : cette zone d'impression est un
+               <style> isolé (voir commentaire plus haut sur la cause du
+               logo intermittent) -- il ne reprend pas automatiquement
+               style.css, donc les classes .fiche-* doivent être redéfinies
+               ici en version imprimable (fond blanc, pas d'ombre, accent
+               conservé pour le repérage bleu/vert secondaire/primaire). */
+            /* ❖ Fiche de cours élève (24/11/2026) : version imprimable sobre ; les corrigés démarrent sur une
+               nouvelle page pour pouvoir ne distribuer que le cours et les exercices. */
+            .document-aere .fiche-cours-eleve { white-space: normal; }
+            .document-aere .fce-entete { border-bottom: 2px solid #1D3FA8; margin-bottom: 12px; padding-bottom: 6px; }
+            .document-aere .fce-entete h1 { margin: 0 0 4px; font-size: 20pt; color: #1D3FA8; }
+            .document-aere .fce-bloc { margin: 0 0 12px; }
+            .document-aere .fce-titre { font-size: 14pt; color: #1D3FA8; margin: 14px 0 6px; }
+            .document-aere .fce-savoir, .document-aere .fce-retiens { border: 1px solid #94A3B8; border-radius: 6px; padding: 8px 12px; }
+            .document-aere .fce-corriges { page-break-before: always; }
+            .document-aere .fce-note { display: none; }
+            .document-aere .fiche-cours-eleve p, .document-aere .fiche-cours-eleve li { margin: 4px 0; }
+            .document-aere .fiche-lecon {
+                white-space: normal;
+                --fiche-accent: #3B82F6;
+                --fiche-accent-douce: #EFF6FF;
+            }
+            .document-aere .fiche-lecon.accent-vert {
+                --fiche-accent: #059669;
+                --fiche-accent-douce: #ECFDF5;
+            }
+            .document-aere .fiche-lecon > * + * { margin-top: 1.1em; }
+            .document-aere .fiche-section-titre {
+                font-size: 10pt;
+                letter-spacing: 0.04em;
+                font-weight: 700;
+                color: var(--fiche-accent);
+                text-transform: uppercase;
+                margin-top: 1.2em;
+            }
+            .document-aere .fiche-bloc-entete {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-top: 0.4em;
+            }
+            .document-aere .fiche-badge {
+                display: inline-block;
+                padding: 3px 10px;
+                border-radius: 999px;
+                background: var(--fiche-accent-douce);
+                color: var(--fiche-accent);
+                border: 1px solid var(--fiche-accent);
+                font-size: 10pt;
+                font-weight: 600;
+            }
+            .document-aere .fiche-badge-label { opacity: 0.75; font-weight: 500; }
+            .document-aere .fiche-badge.fiche-badge-competence {
+                display: block;
+                width: 100%;
+                background: #F1F5F9;
+                color: #0F172A;
+                border-color: #CBD5E1;
+            }
+            .document-aere .fiche-carte {
+                border: 1px solid #CBD5E1;
+                border-radius: 10px;
+                padding: 12px 16px;
+                margin-top: 0.4em;
+            }
+            .document-aere .fiche-liste-simple > div,
+            .document-aere .fiche-phase-ligne {
+                padding: 6px 0;
+                border-top: 1px solid #E5E7EB;
+            }
+            .document-aere .fiche-liste-simple > div:first-child,
+            .document-aere .fiche-phase-ligne:first-of-type {
+                border-top: none;
+                padding-top: 0;
+            }
+            .document-aere .fiche-phase-titre {
+                font-weight: 700;
+                color: var(--fiche-accent);
+            }
+            .document-aere .fiche-phase-legende {
+                display: block;
+                font-size: 8.5pt;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                font-weight: 700;
+                color: #475569;
+                margin-bottom: 2px;
+            }
+            .document-aere .fiche-lecon p { margin: 0 0 0.4em; white-space: normal; }
+            .document-aere .fiche-lecon p:last-child { margin-bottom: 0; }
+            .document-aere .fiche-lecon ul { margin: 0.3em 0 0.4em 1.1em; padding: 0; }
+            .document-aere .fiche-lecon + .signature-doc,
+            .document-aere .fiche-lecon .signature-doc {
+                display: block;
+                margin-top: 1em;
+                opacity: 0.6;
+                font-size: 9pt;
+            }
+            .document-aere .fiche-carte.fiche-corrige {
+                border-color: #FBBF24;
+                background: #FFFBEB;
+            }
+            .document-aere .mission-devoir {
+                border: 1px solid #BFDBFE;
+                background: #EFF6FF;
+                border-radius: 14px;
+                padding: 12px 16px;
+                margin-top: 0.6em;
+            }
+            .document-aere .mission-devoir-titre {
+                font-size: 9pt;
+                letter-spacing: 0.04em;
+                font-weight: 700;
+                color: #2563EB;
+                text-transform: uppercase;
+                margin-bottom: 6px;
+            }
+            .document-aere .mission-devoir-contenu {
+                background: transparent;
+                border: none;
+                padding: 0;
+                margin: 0;
+                white-space: pre-wrap;
+                font-family: inherit;
+            }
+        </style>
+
+        <div class="document-aere">
+            ${contenuHTML}
+        </div>`;
+        // ❖ Aucun pied de page n'est ajouté ici : la fiche porte déjà sa
+        // propre signature (« ❖ Architecture Pédagogique EdukaTchat ❖ »),
+        // mieux intégrée à la mise en page. Le bloc précédent — sceau,
+        // « EdukaTchat™ » et mention de propriété — faisait doublon et,
+        // avec ses 50 px de marge haute et son image de 60 px, poussait
+        // régulièrement une page supplémentaire ne contenant que lui.
+
+    window.print();
+}
+
+// ❖ BIBLIOTHÈQUE DE L'ENSEIGNANT (31/10/2026) : bouton « Enregistrer » explicite sous une fiche.
+// Jamais pour une correction de copie (noms et notes d'élèves) ; exige un code ENS- (pas l'essai gratuit).
+function boutonBibliotheque(outil, bulle) {
+    try {
+        if (!fonctionActive('bibliotheque')) return '';
+        if (!localStorage.getItem('eduka_sceau_enseignant')) return '';
+        if (/correction\s+de\s+copie/i.test((bulle && bulle.dataset && bulle.dataset.demande) || '')) return '';
+        return `<button class="btn-action-doc btn-biblio" type="button" onclick="enregistrerDansBibliotheque(this, '${outil}')" title="Enregistrer dans ma bibliothèque" aria-label="Enregistrer dans ma bibliothèque">📚 Enregistrer dans ma bibliothèque</button>`;
+    } catch (e) { return ''; }
+}
+
+async function enregistrerDansBibliotheque(bouton, outil) {
+    const bulle = bouton.closest('.bot-message');
+    if (!bulle) return;
+    // Copie nettoyée de la fiche telle qu'affichée (mise en page conservée) : sans boutons, scripts ni gestionnaires d'événements.
+    const clone = bulle.cloneNode(true);
+    clone.querySelectorAll('.message-actions, button, script, style, iframe, object, embed, .mascotte-avatar').forEach(e => e.remove());
+    clone.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
+    clone.querySelectorAll('*').forEach(e => { Array.from(e.attributes).forEach(a => { if (/^on/i.test(a.name)) e.removeAttribute(a.name); }); });
+    const html = clone.innerHTML;
+    // Texte lisible avec retours à la ligne : innerText ne fonctionne que sur un élément affiché, d'où l'hôte hors écran.
+    const hote = document.createElement('div');
+    hote.style.cssText = 'position:fixed;left:-99999px;top:0;width:720px;pointer-events:none;';
+    const copieTexte = clone.cloneNode(true);
+    copieTexte.querySelectorAll('svg').forEach(e => e.replaceWith(document.createTextNode('[Figure : voir la mise en page]')));
+    copieTexte.querySelectorAll('.katex').forEach(k => {
+        const ann = k.querySelector('annotation[encoding="application/x-tex"]');
+        if (ann) k.replaceWith(document.createTextNode('$' + ann.textContent + '$'));
+    });
+    hote.appendChild(copieTexte);
+    document.body.appendChild(hote);
+    const contenu = hote.innerText;
+    hote.remove();
+    const demande = bulle.dataset.demande || '';
+    const lire = (re) => { const m = re.exec(demande); return m ? m[1].trim().slice(0, 60) : ''; };
+    const texteOriginal = bouton.innerHTML;
+    bouton.disabled = true;
+    bouton.textContent = 'Enregistrement…';
+    try {
+        const r = await fetch('https://api.edukatchat.org/api/bibliotheque/enregistrer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                matricule: localStorage.getItem('eduka_sceau_enseignant') || '',
+                outil: outil,
+                demande: demande,
+                contenu: contenu,
+                html: html,
+                source: bulle.dataset.sourceBrute || '',
+                matiere: lire(/mati[eè]re\s*:\s*([^;\n,]+)/i),
+                classe: lire(/classe\s*:\s*([^;\n,]+)/i)
+            })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok) {
+            bouton.textContent = d.deja_enregistree ? '✓ Déjà dans votre bibliothèque' : '✓ Enregistrée dans votre bibliothèque';
+            return;
+        }
+        bouton.textContent = (typeof d.detail === 'string' ? d.detail : 'Enregistrement impossible').slice(0, 90);
+    } catch (e) {
+        bouton.textContent = 'Connexion impossible';
+    }
+    setTimeout(() => { bouton.innerHTML = texteOriginal; bouton.disabled = false; bouton.style.color = ''; }, 3500);
+}
+
+function copierTexte(bouton) {
+    const documentDiv = bouton.closest('.bot-message');
+    const clone = documentDiv.cloneNode(true);
+    const actions = clone.querySelector('.message-actions');
+    if (actions) actions.remove();
+    clone.querySelectorAll('.fiche-invite-cours-eleve').forEach(e => e.remove());
+    clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+
+    const contenuHTML = clone.innerHTML;
+    const texteBrut = clone.innerText;
+
+    const signatureHTML = `
+        <br><br>
+        <div style="text-align: center; font-family: Arial, sans-serif; border-top: 2px solid #E5E7EB; padding-top: 20px;">
+            <img src="${urlSceau}" alt="Sceau EdukaTchat" style="height: 60px; width: auto; display: block; margin: 0 auto;">
+            <strong style="font-size: 14pt; color: #1F2937; display: block; margin-top: -12px;">EdukaTchat™</strong>
+            <span style="font-size: 10pt; color: #6B7280; display: block; margin-top: 2px;">© Propriété Intellectuelle Exclusive</span>
+        </div>`;
+
+    const blobHtml = new Blob([contenuHTML + signatureHTML], { type: "text/html" });
+    const blobText = new Blob([texteBrut + "\n\n© EdukaTchat™ - Propriété Intellectuelle Exclusive"], { type: "text/plain" });
+
+    try {
+        const data = [new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })];
+        navigator.clipboard.write(data).then(() => {
+            animerBoutonCopie(bouton);
+        });
+    } catch (err) {
+        navigator.clipboard.writeText(texteBrut + "\n\n© EdukaTchat™ - Propriété Intellectuelle").then(() => {
+            animerBoutonCopie(bouton);
+        });
+    }
+}
+
+function animerBoutonCopie(bouton) {
+    const texteOriginal = bouton.innerHTML;
+    bouton.innerHTML = "✨ Document et Sceau copiés !";
+    bouton.style.color = "#10B981";
+    bouton.style.borderColor = "#10B981";
+
+    setTimeout(() => {
+        bouton.innerHTML = texteOriginal;
+        bouton.style.color = "";
+        bouton.style.borderColor = "";
+    }, 2000);
+}
+
+// ❖ LA PRONONCIATION À LA DEMANDE, CIBLÉE SUR LA PHRASE (langues uniquement) ❖
+// Historique des tentatives :
+//  1) Repérage par guillemets doubles ("..."). Le français utilise lui aussi
+//     les guillemets pour citer un mot ("bonjour") -> bouton sur les deux.
+//  2) Consigne de prompt demandant des BACKTICKS (`mot`) autour du seul mot
+//     étranger. Résultat instable d'une réponse à l'autre : parfois respecté,
+//     parfois non (l'IA revient aux guillemets classiques), donc aucun
+//     bouton n'apparaissait du tout sur certaines réponses.
+// Version actuelle : on revient aux guillemets doubles -- seul signe que
+// l'IA utilise VRAIMENT de façon systématique, confirmé sur tous les essais
+// -- et on compense le défaut n°1 avec un filtre local : on ignore tout
+// segment entre guillemets qui correspond à un mot ou une expression
+// française courante (salutations/politesse -- le vocabulaire typique de ce
+// contexte, pas une détection de langue complète). Le prompt garde sa
+// consigne en complément, mais le site ne dépend plus de son respect exact.
+const phrasesAudioEnAttente = {};
+
+const MOTS_COURANTS_FRANCAIS = new Set([
+    'bonjour', 'bonsoir', 'salut', 'au revoir', 'a plus', 'a bientot',
+    'a tout a lheure', 'merci', 'merci beaucoup', 'de rien', 'pardon',
+    'excuse-moi', 'excusez-moi', 'oui', 'non', 'peut-etre', 'sil vous plait',
+    'sil te plait', 'comment allez-vous', 'comment vas-tu', 'comment ca va',
+    'ca va', 'tres bien', 'bien', 'bienvenue', 'bonne journee', 'bonne soiree',
+    'bonne nuit', 'enchante', 'enchantee', 's il te plait', 's il vous plait'
+]);
+
+function normaliserPourComparaison(texte) {
+    return texte
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+// ❖ Filtre complété (17 août) : MOTS_COURANTS_FRANCAIS seul ne couvrait
+// que les salutations ("bonjour", "merci"...) -- une phrase française
+// quelconque comme "j'ai faim" n'y figurait pas et recevait quand même un
+// bouton d'écoute. ressembleAuFrancais() ajoute une heuristique légère
+// (élisions "j'/l'/d'/qu'..." + mots-outils français + accents) plutôt
+// qu'une liste figée, sans dépendre d'une vraie détection de langue.
+const MOTS_OUTILS_FRANCAIS = new Set([
+    'je', 'tu', 'il', 'elle', 'nous', 'vous', 'ils', 'elles',
+    'le', 'la', 'les', 'un', 'une', 'des', 'du', 'au', 'aux',
+    'est', 'es', 'suis', 'ai', 'as', 'avons', 'avez', 'ont',
+    'ne', 'pas', 'que', 'qui', 'quoi', 'et', 'mais', 'donc', 'car',
+    'pour', 'avec', 'sans', 'dans', 'chez', 'vers', 'entre',
+    'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses',
+    'notre', 'votre', 'leur', 'leurs', 'ce', 'cet', 'cette', 'ces', 'tres'
+]);
+
+function ressembleAuFrancais(phrase) {
+    const normalisee = normaliserPourComparaison(phrase);
+    if (/[éèàçêîôûùïëœ]/.test(normalisee)) return true;
+    const mots = normalisee.split(/\s+/).filter(Boolean);
+    if (mots.length === 0) return false;
+    let indicesFrancais = 0;
+    for (const mot of mots) {
+        if (/^(j|l|d|qu|n|s|m|t|c|jusqu|lorsqu|puisqu)['’]/i.test(mot)) {
+            indicesFrancais++;
+            continue;
+        }
+        const motNu = mot.replace(/^['’]+|['’.,!?;:]+$/g, '');
+        if (MOTS_OUTILS_FRANCAIS.has(motNu)) indicesFrancais++;
+    }
+    return (indicesFrancais / mots.length) >= 0.5;
+}
+
+function ajouterBoutonsPrononciationInline(messageDiv) {
+    // ❖ 01/11/2026 : on travaille sur les NŒUDS TEXTE du DOM, jamais sur le HTML brut.
+    // Avant, la recherche des guillemets "..." s'appliquait au innerHTML et prenait les
+    // guillemets des attributs (class="mission-devoir") pour une phrase anglaise : un bouton
+    // 🔊 s'insérait dans la balise, d'où les « > » et haut-parleurs parasites dans l'encadré DEVOIR.
+    // Seulement les guillemets droits "…" (convention du prompt : mots de la langue étudiée).
+    // Les chevrons français « … » ne reçoivent JAMAIS de haut-parleur (ils citent du français).
+    const MOTIF_GUILLEMETS = /["“”]([^"“”<>]{1,150})["“”]/g;
+    let indexPhrase = 0;
+    const marcheur = document.createTreeWalker(messageDiv, NodeFilter.SHOW_TEXT, {
+        acceptNode(noeud) {
+            const parent = noeud.parentElement;
+            if (parent && parent.closest('button, script, style, .btn-ecoute-inline')) return NodeFilter.FILTER_REJECT;
+            return /["“”]/.test(noeud.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
+    });
+    const noeuds = [];
+    while (marcheur.nextNode()) noeuds.push(marcheur.currentNode);
+
+    noeuds.forEach((noeud) => {
+        const texte = noeud.nodeValue;
+        MOTIF_GUILLEMETS.lastIndex = 0;
+        const fragment = document.createDocumentFragment();
+        let dernier = 0;
+        let modifie = false;
+        let m;
+        while ((m = MOTIF_GUILLEMETS.exec(texte)) !== null) {
+            const phrase = (m[1] || '').trim();
+            if (!phrase || /(.)\1\1/i.test(phrase) || MOTS_COURANTS_FRANCAIS.has(normaliserPourComparaison(phrase)) || ressembleAuFrancais(phrase)) {
+                continue; // phrase française (courante ou détectée) : pas de bouton
+            }
+            const id = `phrase-audio-${Date.now()}-${indexPhrase}`;
+            indexPhrase++;
+            phrasesAudioEnAttente[id] = phrase;
+            const fin = m.index + m[0].length;
+            fragment.appendChild(document.createTextNode(texte.slice(dernier, fin)));
+            const bouton = document.createElement('button');
+            bouton.type = 'button';
+            bouton.className = 'btn-ecoute-inline';
+            bouton.dataset.phraseId = id;
+            bouton.setAttribute('onclick', 'ecouterPhraseParId(this)');
+            bouton.title = 'Écouter la prononciation';
+            bouton.setAttribute('aria-label', 'Écouter la prononciation');
+            bouton.textContent = '🔊';
+            fragment.appendChild(bouton);
+            dernier = fin;
+            modifie = true;
+        }
+        if (modifie) {
+            fragment.appendChild(document.createTextNode(texte.slice(dernier)));
+            noeud.parentNode.replaceChild(fragment, noeud);
+        }
+    });
+}
+
+async function ecouterPhraseParId(bouton) {
+    const texte = phrasesAudioEnAttente[bouton.dataset.phraseId];
+    if (!texte) return;
+
+    const contenuOriginal = bouton.innerHTML;
+    bouton.innerHTML = '⏳';
+    bouton.disabled = true;
+
+    try {
+        const reponse = await fetch('https://api.edukatchat.org/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texte: texte, avatar: avatarActif })
+        });
+
+        if (!reponse.ok) {
+            throw new Error(`Le serveur a répondu avec l'état : ${reponse.status}`);
+        }
+
+        const blobAudio = await reponse.blob();
+        const urlAudio = URL.createObjectURL(blobAudio);
+        const lecteur = new Audio(urlAudio);
+        lecteur.play();
+        lecteur.onended = () => URL.revokeObjectURL(urlAudio);
+    } catch (erreur) {
+        console.error("Échec de la synthèse vocale :", erreur);
+        bouton.innerHTML = '⚠️';
+        setTimeout(() => { bouton.innerHTML = contenuOriginal; }, 2000);
+        bouton.disabled = false;
+        return;
+    }
+
+    bouton.innerHTML = contenuOriginal;
+    bouton.disabled = false;
+}
+
+function verifierFormulaire() {
+    const habitude = document.getElementById('habitudes-revision').value;
+    const stress = document.getElementById('gestion-stress').value;
+    const champClasse = document.getElementById('niveau-classe');
+    // ❖ Le champ classe n'existe que si l'ajout HTML a été fait : tant
+    // qu'il n'est pas présent, on ne bloque pas le formulaire pour autant.
+    const classe = champClasse ? champClasse.value : "ok";
+    const bouton = document.getElementById('btn-commencer');
+
+    if (habitude !== "" && stress !== "" && classe !== "") {
+        bouton.disabled = false;
+        bouton.style.opacity = '1';
+        bouton.style.cursor = 'pointer';
+    } else {
+        bouton.disabled = true;
+        bouton.style.opacity = '0.5';
+        bouton.style.cursor = 'not-allowed';
+    }
+}
+
+// =======================================================================
+// ❖ GESTION DU PLEIN ÉCRAN ❖
+// =======================================================================
+function toggleFullScreen() {
+    const doc = window.document;
+    const docEl = doc.documentElement;
+    const btn = document.getElementById('btn-fullscreen');
+
+    const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+    if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        if (requestFullScreen) {
+            requestFullScreen.call(docEl);
+            if (btn) btn.title = "Quitter le plein écran";
+        }
+    } else {
+        if (cancelFullScreen) {
+            cancelFullScreen.call(doc);
+            if (btn) btn.title = "Plein écran";
+        }
+    }
+}
+
+document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('btn-fullscreen');
+    if (!document.fullscreenElement && btn) {
+        btn.title = "Plein écran";
+    }
+});
+
+// =======================================================================
+// ❖ LA MAÏEUTIQUE DE L'ORIENTATION (Version Holistique) ❖
+// =======================================================================
+function calculerMO() {
+    const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+
+    const frAn = getVal('mo-fr-an'), frBepc = getVal('mo-fr-bepc');
+    const mathAn = getVal('mo-math-an'), mathBepc = getVal('mo-math-bepc');
+    const pcAn = getVal('mo-pc-an'), pcBepc = getVal('mo-pc-bepc');
+    const angAn = getVal('mo-ang-an'), angBepcE = getVal('mo-ang-bepc-e'), angBepcO = getVal('mo-ang-bepc-o');
+
+    const angBepc = (angBepcE > 0 || angBepcO > 0) ? (angBepcE + angBepcO) / 2 : 0;
+
+    const poidsLitteraire = ((frAn + frBepc) * 2) + ((angAn + angBepc) * 1);
+    const poidsScientifique = ((mathAn + mathBepc) * 2) + ((pcAn + pcBepc) * 1);
+
+    const grandTotal = poidsLitteraire + poidsScientifique;
+    const mo = (grandTotal / 12).toFixed(2);
+
+    const resultContainer = document.getElementById('mo-result-container');
+    const scoreDisplay = document.getElementById('mo-score-display');
+    const adviceDisplay = document.getElementById('mo-advice-display');
+
+    scoreDisplay.textContent = mo;
+    window.__moResultat = mo;
+    window.__mo3e = { mo: mo, frAn: frAn, frBepc: frBepc, mathAn: mathAn, mathBepc: mathBepc, pcAn: pcAn, pcBepc: pcBepc,
+        angAn: angAn, angBepc: angBepc, poidsL: poidsLitteraire, poidsS: poidsScientifique };   // mémoire de la page seulement
+
+    const moisActuel = new Date().getMonth();
+    const estPeriodePostBepc = (moisActuel >= 6 && moisActuel <= 8);
+
+    const possedeSceau = localStorage.getItem('eduka_sceau') !== null;
+    let directiveCognitive = "";
+
+    if (possedeSceau) {
+        directiveCognitive = "<br><br><span style='color: #4B5563; font-size: 0.95em;'><strong>✧ Quête d'Orientation :</strong> Retourne dans ton Espace Élève et communique ce score à ton Répétiteur. Demande-lui de confronter cette moyenne avec ton profil cognitif profond pour découvrir ta véritable voie.</span>";
+    }
+
+    let conseil = "";
+    let actionHTML = "";
+
+    if (estPeriodePostBepc) {
+        if (mo < 10) {
+            conseil = "Les épreuves sont terminées. La marche était un peu haute cette année, mais chaque échec porte les graines de ta future réussite. Repose-toi, l'Académie t'aidera l'année prochaine.";
+            resultContainer.style.borderLeftColor = "#6B7280";
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #6B7280; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et méditer</button>`;
+        } else if (mo >= 10 && mo < 12) {
+            conseil = "Félicitations, l'essentiel est accompli. Ton passage en Seconde est validé. Ton profil t'ouvre naturellement les portes de la série Littéraire (A). Profite d'un repos mérité.";
+            resultContainer.style.borderLeftColor = "#F59E0B";
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer la Boussole</button>`;
+        } else {
+            if (poidsLitteraire > poidsScientifique) {
+                conseil = "Brillante réussite ! Ton profil est fortement marqué par les Lettres, t'assurant la série A. Cependant, ton excellente moyenne globale t'ouvre également les portes de la prestigieuse série Scientifique (C) si tel est ton choix.";
+            } else {
+                conseil = "Une victoire éclatante ! Ton esprit logique a triomphé. Les portes de la série Scientifique (C) te sont grandes ouvertes, te laissant le champ libre pour l'excellence.";
+            }
+            resultContainer.style.borderLeftColor = "#10B981";
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #10B981; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer la Boussole</button>`;
+        }
+    } else {
+        if (mo < 10) {
+            conseil = "Ta dynamique actuelle est fragile. Ne laisse pas l'angoisse s'installer, il est encore temps d'agir. Cible tes lacunes dès aujourd'hui.";
+            resultContainer.style.borderLeftColor = "#EF4444";
+            actionHTML = `<button onclick="fermerBoussole(); window.scrollTo(0, document.body.scrollHeight);" style="margin-top:20px; padding: 10px; width:100%; background-color: #EF4444; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer et agir</button>`;
+        } else if (mo >= 10 && mo < 12) {
+            conseil = "Tu es dans la course. Ton profil est équilibré pour la série A. Cependant, pour sécuriser une place en série C, il faut intensifier ton entraînement mathématique.";
+            resultContainer.style.borderLeftColor = "#F59E0B";
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer la Boussole</button>`;
+        } else {
+            conseil = "Excellente trajectoire. Que ton cœur penche vers les Lettres ou les Sciences, tes efforts actuels te garantissent le choix. Maintiens cette rigueur.";
+            resultContainer.style.borderLeftColor = "#3B82F6";
+            actionHTML = `<button onclick="fermerBoussole()" style="margin-top:20px; padding: 10px; width:100%; background-color: #3B82F6; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">Fermer la Boussole</button>`;
+        }
+    }
+
+    const boutonAnalyse = `<button onclick="analyseOrientation3e()" style="margin-top:20px; padding: 10px; width:100%; background-color: #F59E0B; color: white; border: none; border-radius: 5px; cursor:pointer; font-weight: bold;">🧭 Analyse personnalisée par le Conseiller</button>
+<span style="display:block;font-size:0.8em;color:#6B7280;margin-top:6px;font-style:normal;">Il tient compte de tes moyennes et, si tu l'as passé, de ton test de centres d'intérêt.</span>`;
+    adviceDisplay.innerHTML = conseil + directiveCognitive + boutonAnalyse + actionHTML;
+    resultContainer.style.display = "block";
+}
+
+// =======================================================================
+// ❖ LA RESPIRATION DES FENÊTRES (OUVERTURE ET FERMETURE) ❖
+// =======================================================================
+function ouvrirBoussole() {
+    document.getElementById('mo-modal').classList.add('active');
+}
+function fermerBoussole() {
+    document.getElementById('mo-modal').classList.remove('active');
+}
+function ouvrirAtelier() {
+    document.getElementById('orateur-modal').classList.add('active');
+}
+function fermerAtelier() {
+    document.getElementById('orateur-modal').classList.remove('active');
+}
+function ouvrirPhilo() { document.getElementById('philo-modal').classList.add('active'); }
+function fermerPhilo() { document.getElementById('philo-modal').classList.remove('active'); }
+function ouvrirSciences() { document.getElementById('sciences-modal').classList.add('active'); }
+function fermerSciences() { document.getElementById('sciences-modal').classList.remove('active'); }
+function ouvrirBoussoleUniv() {
+    document.getElementById('univ-modal').classList.add('active');
+    try { if (window.majBandeauProfilInterets) window.majBandeauProfilInterets(); } catch (e) {}
+}
+function fermerBoussoleUniv() { document.getElementById('univ-modal').classList.remove('active'); }
+
+// L'Atelier de l'Élan n'a volontairement aucun formulaire préalable (contrairement à
+// Orateur/Philo/Sciences) : demander "sujet" + "cadre" avant de pouvoir parler ajouterait de la
+// friction à un outil pensé pour être accessible sans détour, y compris à un élève qui a juste
+// besoin de souffler.
+function ouvrirElan() {
+    preparerArene('elan', "Salut&nbsp;! Je suis l'Atelier de l'Élan — un espace pour trouver ta méthode, te remotiver après un coup dur, ou fixer tes objectifs. Qu'est-ce qui t'amène aujourd'hui&nbsp;?", {}, true);
+}
+
+// =======================================================================
+// ❖ LA NOUVELLE ARÈNE UNIVERSELLE (ATELIERS & BOUSSOLE) ❖
+// =======================================================================
+let activeAtelier = "";
+let activeAtelierInputs = {};
+let areneConversationId = "";
+
+// ❖ OUVERTURE VIVANTE DES ATELIERS (ajouté le 03/09/2026) ❖
+//
+// Jusqu'ici, preparerArene() affichait un texte d'accueil figé, codé en
+// dur côté client (jamais généré par l'IA) -- l'élève ne recevait donc un
+// vrai message de l'agent qu'après avoir lui-même écrit quelque chose.
+// Constant a demandé de rendre cette ouverture réellement vivante : dès
+// l'entrée dans un Atelier, un vrai premier appel est envoyé à l'agent
+// (silencieusement, sans bulle "élève" visible, l'élève n'a rien tapé),
+// pour qu'il génère lui-même son message d'accueil -- exactement ce que
+// prévoit déjà la section "PREMIER CONTACT" de chaque prompt d'Atelier,
+// jusqu'ici jamais réellement déclenchée. Chaque prompt d'Atelier doit
+// reconnaître ce texte sentinelle et l'interpréter comme un déclencheur
+// d'accueil, jamais comme une vraie question à traiter littéralement --
+// même principe que SENTINEL_FIN_SESSION_SAS côté Espace de Préparation.
+const SENTINEL_OUVERTURE_ARENE = "[DEBUT_DE_SESSION_AUTOMATIQUE]";
+
+function preparerArene(nomAtelier, messageBienvenue, inputs, ouvertureVivante) {
+    activeAtelier = nomAtelier;
+    activeAtelierInputs = inputs;
+    areneConversationId = "";
+
+    // Basculer l'affichage
+    document.getElementById('home-view').style.display = 'none';
+    document.getElementById('app-view').style.display = 'flex';
+
+    document.querySelectorAll('.custom-chat-container').forEach(c => c.classList.remove('active'));
+    document.getElementById('container-arene-custom').classList.add('active');
+    document.getElementById('teacher-tabs-container').style.display = 'none';
+    masquerChooserCategorieEnseignant();
+
+    const chatHistory = document.getElementById('arene-chat-history');
+
+    if (ouvertureVivante) {
+        // ❖ Ouverture vivante : l'historique part vide, un vrai appel à
+        // l'agent (silencieux) va immédiatement produire le message
+        // d'accueil réel -- voir SENTINEL_OUVERTURE_ARENE ci-dessus.
+        // messageBienvenue n'est plus affiché directement : sendAreneMessage
+        // gère déjà son propre repli en cas d'échec réseau ("Le lien a été
+        // rompu..."), pas besoin d'un second filet ici.
+        chatHistory.innerHTML = '';
+        sendAreneMessage(SENTINEL_OUVERTURE_ARENE, { silencieux: true });
+    } else {
+        // Comportement historique, inchangé (utilisé par la Boussole
+        // Universitaire/Conseiller, qui a déjà son propre déclenchement
+        // vivant via un second message auto-envoyé juste après cet appel).
+        chatHistory.innerHTML = `<div class="message system-message">${messageBienvenue}</div>`;
+    }
+}
+
+function invoquerJury() {
+    const sujet = document.getElementById('orateur-sujet').value;
+    const cadre = document.getElementById('orateur-cadre').value;
+    if (!sujet || !cadre) { alert("Le jury exige de préciser l'œuvre et le cadre."); return; }
+    fermerAtelier();
+    preparerArene('orateur', `Le Jury est prêt à vous écouter sur : <strong>${sujet}</strong> (${cadre}).`, { sujet_etudie: sujet, cadre_epreuve: cadre }, true);
+}
+
+function invoquerMaitrePhilo() {
+    const sujet = document.getElementById('philo-sujet').value;
+    const cadre = document.getElementById('philo-cadre').value;
+    if (!sujet || !cadre) { alert("Le Maître exige un sujet et un cadre de réflexion."); return; }
+    fermerPhilo();
+    preparerArene('philo', `L'Espace de réflexion est ouvert. Thème : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre }, true);
+}
+
+function invoquerLaboratoire() {
+    const sujet = document.getElementById('sciences-sujet').value;
+    const cadre = document.getElementById('sciences-cadre').value;
+    if (!sujet || !cadre) { alert("Les protocoles exigent un sujet et une méthode."); return; }
+    fermerSciences();
+    preparerArene('sciences', `Le Laboratoire est actif. Protocole : <strong>${sujet}</strong>.`, { sujet_etudie: sujet, cadre_epreuve: cadre }, true);
+}
+
+// Carte sous la réponse du Conseiller : rouvre le résultat du test (à partager) ou propose de le passer.
+function ajouterCarteProfilArene(ctx) {
+    const hist = document.getElementById('arene-chat-history');
+    if (!hist || document.getElementById('carte-profil-interets')) return;
+    const pi = window.__profilInterets;
+    const aProfil = pi && pi.ctx === ctx && pi.noms && pi.noms.length;
+    const carte = document.createElement('div');
+    carte.id = 'carte-profil-interets';
+    carte.className = 'message system-message';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.style.cssText = 'margin-top:8px;padding:9px 14px;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer;background:' + (ctx === 'bac' ? '#14B8A6' : '#F59E0B') + ';';
+    if (aProfil) {
+        carte.appendChild(document.createTextNode("🎯 Ton profil d'intérêts : "));
+        const s = document.createElement('strong'); s.textContent = pi.noms.join(', '); carte.appendChild(s);
+        carte.appendChild(document.createElement('br'));
+        b.textContent = 'Voir mon résultat et le partager';
+        b.onclick = () => { if (window.afficherMonProfilInterets) window.afficherMonProfilInterets(); };
+    } else {
+        carte.appendChild(document.createTextNode("🎯 Tu n'as pas encore passé le test de centres d'intérêt : il affinerait ce conseil. Une fois terminé, relance l'analyse."));
+        carte.appendChild(document.createElement('br'));
+        b.textContent = "Découvrir mes centres d'intérêt";
+        b.onclick = () => { if (window.ouvrirCentresInteret) window.ouvrirCentresInteret(ctx); };
+    }
+    carte.appendChild(b);
+    hist.appendChild(carte);
+}
+
+// ❖ Boussole d'Orientation (3e) : analyse PERSONNALISÉE par le Conseiller (mode « 3e (BEPC) »).
+function analyseOrientation3e() {
+    const d = window.__mo3e;
+    if (!d) { alert("Calcule d'abord ta moyenne d'orientation."); return; }
+    fermerBoussole();
+    const moy = (an, bepc) => (an > 0 && bepc > 0) ? ((an + bepc) / 2).toFixed(2) : String(an || bepc || 0);
+    const inputs = {
+        serie_bac: "3e (BEPC)",
+        date_naissance: "Non renseignée",
+        note_maths: moy(d.mathAn, d.mathBepc),
+        note_francais: moy(d.frAn, d.frBepc),
+        note_philo: "0",
+        note_pc: moy(d.pcAn, d.pcBepc),
+        note_svt: "0",
+        note_hg: "0",
+        moyenne_bac: d.mo
+    };
+    preparerArene('conseiller', "Le Conseiller analyse ta moyenne d'orientation de 3e... Que souhaites-tu savoir sur ton passage en Seconde ?", inputs);
+    let msg = "Je suis en 3e (BEPC). Analyse mon profil et conseille-moi sur mon orientation en Seconde. " +
+        "Ma moyenne d'orientation est " + d.mo + ". " +
+        "Français : année " + d.frAn + ", BEPC " + d.frBepc + ". " +
+        "Mathématiques : année " + d.mathAn + ", BEPC " + d.mathBepc + ". " +
+        "Physique-Chimie : année " + d.pcAn + ", BEPC " + d.pcBepc + ". " +
+        "Anglais : année " + d.angAn + ", BEPC " + d.angBepc.toFixed(1) + ". " +
+        "Pôle littéraire (français et anglais) : " + d.poidsL + " ; pôle scientifique (maths et physique-chimie) : " + d.poidsS + ".";
+    const pi = window.__profilInterets;
+    if (pi && pi.ctx === 'bepc' && pi.noms && pi.noms.length) {
+        msg += " Mon test de centres d'intérêt a fait ressortir : " + pi.noms.map((n, i) => n + " (" + pi.codes[i] + ")").join(", ") + ".";
+    }
+    setTimeout(() => {
+        const inputField = document.getElementById('arene-user-input');
+        if (inputField) {
+            inputField.value = msg;
+            Promise.resolve(sendAreneMessage()).then(() => ajouterCarteProfilArene('bepc')).catch(() => {});
+        }
+    }, 800);
+}
+
+function invoquerConseiller() {
+    const serie = document.getElementById('univ-serie').value;
+
+    // ✦ CE QUI CHANGE : On supprime 'annee' et on capte la date complète ✦
+    const dateNaissance = document.getElementById('univ-date-naissance').value;
+
+    const maths = document.getElementById('univ-maths').value || "0";
+const francais = document.getElementById('univ-francais').value || "0";
+const philo = document.getElementById('univ-philo').value || "0";
+const pc = document.getElementById('univ-pc').value || "0";
+const svt = document.getElementById('univ-svt').value || "0";
+const hg = document.getElementById('univ-hg').value || "0";
+    const moyenne = document.getElementById('univ-moyenne').value;
+
+    // ✦ CE QUI CHANGE : L'alerte exige désormais la date de naissance ✦
+    // ❖ 01/11/2026 : la date de naissance est FACULTATIVE (elle ne sert qu'au filtre d'âge des
+    // universités publiques ; absente, le Conseiller le signale sans rien supposer).
+    if (!serie || !moyenne) {
+        alert("L'algorithme requiert au moins votre série et votre moyenne."); return;
+    }
+
+    // ✦ L'accès est désormais libre pour tous les bacheliers ✦
+    fermerBoussoleUniv();
+
+    const inputs = {
+        serie_bac: serie,
+        date_naissance: dateNaissance || "Non renseignée",
+        note_maths: maths,
+        note_francais: francais,
+        note_philo: philo,
+        note_pc: pc,  // ✦ Retour à l'identifiant originel et correct
+        note_svt: svt,
+        note_hg: hg,
+        moyenne_bac: moyenne
+    };
+
+    preparerArene('conseiller', `Le Conseiller Universitaire analyse vos résultats de la Série ${serie}... Que souhaitez-vous savoir sur vos orientations possibles ?`, inputs);
+
+    // 3. Déclenchement automatique de l'IA (ON GARDE INTACT)
+    setTimeout(() => {
+        const inputField = document.getElementById('arene-user-input');
+        if(inputField) {
+            let texteDemande = "Analyse mon profil, indique-moi mes chances et propose-moi des formations adaptées.";
+            const pi = window.__profilInterets;   // résultat du test de centres d'intérêt (mémoire de la page seulement)
+            if (pi && pi.ctx === 'bac' && pi.noms && pi.noms.length) {
+                texteDemande += " Mon test de centres d'intérêt a fait ressortir : " +
+                    pi.noms.map((n, i) => n + " (" + pi.codes[i] + ")").join(", ") + ".";
+            }
+            inputField.value = texteDemande;
+            // ❖ Sous la réponse du Conseiller : retour direct au résultat du test (partage SMS/WhatsApp).
+            Promise.resolve(sendAreneMessage()).then(() => ajouterCarteProfilArene('bac')).catch(() => {});
+        }
+    }, 800);
+}
+// --- LOGIQUE DE DIALOGUE ET DE FLUX CONTINU ---
+function handleAreneKeyPress(event) {
+    if (event.key === 'Enter') sendAreneMessage();
+}
+
+async function sendAreneMessage(messageForce, optionsEnvoi) {
+    if (typeof messageForce !== 'string' && envoiPendantMicro('arene')) return;
+    optionsEnvoi = optionsEnvoi || {};
+    const silencieux = optionsEnvoi.silencieux === true;
+
+    const inputField = document.getElementById('arene-user-input');
+    const button = inputField.nextElementSibling;
+    const message = (typeof messageForce === 'string' && messageForce) ? messageForce : inputField.value.trim();
+    if (!message) return;
+
+    inputField.disabled = true;
+    button.disabled = true;
+    button.style.opacity = '0.5';
+
+    const chatHistory = document.getElementById('arene-chat-history');
+
+    // ❖ Mode silencieux (ouverture vivante) : aucune bulle "élève" affichée
+    // -- l'élève n'a rien tapé, ce serait mentir sur qui a "dit" quoi.
+    // Seule la réponse de l'agent (traitée plus bas, inchangé) apparaîtra.
+    if (!silencieux) {
+        const userMsgDiv = document.createElement('div');
+        userMsgDiv.className = 'message user-message';
+        userMsgDiv.textContent = message;
+        userMsgDiv.appendChild(creerBoutonReutiliser(message, 'arene-user-input'));
+        chatHistory.appendChild(userMsgDiv);
+        inputField.value = '';
+        scrollToBottom('arene-chat-history');
+    }
+
+    const botLoadingDiv = document.createElement('div');
+    botLoadingDiv.className = 'message bot-message apparition-fluide';
+    botLoadingDiv.innerHTML = creerBulleReflexion("L'esprit rassemble le savoir...");
+    chatHistory.appendChild(botLoadingDiv);
+    scrollToElementTop('arene-chat-history', botLoadingDiv);
+
+    const sceau = localStorage.getItem('eduka_sceau') || "";
+
+    try {
+        const response = await fetch('https://api.edukatchat.org/api/ateliers/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: message,
+                conversation_id: areneConversationId,
+                matricule: sceau,
+                atelier: activeAtelier,
+                inputs: activeAtelierInputs,
+                device_id: obtenirDeviceId()
+            })
+        });
+
+        if (!response.ok) throw new Error(`État : ${response.status}`);
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (data.answer && (data.answer.includes("limite") || data.answer.includes("épuisée"))) {
+                botLoadingDiv.innerHTML = data.answer + "<br><br><button onclick='openPremiumModal()' style='display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;'>Déverrouiller l'Académie</button>";
+            } else {
+                botLoadingDiv.textContent = data.answer || "La source est silencieuse.";
+            }
+        } else {
+            // ❖ Même principe : la bulle animée n'est plus effacée par avance.
+            let texteIntegral = "";
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (let line of lines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('data: ')) {
+                        const payload = trimmedLine.substring(6).trim();
+                        if (payload === "[DONE]") continue;
+                        try {
+                            const dataObj = JSON.parse(payload);
+                            // ✦ NOUVEAU : On capte les erreurs internes du modèle IA de Dify
+                            if (dataObj.event === 'error') {
+                                botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Erreur interne Dify : ${dataObj.message || dataObj.code}</span>`;
+                                break; // On stoppe la boucle
+                            }
+                            if (dataObj.event === 'message' || dataObj.event === 'agent_message' || dataObj.answer) {
+                                texteIntegral += (dataObj.answer || "");
+                                if (texteIntegral.length > 0) {
+                                    afficherReponseAvecFondu(botLoadingDiv, texteIntegral, false, true);
+                                    scrollToElementTop('arene-chat-history', botLoadingDiv);
+                                }
+                            }
+                            if (dataObj.conversation_id) areneConversationId = dataObj.conversation_id;
+                        } catch(e) { }
+                    }
+                }
+            }
+
+            if (!texteIntegral) {
+                botLoadingDiv.innerHTML = "Je n'ai pas de réponse à formuler pour l'instant. Peux-tu reformuler ?";
+            } else {
+                afficherReponseAvecFondu(botLoadingDiv, texteIntegral); // rendu final, curseur retiré
+            }
+        }
+
+        if (botLoadingDiv.textContent.length > 50) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = `<button class="btn-action-doc" onclick="copierTexte(this)" title="Copier pour Word" aria-label="Copier pour Word"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg></button><button class="btn-action-doc" onclick="imprimerDocument(this)" title="Imprimer / Enregistrer en PDF" aria-label="Imprimer ou enregistrer en PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>`;
+            botLoadingDiv.appendChild(actionsDiv);
+        }
+    } catch (error) {
+        botLoadingDiv.innerHTML = `<span style="color:#EF4444;">Le lien a été rompu. Reprenez votre respiration et essayez à nouveau.</span>`;
+    } finally {
+        inputField.disabled = false;
+        button.disabled = false;
+        button.style.opacity = '1';
+        inputField.focus();
+        // ❖ Volontairement pas de scrollToBottom ici : voir sendSasMessage.
+    }
+}
+
+// =====================================================================
+// BIBLIOTHÈQUE D'ILLUSTRATIONS (Espace Enseignant — La Forge)
+// =====================================================================
+// ❖ Galerie de schémas recréés (vectoriel, sans risque de droits
+// d'auteur) et de vraies photographies microscopiques libres de droits,
+// consultable depuis La Forge des Leçons. Interroge le même gateway que
+// le chat (GET /api/illustrations, sans authentification : ce sont des
+// ressources pédagogiques publiques). Portée actuelle : SVT et
+// Physique-Chimie, Terminale et Troisième (BEPC) — les autres
+// classes/matières n'ont pas encore d'illustrations cataloguées.
+let illuMinuteur = null;
+
+function ouvrirBibliothequeIllustrations() {
+    document.getElementById('illustrations-modal').classList.add('active');
+    rechercherIllustrations();
+}
+
+function fermerBibliothequeIllustrations() {
+    document.getElementById('illustrations-modal').classList.remove('active');
+}
+
+function rechercherIllustrationsDifferee() {
+    clearTimeout(illuMinuteur);
+    illuMinuteur = setTimeout(rechercherIllustrations, 350);
+}
+
+async function rechercherIllustrations() {
+    const matiere = document.getElementById('illu-filtre-matiere').value;
+    const niveau = document.getElementById('illu-filtre-niveau').value;
+    const q = document.getElementById('illu-recherche').value.trim();
+    const feedback = document.getElementById('illu-feedback');
+    const conteneur = document.getElementById('illu-resultats');
+
+    feedback.textContent = 'Recherche...';
+    try {
+        const params = new URLSearchParams();
+        if (matiere) params.set('matiere', matiere);
+        if (niveau) params.set('niveau', niveau);
+        if (q) params.set('q', q);
+        const reponse = await fetch(`https://api.edukatchat.org/api/illustrations?${params.toString()}`);
+        const data = await reponse.json();
+        afficherResultatsIllustrations(data.illustrations || []);
+        feedback.textContent = data.total > 0
+            ? `${data.total} illustration${data.total > 1 ? 's' : ''} trouvée${data.total > 1 ? 's' : ''}.`
+            : "Aucune illustration ne correspond à cette recherche pour l'instant.";
+    } catch (error) {
+        conteneur.innerHTML = '';
+        feedback.textContent = "La bibliothèque est momentanément indisponible. Réessayez dans un instant.";
+    }
+}
+
+function afficherResultatsIllustrations(liste) {
+    const conteneur = document.getElementById('illu-resultats');
+    conteneur.innerHTML = '';
+    liste.forEach((img) => {
+        const carte = document.createElement('div');
+        carte.style.cssText = 'background:#fff; border:1px solid #E5E7EB; border-radius:8px; overflow:hidden; cursor:pointer; transition:0.15s; display:flex; flex-direction:column;';
+        carte.onmouseenter = () => carte.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+        carte.onmouseleave = () => carte.style.boxShadow = 'none';
+        carte.title = 'Cliquer pour copier le lien Markdown';
+        carte.innerHTML = `
+            <img src="${img.url}" alt="${img.legende || img.fiche}" style="width:100%; height:150px; object-fit:contain; display:block; background:#fff;">
+            <div style="padding:8px; font-size:0.78em; color:#374151; flex:1;">${(img.legende || img.fiche || '').slice(0, 140)}</div>
+        `;
+        carte.onclick = () => copierLienIllustration(img.url, img.legende || img.fiche, carte);
+        conteneur.appendChild(carte);
+    });
+}
+
+function copierLienIllustration(url, legende, carteElement) {
+    const markdown = `![${legende}](${url})`;
+    navigator.clipboard.writeText(markdown).then(() => {
+        const feedback = document.getElementById('illu-feedback');
+        feedback.textContent = 'Lien Markdown copié — collez-le dans votre fiche (La Forge).';
+        if (carteElement) {
+            const ancienneBordure = carteElement.style.border;
+            carteElement.style.border = '2px solid #10B981';
+            setTimeout(() => { carteElement.style.border = ancienneBordure; }, 700);
+        }
+    }).catch(() => {
+        document.getElementById('illu-feedback').textContent = "Impossible de copier automatiquement — clic droit sur l'image pour copier son adresse.";
+    });
+}
+
+// =======================================================================
+// ❖ LA BIBLIOTHÈQUE DE FICHES-FORMULES (Espace Enseignant) ❖
+// Même logique que la Bibliothèque d'Illustrations juste au-dessus, mais
+// il n'y a pas d'image à afficher : chaque carte montre le titre de la
+// fiche, et un clic copie directement son CONTENU texte (le formulaire
+// complet) dans le presse-papiers, prêt à coller dans un message adressé
+// à l'IA (Forge/Atelier). Portée actuelle : Maths, Physique-Chimie et
+// SVT, de la 6ème à la Terminale.
+let formulesMinuteur = null;
+
+function ouvrirBibliothequeFormules() {
+    document.getElementById('formules-modal').classList.add('active');
+    rechercherFormules();
+}
+
+function fermerBibliothequeFormules() {
+    document.getElementById('formules-modal').classList.remove('active');
+}
+
+function rechercherFormulesDifferee() {
+    clearTimeout(formulesMinuteur);
+    formulesMinuteur = setTimeout(rechercherFormules, 350);
+}
+
+async function rechercherFormules() {
+    const matiere = document.getElementById('formules-filtre-matiere').value;
+    const niveau = document.getElementById('formules-filtre-niveau').value;
+    const q = document.getElementById('formules-recherche').value.trim();
+    const feedback = document.getElementById('formules-feedback');
+    const conteneur = document.getElementById('formules-resultats');
+
+    feedback.textContent = 'Recherche...';
+    try {
+        const params = new URLSearchParams();
+        if (matiere) params.set('matiere', matiere);
+        if (niveau) params.set('niveau', niveau);
+        if (q) params.set('q', q);
+        const reponse = await fetch(`https://api.edukatchat.org/api/formules?${params.toString()}`);
+        const data = await reponse.json();
+        afficherResultatsFormules(data.formules || []);
+        feedback.textContent = data.total > 0
+            ? `${data.total} fiche${data.total > 1 ? 's' : ''} trouvée${data.total > 1 ? 's' : ''}.`
+            : "Aucune fiche ne correspond à cette recherche pour l'instant.";
+    } catch (error) {
+        conteneur.innerHTML = '';
+        feedback.textContent = "La bibliothèque est momentanément indisponible. Réessayez dans un instant.";
+    }
+}
+
+function afficherResultatsFormules(liste) {
+    const conteneur = document.getElementById('formules-resultats');
+    conteneur.innerHTML = '';
+    liste.forEach((fiche) => {
+        const carte = document.createElement('div');
+        carte.style.cssText = 'background:#fff; border:1px solid #E5E7EB; border-radius:8px; padding:12px; cursor:pointer; transition:0.15s;';
+        carte.onmouseenter = () => carte.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+        carte.onmouseleave = () => carte.style.boxShadow = 'none';
+        carte.title = 'Cliquer pour copier cette fiche';
+        const apercu = (fiche.contenu || '').split('\n').slice(1, 4).join(' ').slice(0, 110);
+        carte.innerHTML = `
+            <div style="font-weight:600; font-size:0.88em; color:#111827; margin-bottom:4px;">${fiche.titre || fiche.chapitre}</div>
+            <div style="font-size:0.78em; color:#6B7280;">${apercu}…</div>
+        `;
+        carte.onclick = () => copierFormule(fiche, carte);
+        conteneur.appendChild(carte);
+    });
+}
+
+function copierFormule(fiche, carteElement) {
+    navigator.clipboard.writeText(fiche.contenu || '').then(() => {
+        const feedback = document.getElementById('formules-feedback');
+        feedback.textContent = 'Fiche copiée — collez-la dans votre message (La Forge/L\'Atelier).';
+        if (carteElement) {
+            const ancienneBordure = carteElement.style.border;
+            carteElement.style.border = '2px solid #10B981';
+            setTimeout(() => { carteElement.style.border = ancienneBordure; }, 700);
+        }
+    }).catch(() => {
+        document.getElementById('formules-feedback').textContent = "Impossible de copier automatiquement.";
+    });
+}
+
+// =======================================================================
+// ❖ LA BANNIÈRE D'INSTALLATION PWA ❖
+// =======================================================================
+// Chrome/Edge sur Android ne rendent l'installation possible qu'après avoir
+// capturé l'évènement `beforeinstallprompt` -- inexistant sur iOS Safari,
+// qui garde son propre chemin ("Partager -> Sur l'écran d'accueil", déjà
+// documenté dans index.html). La bannière ne s'affiche donc que là où cet
+// évènement existe réellement : jamais de fausse promesse d'installation.
+let evenementInstallationDiffere = null;
+const CLE_BANNIERE_PWA_MASQUEE = 'eduka_banniere_pwa_masquee';
+
+window.addEventListener('beforeinstallprompt', (evenement) => {
+    evenement.preventDefault();
+    evenementInstallationDiffere = evenement;
+    if (localStorage.getItem(CLE_BANNIERE_PWA_MASQUEE)) return;
+    const banniere = document.getElementById('pwa-install-banner');
+    if (banniere) banniere.classList.add('active');
+});
+
+async function installerPWA() {
+    const banniere = document.getElementById('pwa-install-banner');
+    if (!evenementInstallationDiffere) {
+        if (banniere) banniere.classList.remove('active');
+        return;
+    }
+    evenementInstallationDiffere.prompt();
+    await evenementInstallationDiffere.userChoice;
+    evenementInstallationDiffere = null;
+    if (banniere) banniere.classList.remove('active');
+}
+
+function fermerBanniereInstallationPWA() {
+    const banniere = document.getElementById('pwa-install-banner');
+    if (banniere) banniere.classList.remove('active');
+    // ❖ Un refus explicite ne doit pas être réimposé à chaque visite.
+    localStorage.setItem(CLE_BANNIERE_PWA_MASQUEE, '1');
+}
+
+window.addEventListener('appinstalled', () => {
+    const banniere = document.getElementById('pwa-install-banner');
+    if (banniere) banniere.classList.remove('active');
+    localStorage.setItem(CLE_BANNIERE_PWA_MASQUEE, '1');
+});
+
+
+// ❖ FONCTIONS EN TEST (29/10/2026) ❖
+// Le serveur dit quelles fonctions en chantier (ex. « defi ») sont visibles pour
+// CE Sceau (voir FONCTIONS_EN_TEST dans gateway/main.py). Tant que la réponse n'est
+// pas « true », la fonction n'existe pas dans la page. Échec réseau = tout fermé.
+function codeEnseignantPresent() {
+    try {
+        return /^ENS-/.test(localStorage.getItem('eduka_sceau') || '') || /^ENS-/.test(localStorage.getItem('eduka_sceau_enseignant') || '');
+    } catch (e) { return false; }
+}
+window.fonctionsActives = {};
+function fonctionActive(nom) {
+    return !!(window.fonctionsActives && window.fonctionsActives[nom]);
+}
+async function chargerFonctionsActives() {
+    try {
+        let sceau = '';
+        try { sceau = localStorage.getItem('eduka_sceau') || localStorage.getItem('eduka_sceau_enseignant') || ''; } catch (e) { /* stockage indisponible */ }
+        const reponse = await fetch('https://api.edukatchat.org/api/fonctions-actives', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: sceau })
+        });
+        if (!reponse.ok) return;
+        window.fonctionsActives = await reponse.json();
+        document.dispatchEvent(new CustomEvent('fonctions-actives'));
+    } catch (e) {
+        window.fonctionsActives = {};
+    }
+}
+document.addEventListener('DOMContentLoaded', chargerFonctionsActives);
+
+// Menu : le lien « Salle d'étude » n'apparaît que si le serveur ouvre la fonction « salle »
+// pour ce Sceau (30/10/2026). Fermée = absent du menu.
+document.addEventListener('fonctions-actives', function () {
+    try {
+        const bloc = document.getElementById('menu-nav-salle-bloc');
+        if (bloc) bloc.style.display = (fonctionActive('salle') && !codeEnseignantPresent()) ? 'block' : 'none';
+        majMenuOutilsEnseignant();
+        organiserMenuNavigation();
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+});
+
+// Vitrine enseignant (08/11/2026) : « Séances de classe » et « Ma bibliothèque » sont montrés à un code ENS-
+// (ou au Créateur) ; dans l'Espace Enseignant ils sont aussi montrés sans code, quand le serveur ouvre ces
+// fonctions au public (clés *_vitrine) : la page explique alors qu'ils sont réservés aux enseignants abonnés.
+function majMenuOutilsEnseignant() {
+    try {
+        const dansEns = (typeof espaceActuel !== 'undefined' && espaceActuel === 'enseignant');
+        const blocSeance = document.getElementById('menu-nav-seance-bloc');
+        if (blocSeance) blocSeance.style.display = (fonctionActive('seance') || (dansEns && fonctionActive('seance_vitrine'))) ? 'block' : 'none';
+        const blocBiblio = document.getElementById('menu-nav-biblio-bloc');
+        if (blocBiblio) blocBiblio.style.display = (fonctionActive('bibliotheque') || (dansEns && fonctionActive('bibliotheque_vitrine'))) ? 'block' : 'none';
+        // Mêmes règles pour les cartes « Mes outils » du Sas des ateliers (Espace Enseignant, secondaire).
+        const voirSeance = fonctionActive('seance') || (dansEns && fonctionActive('seance_vitrine'));
+        const voirBiblio = fonctionActive('bibliotheque') || (dansEns && fonctionActive('bibliotheque_vitrine'));
+        const carteSeance = document.getElementById('sas-outil-seance');
+        const carteBiblio = document.getElementById('sas-outil-biblio');
+        const groupeOutils = document.getElementById('sas-outils-prof');
+        if (carteSeance) carteSeance.style.display = voirSeance ? '' : 'none';
+        if (carteBiblio) carteBiblio.style.display = voirBiblio ? '' : 'none';
+        if (groupeOutils) groupeOutils.style.display = (voirSeance || voirBiblio) ? 'flex' : 'none';
+        // Raccourcis de la barre d'outils (13/11/2026) : seulement dans l'Espace Enseignant, mêmes règles que le menu.
+        const rs = document.getElementById('btn-raccourci-seance');
+        const rb = document.getElementById('btn-raccourci-biblio');
+        if (rs) rs.style.display = (dansEns && voirSeance) ? 'flex' : 'none';
+        if (rb) rb.style.display = (dansEns && voirBiblio) ? 'flex' : 'none';
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+}
+
+
+// ❖ SE DÉCONNECTER (31/10/2026) : efface le(s) Code(s) et ce qui est propre à l'appareil, puis recharge.
+// Aucun coût serveur : tout se passe dans le navigateur. L'historique des conversations de l'élève
+// reste côté serveur, lié à son Code ELV- (il le retrouve en se reconnectant). On GARDE l'identifiant
+// d'appareil et le compteur d'essais gratuits (sinon se déconnecter permettrait de les contourner).
+function aUnCodeEnregistre() {
+    try { return !!(localStorage.getItem('eduka_sceau') || localStorage.getItem('eduka_sceau_enseignant')); } catch (e) { return false; }
+}
+function majBoutonDeconnexion() {
+    const bloc = document.getElementById('menu-nav-deconnexion-bloc');
+    if (bloc) bloc.style.display = aUnCodeEnregistre() ? 'block' : 'none';
+}
+function demanderDeconnexion() {
+    fermerMenuNavigation();
+    let fond = document.getElementById('deconnexion-modal');
+    if (!fond) {
+        fond = document.createElement('div');
+        fond.id = 'deconnexion-modal';
+        fond.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;z-index:100000;padding:16px;';
+        fond.innerHTML = '<div role="dialog" aria-modal="true" style="background:#fff;color:#0f172a;max-width:420px;width:100%;border-radius:18px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.35);font-family:inherit;">'
+            + '<h3 style="margin:0 0 10px;font-size:1.15rem;">Se déconnecter ?</h3>'
+            + '<p style="margin:0 0 16px;line-height:1.5;font-size:.95rem;">Ton Code sera effacé de cet appareil : il faudra le saisir de nouveau pour revenir. <strong>Garde-le (message WhatsApp reçu à l\'abonnement).</strong> Ta conversation en cours disparaîtra de cet écran.</p>'
+            + '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">'
+            + '<button type="button" id="deconnexion-annuler" style="padding:10px 16px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;cursor:pointer;font-size:.95rem;">Annuler</button>'
+            + '<button type="button" id="deconnexion-ok" style="padding:10px 16px;border-radius:10px;border:0;background:#dc2626;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;">Se déconnecter</button>'
+            + '</div></div>';
+        document.body.appendChild(fond);
+        document.getElementById('deconnexion-annuler').addEventListener('click', function () { fond.style.display = 'none'; });
+        document.getElementById('deconnexion-ok').addEventListener('click', effectuerDeconnexion);
+        fond.addEventListener('click', function (e) { if (e.target === fond) fond.style.display = 'none'; });
+    }
+    fond.style.display = 'flex';
+}
+function effectuerDeconnexion() {
+    try {
+        ['eduka_sceau', 'eduka_sceau_enseignant', 'eduka_profil_eleve', 'eduka_salles', 'eduka_conv_sas'].forEach(function (k) { localStorage.removeItem(k); });
+        Object.keys(localStorage).forEach(function (k) {
+            if (k.indexOf('eduka_chat_') === 0 || k.indexOf('eduka_conv_') === 0 || k.indexOf('eduka_hist_sas_') === 0) localStorage.removeItem(k);
+        });
+    } catch (e) { /* stockage indisponible */ }
+    try { sessionStorage.removeItem('eduka_retour'); } catch (e) { /* sans gravité */ }
+    window.location.href = window.location.pathname;
+}
+document.addEventListener('DOMContentLoaded', majBoutonDeconnexion);
+
+// ❖ Messages d'accueil figés : les noms de boutons mis en exergue sont CLIQUABLES (01/11/2026).
+// Délégation d'événement : fonctionne aussi quand l'accueil est restauré depuis l'historique local.
+document.addEventListener('click', function (e) {
+    const cible = e.target && e.target.closest ? e.target.closest('.nom-bouton') : null;
+    if (!cible) return;
+    try {
+        if (cible.dataset.formulaire && typeof ouvrirFormulaireGuide === 'function') {
+            ouvrirFormulaireGuide(cible.dataset.formulaire);
+        } else if (cible.dataset.sug) {
+            const boutons = document.querySelectorAll('#sas-suggestions-rapides .btn-suggestion');
+            for (const b of boutons) {
+                if ((b.textContent || '').indexOf(cible.dataset.sug) !== -1) { b.click(); break; }
+            }
+        }
+    } catch (err) { /* sans gravité */ }
+});
+
+// ❖ RETOUR AU POINT DE DÉPART (31/10/2026) : quand on quitte l'application par le menu vers
+// Salle d'étude / Séances de classe / Ma bibliothèque, on retient l'espace où l'on était ;
+// à « ← Retour à EdukaTchat », on le rouvre au lieu de tomber sur l'accueil.
+// On rouvre l'ESPACE (pas la conversation) : rien n'est envoyé à l'IA au retour.
+(function () {
+    function memoriserRetour() {
+        try {
+            // Élève dans une matière : le point de départ est déjà retenu par memoriserPointDeDepart (retour via index.html?retour=1).
+            if (localStorage.getItem('eduka_retour')) { sessionStorage.removeItem('eduka_retour'); return; }
+            let etat = null;
+            const appVue = document.getElementById('app-view');
+            if (appVue && appVue.style.display === 'flex') {
+                const sas = document.getElementById('container-sas-custom');
+                const tabs = document.getElementById('teacher-tabs-container');
+                if (sas && sas.classList.contains('active')) {
+                    etat = { type: 'eleve', matiere: avatarActif };
+                } else if (tabs && tabs.style.display !== 'none') {
+                    const instit = ['forge_primaire', 'cabinet_primaire'].some(function (id) {
+                        const t = document.getElementById('tab-' + id); return t && t.classList.contains('active');
+                    });
+                    etat = { type: 'enseignant', categorie: instit ? 'instituteur' : 'professeur' };
+                } else if (document.getElementById('teacher-categorie-chooser') && document.getElementById('teacher-categorie-chooser').style.display === 'flex') {
+                    etat = { type: 'enseignant', categorie: null };
+                }
+            }
+            if (etat) sessionStorage.setItem('eduka_retour', JSON.stringify(etat));
+            else sessionStorage.removeItem('eduka_retour');
+        } catch (e) { /* sans gravité */ }
+    }
+    ['menu-nav-salle', 'menu-nav-seance', 'menu-nav-biblio'].forEach(function (id) {
+        document.addEventListener('DOMContentLoaded', function () {
+            const a = document.getElementById(id);
+            if (a) a.addEventListener('click', memoriserRetour);
+        });
+    });
+    function restaurerRetour() {
+        let etat = null;
+        try { etat = JSON.parse(sessionStorage.getItem('eduka_retour') || 'null'); sessionStorage.removeItem('eduka_retour'); } catch (e) { return; }
+        if (!etat) return;
+        try {
+            if (etat.type === 'enseignant' && localStorage.getItem('eduka_sceau_enseignant')) {
+                entrerDansEspaceEnseignant();
+                if (etat.categorie) choisirCategorieEnseignant(etat.categorie);
+            } else if (etat.type === 'eleve' && localStorage.getItem('eduka_sceau') && etat.matiere) {
+                entrerDansLeChat(etat.matiere);
+            }
+        } catch (e) { /* on reste sur l'accueil */ }
+    }
+    document.addEventListener('DOMContentLoaded', function () { setTimeout(restaurerRetour, 50); });
+})();
+
+
+// ❖ DÉFI PAR LIEN — étape 3 : bouton « Défier un camarade » (29/10/2026) ❖
+// Visible UNIQUEMENT si le serveur a répondu « true » pour la fonction « defi »
+// (voir fonctionActive). Le bouton apparaît sous le 5e quiz d'un même message
+// quand les 5 premières questions ont reçu une réponse. Voir
+// cahiers_des_charges/CDC_defi_par_lien.md.
+const DEFI_NB_QUESTIONS = 5;
+
+function cartesDefiDeLaBulle(bulle) {
+    return Array.from(bulle.querySelectorAll('.quiz-carte[data-quiz-source]')).slice(0, DEFI_NB_QUESTIONS);
+}
+
+function mettreAJourBoutonDefi(carte) {
+    if (!fonctionActive('defi') || !carte) return;
+    const bulle = carte.closest('.bot-message') || carte.parentElement;
+    if (!bulle || bulle.querySelector('.defi-action')) return;
+    const cartes = cartesDefiDeLaBulle(bulle);
+    if (cartes.length < DEFI_NB_QUESTIONS) return;
+    if (!cartes.every(c => c.classList.contains('quiz-repondu'))) return;
+    const zone = document.createElement('div');
+    zone.className = 'defi-action';
+    const bouton = document.createElement('button');
+    bouton.type = 'button';
+    bouton.className = 'defi-bouton';
+    bouton.setAttribute('onclick', 'ouvrirFenetreDefi(this)');
+    bouton.textContent = '⚔️ Défier un camarade';
+    // Badge « Nouveau » (30/10/2026) : jusqu'au premier clic ou 30 jours ; la clé est la même
+    // que celle de visite-guidee.js (eduka_nouveau_defi), qui retire le badge au clic.
+    try {
+        const dejaVu = localStorage.getItem('eduka_nouveau_defi');
+        if (!dejaVu && Date.now() - new Date('2026-10-30').getTime() < 30 * 86400000) {
+            bouton.setAttribute('data-nouveau-id', 'defi');
+            const badge = document.createElement('span');
+            badge.className = 'badge-nouveau';
+            badge.textContent = 'Nouveau';
+            bouton.appendChild(badge);
+        }
+    } catch (e) { /* stockage indisponible : pas de badge */ }
+    zone.appendChild(bouton);
+    cartes[cartes.length - 1].insertAdjacentElement('afterend', zone);
+}
+
+function balayerBoutonsDefi() {
+    if (!fonctionActive('defi')) {
+        document.querySelectorAll('.defi-action').forEach(z => z.remove());
+        return;
+    }
+    document.querySelectorAll('.quiz-carte[data-quiz-source].quiz-repondu').forEach(c => {
+        try { mettreAJourBoutonDefi(c); } catch (e) { /* ignoré */ }
+    });
+}
+document.addEventListener('fonctions-actives', balayerBoutonsDefi);
+
+function fermerFenetreDefi() {
+    const ancienne = document.getElementById('defi-overlay');
+    if (ancienne) ancienne.remove();
+    document.removeEventListener('keydown', toucheFenetreDefi);
+}
+function toucheFenetreDefi(e) { if (e.key === 'Escape') fermerFenetreDefi(); }
+
+function creerElementDefi(balise, classe, texte) {
+    const el = document.createElement(balise);
+    if (classe) el.className = classe;
+    if (texte !== undefined) el.textContent = texte;
+    return el;
+}
+
+function ouvrirFenetreDefi(bouton) {
+    const bulle = bouton.closest('.bot-message');
+    if (!bulle) return;
+    const cartes = cartesDefiDeLaBulle(bulle);
+    const questions = [];
+    for (const c of cartes) {
+        try {
+            const q = JSON.parse(c.getAttribute('data-quiz-source'));
+            questions.push({ question: q.question, options: q.options, bonne: q.bonne, explication: q.explication || '' });
+        } catch (e) { /* carte illisible : le serveur refusera si elles ne sont pas 5 */ }
+    }
+    const score = cartes.filter(c => c.querySelector('.quiz-retour-juste')).length;
+    const matiere = formaterNomMatiere(avatarActif);
+    let pseudoMemorise = '';
+    try { pseudoMemorise = localStorage.getItem('eduka_defi_pseudo') || ''; } catch (e) { /* stockage indisponible */ }
+
+    fermerFenetreDefi();
+    const overlay = creerElementDefi('div', 'defi-overlay');
+    overlay.id = 'defi-overlay';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) fermerFenetreDefi(); });
+    const fenetre = creerElementDefi('div', 'defi-fenetre');
+    fenetre.setAttribute('role', 'dialog');
+    fenetre.setAttribute('aria-modal', 'true');
+    fenetre.setAttribute('aria-label', 'Défier un camarade');
+
+    const titreFenetre = creerElementDefi('h3', 'defi-titre-fenetre', '⚔️ Défier un camarade');
+    const aide = creerElementDefi('p', 'defi-aide', 'Ton camarade rejouera ces 5 questions depuis un lien, sans compte ni abonnement. Le lien est valable 7 jours.');
+
+    const labelTitre = creerElementDefi('label', 'defi-label', 'Titre du défi');
+    const champTitre = creerElementDefi('input', 'defi-champ');
+    champTitre.type = 'text'; champTitre.maxLength = 80;
+    champTitre.value = matiere + ' — Quiz de révision';
+    labelTitre.appendChild(champTitre);
+
+    const labelPseudo = creerElementDefi('label', 'defi-label', 'Ton pseudonyme (visible par tes camarades)');
+    const champPseudo = creerElementDefi('input', 'defi-champ');
+    champPseudo.type = 'text'; champPseudo.maxLength = 20; champPseudo.placeholder = 'Ex. : Awa';
+    champPseudo.value = pseudoMemorise;
+    labelPseudo.appendChild(champPseudo);
+
+    // Salles d'étude de cet appareil : permet de partager le défi directement dans une salle.
+    let sallesPossibles = [];
+    try {
+        if (fonctionActive('salle')) {
+            const l = JSON.parse(localStorage.getItem('eduka_salles') || '[]');
+            if (Array.isArray(l)) sallesPossibles = l.filter(x => x && /^[A-Z0-9]{8}$/.test(String(x.code || ''))).slice(0, 8);
+        }
+    } catch (e) { /* stockage indisponible : pas de partage en salle */ }
+    const labelSalle = creerElementDefi('label', 'defi-label', 'Partager aussi dans une salle d\u2019étude (facultatif)');
+    const choixSalle = creerElementDefi('select', 'defi-champ');
+    choixSalle.appendChild(new Option('Non, seulement le lien', ''));
+    sallesPossibles.forEach(x => choixSalle.appendChild(new Option('\uD83D\uDCDA ' + String(x.titre || 'Salle').slice(0, 60), x.code)));
+    labelSalle.appendChild(choixSalle);
+    if (!sallesPossibles.length) labelSalle.style.display = 'none';
+
+    const message = creerElementDefi('p', 'defi-message');
+    message.setAttribute('role', 'status');
+    const zoneResultat = creerElementDefi('div', 'defi-resultat');
+    zoneResultat.style.display = 'none';
+
+    const boutons = creerElementDefi('div', 'defi-boutons');
+    const btnAnnuler = creerElementDefi('button', 'defi-btn defi-btn-secondaire', 'Fermer');
+    btnAnnuler.type = 'button';
+    btnAnnuler.addEventListener('click', fermerFenetreDefi);
+    const btnCreer = creerElementDefi('button', 'defi-btn defi-btn-principal', 'Créer le lien');
+    btnCreer.type = 'button';
+    boutons.appendChild(btnAnnuler);
+    boutons.appendChild(btnCreer);
+
+    btnCreer.addEventListener('click', async () => {
+        const titre = champTitre.value.trim();
+        const pseudo = champPseudo.value.trim();
+        message.textContent = '';
+        if (!titre) { message.textContent = 'Donne un titre à ton défi.'; return; }
+        btnCreer.disabled = true;
+        btnCreer.textContent = 'Création…';
+        try {
+            let sceau = '';
+            try { sceau = localStorage.getItem('eduka_sceau') || ''; } catch (e) { /* stockage indisponible */ }
+            const reponse = await fetch('https://api.edukatchat.org/api/defis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ matricule: sceau, titre, pseudo, matiere, classe: classeActive, questions })
+            });
+            let donnees = {};
+            try { donnees = await reponse.json(); } catch (e) { /* réponse vide */ }
+            if (!reponse.ok) {
+                message.textContent = (reponse.status === 404)
+                    ? "Cette fonction n'est pas disponible pour le moment."
+                    : (typeof donnees.detail === 'string' ? donnees.detail : 'Impossible de créer le défi. Réessaie dans un instant.');
+                btnCreer.disabled = false;
+                btnCreer.textContent = 'Créer le lien';
+                return;
+            }
+            try { localStorage.setItem('eduka_defi_pseudo', pseudo); } catch (e) { /* stockage indisponible */ }
+            afficherLienDefi(fenetre, zoneResultat, donnees, titre, score);
+            const salleChoisie = choixSalle.value;
+            const codeDefi = (String(donnees.lien || '').match(/[A-Z0-9]{8}$/) || [''])[0];
+            if (salleChoisie && codeDefi) {
+                let appareilSalle = '';
+                try { appareilSalle = localStorage.getItem('eduka_appareil_defi') || ''; } catch (e) { /* ignoré */ }
+                let partage = false;
+                try {
+                    const r2 = await fetch('https://api.edukatchat.org/api/salles/' + salleChoisie + '/defi', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ appareil: appareilSalle, defi_code: codeDefi })
+                    });
+                    partage = r2.ok;
+                } catch (e) { /* réseau */ }
+                zoneResultat.appendChild(creerElementDefi('p', partage ? 'defi-succes' : 'defi-aide', partage
+                    ? '\u2705 Défi partagé dans ta salle d\u2019étude.'
+                    : 'Le défi est créé, mais n\u2019a pas pu être ajouté à la salle : colle son lien dans la salle.'));
+            }
+            labelSalle.style.display = 'none';
+            labelTitre.style.display = 'none';
+            labelPseudo.style.display = 'none';
+            aide.style.display = 'none';
+            btnCreer.remove();
+            btnAnnuler.textContent = 'Terminé';
+        } catch (e) {
+            message.textContent = 'Connexion impossible. Vérifie ta connexion et réessaie.';
+            btnCreer.disabled = false;
+            btnCreer.textContent = 'Créer le lien';
+        }
+    });
+
+    fenetre.append(titreFenetre, aide, labelTitre, labelPseudo, labelSalle, message, zoneResultat, boutons);
+    overlay.appendChild(fenetre);
+    document.body.appendChild(overlay);
+    document.addEventListener('keydown', toucheFenetreDefi);
+    champTitre.focus();
+}
+
+function afficherLienDefi(fenetre, zone, donnees, titre, score) {
+    zone.style.display = 'block';
+    zone.textContent = '';
+    zone.appendChild(creerElementDefi('p', 'defi-succes', '✅ Ton défi est prêt !'));
+    const boite = creerElementDefi('input', 'defi-champ defi-lien');
+    boite.type = 'text'; boite.readOnly = true; boite.value = donnees.lien || '';
+    boite.addEventListener('focus', () => boite.select());
+    zone.appendChild(boite);
+    const texteWhatsApp = 'Défi EdukaTchat : je viens de faire ' + score + '/' + DEFI_NB_QUESTIONS
+        + ' sur « ' + titre + ' ». Peux-tu faire mieux ? Joue ici (' + DEFI_NB_QUESTIONS
+        + ' questions, 2 minutes) : ' + (donnees.lien || '');
+    const rang = creerElementDefi('div', 'defi-boutons');
+    const btnWa = creerElementDefi('a', 'defi-btn defi-btn-principal', 'Partager sur WhatsApp');
+    btnWa.href = 'https://wa.me/?text=' + encodeURIComponent(texteWhatsApp);
+    btnWa.target = '_blank'; btnWa.rel = 'noopener noreferrer';
+    const btnCopier = creerElementDefi('button', 'defi-btn defi-btn-secondaire', 'Copier le lien');
+    btnCopier.type = 'button';
+    btnCopier.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(donnees.lien || '');
+            btnCopier.textContent = 'Lien copié ✓';
+        } catch (e) {
+            boite.focus(); boite.select();
+            btnCopier.textContent = 'Sélectionné : copie-le';
+        }
+    });
+    rang.append(btnWa, btnCopier);
+    zone.appendChild(rang);
+    zone.appendChild(creerElementDefi('p', 'defi-aide', 'Les résultats sont effacés 30 jours après la fin du défi.'));
+}
+
+
+// =======================================================================
+// ❖ BOUTONS « APRÈS DOCUMENT » (30/10/2026) ❖
+// Les boutons qui agissent sur le dernier document (variante, corrigé,
+// activités…) n'apparaissent qu'une fois un document généré : ils ne
+// prennent pas de place -- et ne provoquent aucun clic inutile -- au départ.
+// =======================================================================
+function majBoutonsApresDocument() {
+    document.querySelectorAll('.btn-suggestion[data-apres-doc]').forEach(b => {
+        const outil = b.dataset.outil;
+        let pret;
+        if (outil === 'sas') { // réponses d'élève souvent plus courtes : une bulle de plus de 150 caractères suffit
+            const h = document.getElementById('sas-chat-history');
+            pret = !!(h && Array.from(h.querySelectorAll('.bot-message')).some(m => (m.innerText || '').trim().length > 150));
+        } else {
+            pret = !!(outil && derniereReponseEnseignant(outil));
+        }
+        b.classList.toggle('doc-pret', pret);
+    });
+}
+(function () {
+    let minuteur = null;
+    const planifier = () => { clearTimeout(minuteur); minuteur = setTimeout(majBoutonsApresDocument, 400); };
+    const brancher = () => {
+        ['sas', 'atelier', 'forge', 'forge_primaire'].forEach(o => {
+            const h = document.getElementById(`${o}-chat-history`);
+            if (h && !h.dataset.obsApresDoc) {
+                h.dataset.obsApresDoc = '1';
+                new MutationObserver(planifier).observe(h, {childList: true, subtree: true, characterData: true});
+            }
+        });
+        majBoutonsApresDocument();
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', brancher); else brancher();
+    setTimeout(brancher, 3000);
+})();
+
+
+// ❖ 30/10/2026 : « Préparer la rentrée » n'apparaît que pendant les vacances scolaires,
+// de juillet à septembre inclus (il disparaît dès le 1er octobre).
+function majBoutonsSaisonniers() {
+    const mois = new Date().getMonth(); // 0 = janvier ; 6 = juillet ; 8 = septembre
+    const vacances = mois >= 6 && mois <= 8;
+    document.querySelectorAll('[data-saison-rentree]').forEach(b => { b.style.display = vacances ? '' : 'none'; });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', majBoutonsSaisonniers); else majBoutonsSaisonniers();
+
+
+// =======================================================================
+// ❖ SÉLECTEUR DE PHOTO AVEC BOUTON « + » (30/10/2026) ❖
+// À la place du champ « Choisir un fichier » : un bouton + ouvre un petit menu
+// (Appareil photo / Galerie), comme dans l'application Claude. L'input d'origine
+// est conservé (masqué) : tout le code existant continue de lire input.files.
+// =======================================================================
+function installerSelecteurPhoto(idInput) {
+    const principal = document.getElementById(idInput);
+    if (!principal || principal.dataset.selecteurPhoto) return;
+    principal.dataset.selecteurPhoto = '1';
+    principal.removeAttribute('capture');   // galerie / fichiers
+    principal.style.display = 'none';
+
+    const camera = document.createElement('input');
+    camera.type = 'file'; camera.accept = 'image/*'; camera.setAttribute('capture', 'environment');
+    camera.style.display = 'none';
+
+    const zone = document.createElement('div');
+    zone.className = 'photo-picker';
+    zone.innerHTML =
+        '<button type="button" class="photo-plus" aria-haspopup="true" aria-expanded="false" aria-label="Ajouter une photo" title="Ajouter une photo">' +
+        '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>' +
+        '<img class="photo-apercu" alt="" style="display:none">' +
+        '<span class="photo-nom">Aucune photo choisie</span>' +
+        '<div class="photo-menu" role="menu" style="display:none">' +
+        '<button type="button" role="menuitem" data-src="camera">📷&nbsp; Prendre une photo</button>' +
+        '<button type="button" role="menuitem" data-src="galerie">🖼️&nbsp; Choisir dans la galerie</button></div>';
+    principal.parentNode.insertBefore(zone, principal);
+    zone.appendChild(camera);
+
+    const plus = zone.querySelector('.photo-plus'), menu = zone.querySelector('.photo-menu');
+    const nom = zone.querySelector('.photo-nom'), apercu = zone.querySelector('.photo-apercu');
+    const fermer = () => { menu.style.display = 'none'; plus.setAttribute('aria-expanded', 'false'); };
+    plus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const ouvrir = menu.style.display === 'none';
+        menu.style.display = ouvrir ? 'block' : 'none';
+        plus.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
+    });
+    document.addEventListener('click', (e) => { if (!zone.contains(e.target)) fermer(); });
+    menu.addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-src]');
+        if (!b) return;
+        fermer();
+        (b.dataset.src === 'camera' ? camera : principal).click();
+    });
+    // Photo prise avec l'appareil : on la recopie dans l'input d'origine
+    camera.addEventListener('change', () => {
+        if (!camera.files || !camera.files.length) return;
+        try {
+            const dt = new DataTransfer();
+            dt.items.add(camera.files[0]);
+            principal.files = dt.files;
+        } catch (err) { /* navigateur ancien : on garde seulement l'aperçu */ }
+        camera.value = '';
+        principal.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+    let derniereUrl = '';
+    const rafraichir = () => {
+        const f = principal.files && principal.files[0];
+        const cle = f ? f.name + f.size + f.lastModified : '';
+        if (cle === zone.dataset.cle) return;
+        zone.dataset.cle = cle;
+        if (derniereUrl) { try { URL.revokeObjectURL(derniereUrl); } catch (e) {} derniereUrl = ''; }
+        if (f) {
+            nom.textContent = f.name.length > 28 ? f.name.slice(0, 25) + '…' : f.name;
+            nom.classList.add('choisie');
+            try { derniereUrl = URL.createObjectURL(f); apercu.src = derniereUrl; apercu.style.display = 'block'; } catch (e) {}
+        } else {
+            nom.textContent = 'Aucune photo choisie'; nom.classList.remove('choisie');
+            apercu.removeAttribute('src'); apercu.style.display = 'none';
+        }
+    };
+    principal.addEventListener('change', rafraichir);
+    setInterval(rafraichir, 800); // le code existant vide parfois le champ sans événement
+}
+document.addEventListener('DOMContentLoaded', () => {
+    installerSelecteurPhoto('planning-photo-input');
+    installerSelecteurPhoto('pre-abo-photo-input');
+});
+
+
+// ❖ CASIER DE FICHES (08/11/2026) : bouton « Ranger dans mon casier » sous les réponses du Sas.
+// Le navigateur n'envoie que les identifiants du message : le texte est relu côté serveur.
+// ❖ POINT DE DÉPART (09/11/2026) : avant d'ouvrir le casier, on retient l'espace et la matière de l'élève ;
+// le lien « Retour à EdukaTchat » du casier le ramène là (index.html?retour=1) au lieu de l'accueil.
+function memoriserPointDeDepart() {
+    try {
+        if ((espaceActuel === 'eleve' || espaceActuel === 'sas') && avatarActif) {
+            localStorage.setItem('eduka_retour', JSON.stringify({ espace: espaceActuel, avatar: avatarActif, t: Date.now() }));
+        } else {
+            // Enseignant : on retient l'espace (et la catégorie) pour le retour depuis Séances de classe / Ma bibliothèque.
+            const appVue = document.getElementById('app-view');
+            const tabs = document.getElementById('teacher-tabs-container');
+            const chooser = document.getElementById('teacher-categorie-chooser');
+            if (appVue && appVue.style.display === 'flex' && tabs && tabs.style.display !== 'none') {
+                const instit = ['forge_primaire', 'cabinet_primaire'].some(function (id) {
+                    const t = document.getElementById('tab-' + id); return t && t.classList.contains('active');
+                });
+                localStorage.setItem('eduka_retour', JSON.stringify({ espace: 'enseignant', categorie: instit ? 'instituteur' : 'professeur', t: Date.now() }));
+            } else if (appVue && appVue.style.display === 'flex' && chooser && chooser.style.display === 'flex') {
+                localStorage.setItem('eduka_retour', JSON.stringify({ espace: 'enseignant', categorie: null, t: Date.now() }));
+            } else {
+                localStorage.removeItem('eduka_retour');
+            }
+        }
+    } catch (e) { /* jamais bloquant */ }
+}
+document.addEventListener('click', function (e) {
+    try {
+        const a = e.target && e.target.closest ? e.target.closest('a[href="casier.html"], a[href="fiches.html"], a[href="salle.html"], a[href="excellence-archi.html"], a[href="bibliotheque.html"], a[href="seance.html"], a[href="seance-prof.html"]') : null;
+        if (a) memoriserPointDeDepart();
+    } catch (err) { /* jamais bloquant */ }
+}, true);
+
+function ajouterBoutonCasier(actionsDiv, messageId, conversationId) {
+    try {
+        const sceau = localStorage.getItem('eduka_sceau') || '';
+        if (!messageId || !conversationId || !sceau || sceau.indexOf('ENS-') === 0) return;
+        const b = document.createElement('button');
+        b.className = 'btn-action-doc';
+        b.type = 'button';
+        b.title = 'Ranger dans mon casier';
+        b.setAttribute('aria-label', 'Ranger dans mon casier');
+        b.textContent = '\uD83D\uDDC2\uFE0F Ranger';
+        b.style.cssText = 'width:auto;height:auto;padding:4px 12px;border-radius:999px;background:#FEF3C7;color:#92400E;border:1px solid #F59E0B;font-weight:700;font-size:12px;cursor:pointer;';
+        b.dataset.mid = messageId;
+        b.dataset.conv = conversationId;
+        b.addEventListener('click', function () { rangerDansCasier(b); });
+        actionsDiv.appendChild(b);
+    } catch (e) { /* le bouton ne doit jamais gêner la conversation */ }
+}
+
+async function rangerDansCasier(bouton) {
+    if (bouton.dataset.fait === '1') { memoriserPointDeDepart(); window.location.href = 'casier.html'; return; }
+    const ancien = bouton.textContent;
+    bouton.disabled = true;
+    bouton.textContent = '\u2026';
+    try {
+        const rep = await fetch('https://api.edukatchat.org/api/casier/enregistrer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricule: localStorage.getItem('eduka_sceau') || '', conversation_id: bouton.dataset.conv, message_id: bouton.dataset.mid })
+        });
+        const d = await rep.json().catch(function () { return {}; });
+        if (rep.ok) {
+            bouton.dataset.fait = '1';
+            bouton.textContent = '\u2705 Rang\u00e9';
+            bouton.title = 'Rangé dans ton casier \u2014 clique pour l\u2019ouvrir';
+            // ❖ Révision espacée : on dit à l'élève ce qui va se passer (sinon la fonction passe inaperçue).
+            try {
+                if (d.rappel_le && bouton.parentNode && bouton.parentNode.parentNode && !bouton.parentNode.parentNode.querySelector('.note-rappel')) {
+                    const note = document.createElement('div');
+                    note.className = 'note-rappel';
+                    note.style.cssText = 'text-align:right;font-size:12px;color:#6D28D9;font-weight:600;margin-top:4px;';
+                    const demain = new Date(); demain.setDate(demain.getDate() + 1);
+                    const jourDemain = demain.getFullYear() + '-' + String(demain.getMonth() + 1).padStart(2, '0') + '-' + String(demain.getDate()).padStart(2, '0');
+                    const quand = d.rappel_le === jourDemain ? 'demain' : 'le ' + String(d.rappel_le).split('-').reverse().join('/');
+                    note.textContent = '\u23F0 Je te la rappellerai ' + quand + ' pour la réviser en 3 questions.';
+                    bouton.parentNode.parentNode.appendChild(note);
+                }
+            } catch (e) { /* jamais bloquant */ }
+        } else {
+            bouton.textContent = ancien;
+            alert(typeof d.detail === 'string' ? d.detail : 'Impossible de ranger cette r\u00e9ponse pour le moment.');
+        }
+    } catch (e) {
+        bouton.textContent = ancien;
+        alert('Connexion impossible. R\u00e9essaie dans un instant.');
+    }
+    bouton.disabled = false;
+}
+
+// ❖ RÉVISION D'UNE FICHE DU CASIER (08/11/2026) : le bouton « Me réviser avec cette fiche » du casier ouvre le Sas
+// dans la matière de la fiche et lance une interrogation. Le texte de la fiche est joint à la question sans être affiché.
+// ❖ Invitation à garder l'essentiel (08/11/2026) : après quelques échanges, une fois par conversation, on propose
+// à l'élève abonné de transformer la leçon en fiche de révision rangeable dans son casier.
+function proposerFicheRevision(bulle) {
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    if (!sceau || sceau.indexOf('ENS-') === 0) return;
+    const histo = document.getElementById('sas-chat-history');
+    if (!histo) return;
+    const nbQuestions = histo.querySelectorAll('.user-message').length;
+    if (nbQuestions < 4) return;
+    const dernier = Array.from(histo.querySelectorAll('.user-message')).pop();
+    if (dernier && /fiche|interroge-moi|quiz/i.test(dernier.textContent || '')) return;
+    // Pas d'invitation dans une conversation de révision d'une fiche (mini-quiz de rappel ou « Me réviser avec cette fiche »).
+    if (window._rappelEnCours || Array.from(histo.querySelectorAll('.user-message')).some(function (m) { return /^\s*Interroge-moi (en 3 questions )?sur ma fiche/i.test(m.textContent || ''); })) return;
+    const cle = 'eduka_fiche_proposee_' + (sasConversationIds[avatarActif] || avatarActif);
+    // Deux invitations au maximum : après 4 questions, puis une seconde fois après 10.
+    try {
+        const deja = parseInt(sessionStorage.getItem(cle) || '0', 10);
+        if (deja >= 2) return;
+        if (deja === 1 && nbQuestions < 10) return;
+        sessionStorage.setItem(cle, String(deja + 1));
+    } catch (e) { return; }
+    histo.querySelectorAll('.proposition-fiche').forEach(function (x) { x.remove(); });
+    const bloc = document.createElement('div');
+    bloc.className = 'proposition-fiche';
+    bloc.style.cssText = 'margin-top:10px;padding:10px 14px;border-radius:12px;background:#ECFDF5;border:1px solid #6EE7B7;color:#065F46;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+    const t = document.createElement('span');
+    t.textContent = 'Tu veux garder l\u2019essentiel de cette leçon ?';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '\uD83D\uDCDD Faire ma fiche de révision';
+    b.style.cssText = 'padding:5px 12px;border-radius:999px;border:1px solid #10B981;background:#10B981;color:#fff;font-weight:700;font-size:12px;cursor:pointer;';
+    b.addEventListener('click', function () {
+        const champ = document.getElementById('sas-user-input');
+        if (!champ) return;
+        champ.value = "Fais-moi une fiche de révision de la leçon que nous venons de voir : l\u2019essentiel, les définitions ou formules, les erreurs à éviter et un exemple. Elle doit tenir sur une page, pour que je la range dans mon casier.";
+        bloc.remove();
+        sendSasMessage();
+    });
+    bloc.appendChild(t);
+    bloc.appendChild(b);
+    bulle.appendChild(bloc);
+}
+
+// ❖ RÉVISION ESPACÉE (09/11/2026) : à l'entrée dans le Sas, un bandeau propose les fiches du casier à revoir aujourd'hui
+// (celles des matières au programme de demain d'abord). Un clic lance un mini-quiz de 3 questions ; le score
+// (« Score : X/3 » écrit par l'agent) programme le rappel suivant côté serveur.
+const MATIERES_RAPPEL = ['maths','physique','informatique','svt','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
+
+function appelRappels(chemin, corps) {
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    return fetch('https://api.edukatchat.org' + chemin, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ matricule: sceau }, corps || {}))
+    }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, donnees: d }; });
+    }).catch(function () { return { ok: false, donnees: {} }; });
+}
+
+function afficherRappelsRevision() {
+    const ancien = document.getElementById('bandeau-rappels');
+    if (ancien) ancien.remove();
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    // Pas de code, ou code enseignant : pas de casier. Le serveur tranche pour le reste (ELV- valide ou code Créateur).
+    if (!sceau || sceau.indexOf('ENS-') === 0) return;
+    const matiere = MATIERES_RAPPEL.indexOf(avatarActif) !== -1 ? avatarActif : '';
+    appelRappels('/api/casier/rappels', { matiere: matiere }).then(function (res) {
+        const d = res.donnees || {};
+        if (!res.ok || d.status !== 'success' || !d.a_revoir || !d.a_revoir.length) return;
+        const conteneur = document.getElementById('container-sas-custom');
+        const histo = document.getElementById('sas-chat-history');
+        if (!conteneur || !histo || document.getElementById('bandeau-rappels')) return;
+        const bandeau = document.createElement('div');
+        bandeau.id = 'bandeau-rappels';
+        bandeau.style.cssText = 'margin:8px 12px 0;padding:10px 14px;border-radius:14px;background:#F5F3FF;border:1px solid #C4B5FD;color:#4C1D95;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+        const t = document.createElement('span');
+        t.style.fontWeight = '700';
+        const n = d.total || d.a_revoir.length;
+        t.textContent = '🧠 ' + n + (n > 1 ? ' fiches à revoir aujourd’hui' : ' fiche à revoir aujourd’hui');
+        bandeau.appendChild(t);
+        d.a_revoir.slice(0, 3).forEach(function (f) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            const titre = String(f.titre || 'Fiche');
+            b.textContent = (f.demain ? '⭐ ' : '') + (titre.length > 34 ? titre.slice(0, 33) + '…' : titre);
+            b.title = f.demain ? 'Cette matière est au programme de demain' : 'Réviser cette fiche en 3 questions';
+            b.style.cssText = 'padding:5px 12px;border-radius:999px;border:1px solid #7C3AED;background:#7C3AED;color:#fff;font-weight:700;font-size:12px;cursor:pointer;';
+            b.addEventListener('click', function () { lancerRappelFiche(f.id, titre); });
+            bandeau.appendChild(b);
+        });
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.textContent = '×';
+        x.title = 'Plus tard';
+        x.setAttribute('aria-label', 'Masquer');
+        x.style.cssText = 'margin-left:auto;border:none;background:transparent;color:#6D28D9;font-size:18px;cursor:pointer;line-height:1;';
+        x.addEventListener('click', function () { bandeau.remove(); });
+        bandeau.appendChild(x);
+        conteneur.insertBefore(bandeau, histo);
+    });
+}
+
+function lancerRappelFiche(id, titre) {
+    const champ = document.getElementById('sas-user-input');
+    if (!champ) return;
+    appelRappels('/api/casier/lire', { id: id }).then(function (res) {
+        const d = res.donnees || {};
+        if (!res.ok || !d.contenu) return;
+        const b = document.getElementById('bandeau-rappels');
+        if (b) b.remove();
+        window._rappelEnCours = { id: id };
+        window._contexteReviser = '\n\n[CONSIGNE DE RAPPEL — ne la recopie pas] L’élève révise sa fiche ci-dessous avec un mini-quiz. Pose-lui EXACTEMENT 3 questions courtes sur cette fiche, UNE SEULE à la fois, et attends sa réponse avant de passer à la suivante. Après chaque réponse, corrige en une ou deux phrases, avec bienveillance. Après la 3e réponse, termine par une phrase d’encouragement, puis écris sur une ligne seule, exactement : Score : X/3 (X = nombre de bonnes réponses, entre 0 et 3). N’écris jamais cette ligne avant la fin.\n\nFICHE :\n' + String(d.contenu || '').slice(0, 6000);
+        champ.value = 'Interroge-moi en 3 questions sur ma fiche « ' + titre.slice(0, 80) + ' ».';
+        sendSasMessage();
+    });
+}
+
+function traiterScoreRappel(bulle) {
+    const r = window._rappelEnCours;
+    if (!r) return;
+    const m = /Score\s*:\s*([0-3])\s*\/\s*3/i.exec(bulle.textContent || '');
+    if (!m) return;
+    window._rappelEnCours = null;
+    appelRappels('/api/casier/rappel_resultat', { id: r.id, score: parseInt(m[1], 10) }).then(function (res) {
+        const d = res.donnees || {};
+        if (!res.ok || d.status !== 'success') return;
+        const note = document.createElement('div');
+        note.style.cssText = 'margin-top:8px;font-size:12px;color:#6D28D9;font-weight:600;';
+        note.textContent = d.maitrisee ? '✅ Fiche maîtrisée, bravo !' : '⏰ Prochain rappel de cette fiche : ' + String(d.prochaine || '').split('-').reverse().join('/');
+        bulle.appendChild(note);
+    });
+}
+
+function consommerContexteReviser() {
+    const c = window._contexteReviser || '';
+    window._contexteReviser = '';
+    return c;
+}
+
+function lancerRevisionFiche() {
+    const r = window._reviserFiche;
+    if (!r) return;
+    window._reviserFiche = null;
+    const champ = document.getElementById('sas-user-input');
+    if (!champ) return;
+    window._contexteReviser = '\n\n[CONSIGNE DE RÉVISION — ne la recopie pas] L\u2019élève veut réviser avec sa fiche ci-dessous. Interroge-le sur cette fiche : pose UNE seule question à la fois, de la plus simple à la plus difficile, puis attends sa réponse. Corrige avec bienveillance, explique en une ou deux phrases, puis pose la question suivante. Après 5 questions, fais un petit bilan (points acquis, points à revoir). Ne réécris pas la fiche.\n[FICHE DE L\u2019ÉLÈVE]\n' + String(r.contenu || '').slice(0, 6000);
+    champ.value = 'Interroge-moi sur ma fiche \u00ab ' + String(r.titre || 'de révision').slice(0, 80) + ' \u00bb, une question à la fois.';
+    setTimeout(function () { try { sendSasMessage(); } catch (e) { /* jamais bloquant */ } }, 300);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (new URLSearchParams(location.search).get('retour') !== '1') return;
+        history.replaceState(null, '', location.pathname);
+        const brut = localStorage.getItem('eduka_retour');
+        localStorage.removeItem('eduka_retour');
+        const r = brut ? JSON.parse(brut) : null;
+        const retirer = function () { try { const e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); } catch (x) { /* ignoré */ } };
+        setTimeout(retirer, 8000);
+        // Enseignant : retour dans son espace (et sa catégorie).
+        if (r && r.espace === 'enseignant' && (Date.now() - (r.t || 0) < 6 * 3600 * 1000) && localStorage.getItem('eduka_sceau_enseignant')) {
+            setTimeout(function () {
+                try {
+                    entrerDansEspaceEnseignant();
+                    if (r.categorie) choisirCategorieEnseignant(r.categorie);
+                } catch (x) { /* jamais bloquant */ }
+                setTimeout(retirer, 700);
+            }, 600);
+            return;
+        }
+        const matieres = ['maths','physique','informatique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
+        // Valable 6 heures. L'Académie (espace « eleve ») exige un code d'accès ; l'Espace de Préparation (« sas », accès libre)
+        // n'en demande pas : le quota gratuit reste compté côté serveur (11/11/2026 : l'accès libre revenait à l'accueil).
+        const codeOuSas = !!localStorage.getItem('eduka_sceau') || (r && r.espace === 'sas');
+        if (!r || !r.avatar || !(Date.now() - (r.t || 0) < 6 * 3600 * 1000) || !codeOuSas || matieres.indexOf(r.avatar) === -1) { retirer(); return; }
+        setTimeout(function () {
+            try {
+                espaceActuel = (r.espace === 'sas') ? 'sas' : 'eleve'; majHabillageEspace();
+                entrerDansLeChat(r.avatar);
+            } catch (x) { /* jamais bloquant */ }
+            setTimeout(retirer, 700);
+        }, 600);
+    } catch (e) { /* jamais bloquant */ }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (new URLSearchParams(location.search).get('reviser') !== '1') return;
+        history.replaceState(null, '', location.pathname);
+        const brut = localStorage.getItem('eduka_reviser');
+        localStorage.removeItem('eduka_reviser');
+        const r = brut ? JSON.parse(brut) : null;
+        if (!r || !r.contenu) { const e0 = document.getElementById('voile-reviser-css'); if (e0 && e0.parentNode) e0.parentNode.removeChild(e0); return; }
+        const matieres = ['maths','physique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
+        window._reviserFiche = r;
+        // Écran d'attente (posé par index.html dès le premier affichage) : retiré une fois le Sas ouvert.
+        const retirerVoile = function () { try { const e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); } catch (e) { /* ignoré */ } };
+        setTimeout(retirerVoile, 8000); // sécurité : le voile ne reste jamais bloqué
+        setTimeout(function () {
+            if (!localStorage.getItem('eduka_sceau')) { window._reviserFiche = null; retirerVoile(); return; }
+            try {
+                espaceActuel = 'eleve'; majHabillageEspace();
+                if (matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
+                else { openSpace('eleve'); }
+            } catch (e) { /* jamais bloquant */ }
+            setTimeout(retirerVoile, 700);
+        }, 600);
+    } catch (e) { /* jamais bloquant */ }
+});
+
+// ❖ 13/11/2026 : « Demander à l'assistant » depuis la page publique Fiches et schémas (fiches.html).
+// Réservé aux abonnés Premium (code ELV- dans le navigateur ; le serveur revérifie à l'envoi du message).
+// Même principe que la révision depuis le casier : on ouvre le chat de la bonne matière et on envoie la question.
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (new URLSearchParams(location.search).get('schema') !== '1') return;
+        history.replaceState(null, '', location.pathname);
+        const brut = localStorage.getItem('eduka_schema');
+        localStorage.removeItem('eduka_schema');
+        let r = null;
+        try { r = brut ? JSON.parse(brut) : null; } catch (e) { r = null; }
+        const retirerVoile = function () { try { const e = document.getElementById('voile-reviser-css'); if (e && e.parentNode) e.parentNode.removeChild(e); } catch (x) { /* ignoré */ } };
+        setTimeout(retirerVoile, 8000);
+        const matieres = ['maths','physique','svt','tice','francais','philosophie','histoire_geo','edhc','anglais','espagnol','allemand','musique','arts_plastiques'];
+        const sceau = localStorage.getItem('eduka_sceau') || '';
+        if (!r || !r.titre || (Date.now() - (r.t || 0) > 3600 * 1000)) { retirerVoile(); return; }
+        window._schemaEnAttente = r;
+        setTimeout(function () {
+            try {
+                espaceActuel = 'eleve'; majHabillageEspace();
+                // Sans code d'abonné mémorisé : l'application demande le code (fenêtre habituelle), puis la matière ; la question part ensuite.
+                if (sceau && sceau.indexOf('ENS-') !== 0 && matieres.indexOf(r.matiere) !== -1) { entrerDansLeChat(r.matiere); }
+                else { openSpace('eleve'); }
+            } catch (e) { /* jamais bloquant */ }
+            setTimeout(retirerVoile, 700);
+        }, 600);
+    } catch (e) { /* jamais bloquant */ }
+});
+
+function lancerQuestionSchema() {
+    const r = window._schemaEnAttente;
+    if (!r) return;
+    window._schemaEnAttente = null;
+    if (espaceActuel !== 'eleve') return;   // réservé aux abonnés : jamais envoyée depuis l'accès libre
+    if (Date.now() - (r.t || 0) > 15 * 60 * 1000) return;   // question trop ancienne : on ne l'envoie plus
+    const champ = document.getElementById('sas-user-input');
+    if (!champ) return;
+    champ.value = 'Explique-moi ce schéma : \u00ab ' + String(r.titre).slice(0, 110) + ' \u00bb' + (r.niveau ? ' (' + r.niveau + ')' : '') + ', étape par étape.';
+    setTimeout(function () { try { sendSasMessage(); } catch (e) { /* jamais bloquant */ } }, 300);
+}
+
+document.addEventListener('fonctions-actives', function () {
+    try {
+        const bloc = document.getElementById('menu-nav-casier-bloc');
+        // Vitrine : le casier est visible pour tous les élèves (accès libre compris) ; sans code ELV-, sa page explique qu'il est réservé aux abonnés. Masqué pour un enseignant.
+        if (bloc) bloc.style.display = codeEnseignantPresent() ? 'none' : 'block';
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+});
+
+// Cap Excellence (20/11/2026) : la carte n'apparaît que si le serveur ouvre la fonction « excellence »
+// (créateur pendant les essais ; tout le monde quand FONCTIONS_EN_TEST contient excellence=TOUS). Masquée pour un enseignant.
+document.addEventListener('fonctions-actives', function () {
+    try {
+        const bloc = document.getElementById('menu-nav-excellence-bloc');
+        if (bloc) bloc.style.display = (fonctionActive('excellence') && !codeEnseignantPresent()) ? 'block' : 'none';
+        organiserMenuNavigation();
+    } catch (e) { /* le menu ne doit jamais gêner l'application */ }
+});
+
+// Aperçu enseignant (11/11/2026) : le lien « Découvrir l'abonnement » des pages Séance de classe / Ma bibliothèque
+// (sans code) revient ici avec ?abo=enseignant et ouvre la fenêtre d'abonnement enseignant.
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        if (new URLSearchParams(location.search).get('abo') !== 'enseignant') return;
+        history.replaceState(null, '', location.pathname);
+        setTimeout(function () { try { ouvrirEnseignantAboModal(); } catch (e) { /* jamais bloquant */ } }, 500);
+    } catch (e) { /* jamais bloquant */ }
+});
