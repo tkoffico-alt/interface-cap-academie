@@ -2787,3 +2787,12 @@ body.dark-theme .fiche-cours-eleve .fce-exercices .fce-titre, body.dark-theme .f
     .fiche-cours-eleve .fce-titre { break-after: avoid; page-break-after: avoid; }
     .fiche-cours-eleve li { break-inside: avoid; page-break-inside: avoid; }
 }
+
+/* ❖ 24/11/2026 — Bandeau de la fiche de cours : tout texte du bandeau reste blanc, même dans la bibliothèque
+   (dont la feuille de style colore les titres en brique). */
+.fiche-cours-eleve .fce-entete h1, .fiche-cours-eleve .fce-entete h2, .fiche-cours-eleve .fce-entete h3,
+.fiche-cours-eleve .fce-entete p, .fiche-cours-eleve .fce-entete strong { color: #FFFFFF; }
+@media print {
+    .fiche-cours-eleve .fce-entete h1, .fiche-cours-eleve .fce-entete h2, .fiche-cours-eleve .fce-entete h3,
+    .fiche-cours-eleve .fce-entete p, .fiche-cours-eleve .fce-entete strong { color: #1D3FA8 !important; }
+}

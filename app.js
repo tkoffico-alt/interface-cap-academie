@@ -4902,7 +4902,7 @@ function habillerFicheCoursEleve(html) {
     sortie.className = 'fiche-cours-eleve';
     const typeDe = (txt) => {
         const t = txt.replace(/[:\s]+$/, '').trim();
-        if (/^FICHE DE COURS$/i.test(t)) return 'entete';
+        if (/^FICHE DE COURS\b/i.test(t)) return 'entete';
         if (/^ce que je dois savoir faire$/i.test(t)) return 'savoir';
         if (/^ce que je retiens$/i.test(t)) return 'retiens';
         if (/^exercices?\b/i.test(t)) return 'exercices';
@@ -4929,8 +4929,15 @@ function habillerFicheCoursEleve(html) {
                 courant.className = 'fce-bloc fce-' + type;
                 const h = document.createElement(type === 'entete' ? 'h1' : 'h2');
                 h.className = 'fce-titre';
-                h.textContent = n.textContent.trim();
+                let titreTexte = n.textContent.trim(), sousTitre = '';
+                if (type === 'entete') {
+                    // « FICHE DE COURS — Arts plastiques, 6e : Couleur-matière » sur une seule ligne : le titre reste seul, le reste passe dessous.
+                    const m = /^FICHE DE COURS\s*[—–:\-]\s*(.+)$/i.exec(titreTexte);
+                    if (m) { titreTexte = 'FICHE DE COURS'; sousTitre = m[1].trim(); }
+                }
+                h.textContent = titreTexte;
                 courant.appendChild(h);
+                if (sousTitre) { const sp = document.createElement('p'); sp.textContent = sousTitre; courant.appendChild(sp); }
                 sortie.appendChild(courant);
                 return;
             }
@@ -7034,12 +7041,22 @@ function deduireMetaFicheForge(source) {
     const nettoyer = (v) => String(v || '').replace(/[*_`#]/g, '').replace(/\s+/g, ' ').replace(/^[\s:;\-–—]+|[\s;]+$/g, '').trim();
     const champ = (re) => { const m = re.exec(source || ''); return m ? nettoyer(m[1]).slice(0, 80) : ''; };
     const lignes = String(source || '').split('\n').map(l => nettoyer(l)).filter(Boolean);
-    if (lignes.length && /^FICHE DE COURS$/i.test(lignes[0]) && lignes[1]) {
-        // « Philosophie — 1ère A — L'État est-il nécessaire à l'homme ? »
-        const parts = lignes[1].split(/\s+[—–]\s+/);
-        const matiere = parts[0] || '', classe = parts.length >= 3 ? parts[1] : '';
-        const sujet = parts.length >= 3 ? parts.slice(2).join(' — ') : (parts[1] || '');
-        return { titre: ('Fiche de cours ' + matiere + (sujet ? ' — ' + sujet : '') + (classe ? ' (' + classe + ')' : '')).slice(0, 120), matiere: matiere.slice(0, 60), classe: classe.slice(0, 40) };
+    if (lignes.length && /^FICHE DE COURS\b/i.test(lignes[0])) {
+        // Deux formes vues : « Philosophie — 1ère A — Titre » (ligne 2) ou « FICHE DE COURS — Arts plastiques, 6e : Titre » (ligne 1).
+        let reste = lignes[0].replace(/^FICHE DE COURS\s*[—–:\-]?\s*/i, '').trim();
+        if (!reste && lignes[1]) reste = lignes[1];
+        let matiere = '', classe = '', sujet = '';
+        const A = reste.split(/\s+[—–]\s+/);
+        if (A.length >= 3) { matiere = A[0]; classe = A[1]; sujet = A.slice(2).join(' — '); }
+        else {
+            const m = /^(.+?),\s*([^:,]+?)\s*:\s*(.+)$/.exec(reste);
+            if (m) { matiere = m[1]; classe = m[2]; sujet = m[3]; }
+            else {
+                const m2 = /^(.+?)\s*[—–:]\s*(.+)$/.exec(reste);
+                if (m2) { matiere = m2[1]; sujet = m2[2]; } else { sujet = reste; }
+            }
+        }
+        return { titre: ('Fiche de cours' + (matiere ? ' ' + matiere : '') + (sujet ? ' — ' + sujet : '') + (classe ? ' (' + classe + ')' : '')).slice(0, 120), matiere: matiere.slice(0, 60), classe: classe.slice(0, 40) };
     }
     const sujet = champ(/^[\s\-•*#>]*(?:Titre de la le[çc]on|Le[çc]on|Lesson title|T[ií]tulo de la lecci[óo]n)\s*:\s*(.+)$/im);
     const matiere = champ(/^[\s\-•*#>]*(?:Discipline|Mati[èe]re|Subject|Asignatura|Fach)\s*:\s*(.+)$/im);
