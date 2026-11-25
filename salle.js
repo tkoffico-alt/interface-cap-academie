@@ -439,6 +439,18 @@
     img.onerror = function () { URL.revokeObjectURL(url); fin(null); };
     img.src = url;
   }
+  function agrandirPhoto(src) {
+    var fond = document.createElement('div');
+    fond.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;cursor:zoom-out;';
+    var big = document.createElement('img'); big.src = src; big.alt = 'Photo agrandie';
+    big.style.cssText = 'max-width:100%;max-height:88vh;object-fit:contain;border-radius:8px;background:#fff;';
+    var info = document.createElement('div'); info.textContent = 'Touche l\u2019écran pour fermer'; info.style.cssText = 'color:#fff;margin-top:10px;font-size:.9rem;';
+    fond.appendChild(big); fond.appendChild(info);
+    function fermer() { if (fond.parentNode) fond.parentNode.removeChild(fond); document.removeEventListener('keydown', touche); }
+    function touche(e) { if (e.key === 'Escape') fermer(); }
+    fond.addEventListener('click', fermer); document.addEventListener('keydown', touche);
+    document.body.appendChild(fond);
+  }
   function afficherPhotos(images) {
     var zone = $('pf-photos-liste'); zone.textContent = '';
     if (!images.length) { zone.appendChild(el('p', 'doux', 'Aucune photo pour l\u2019instant. Propose celle d\u2019un exercice sur lequel tu veux de l\u2019aide ou que tu veux partager.')); return; }
@@ -450,7 +462,8 @@
       var img = document.createElement('img'); img.alt = 'Photo d\u2019exercice proposée par ' + p.pseudo; img.style.cssText = 'width:100%;height:auto;border-radius:8px;background:#f1f5f9;min-height:60px;';
       if (photoCache[p.id]) { img.src = photoCache[p.id]; }
       else { appel('/' + code + '/image/voir', 'POST', { appareil: etat.appareil, id: p.id }).then(function (r) { if (r.ok && r.donnees.image) { photoCache[p.id] = r.donnees.image; img.src = r.donnees.image; } }); }
-      img.addEventListener('click', function () { if (img.src) window.open(img.src, '_blank'); });
+      img.style.cursor = 'zoom-in'; img.title = 'Touche pour agrandir';
+      img.addEventListener('click', function () { if (img.src) agrandirPhoto(img.src); });
       carte.appendChild(img);
       var bar = el('div', ''); bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;';
       if (!p.moi && !p.signale) {
