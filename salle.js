@@ -7,7 +7,7 @@
   var code = (new URLSearchParams(location.search).get('c') || '').trim().toUpperCase();
   var etat = { appareil: '', pseudo: '', donnees: null, occupe: false };
   var minuterie = null;
-  var OBJECTIFS = { devoir: 'Devoir', bepc: 'BEPC', bac: 'BAC', expose: 'Exposé', autre: 'Révisions' };
+  var OBJECTIFS = { devoir: 'Devoir', bepc: 'BEPC', bac: 'BAC', expose: 'Exposé', exercices: 'Exercices', autre: 'Révisions' };
   var REACTIONS = { bravo: '👏 Bravo', courage: '💪 Courage', merci: '🙏 Merci' };
 
   function $(id) { return document.getElementById(id); }
@@ -75,9 +75,20 @@
 
   /* ---------- Libellés selon l'objectif ---------- */
   function adapterFormulaire() {
-    var expose = ($('c-objectif').value === 'expose');
+    var expose = ($('c-objectif').value === 'expose'), exo = ($('c-objectif').value === 'exercices');
+    var EXO_DEF = 'Mathématiques\nSciences\nLettres';
     $('c-titre-label').textContent = expose ? 'Thème de l\u2019exposé' : 'Titre de la salle';
     $('c-titre').placeholder = expose ? 'Ex. : Le cacao en Côte d\u2019Ivoire' : 'Ex. : Révision BEPC de maths';
+    if (exo) {
+      $('c-titre').placeholder = 'Ex. : Exercices de 3e du groupe A';
+      $('c-chap-label').textContent = 'Rubriques (une par ligne, de 1 à 12) : matières ou thèmes';
+      $('c-chap-aide').textContent = 'Dans chaque rubrique, vous déposez un exercice en photo ; les camarades proposent leurs solutions. Pas de fiche ni de plan de révision.';
+      if (!$('c-chapitres').value.trim()) $('c-chapitres').value = EXO_DEF;
+      $('btn-suggerer').classList.add('cache');
+      return;
+    }
+    $('btn-suggerer').classList.toggle('cache', !!etat.binome);
+    if ($('c-chapitres').value === EXO_DEF) $('c-chapitres').value = '';
     $('c-chap-label').textContent = expose ? 'Parties de l\u2019exposé (une par ligne, une par élève)' : 'Chapitres à réviser (un par ligne, de 1 à 12)';
     $('c-chap-aide').textContent = expose ? 'Un exposé porte sur un thème : découpe-le en parties que vous vous répartirez (de 1 à 12).' : '';
     var zone = $('c-chapitres');
@@ -262,7 +273,18 @@
       }
       rappel.classList.remove('cache'); rappel.style.display = '';
     } else { rappel.style.display = 'none'; }
+    var exo = (d.objectif === 'exercices');
     d.plan.forEach(function (t, i) {
+      if (exo) {
+        var lx = el('li', 'tache'), cx = el('div', 'tache-corps');
+        cx.appendChild(el('div', 'tache-nom', t.texte));
+        cx.appendChild(el('div', 'tache-info', (t.nb_img || 0) + ' exercice' + (t.nb_img > 1 ? 's' : '') + ' en photo'));
+        var ax = el('div', 'tache-info');
+        var bx = el('button', 'btn-petit', '📷 Exercices et solutions' + (t.nb_img ? ' (' + t.nb_img + ')' : '') + (t.nb_fil ? ' · 💬 ' + t.nb_fil : '')); bx.type = 'button';
+        bx.addEventListener('click', function () { ouvrirFil(i, t.texte); });
+        ax.appendChild(bx); cx.appendChild(ax); lx.appendChild(cx); plan.appendChild(lx);
+        return;
+      }
       var fait = d.mes_faits.indexOf(i) !== -1;
       var li = el('li', 'tache' + (fait ? ' fait' : ''));
       var cb = el('input'); cb.type = 'checkbox'; cb.checked = fait;
@@ -334,7 +356,7 @@
     d.membres.forEach(function (m) {
       var li = el('li', 'membre' + (m.moi ? ' moi' : ''));
       li.appendChild(el('span', 'membre-nom', m.pseudo + (m.createur ? ' ⭐' : '') + (m.moi ? ' (moi)' : '')));
-      li.appendChild(el('span', 'membre-score', m.nb_faits + ' / ' + d.plan.length));
+      if (d.objectif !== 'exercices') li.appendChild(el('span', 'membre-score', m.nb_faits + ' / ' + d.plan.length));
       if (!m.moi) {
         var r = el('div', 'reactions');
         Object.keys(REACTIONS).forEach(function (cle) {
@@ -368,13 +390,19 @@
       li2.appendChild(a2); ld.appendChild(li2);
     });
     afficherFiches(d);
-    $('carte-suivi').classList.toggle('cache', !d.est_createur);
+    $('carte-suivi').classList.toggle('cache', !d.est_createur || d.objectif === 'exercices');
     $('btn-expose').classList.toggle('cache', d.objectif !== 'expose');
     $('btn-jury').classList.toggle('cache', d.objectif !== 'expose');
-    $('plan-titre').textContent = (d.objectif === 'expose') ? 'Les sections de l\u2019exposé' : 'Mon plan de révision';
-    $('plan-aide').textContent = (d.objectif === 'expose')
-      ? 'Prends une section, rédige-la et dépose-la ; coche-la quand elle est terminée. Tout le monde peut lire les sections des autres.'
-      : 'Coche un chapitre quand tu l\u2019as révisé. Si tu bloques, demande de l\u2019aide : tes camarades le verront.';
+    if (d.objectif === 'exercices') {
+      $('plan-titre').textContent = 'Les rubriques d\u2019exercices';
+      $('plan-aide').textContent = 'Choisis une rubrique, prends ton exercice en photo (1 par jour) et laisse tes camarades proposer leurs solutions. Marque-le « Résolu » quand tu as ta réponse.';
+      $('btn-fil-general').textContent = '📷 Exercices hors rubrique et discussion' + (d.nb_img_general ? ' · 📷 ' + d.nb_img_general : '');
+    } else {
+      $('plan-titre').textContent = (d.objectif === 'expose') ? 'Les sections de l\u2019exposé' : 'Mon plan de révision';
+      $('plan-aide').textContent = (d.objectif === 'expose')
+        ? 'Prends une section, rédige-la et dépose-la ; coche-la quand elle est terminée. Tout le monde peut lire les sections des autres.'
+        : 'Coche un chapitre quand tu l\u2019as révisé. Si tu bloques, demande de l\u2019aide : tes camarades le verront.';
+    }
     $('btn-quitter').classList.toggle('cache', d.est_createur);
     $('btn-fermer').classList.toggle('cache', !d.est_createur);
     $('btn-prolonger').classList.toggle('cache', !d.est_createur);
