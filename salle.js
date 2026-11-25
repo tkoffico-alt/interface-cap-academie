@@ -316,7 +316,7 @@
       }
       {
         var actD = el('div', 'tache-info');
-        var bd = el('button', 'btn-petit', '💬 Discussion' + (t.nb_fil ? ' (' + t.nb_fil + ')' : '')); bd.type = 'button';
+        var bd = el('button', 'btn-petit', '💬 Discussion' + (t.nb_fil ? ' (' + t.nb_fil + ')' : '') + (t.nb_img ? ' · 📷 ' + t.nb_img : '')); bd.type = 'button';
         bd.addEventListener('click', function () { ouvrirFil(i, t.texte); });
         actD.appendChild(bd); corps.appendChild(actD);
       }
@@ -329,7 +329,7 @@
       plan.appendChild(li);
     });
 
-    $('btn-fil-general').textContent = '💬 Discussion de la salle' + (d.nb_fil_general ? ' (' + d.nb_fil_general + ')' : '');
+    $('btn-fil-general').textContent = '💬 Discussion de la salle' + (d.nb_fil_general ? ' (' + d.nb_fil_general + ')' : '') + (d.nb_img_general ? ' · 📷 ' + d.nb_img_general : '');
     var liste = $('liste-membres'); liste.textContent = '';
     d.membres.forEach(function (m) {
       var li = el('li', 'membre' + (m.moi ? ' moi' : ''));
@@ -422,15 +422,88 @@
       if (enBas) { try { liste.scrollTop = liste.scrollHeight; } catch (e) {} }
     });
   }
+  /* ---------- Photos d'exercices (25/11/2026) : réduites par le téléphone, visibles des seuls membres ---------- */
+  var photoCache = {};
+  function reduirePhoto(fichier, fin) {
+    var url = URL.createObjectURL(fichier), img = new Image();
+    img.onload = function () {
+      try {
+        var max = 1200, k = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+        var q = 0.74, data = c.toDataURL('image/jpeg', q);
+        while (data.length * 0.75 > 250 * 1024 && q > 0.35) { q -= 0.08; data = c.toDataURL('image/jpeg', q); }
+        URL.revokeObjectURL(url); fin(data.length * 0.75 > 280 * 1024 ? null : data);
+      } catch (e) { fin(null); }
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); fin(null); };
+    img.src = url;
+  }
+  function afficherPhotos(images) {
+    var zone = $('pf-photos-liste'); zone.textContent = '';
+    if (!images.length) { zone.appendChild(el('p', 'doux', 'Aucune photo pour l\u2019instant. Propose celle d\u2019un exercice sur lequel tu veux de l\u2019aide ou que tu veux partager.')); return; }
+    images.forEach(function (p) {
+      var carte = el('div', ''); carte.style.cssText = 'margin:0 0 12px;padding:8px;border-radius:10px;border:1px solid var(--bord);';
+      var tete = el('div', 'doux', '📷 ' + p.pseudo + (p.moi ? ' (moi)' : '') + ' · ' + p.date + (p.signale ? ' · 🚩 signalée' : '')); tete.style.fontSize = '.85rem';
+      carte.appendChild(tete);
+      if (p.legende) { var lg = el('div', '', p.legende); lg.style.cssText = 'font-weight:600;margin:4px 0;overflow-wrap:anywhere;'; carte.appendChild(lg); }
+      var img = document.createElement('img'); img.alt = 'Photo d\u2019exercice proposée par ' + p.pseudo; img.style.cssText = 'width:100%;height:auto;border-radius:8px;background:#f1f5f9;min-height:60px;';
+      if (photoCache[p.id]) { img.src = photoCache[p.id]; }
+      else { appel('/' + code + '/image/voir', 'POST', { appareil: etat.appareil, id: p.id }).then(function (r) { if (r.ok && r.donnees.image) { photoCache[p.id] = r.donnees.image; img.src = r.donnees.image; } }); }
+      img.addEventListener('click', function () { if (img.src) window.open(img.src, '_blank'); });
+      carte.appendChild(img);
+      var bar = el('div', ''); bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;';
+      if (!p.moi && !p.signale) {
+        var bs = el('button', 'btn-petit', '🚩 Signaler'); bs.type = 'button';
+        bs.addEventListener('click', function () { if (!confirm('Signaler cette photo ? Elle sera masquée pour les autres membres.')) return; appel('/' + code + '/image/signaler', 'POST', { appareil: etat.appareil, id: p.id, valeur: 1 }).then(function () { chargerPhotos(); actualiser(true); }); });
+        bar.appendChild(bs);
+      }
+      if (p.signale && p.est_createur) {
+        var br = el('button', 'btn-petit', '✅ Rétablir'); br.type = 'button';
+        br.addEventListener('click', function () { appel('/' + code + '/image/signaler', 'POST', { appareil: etat.appareil, id: p.id, valeur: 0 }).then(function () { chargerPhotos(); actualiser(true); }); });
+        bar.appendChild(br);
+      }
+      if (p.peut_supprimer) {
+        var bx = el('button', 'btn-petit', '🗑 Supprimer'); bx.type = 'button';
+        bx.addEventListener('click', function () { if (!confirm('Supprimer cette photo ?')) return; appel('/' + code + '/image/supprimer', 'POST', { appareil: etat.appareil, id: p.id }).then(function () { chargerPhotos(); actualiser(true); }); });
+        bar.appendChild(bx);
+      }
+      if (bar.childNodes.length) carte.appendChild(bar);
+      zone.appendChild(carte);
+    });
+  }
+  function chargerPhotos() {
+    if (!filCourant) return;
+    var idx = filCourant.index;
+    appel('/' + code + '/image/liste', 'POST', { appareil: etat.appareil, index: idx }).then(function (res) {
+      if (!filCourant || filCourant.index !== idx || !res.ok) return;
+      afficherPhotos(res.donnees.images || []);
+    });
+  }
+  function envoyerPhoto(fichier) {
+    if (!filCourant || !fichier) return;
+    var msg = $('pf-photo-msg'), btn = $('pf-photo-btn'); msg.classList.remove('ok-msg'); msg.textContent = '';
+    if (!/^image\/(jpeg|png)$/.test(fichier.type)) { msg.textContent = 'Choisis une photo au format JPG ou PNG.'; return; }
+    btn.disabled = true; btn.textContent = '⏳ Envoi de la photo…';
+    reduirePhoto(fichier, function (data) {
+      if (!data) { btn.disabled = false; btn.textContent = '📷 Ajouter la photo d’un exercice'; msg.textContent = 'Photo illisible ou trop lourde. Réessaie avec une autre photo.'; return; }
+      appel('/' + code + '/image/ajouter', 'POST', { appareil: etat.appareil, index: filCourant.index, legende: $('pf-photo-legende').value.trim(), image: data }).then(function (res) {
+        btn.disabled = false; btn.textContent = '📷 Ajouter la photo d’un exercice';
+        if (!res.ok) { msg.textContent = messageErreur(res); return; }
+        $('pf-photo-legende').value = ''; msg.classList.add('ok-msg'); msg.textContent = 'Photo ajoutée ✓';
+        chargerPhotos(); actualiser(true);
+      });
+    });
+  }
   function ouvrirFil(index, titre) {
     fermerPanneaux();
     filCourant = { index: index };
     $('pf-titre').textContent = index < 0 ? '💬 Discussion de la salle' : '💬 ' + titre;
     $('pf-msg').textContent = ''; $('pf-saisie').value = ''; $('pf-compteur').textContent = '0 / 300';
-    $('pf-liste').textContent = '';
+    $('pf-liste').textContent = ''; $('pf-photos-liste').textContent = ''; $('pf-photo-msg').textContent = ''; $('pf-photo-legende').value = '';
     $('panneau-fil').classList.remove('cache');
     $('panneau-fil').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    chargerFil(false);
+    chargerFil(false); chargerPhotos();
     filMinuterie = setInterval(function () { if (!document.hidden) chargerFil(true); }, 15000);
   }
   function envoyerFil() {
@@ -1243,6 +1316,8 @@
     $('pf-fermer').addEventListener('click', fermerPanneaux);
     $('pf-envoyer').addEventListener('click', envoyerFil);
     $('btn-fil-general').addEventListener('click', function () { ouvrirFil(-1, ''); });
+    $('pf-photo-btn').addEventListener('click', function () { $('pf-photo-fichier').click(); });
+    $('pf-photo-fichier').addEventListener('change', function () { var f = this.files && this.files[0]; this.value = ''; envoyerPhoto(f); });
     $('pf-saisie').addEventListener('input', function () { $('pf-compteur').textContent = $('pf-saisie').value.length + ' / 300'; });
     $('pc-partager').addEventListener('click', partagerPaquet);
     $('pc-regenerer').addEventListener('click', function () {

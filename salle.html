@@ -287,6 +287,16 @@
       <div id="panneau-fil" class="carte cache">
         <h2 id="pf-titre">Discussion</h2>
         <p class="doux" id="pf-aide">Entraide entre membres de la salle : messages courts et polis. Pas de lien ni de numéro de téléphone.</p>
+        <div id="pf-photos" style="margin:12px 0;padding:12px;border-radius:12px;border:1px solid var(--bord)">
+          <h3 style="margin:0 0 6px">📷 Exercices en photo</h3>
+          <div id="pf-photos-liste"></div>
+          <p class="doux" style="margin:8px 0">Photographie seulement l’exercice : <strong>pas de visage, pas de nom</strong>. ⏳ 1 photo par jour et par personne.</p>
+          <input type="text" id="pf-photo-legende" maxlength="120" placeholder="Légende (facultatif) : par exemple « Exercice 3 page 45 »">
+          <input type="file" id="pf-photo-fichier" accept="image/jpeg,image/png" class="cache">
+          <p id="pf-photo-msg" class="erreur-msg" role="alert"></p>
+          <button type="button" id="pf-photo-btn" class="btn btn-sec">📷 Ajouter la photo d’un exercice</button>
+        </div>
+        <h3 style="margin:12px 0 6px">💬 Messages</h3>
         <ul id="pf-liste" class="liste" aria-live="polite" style="max-height:50vh;overflow-y:auto"></ul>
         <textarea id="pf-saisie" maxlength="300" style="min-height:80px" placeholder="Écris ton message (300 caractères au maximum)"></textarea>
         <div class="doux" id="pf-compteur">0 / 300</div>
@@ -416,6 +426,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=41" defer></script>
+<script src="salle.js?v=42" defer></script>
 </body>
 </html>
