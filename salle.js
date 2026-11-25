@@ -451,12 +451,73 @@
     fond.addEventListener('click', fermer); document.addEventListener('keydown', touche);
     document.body.appendChild(fond);
   }
+  /* ---------- Solutions proposées sous une photo d'exercice (25/11/2026) ---------- */
+  var solOuvertes = {};
+  function chargerSolutions(p, zone) {
+    appel('/' + code + '/solution/liste', 'POST', { appareil: etat.appareil, image_id: p.id }).then(function (res) {
+      if (!solOuvertes[p.id]) return;
+      zone.textContent = '';
+      if (!res.ok) { zone.appendChild(el('p', 'erreur-msg', messageErreur(res))); return; }
+      var x = res.donnees, sols = x.solutions || [];
+      function recharger() { chargerSolutions(p, zone); chargerPhotos(); }
+      var boite = el('div', ''); boite.style.cssText = 'padding:10px;border-radius:10px;background:var(--fond);border:1px dashed var(--bord);';
+      boite.appendChild(el('strong', '', '✍️ Solutions et pistes'));
+      boite.appendChild(el('p', 'doux', x.resolu ? '✅ Cet exercice est marqué comme résolu.' : 'Explique ta démarche : c\u2019est en expliquant qu\u2019on apprend. Ne donne pas seulement le résultat.'));
+      if (x.peut_resoudre) {
+        var br = el('button', 'btn-petit', x.resolu ? '↩ Rouvrir l\u2019exercice' : '✅ Marquer comme résolu'); br.type = 'button';
+        br.addEventListener('click', function () { appel('/' + code + '/solution/resoudre', 'POST', { appareil: etat.appareil, image_id: p.id, solution_id: x.resolu ? 0 : -1 }).then(recharger); });
+        boite.appendChild(br);
+      }
+      if (!sols.length) boite.appendChild(el('p', 'doux', 'Aucune réponse pour l\u2019instant. Sois le premier à proposer une piste.'));
+      sols.forEach(function (s) {
+        var c = el('div', ''); c.style.cssText = 'margin:8px 0;padding:8px 10px;border-radius:8px;background:var(--carte);border:1px solid ' + (s.retenue ? '#16A34A' : 'var(--bord)') + ';';
+        var t = el('div', 'doux', (s.retenue ? '⭐ Réponse retenue · ' : '') + s.pseudo + (s.moi ? ' (moi)' : '') + ' · ' + s.date); t.style.fontSize = '.82rem';
+        var corps = el('div', '', s.texte); corps.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0;';
+        c.appendChild(t); c.appendChild(corps);
+        var act = el('div', ''); act.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+        if (!s.moi) {
+          var bu = el('button', 'btn-petit' + (s.j_ai_vote ? ' actif' : ''), '👍 Utile' + (s.utiles ? ' (' + s.utiles + ')' : '')); bu.type = 'button';
+          bu.addEventListener('click', function () { appel('/' + code + '/solution/utile', 'POST', { appareil: etat.appareil, id: s.id }).then(recharger); });
+          act.appendChild(bu);
+        } else if (s.utiles) { act.appendChild(el('span', 'doux', '👍 ' + s.utiles + ' utile' + (s.utiles > 1 ? 's' : ''))); }
+        if (x.peut_resoudre && !s.retenue) {
+          var bk = el('button', 'btn-petit', '⭐ Retenir cette réponse'); bk.type = 'button';
+          bk.addEventListener('click', function () { appel('/' + code + '/solution/resoudre', 'POST', { appareil: etat.appareil, image_id: p.id, solution_id: s.id }).then(recharger); });
+          act.appendChild(bk);
+        }
+        if (s.peut_supprimer) {
+          var bd = el('button', 'btn-petit', '🗑'); bd.type = 'button'; bd.title = 'Supprimer cette réponse'; bd.setAttribute('aria-label', 'Supprimer cette réponse');
+          bd.addEventListener('click', function () { if (!confirm('Supprimer cette réponse ?')) return; appel('/' + code + '/solution/supprimer', 'POST', { appareil: etat.appareil, id: s.id }).then(recharger); });
+          act.appendChild(bd);
+        }
+        if (act.childNodes.length) c.appendChild(act);
+        boite.appendChild(c);
+      });
+      var ta = document.createElement('textarea'); ta.maxLength = 2000; ta.style.minHeight = '110px';
+      ta.placeholder = 'Écris ta solution ou ta piste (2000 caractères au maximum).';
+      var cpt = el('div', 'doux', '0 / 2000'); ta.addEventListener('input', function () { cpt.textContent = ta.value.length + ' / 2000'; });
+      var msg = el('p', 'erreur-msg', ''); msg.setAttribute('role', 'alert');
+      var bs = el('button', 'btn', 'Envoyer ma réponse'); bs.type = 'button';
+      bs.addEventListener('click', function () {
+        var texte = ta.value.trim(); msg.classList.remove('ok-msg');
+        if (texte.length < 3) { msg.textContent = 'Écris ta solution ou ta piste.'; return; }
+        bs.disabled = true; msg.textContent = '';
+        appel('/' + code + '/solution/ecrire', 'POST', { appareil: etat.appareil, image_id: p.id, texte: texte }).then(function (r2) {
+          bs.disabled = false;
+          if (!r2.ok) { msg.textContent = messageErreur(r2); return; }
+          recharger();
+        });
+      });
+      boite.appendChild(ta); boite.appendChild(cpt); boite.appendChild(msg); boite.appendChild(bs);
+      zone.appendChild(boite);
+    });
+  }
   function afficherPhotos(images) {
     var zone = $('pf-photos-liste'); zone.textContent = '';
     if (!images.length) { zone.appendChild(el('p', 'doux', 'Aucune photo pour l\u2019instant. Propose celle d\u2019un exercice sur lequel tu veux de l\u2019aide ou que tu veux partager.')); return; }
     images.forEach(function (p) {
       var carte = el('div', ''); carte.style.cssText = 'margin:0 0 12px;padding:8px;border-radius:10px;border:1px solid var(--bord);';
-      var tete = el('div', 'doux', '📷 ' + p.pseudo + (p.moi ? ' (moi)' : '') + ' · ' + p.date + (p.signale ? ' · 🚩 signalée' : '')); tete.style.fontSize = '.85rem';
+      var tete = el('div', 'doux', '📷 ' + p.pseudo + (p.moi ? ' (moi)' : '') + ' · ' + p.date + (p.signale ? ' · 🚩 signalée' : '') + (p.resolu ? ' · ✅ résolu' : '')); tete.style.fontSize = '.85rem';
       carte.appendChild(tete);
       if (p.legende) { var lg = el('div', '', p.legende); lg.style.cssText = 'font-weight:600;margin:4px 0;overflow-wrap:anywhere;'; carte.appendChild(lg); }
       var img = document.createElement('img'); img.alt = 'Photo d\u2019exercice proposée par ' + p.pseudo; img.style.cssText = 'width:100%;height:auto;border-radius:8px;background:#f1f5f9;min-height:60px;';
@@ -466,6 +527,13 @@
       img.addEventListener('click', function () { if (img.src) agrandirPhoto(img.src); });
       carte.appendChild(img);
       var bar = el('div', ''); bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;';
+      var zoneSol = el('div', ''); zoneSol.style.cssText = 'margin-top:8px;';
+      var bsol = el('button', 'btn-petit' + (solOuvertes[p.id] ? ' actif' : ''), '✍️ Solutions' + (p.nb_sol ? ' (' + p.nb_sol + ')' : '')); bsol.type = 'button';
+      bsol.addEventListener('click', function () {
+        if (solOuvertes[p.id]) { delete solOuvertes[p.id]; zoneSol.textContent = ''; bsol.classList.remove('actif'); }
+        else { solOuvertes[p.id] = true; bsol.classList.add('actif'); chargerSolutions(p, zoneSol); }
+      });
+      bar.appendChild(bsol);
       if (!p.moi && !p.signale) {
         var bs = el('button', 'btn-petit', '🚩 Signaler'); bs.type = 'button';
         bs.addEventListener('click', function () { if (!confirm('Signaler cette photo ? Elle sera masquée pour les autres membres.')) return; appel('/' + code + '/image/signaler', 'POST', { appareil: etat.appareil, id: p.id, valeur: 1 }).then(function () { chargerPhotos(); actualiser(true); }); });
@@ -482,6 +550,7 @@
         bar.appendChild(bx);
       }
       if (bar.childNodes.length) carte.appendChild(bar);
+      carte.appendChild(zoneSol); if (solOuvertes[p.id]) chargerSolutions(p, zoneSol);
       zone.appendChild(carte);
     });
   }
