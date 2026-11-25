@@ -629,7 +629,8 @@
         zone.appendChild(el('h3', null, '⭐ Les retours de tes camarades'));
         var sy = x.synthese;
         if (!sy || !sy.assez) {
-          zone.appendChild(el('p', 'doux', (sy && sy.nb ? sy.nb + ' retour reçu. ' : 'Aucun retour pour le moment. ') + 'La synthèse s\u2019affiche à partir de ' + (sy ? sy.min : 2) + ' retours, pour que chacun reste anonyme.'));
+          var nbr = sy && sy.nb ? sy.nb : 0, mini = sy ? sy.min : 2, reste = Math.max(1, mini - nbr);
+          zone.appendChild(el('p', 'doux', (nbr ? '✅ ' + nbr + ' retour reçu. ' : 'Aucun retour pour le moment. ') + 'Dès que ' + (nbr ? 'encore ' + reste + ' camarade' + (reste > 1 ? 's auront' : ' aura') + ' répondu' : mini + ' camarades auront répondu') + ', tu verras ici la synthèse (moyenne, ce qui a plu, pistes). Elle est anonyme : personne n’est nommé.'));
         } else {
           zone.appendChild(el('p', null, 'Moyenne : ' + String(sy.moyenne).replace('.', ',') + ' / 5 (' + sy.nb + ' retours)'));
           for (var n = 5; n >= 1; n--) {
