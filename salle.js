@@ -278,7 +278,7 @@
     $('salle-pct-ligne').classList.toggle('cache', exo); $('salle-barre-ligne').classList.toggle('cache', exo);
     d.plan.forEach(function (t, i) {
       if (exo) {
-        var lx = el('li', 'tache'), cx = el('div', 'tache-corps');
+        var lx = el('li', 'tache rub rub-' + (i % 6)), cx = el('div', 'tache-corps');
         cx.appendChild(el('div', 'tache-nom', t.texte));
         cx.appendChild(el('div', 'tache-info', (t.nb_img || 0) + ' exercice' + (t.nb_img > 1 ? 's' : '') + ' en photo'));
         var ax = el('div', 'tache-info');
@@ -398,8 +398,10 @@
     if (d.objectif === 'exercices') {
       $('plan-titre').textContent = 'Les rubriques d\u2019exercices';
       $('plan-aide').textContent = 'Choisis une rubrique, prends ton exercice en photo (1 par jour) et laisse tes camarades proposer leurs solutions. Marque-le « Résolu » quand tu as ta réponse.';
+      $('btn-fil-general').classList.add('exo');
       $('btn-fil-general').textContent = '📷 Exercices hors rubrique et discussion' + (d.nb_img_general ? ' · 📷 ' + d.nb_img_general : '');
     } else {
+      $('btn-fil-general').classList.remove('exo');
       $('plan-titre').textContent = (d.objectif === 'expose') ? 'Les sections de l\u2019exposé' : 'Mon plan de révision';
       $('plan-aide').textContent = (d.objectif === 'expose')
         ? 'Prends une section, rédige-la et dépose-la ; coche-la quand elle est terminée. Tout le monde peut lire les sections des autres.'

@@ -72,6 +72,19 @@
   .tache { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--option); }
   .tache.fait { background: var(--juste-fond); border-color: var(--juste-bord); }
   .tache input[type="checkbox"] { flex-shrink: 0; width: 26px; height: 26px; margin-top: 2px; accent-color: var(--juste-bord); cursor: pointer; }
+  /* Salle d'exercices : une teinte douce par rubrique (contraste par aplats, sans filets) */
+  .tache.rub { border: 0; box-shadow: 0 2px 8px rgba(15,23,42,.10); }
+  .tache.rub .tache-nom { font-size: 1.08rem; font-weight: 800; }
+  .tache.rub .btn-petit { background: #1D3FA8; border-color: #14307F; color: #FFFFFF; font-weight: 700; }
+  .rub-0 { background: #E8F0FE; } .rub-1 { background: #E6F6EC; } .rub-2 { background: #FFF1DC; }
+  .rub-3 { background: #F3E8FF; } .rub-4 { background: #FDE8EF; } .rub-5 { background: #E0F5F5; }
+  .rub-0 .tache-nom { color: #1D3FA8; } .rub-1 .tache-nom { color: #166534; } .rub-2 .tache-nom { color: #9A4A06; }
+  .rub-3 .tache-nom { color: #6B21A8; } .rub-4 .tache-nom { color: #9D174D; } .rub-5 .tache-nom { color: #0F6B6B; }
+  :root[data-theme="dark"] .rub-0 { background: #17233F; } :root[data-theme="dark"] .rub-1 { background: #14301F; }
+  :root[data-theme="dark"] .rub-2 { background: #332612; } :root[data-theme="dark"] .rub-3 { background: #28183B; }
+  :root[data-theme="dark"] .rub-4 { background: #3A1727; } :root[data-theme="dark"] .rub-5 { background: #123333; }
+  :root[data-theme="dark"] .tache.rub .tache-nom { color: #F1F5F9; }
+  #btn-fil-general.exo { background: #1D3FA8; border-color: #14307F; color: #FFFFFF; }
   .tache-corps { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .tache-nom { font-weight: 600; }
   /* 15/11/2026 : fiche de chapitre en couleurs, pour se repérer d'un coup d'œil */
@@ -427,6 +440,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=46" defer></script>
+<script src="salle.js?v=47" defer></script>
 </body>
 </html>
