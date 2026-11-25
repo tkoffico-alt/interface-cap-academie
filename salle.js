@@ -84,10 +84,10 @@
       $('c-chap-label').textContent = 'Rubriques (une par ligne, de 1 à 12) : matières ou thèmes';
       $('c-chap-aide').textContent = 'Dans chaque rubrique, vous déposez un exercice en photo ; les camarades proposent leurs solutions. Pas de fiche ni de plan de révision.';
       if (!$('c-chapitres').value.trim()) $('c-chapitres').value = EXO_DEF;
-      $('btn-suggerer').classList.add('cache');
+      $('btn-suggerer').classList.add('cache'); $('c-sug-note').classList.add('cache');
       return;
     }
-    $('btn-suggerer').classList.toggle('cache', !!etat.binome);
+    $('btn-suggerer').classList.toggle('cache', !!etat.binome); $('c-sug-note').classList.toggle('cache', !!etat.binome);
     if ($('c-chapitres').value === EXO_DEF) $('c-chapitres').value = '';
     $('c-chap-label').textContent = expose ? 'Parties de l\u2019exposé (une par ligne, une par élève)' : 'Chapitres à réviser (un par ligne, de 1 à 12)';
     $('c-chap-aide').textContent = expose ? 'Un exposé porte sur un thème : découpe-le en parties que vous vous répartirez (de 1 à 12).' : '';
@@ -131,7 +131,7 @@
   /* ---------- Création ---------- */
   function modeBinome(actif) {
     etat.binome = !!actif;
-    ['c-bloc-haut', 'c-bloc-classe', 'btn-suggerer'].forEach(function (id) { $(id).classList.toggle('cache', !!actif); });
+    ['c-bloc-haut', 'c-bloc-classe', 'btn-suggerer', 'c-sug-note'].forEach(function (id) { $(id).classList.toggle('cache', !!actif); });
     $('creation-titre').textContent = actif ? 'Étudier en binôme' : 'Créer une salle d\u2019étude';
     $('cree-info').textContent = actif ? 'Envoie ce lien à ton camarade (2 personnes en tout) :' : 'Envoie ce lien à tes camarades (2 à 4 personnes en tout) :';
     if (actif) $('c-objectif').value = 'autre';
@@ -274,6 +274,8 @@
       rappel.classList.remove('cache'); rappel.style.display = '';
     } else { rappel.style.display = 'none'; }
     var exo = (d.objectif === 'exercices');
+    if (exo) { rappel.style.display = 'none'; encAides.style.display = 'none'; }
+    $('salle-pct-ligne').classList.toggle('cache', exo); $('salle-barre-ligne').classList.toggle('cache', exo);
     d.plan.forEach(function (t, i) {
       if (exo) {
         var lx = el('li', 'tache'), cx = el('div', 'tache-corps');
