@@ -1070,7 +1070,7 @@
       var donnees = res.donnees, zone = $('pe-contenu'); zone.textContent = '';
       var brut = donnees.titre + '\n\n', html = '<h1>' + echapperHtml(donnees.titre) + '</h1>';
       donnees.sections.forEach(function (sec, k) {
-        var titre = (k + 1) + '. ' + sec.titre;
+        var titre = (k + 1) + '. ' + String(sec.titre || '').replace(/^\s*\d{1,2}\s*[.)]\s+/, '');   // évite « 1. 1. Titre » quand le titre commence déjà par son numéro
         zone.appendChild(el('h2', '', titre));
         zone.appendChild(el('p', sec.texte ? '' : 'doux', sec.texte || '(section pas encore rédigée' + (sec.auteur ? ' — ' + sec.auteur : '') + ')'));
         zone.lastChild.style.whiteSpace = 'pre-wrap';
