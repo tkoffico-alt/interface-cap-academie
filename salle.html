@@ -53,6 +53,14 @@
          cursor: pointer; text-decoration: none; }
   .btn:disabled { opacity: 0.6; cursor: default; }
   .btn-sec { background: transparent; color: var(--primaire); border: 2px solid var(--primaire); }
+  .ok-msg { color: #15803D !important; }
+  :root[data-theme="dark"] .ok-msg { color: #86EFAC !important; }
+  :root { --texte-fond: #FFFBEB; --texte-bord: #F59E0B; }
+  :root[data-theme="dark"] { --texte-fond: #2A2415; --texte-bord: #B45309; }
+  #pe-contenu p, #ps-texte { background: var(--texte-fond); border-left: 4px solid var(--texte-bord); border-radius: 8px; padding: 10px 12px; }
+  #pe-contenu p.doux { background: transparent; border-left-color: transparent; }
+  .rel-attention { font-weight: 700; padding: 10px 12px; border-radius: 10px; background: #FEF3C7; border: 2px solid #F59E0B; color: #78350F; }
+  :root[data-theme="dark"] .rel-attention { background: #3B2A0A; color: #FDE68A; }
   .erreur-msg { min-height: 1.3em; margin: 10px 0 0; color: var(--faux-texte); font-size: 0.92rem; font-weight: 600; }
   .barre { height: 10px; border-radius: 999px; background: var(--bord); overflow: hidden; margin: 6px 0 4px; }
   .barre > span { display: block; height: 100%; width: 0; background: var(--juste-bord); transition: width 0.3s ease; }
@@ -203,6 +211,7 @@
       <textarea id="c-chapitres" placeholder="Calcul littéral&#10;Théorème de Thalès&#10;Statistiques"></textarea>
       <p class="doux" id="c-chap-aide" style="margin:6px 0 0"></p>
       <button type="button" id="btn-suggerer" class="btn btn-sec">💡 Suggérer des parties (IA, facultatif)</button>
+      <p class="doux" style="margin:4px 0 8px">⏳ Limite : 5 suggestions par jour. Utilise-les quand tu es prêt(e).</p>
       <label for="c-pseudo">Ton pseudonyme</label>
       <input type="text" id="c-pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. : Awa">
       <p id="creation-msg" class="erreur-msg" role="alert"></p>
@@ -307,6 +316,7 @@
         <div id="ps-quiz" class="cache zone-retours"></div>
         <button type="button" id="ps-enregistrer" class="btn">Enregistrer ma section</button>
         <button type="button" id="ps-relire" class="btn btn-sec cache">🔍 Demander une relecture (IA)</button>
+        <p id="ps-relire-note" class="doux cache" style="margin:4px 0 8px">⏳ Quota : <strong>3 relectures par jour</strong> avec un abonnement, <strong>1 par jour</strong> sans. Termine d’abord ton texte, puis demande la relecture quand tu te sens prêt(e).</p>
         <button type="button" id="ps-liberer" class="btn btn-sec cache">Libérer cette section</button>
         <button type="button" id="ps-fermer" class="btn btn-sec">Fermer</button>
       </div>
@@ -328,7 +338,7 @@
         <div id="pe-contenu"></div>
         <div id="pe-relecture" style="margin:16px 0;padding:12px 14px;border-radius:12px;background:rgba(59,130,246,.10);border:1px solid #93C5FD">
           <h3 style="margin:0 0 6px">🔎 Relecture globale (IA)</h3>
-          <p class="doux" id="pe-rel-info" style="margin:0 0 8px">L’assistant relit toutes les parties ensemble : cohérence, répétitions, transitions. Il ne réécrit rien. <strong>Seul le créateur de la salle peut la lancer</strong> ; le résultat est ensuite visible par tous les membres.</p>
+          <p class="doux" id="pe-rel-info" style="margin:0 0 8px">L’assistant relit toutes les parties ensemble : cohérence, répétitions, transitions. Il ne réécrit rien. <strong>Seul le créateur de la salle peut la lancer</strong> ; le résultat est ensuite visible par tous les membres. <strong>⏳ 2 relectures globales par jour pour la salle</strong> : lance-la quand toutes les parties sont rédigées.</p>
           <div id="pe-rel-resultat"></div>
           <p id="pe-rel-msg" class="erreur-msg" role="alert"></p>
           <button type="button" id="pe-rel-lancer" class="btn btn-sec cache">🔎 Lancer la relecture globale</button>
@@ -406,6 +416,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=39" defer></script>
+<script src="salle.js?v=40" defer></script>
 </body>
 </html>

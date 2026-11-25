@@ -832,7 +832,7 @@
       $('ps-texte').readOnly = !mienne;
       $('ps-enregistrer').classList.toggle('cache', !mienne);
       $('ps-liberer').classList.toggle('cache', !(mienne || d.est_createur));
-      $('ps-relire').classList.toggle('cache', !mienne); $('ps-relecture').classList.add('cache'); $('ps-relecture').textContent = '';
+      $('ps-relire').classList.toggle('cache', !mienne); $('ps-relire-note').classList.toggle('cache', !mienne); $('ps-relecture').classList.add('cache'); $('ps-relecture').textContent = '';
       $('ps-relire').onclick = function () { relire(i); };
       $('ps-enregistrer').onclick = function () {
         $('ps-msg').textContent = '';
@@ -856,7 +856,7 @@
       $('ps-comm-enregistrer').onclick = function () {
         $('ps-comm-msg').textContent = '';
         appel('/' + code + '/section/commenter', 'POST', { appareil: etat.appareil, index: i, texte: $('ps-comm-saisie').value }).then(function (r4) {
-          $('ps-comm-msg').textContent = r4.ok ? 'Commentaire enregistré ✓' : messageErreur(r4);
+          $('ps-comm-msg').textContent = r4.ok ? 'Commentaire enregistré ✓' : messageErreur(r4); $('ps-comm-msg').classList.toggle('ok-msg', !!r4.ok);
           if (r4.ok) { actualiser(true); }
         });
       };
@@ -1091,9 +1091,10 @@
       var d = el('p', 'doux', 'Relecture du ' + (x.date ? x.date.slice(8, 10) + '/' + x.date.slice(5, 7) : '') + (x.a_jour ? '' : ' — des sections ont changé depuis : elle n’est plus à jour.'));
       d.style.marginTop = '8px'; zone.appendChild(d);
     } else {
-      zone.appendChild(el('p', 'doux', x.est_createur
-        ? (x.nb_redigees >= 2 ? 'La relecture n’a pas encore été lancée.' : 'Il faut au moins deux sections rédigées pour relire l’ensemble.')
-        : 'Le créateur de la salle n’a pas encore lancé la relecture globale. Elle sera visible ici dès qu’il l’aura lancée.'));
+      var vide = el('p', 'rel-attention', x.est_createur
+        ? (x.nb_redigees >= 2 ? '👉 Tu n’as pas encore lancé la relecture globale. Lance-la quand toutes les parties sont rédigées : l’assistant vérifiera que l’exposé se tient d’un bout à l’autre, et tous les membres verront ses conseils.' : 'Il faut au moins deux sections rédigées pour pouvoir relire l’ensemble. Rédigez-en d’abord quelques-unes !')
+        : '⏳ Le créateur de la salle n’a pas encore lancé la relecture globale. Elle sera visible ici dès qu’il l’aura lancée.');
+      zone.appendChild(vide);
     }
     var peutLancer = x.est_createur && estEleve() && x.nb_redigees >= 2 && !(r && x.a_jour);
     btn.classList.toggle('cache', !peutLancer);
