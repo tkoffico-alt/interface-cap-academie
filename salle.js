@@ -1063,6 +1063,55 @@
       $('panneau-jury').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
+  /* ---------- Relecture globale de l'exposé (25/11/2026) : lancée par le créateur, lisible par tous ---------- */
+  function afficherRelectureGlobale(x) {
+    var zone = $('pe-rel-resultat'); zone.textContent = '';
+    var btn = $('pe-rel-lancer'), msg = $('pe-rel-msg'); msg.textContent = '';
+    var r = x.resultat;
+    function liste(titre, tab) {
+      if (!tab || !tab.length) return;
+      var bloc = el('div', ''); bloc.style.marginTop = '8px';
+      bloc.appendChild(el('strong', '', titre));
+      var ul = el('ul', ''); ul.style.cssText = 'margin:4px 0 0;padding-left:20px;';
+      tab.forEach(function (t) { ul.appendChild(el('li', '', t)); });
+      bloc.appendChild(ul); zone.appendChild(bloc);
+    }
+    if (r) {
+      if (r.bilan) zone.appendChild(el('p', '', r.bilan));
+      liste('✅ Ce qui fonctionne', r.points_forts);
+      liste('🔁 Répétitions', r.repetitions);
+      liste('↪️ Transitions à soigner', r.transitions);
+      liste('⚠️ À vérifier ou à compléter', r.incoherences);
+      if (r.par_partie && r.par_partie.length) {
+        var bloc = el('div', ''); bloc.style.marginTop = '8px'; bloc.appendChild(el('strong', '', '📝 Un conseil par partie'));
+        var ul = el('ul', ''); ul.style.cssText = 'margin:4px 0 0;padding-left:20px;';
+        r.par_partie.forEach(function (pp) { var li = el('li', ''); li.appendChild(el('strong', '', pp.partie + ' : ')); li.appendChild(document.createTextNode(pp.conseil)); ul.appendChild(li); });
+        bloc.appendChild(ul); zone.appendChild(bloc);
+      }
+      var d = el('p', 'doux', 'Relecture du ' + (x.date ? x.date.slice(8, 10) + '/' + x.date.slice(5, 7) : '') + (x.a_jour ? '' : ' — des sections ont changé depuis : elle n’est plus à jour.'));
+      d.style.marginTop = '8px'; zone.appendChild(d);
+    } else {
+      zone.appendChild(el('p', 'doux', x.est_createur
+        ? (x.nb_redigees >= 2 ? 'La relecture n’a pas encore été lancée.' : 'Il faut au moins deux sections rédigées pour relire l’ensemble.')
+        : 'Le créateur de la salle n’a pas encore lancé la relecture globale. Elle sera visible ici dès qu’il l’aura lancée.'));
+    }
+    var peutLancer = x.est_createur && estEleve() && x.nb_redigees >= 2 && !(r && x.a_jour);
+    btn.classList.toggle('cache', !peutLancer);
+    btn.textContent = r ? '🔄 Relancer la relecture globale' : '🔎 Lancer la relecture globale';
+    btn.onclick = function () {
+      btn.disabled = true; msg.style.color = ''; msg.textContent = 'L’assistant relit votre exposé… (environ 30 secondes)';
+      appel('/' + code + '/expose/relecture/lancer', 'POST', { appareil: etat.appareil, matricule: sceauSalle() }).then(function (r2) {
+        btn.disabled = false;
+        if (!r2.ok) { msg.textContent = messageErreur(r2); return; }
+        chargerRelectureGlobale();
+      });
+    };
+  }
+  function chargerRelectureGlobale() {
+    appel('/' + code + '/expose/relecture/lire', 'POST', { appareil: etat.appareil }).then(function (res) {
+      if (res.ok) afficherRelectureGlobale(res.donnees);
+    });
+  }
   function ouvrirExpose() {
     fermerPanneaux();
     appel('/' + code + '/expose', 'POST', { appareil: etat.appareil }).then(function (res) {
@@ -1086,6 +1135,7 @@
         } catch (e) { $('pe-msg').textContent = 'Téléchargement impossible : utilise « Copier le texte ».'; }
       };
       $('pe-msg').textContent = '';
+      chargerRelectureGlobale();
       $('panneau-expose').classList.remove('cache');
       $('panneau-expose').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });

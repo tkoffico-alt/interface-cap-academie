@@ -326,6 +326,13 @@
       <div id="panneau-expose" class="carte cache">
         <h2>Exposé complet</h2>
         <div id="pe-contenu"></div>
+        <div id="pe-relecture" style="margin:16px 0;padding:12px 14px;border-radius:12px;background:rgba(59,130,246,.10);border:1px solid #93C5FD">
+          <h3 style="margin:0 0 6px">🔎 Relecture globale (IA)</h3>
+          <p class="doux" id="pe-rel-info" style="margin:0 0 8px">L’assistant relit toutes les parties ensemble : cohérence, répétitions, transitions. Il ne réécrit rien. <strong>Seul le créateur de la salle peut la lancer</strong> ; le résultat est ensuite visible par tous les membres.</p>
+          <div id="pe-rel-resultat"></div>
+          <p id="pe-rel-msg" class="erreur-msg" role="alert"></p>
+          <button type="button" id="pe-rel-lancer" class="btn btn-sec cache">🔎 Lancer la relecture globale</button>
+        </div>
         <p id="pe-msg" class="doux" role="status"></p>
         <button type="button" id="pe-copier" class="btn btn-sec">Copier le texte</button>
         <button type="button" id="pe-telecharger" class="btn">Télécharger pour Word (.doc)</button>
@@ -399,6 +406,6 @@
   <footer class="pied">EdukaTchat — réviser autrement, avec des camarades.</footer>
 </div>
 <script src="rendu-fiche.js?v=1" defer></script>
-<script src="salle.js?v=38" defer></script>
+<script src="salle.js?v=39" defer></script>
 </body>
 </html>
