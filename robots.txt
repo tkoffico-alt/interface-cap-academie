@@ -7,6 +7,7 @@ Disallow: /seance-prof.html
 Disallow: /bibliotheque.html
 Disallow: /carnet.html
 Disallow: /merci.html
+Disallow: /relais.html
 Disallow: /emploi-du-temps.html
 Disallow: /essai-enseignant.html
 Disallow: /defi.html

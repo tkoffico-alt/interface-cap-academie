@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Espace Relais — EdukaTchat</title>
+<link rel="icon" href="favicon.png">
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;background:#f3f7ff;margin:0;padding:1rem;color:#0f1b3d}
+  .boite{max-width:560px;margin:1rem auto;background:#fff;border-radius:18px;padding:1.5rem 1.2rem;box-shadow:0 8px 30px rgba(29,63,168,.12)}
+  .logo{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
+  .logo img{height:44px}
+  .logo b{font-size:1.25rem}
+  h1{font-size:1.2rem;margin:.2rem 0 .6rem}
+  label{display:block;font-weight:600;margin:.8rem 0 .25rem;font-size:.95rem}
+  input{width:100%;box-sizing:border-box;padding:.75rem;border:1.5px solid #cbd5e1;border-radius:10px;font-size:1rem}
+  button{margin-top:1rem;width:100%;background:#1d3fa8;color:#fff;border:0;border-radius:10px;padding:.85rem;font-size:1rem;font-weight:700;cursor:pointer}
+  .err{color:#b91c1c;margin-top:.7rem;min-height:1.2em}
+  .petit{font-size:.85rem;color:#64748b;line-height:1.4}
+  .cartes{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:1rem 0}
+  .carte{background:#f3f7ff;border-radius:12px;padding:.8rem}
+  .carte small{display:block;color:#475569;font-size:.8rem}
+  .carte b{font-size:1.3rem}
+  .carte.vert{background:#ecfdf5}.carte.vert b{color:#047857}
+  .carte.or{background:#fffbeb}.carte.or b{color:#b45309}
+  .carte.large{grid-column:1 / -1}
+  table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.5rem}
+  th,td{text-align:left;padding:.45rem .3rem;border-bottom:1px solid #e2e8f0}
+  th{color:#475569;font-size:.8rem}
+  td.m{text-align:right;white-space:nowrap}
+  .etat{font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:99px;white-space:nowrap}
+  .Acquis{background:#d1fae5;color:#047857}.En{background:#fef3c7;color:#b45309}.Hors,.Sans{background:#e2e8f0;color:#475569}
+  .lien{background:none;color:#1d3fa8;border:0;width:auto;margin:.8rem 0 0;padding:0;text-decoration:underline;font-weight:600}
+</style>
+</head>
+<body>
+<div class="boite">
+  <div class="logo"><img src="logo-entete.png" alt=""><b>EdukaTchat · Espace Relais</b></div>
+
+  <div id="connexion">
+    <h1>Suivez vos abonnements et vos gains</h1>
+    <p class="petit">Cette page est réservée au relais. Entrez votre code personnel et le numéro Wave/Orange donné à l'inscription.</p>
+    <label for="code">Votre code relais</label>
+    <input id="code" placeholder="REL-XXXXX" autocapitalize="characters" autocomplete="off">
+    <label for="tel">Votre numéro Wave / Orange</label>
+    <input id="tel" type="tel" inputmode="tel" placeholder="Ex. 07 00 00 00 00" autocomplete="tel">
+    <button id="ok">Voir mon suivi</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="suivi" style="display:none"></div>
+</div>
+<script>
+(function(){
+  var API='https://api.edukatchat.org/api/relais/suivi';
+  var $=function(i){return document.getElementById(i);};
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function f(n){return Number(n||0).toLocaleString('fr-FR').replace(/ /g,' ')+' FCFA';}
+  function dateFr(d){var p=String(d).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;}
+  try{var p=new URLSearchParams(location.search).get('ref');if(p)$('code').value=p;}catch(e){}
+  function afficher(d){
+    var lignes=d.detail.map(function(l){
+      var cls=l.etat.split(' ')[0];
+      var lib=l.type+(l.rang?(l.rang===1?' (1er enfant)':l.rang===2?' (2e enfant)':' ('+l.rang+'e enfant)'):'');
+      return '<tr><td>'+dateFr(l.date)+'</td><td>'+esc(lib)+'</td><td class="m">'+(l.montant?f(l.montant):'—')+'</td><td><span class="etat '+esc(cls)+'">'+esc(l.etat)+'</span></td></tr>';
+    }).join('');
+    $('suivi').innerHTML=
+      '<h1>Bonjour'+(d.nom?' '+esc(d.nom):'')+' 👋</h1>'+
+      '<div class="cartes">'+
+      '<div class="carte vert"><small>Gains acquis</small><b>'+f(d.acquis)+'</b></div>'+
+      '<div class="carte or"><small>En attente ('+d.delai_jours+' jours)</small><b>'+f(d.en_attente)+'</b></div>'+
+      '<div class="carte"><small>Déjà versé</small><b>'+f(d.deja_verse)+'</b></div>'+
+      '<div class="carte vert"><small>Reste à vous verser</small><b>'+f(d.reste_a_verser)+'</b></div>'+
+      '<div class="carte large"><small>Abonnements apportés</small><b>'+d.abonnements+'</b> <span class="petit">('+d.eleves+' élève(s), '+d.enseignants+' enseignant(s))</span></div>'+
+      '</div>'+
+      '<h1>Détail</h1>'+
+      (lignes?'<table><tr><th>Date</th><th>Abonnement</th><th style="text-align:right">Gain</th><th>État</th></tr>'+lignes+'</table>':'<p class="petit">Aucun abonnement pour le moment. Partagez votre lien : edukatchat.org/?ref='+esc($('code').value.trim().toUpperCase())+'</p>')+
+      '<p class="petit">Un gain devient « acquis » '+d.delai_jours+' jours après le paiement, puis il est versé le mois suivant par Wave ou Orange. Offre valable jusqu\'au '+dateFr(d.fin_offre)+'. Les renouvellements ne comptent pas.</p>'+
+      '<button class="lien" id="quitter">Me déconnecter</button>';
+    $('connexion').style.display='none';$('suivi').style.display='block';
+    $('quitter').onclick=function(){$('suivi').style.display='none';$('suivi').innerHTML='';$('tel').value='';$('connexion').style.display='block';};
+  }
+  $('ok').onclick=function(){
+    $('err').textContent='';
+    var code=$('code').value.trim(),tel=$('tel').value.trim();
+    if(!code||!tel){$('err').textContent='Merci de remplir les deux champs.';return;}
+    $('ok').disabled=true;$('ok').textContent='Un instant…';
+    fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,telephone:tel})})
+      .then(function(r){return r.json();})
+      .then(function(d){if(d.status==='success')afficher(d);else $('err').textContent=d.message||'Erreur.';})
+      .catch(function(){$('err').textContent='Connexion impossible. Réessayez.';})
+      .then(function(){$('ok').disabled=false;$('ok').textContent='Voir mon suivi';});
+  };
+})();
+</script>
+</body>
+</html>
