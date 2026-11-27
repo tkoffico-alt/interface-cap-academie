@@ -1048,7 +1048,7 @@ async function preAboApercuTarif() {
         if (seq !== preAboApercuSeq || d.status !== 'success' || !Array.isArray(d.enfants) || !d.enfants.length) return;
         const f = (x) => x.toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ');
         if (fam) {
-            if (zoneFam && d.enfants.length === noms.length) zoneFam.textContent = 'Total à payer : ' + f(d.total) + ' FCFA pour ' + noms.length + ' enfants (' + d.enfants.map(e => f(e.montant)).join(' + ') + ')';
+            if (zoneFam && d.enfants.length === noms.length) zoneFam.textContent = 'Total à payer : ' + f(d.total) + ' FCFA pour ' + noms.length + (noms.length > 1 ? ' enfants (' : ' enfant (') + d.enfants.map(e => f(e.montant)).join(' + ') + ')';
         } else if (zone) {
             const e = d.enfants[0];
             const rg = e.rang === 1 ? '' : ' (' + e.rang + (e.rang === 2 ? 'ᵉ' : 'ᵉ') + ' enfant du numéro' + (e.rang === 2 ? ', −15 %' : ', −25 %') + ')';
