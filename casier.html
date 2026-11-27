@@ -19,6 +19,17 @@
 </script>
 <link rel="stylesheet" href="seance.css?v=4">
 <style>.page{animation:pageIn .35s cubic-bezier(.22,.8,.3,1) both}main>*,.page main section,.page main .carte{animation:pageIn .4s cubic-bezier(.22,.8,.3,1) both}@view-transition{navigation:auto}@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.page,main>*,.page main section,.page main .carte{animation:none}}</style>
+<style>
+/* Titres de section du casier (27/11/2026) : chaque partie a sa couleur et son bandeau */
+#ecran-liste h2.titre-section{display:flex;align-items:center;gap:8px;margin:26px 0 10px;padding:10px 14px;border-radius:12px;border-left:6px solid var(--tc);background:var(--tf);color:var(--tc);font-size:1.05rem;font-weight:800;line-height:1.25}
+#ecran-liste .ts-afaire{--tc:#B45309;--tf:#FEF3C7}
+#ecran-liste .ts-erreurs{--tc:#6D28D9;--tf:#EDE9FE}
+#ecran-liste .ts-rangees{--tc:#1D3FA8;--tf:#E0E7FF}
+[data-theme="dark"] #ecran-liste .ts-afaire{--tc:#FCD34D;--tf:rgba(245,158,11,.16)}
+[data-theme="dark"] #ecran-liste .ts-erreurs{--tc:#C4B5FD;--tf:rgba(139,92,246,.2)}
+[data-theme="dark"] #ecran-liste .ts-rangees{--tc:#A5B4FC;--tf:rgba(99,102,241,.2)}
+#ecran-liste .liste{margin-top:0}
+</style>
 </head>
 <body>
 <div class="page">
@@ -39,17 +50,17 @@
       <p class="doux">Ici, tu ranges les fiches et les devoirs que EdukaTchat te donne, pour les retrouver quand tu veux. Pour ranger une fiche : clique sur 🗂️ sous sa réponse dans le Sas.</p>
 
       <div id="bloc-afaire" class="cache">
-        <h2>📝 Devoirs à faire</h2>
+        <h2 class="titre-section ts-afaire">📝 Devoirs à faire</h2>
         <ul id="liste-afaire" class="liste"></ul>
       </div>
 
       <div id="bloc-erreurs" class="cache">
-        <h2>🔁 Mes erreurs à revoir</h2>
+        <h2 class="titre-section ts-erreurs">🔁 Mes erreurs à revoir</h2>
         <p class="doux">Les notions que tu as ratées dans un devoir reviennent toutes seules : demain, puis dans 3, 7, 14 et 30 jours. Réussis 5 fois de suite et la notion est maîtrisée.</p>
         <ul id="liste-erreurs" class="liste"></ul>
       </div>
 
-      <h2>🗂️ Mes fiches et devoirs rangés</h2>
+      <h2 class="titre-section ts-rangees">🗂️ Mes fiches et devoirs rangés</h2>
       <p id="liste-vide" class="doux cache">Ton casier est vide pour le moment.</p>
       <ul id="liste-fiches" class="liste"></ul>
       <p id="liste-compteur" class="doux" style="margin-top:10px;"></p>
@@ -79,6 +90,6 @@
   </main>
   <footer class="pied no-print">EdukaTchat™ — Propriété Intellectuelle Exclusive</footer>
 </div>
-<script src="casier.js?v=11"></script>
+<script src="casier.js?v=12"></script>
 </body>
 </html>
