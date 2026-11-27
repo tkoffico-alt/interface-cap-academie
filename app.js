@@ -741,7 +741,7 @@ function fermerPlanningModal() {
 // ❖ L'ESPACE PARENTS (CHOIX EDT TALLY / EDT PROGRESSION) ❖
 // =======================================================================
 function ouvrirParentsModal() {
-    parentAboEtape(1); // ❖ toujours repartir de l'étape 1 à l'ouverture
+    parentAboEtape('accueil'); // ❖ 27/11/2026 : on repart de l'écran d'accueil à l'ouverture
     document.getElementById('parents-modal').classList.add('active');
 }
 
@@ -784,20 +784,61 @@ function enseignantAboEtape(etape) {
 // (progression/tally) plutôt qu'un simple numéro — même mécanique, cible
 // nommée directement par la méthode choisie.
 function parentAboEtape(etape) {
-    const IDS = ['parent-abo-etape-1', 'parent-abo-etape-2', 'parent-abo-etape-progression', 'parent-abo-etape-tally'];
-    let cible = 'parent-abo-etape-1';
-    let texte = 'ÉTAPE 1 / 3';
-    if (etape === 2) {
+    // ❖ 27/11/2026 : parcours découpé en écrans (accueil → WhatsApp → méthode → élève → photo → relecture/paiement).
+    const IDS = ['parent-abo-accueil', 'parent-abo-etape-1', 'parent-abo-etape-2', 'parent-abo-etape-progression', 'parent-abo-etape-tally'];
+    let cible = 'parent-abo-accueil';
+    let texte = '';
+    if (etape === 1) {
+        cible = 'parent-abo-etape-1';
+        texte = 'ÉTAPE 1';
+    } else if (etape === 2) {
         cible = 'parent-abo-etape-2';
-        texte = 'ÉTAPE 2 / 3';
+        texte = 'ÉTAPE 2';
     } else if (etape === 'progression') {
         cible = 'parent-abo-etape-progression';
-        texte = 'ÉTAPE 3 / 3';
+        preAboSousEcran('a');
+        texte = 'ÉTAPE 3 / 5';
     } else if (etape === 'tally') {
         cible = 'parent-abo-etape-tally';
         texte = 'ÉTAPE 3 / 3';
     }
     afficherEtapeAbo(IDS, cible, texte, 'parent-abo-indicateur');
+    const entete = document.getElementById('parent-abo-entete');
+    if (entete) entete.style.display = (cible === 'parent-abo-accueil') ? 'none' : '';
+}
+
+// ❖ Sous-écrans de l'étape « Progression » : a = qui est l'élève, b = photo et durée, c = relecture et paiement.
+let preAboSousCourant = 'a';
+function preAboSousEcran(nom) {
+    preAboSousCourant = nom;
+    const a = document.getElementById('pre-abo-sous-a');
+    const b = document.getElementById('pre-abo-sous-b');
+    const c = document.getElementById('pre-abo-relecture');
+    if (a) a.style.display = (nom === 'a') ? '' : 'none';
+    if (b) b.style.display = (nom === 'b') ? '' : 'none';
+    if (c && nom !== 'c') c.style.display = 'none';
+    const ind = document.getElementById('parent-abo-indicateur');
+    if (ind) ind.textContent = 'ÉTAPE ' + ({ a: 3, b: 4, c: 5 }[nom] || 3) + ' / 5';
+    const fb = document.getElementById('pre-abo-feedback');
+    if (fb && nom !== 'c') fb.textContent = '';
+}
+function preAboAllerPhoto() {
+    const telephone = document.getElementById('pre-abo-telephone').value.trim();
+    const nomEleve = document.getElementById('pre-abo-nom-eleve').value.trim();
+    const feedback = document.getElementById('pre-abo-feedback');
+    const erreur = (t) => { feedback.textContent = t; feedback.style.color = '#F59E0B'; };
+    if (!telephone) { erreur('Le numéro WhatsApp du parent est requis.'); return; }
+    if (!nomEleve) { erreur("Le nom de l'élève est requis."); return; }
+    if (preAboMode === 'famille') {
+        const rf = preAboEnfantsFamille(nomEleve);
+        if (rf.erreur) { erreur(rf.erreur); return; }
+    }
+    preAboSousEcran('b');
+}
+function preAboRetour() {
+    if (preAboSousCourant === 'c') { preAboReprendrePhoto(); return; }
+    if (preAboSousCourant === 'b') { preAboSousEcran('a'); return; }
+    parentAboEtape(2);
 }
 
 // ❖ EDT Progression, avant abonnement : la photo de l'emploi du temps est
@@ -1061,13 +1102,19 @@ async function preAboOuvrirPaiement(nomEleve, telephone, feedback) {
 }
 
 // ❖ RELECTURE DU PLANNING PAR LE PARENT AVANT PAIEMENT (27/10/2026) ❖
-function preAboAfficherRelecture(creneaux) { relectureAfficher('pre-abo', creneaux); }
+function preAboAfficherRelecture(creneaux) {
+    relectureAfficher('pre-abo', creneaux);
+    preAboSousEcran('c');
+    const c = document.getElementById('pre-abo-relecture');
+    if (c) c.style.display = 'block';
+}
 function preAboAjouterLigne() { relectureAjouter('pre-abo'); }
 function preAboReprendrePhoto() {
     const zone = document.getElementById('pre-abo-relecture');
     if (zone) zone.style.display = 'none';
     const input = document.getElementById('pre-abo-photo-input');
     if (input) input.value = '';
+    preAboSousEcran('b');
     const feedback = document.getElementById('pre-abo-feedback');
     if (feedback) { feedback.textContent = 'Choisissez une autre photo, plus nette si possible.'; feedback.style.color = '#F59E0B'; }
 }

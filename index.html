@@ -1513,23 +1513,25 @@
         <div class="glass-card modal-content" style="max-width: 620px; max-height: 90vh; overflow-y: auto;">
             <button class="modal-close" onclick="fermerParentsModal()">×</button>
             <h3 style="text-align: center; margin-bottom: 10px;">🛡️ Espace Parents</h3>
-            <div style="text-align: center; margin-bottom: 18px;">
-                <a href="carnet.html" target="_blank" style="display: inline-block; padding: 9px 18px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #1D4ED8; border-radius: 8px; font-weight: bold; font-size: 0.85em; text-decoration: none;">📊 Voir le Carnet de progression de mon enfant</a>
-                <p style="font-size: 0.78em; opacity: 0.75; margin: 6px 0 0;">Avec un guide pour comprendre les chiffres et les couleurs.</p>
-                <a href="emploi-du-temps.html" target="_blank" style="display: inline-block; margin-top: 12px; padding: 9px 18px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #1D4ED8; border-radius: 8px; font-weight: bold; font-size: 0.85em; text-decoration: none;">🗓️ Voir l'emploi du temps de mon enfant</a>
+            <div id="parent-abo-accueil" class="abo-etape">
+                <p style="text-align: center; color: #4B5563; margin-bottom: 14px; font-size: 0.9em;">Que souhaitez-vous faire ?</p>
+                <a href="carnet.html" target="_blank" style="display: block; padding: 14px 16px; margin-bottom: 10px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #1D4ED8; border-radius: 10px; font-weight: bold; text-decoration: none; text-align: center;">📊 Voir le Carnet de progression de mon enfant<br><span style="font-weight: normal; font-size: 0.78em; opacity: 0.8;">Avec un guide pour comprendre les chiffres et les couleurs.</span></a>
+                <a href="emploi-du-temps.html" target="_blank" style="display: block; padding: 14px 16px; margin-bottom: 10px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #1D4ED8; border-radius: 10px; font-weight: bold; text-decoration: none; text-align: center;">🗓️ Voir l'emploi du temps de mon enfant</a>
+                <button type="button" onclick="parentAboEtape(1)" style="display: block; width: 100%; padding: 14px 16px; background-color: #10B981; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 1em; cursor: pointer;">📝 M'abonner<br><span style="font-weight: normal; font-size: 0.78em;">Un parcours guidé, étape par étape</span></button>
             </div>
 
-            <div style="border-top: 1px dashed rgba(107, 114, 128, 0.3); margin: 0 0 18px 0;"></div>
+            <div id="parent-abo-entete" style="display: none;">
+                <h4 style="text-align: center; margin: 0 0 4px 0; color: #1F2937;">📝 S'abonner</h4>
+                <p id="parent-abo-indicateur" class="indicateur-etape-abo">ÉTAPE 1</p>
+            </div>
 
-            <h4 style="text-align: center; margin: 0 0 4px 0; color: #1F2937;">📝 S'abonner : le parcours en 3 étapes</h4>
-            <p id="parent-abo-indicateur" class="indicateur-etape-abo">ÉTAPE 1 / 3</p>
-
-            <div id="parent-abo-etape-1" class="abo-etape">
+            <div id="parent-abo-etape-1" class="abo-etape" style="display: none;">
                 <p style="text-align: center; color: #4B5563; margin-bottom: 16px; font-size: 0.9em;">Dites-nous bonjour sur WhatsApp avant de payer — votre code d'accès pourra alors vous être transmis instantanément sur ce même canal, dès l'abonnement validé.</p>
                 <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 18px; text-align: center;">
                     <a href="https://wa.me/2250142674315?text=Bonjour" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 6px; font-weight: bold; font-size: 0.85em; text-decoration: none;">💬 Dire bonjour sur WhatsApp</a>
                 </div>
                 <button class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; width: 100%;" onclick="parentAboEtape(2)">C'est fait, continuer →</button>
+                <button class="btn-retour-etape-abo" style="margin-top: 10px;" onclick="parentAboEtape('accueil')">← Retour</button>
             </div>
 
             <div id="parent-abo-etape-2" class="abo-etape" style="display: none;">
@@ -1552,6 +1554,7 @@
 
             <div id="parent-abo-etape-progression" class="abo-etape" style="display: none;">
                 <div style="background: rgba(255,255,255,0.5); border-radius: 10px; padding: 18px; text-align: center;">
+                    <div id="pre-abo-sous-a" class="pre-abo-sous">
                     <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
                     <h4 style="margin-bottom: 6px; color: #1F2937;">EDT Progression <span style="font-size: 0.65em; font-weight: normal; color: #10B981;">✅ Recommandé</span></h4>
                     <p style="font-size: 0.85em; color: #4B5563; margin-bottom: 14px;">Envoyez directement la photo de l'emploi du temps de votre enfant : elle sera prête dès l'activation de votre abonnement.</p>
@@ -1575,6 +1578,12 @@
                         <p id="pre-abo-prix-famille" style="margin:8px 0 0 0; font-size:0.8em; color:#065F46; font-weight:700;"></p>
                         <p style="margin:4px 0 0 0; font-size:0.72em; color:#6B7280;">Montant estimé : le tarif exact tient aussi compte des enfants déjà abonnés avec ce numéro.</p>
                     </div>
+                    <button type="button" id="btn-pre-abo-continuer" class="btn-action-doc" style="justify-content: center; background-color: #3B82F6; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="preAboAllerPhoto()">Continuer →</button>
+                    </div>
+
+                    <div id="pre-abo-sous-b" class="pre-abo-sous" style="display:none;">
+                    <div style="font-size: 1.8em; margin-bottom: 8px;">📸</div>
+                    <h4 style="margin-bottom: 10px; color: #1F2937;">La photo de l'emploi du temps</h4>
                     <p id="pre-abo-label-photo" style="margin:0 0 4px 0; font-size:0.78em; color:#4B5563; text-align:left;">📸 Photo de l'emploi du temps de l'élève (obligatoire)</p>
                     <input type="file" id="pre-abo-photo-input" accept="image/*" capture="environment" style="width: 100%; margin-bottom: 10px; font-size: 0.8em;">
                     <select id="pre-abo-duree" style="width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 5px; border: 1px solid #D1D5DB; font-size: 0.85em;">
@@ -1587,6 +1596,7 @@
                     <p id="pre-abo-note-tarif" style="margin:-4px 0 10px 0; font-size:0.72em; color:#6B7280; text-align:left;">Un autre enfant est déjà abonné avec ce numéro ? Le tarif famille s'applique automatiquement à l'abonnement d'un mois (−15 % pour le 2ᵉ enfant, −25 % à partir du 3ᵉ).</p>
                     <p style="margin: 0 0 8px 0; color:#92400E; background:#FEF3C7; border-radius:8px; padding:6px 8px; font-size:0.75em; text-align:left;">📸 Photo nette, bien droite, toute la page visible, sans ombre ni reflet. Vous pourrez corriger avant de payer.</p>
                     <button id="btn-pre-abonnement" class="btn-action-doc" style="justify-content: center; background-color: #10B981; color: white; border: none; display: block; width: 100%; margin-bottom: 6px;" onclick="envoyerPhotoPreAbonnement()">📎 Lire la photo</button>
+                    </div>
                     <p id="pre-abo-feedback" class="feedback-text" style="font-size: 0.75em; margin: 0 0 10px 0; min-height: 16px;"></p>
                     <!-- ❖ 27/10/2026 : relecture avant paiement (rempli par app.js) -->
                     <div id="pre-abo-relecture" style="display:none; text-align:left; margin-bottom:10px;">
@@ -1599,7 +1609,7 @@
                         </div>
                     </div>
                 </div>
-                <button class="btn-retour-etape-abo" onclick="parentAboEtape(2)">← Retour</button>
+                <button class="btn-retour-etape-abo" onclick="preAboRetour()">← Retour</button>
             </div>
 
             <div id="parent-abo-etape-tally" class="abo-etape" style="display: none;">
@@ -2099,7 +2109,7 @@
          comme katex.js, pour la même raison (ABCJS.renderAbc doit exister au
          moment du premier rendu de réponse). -->
     <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
-    <script src="app.js?v=3.99"></script>
+    <script src="app.js?v=4.00"></script>
     <script src="visite-guidee.js?v=4"></script>
     <script src="centres-interet.js?v=7"></script>
 
