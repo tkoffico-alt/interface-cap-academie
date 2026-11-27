@@ -30,6 +30,8 @@
     var d = res.donnees && res.donnees.detail;
     return typeof d === 'string' ? d : 'Une erreur est survenue. Réessaie.';
   }
+  var LIB_MAT = { maths: 'maths', physique: 'physique-chimie', informatique: 'TICE', tice: 'TICE', svt: 'SVT', francais: 'français', philosophie: 'philosophie', histoire_geo: 'histoire-géo', edhc: 'EDHC', anglais: 'anglais', espagnol: 'espagnol', allemand: 'allemand', musique: 'éducation musicale', arts_plastiques: 'arts plastiques' };
+  function libMat(m) { var k = String(m || '').toLowerCase(); return LIB_MAT[k] || String(m || '').replace(/_/g, ' '); }
   function dateCourte(s) { return String(s || '').slice(0, 10).split('-').reverse().join('/'); }
 
   /* ---------- Rendu Markdown sûr (DOM, jamais innerHTML) ---------- */
@@ -121,14 +123,14 @@
     $('bloc-afaire').classList.toggle('cache', !attente.length);
     var ua = $('liste-afaire'); ua.textContent = '';
     attente.forEach(function (d) {
-      ua.appendChild(ligne('Devoir de ' + d.matiere, d.date ? 'donné le ' + dateCourte(d.date) : '', 'Ouvrir', function () { ouvrir({ devoir_matiere: d.matiere }); }));
+      ua.appendChild(ligne('Devoir ' + (/^[aeiouyéèh]/i.test(libMat(d.matiere)) ? 'd’' : 'de ') + libMat(d.matiere), d.date ? 'donné le ' + dateCourte(d.date) : '', 'Ouvrir', function () { ouvrir({ devoir_matiere: d.matiere }); }));
     });
     var ul = $('liste-fiches'); ul.textContent = '';
     etat.fiches.forEach(function (f) {
       var type = f.source === 'devoir' ? '📝 Devoir' : '📄 Fiche';
       var rappel = '';
       if (f.source !== 'devoir') { rappel = f.maitrisee ? '✅ maîtrisée' : (f.rappel ? '⏰ rappel le ' + String(f.rappel).slice(5).split('-').reverse().join('/') : ''); }
-      var infos = [type, f.matiere, dateCourte(f.date), rappel].filter(Boolean).join(' · ');
+      var infos = [type, libMat(f.matiere), dateCourte(f.date), rappel].filter(Boolean).join(' · ');
       ul.appendChild(ligne(f.titre, infos, 'Ouvrir', function () { ouvrir({ id: f.id }); }));
     });
     $('liste-vide').classList.toggle('cache', etat.fiches.length > 0);
@@ -240,7 +242,7 @@
   function afficherFiche(f, corps, horsConnexion) {
     etat.courante = { id: corps.id, contenu: f.contenu, enAttente: !!corps.devoir_matiere };
     $('fiche-titre').textContent = f.titre;
-    $('fiche-meta').textContent = [f.source === 'devoir_en_attente' ? 'Devoir à faire' : (f.source === 'devoir' ? 'Devoir' : 'Fiche'), f.matiere, f.date ? dateCourte(f.date) : ''].filter(Boolean).join(' · ');
+    $('fiche-meta').textContent = [f.source === 'devoir_en_attente' ? 'Devoir à faire' : (f.source === 'devoir' ? 'Devoir' : 'Fiche'), libMat(f.matiere), f.date ? dateCourte(f.date) : ''].filter(Boolean).join(' · ');
     /* un devoir s'affiche dans un cadre (comme dans les fiches), le texte copié reste le texte brut */
     var estDevoir = (f.source === 'devoir' || f.source === 'devoir_en_attente') && String(f.contenu || '').indexOf('```') < 0;
     rendre(estDevoir ? '```\n' + f.contenu + '\n```' : f.contenu, $('fiche-corps'));
