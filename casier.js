@@ -188,6 +188,30 @@
       });
     })();
   }
+  /* ---------- Carnet d'erreurs (27/11/2026) ---------- */
+  function afficherErreurs(donnees) {
+    var liste = (donnees && donnees.erreurs) || [];
+    $('bloc-erreurs').classList.toggle('cache', !liste.length);
+    var ul = $('liste-erreurs'); ul.textContent = '';
+    var total = donnees && donnees.etapes ? donnees.etapes : 5;
+    liste.forEach(function (e) {
+      var info;
+      if (e.maitrisee) info = '✅ maîtrisée';
+      else if (e.a_revoir) info = '⏰ à revoir aujourd’hui';
+      else info = '⏰ prochain rappel le ' + dateCourte(e.prochaine);
+      var infos = [e.matiere, info, e.maitrisee ? '' : (e.etape + '/' + total + ' réussites')].filter(Boolean).join(' · ');
+      if (e.maitrisee) { ul.appendChild(ligne(e.notion, infos, '', function () {})); ul.lastChild.querySelector('button').remove(); return; }
+      ul.appendChild(ligne(e.notion, infos, 'Me retester', function () {
+        try {
+          localStorage.setItem('eduka_reviser', JSON.stringify({ matiere: e.avatar || '', matiere_libelle: e.matiere || '', titre: e.notion || '', erreur_id: e.id, contenu: 'Notion à retravailler : ' + (e.notion || '') }));
+          window.location.href = 'index.html?reviser=1';
+        } catch (x) { /* stockage indisponible */ }
+      }));
+    });
+  }
+  function chargerErreurs() {
+    appel('/erreurs').then(function (res) { if (res.ok && res.donnees && res.donnees.status === 'success') afficherErreurs(res.donnees); });
+  }
   function chargerListe() {
     ecran('chargement');
     appel('/liste').then(function (res) {
@@ -196,6 +220,7 @@
         memoriserListe(res.donnees);
         bandeauHorsConnexion(false);
         afficherListe(res.donnees);
+        chargerErreurs();
         precharger();
         return;
       }

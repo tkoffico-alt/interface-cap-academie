@@ -8784,7 +8784,9 @@ function afficherRappelsRevision() {
     const matiere = MATIERES_RAPPEL.indexOf(avatarActif) !== -1 ? avatarActif : '';
     appelRappels('/api/casier/rappels', { matiere: matiere }).then(function (res) {
         const d = res.donnees || {};
-        if (!res.ok || d.status !== 'success' || !d.a_revoir || !d.a_revoir.length) return;
+        const aRevoir = d.a_revoir || [];
+        const erreursDues = d.erreurs || [];
+        if (!res.ok || d.status !== 'success' || (!aRevoir.length && !erreursDues.length)) return;
         const conteneur = document.getElementById('container-sas-custom');
         const histo = document.getElementById('sas-chat-history');
         if (!conteneur || !histo || document.getElementById('bandeau-rappels')) return;
@@ -8793,10 +8795,20 @@ function afficherRappelsRevision() {
         bandeau.style.cssText = 'margin:8px 12px 0;padding:10px 14px;border-radius:14px;background:#F5F3FF;border:1px solid #C4B5FD;color:#4C1D95;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
         const t = document.createElement('span');
         t.style.fontWeight = '700';
-        const n = d.total || d.a_revoir.length;
-        t.textContent = '🧠 ' + n + (n > 1 ? ' fiches à revoir aujourd’hui' : ' fiche à revoir aujourd’hui');
+        const n = (d.total || aRevoir.length) + (d.erreurs_total || erreursDues.length);
+        t.textContent = '🧠 ' + n + (n > 1 ? ' rappels à revoir aujourd’hui' : ' rappel à revoir aujourd’hui');
         bandeau.appendChild(t);
-        d.a_revoir.slice(0, 3).forEach(function (f) {
+        erreursDues.forEach(function (e) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            const notion = String(e.notion || 'Notion');
+            b.textContent = '🔁 ' + (notion.length > 32 ? notion.slice(0, 31) + '…' : notion);
+            b.title = 'Une notion à retravailler : 3 questions pour la revoir';
+            b.style.cssText = 'padding:5px 12px;border-radius:999px;border:1px solid #D97706;background:#D97706;color:#fff;font-weight:700;font-size:12px;cursor:pointer;';
+            b.addEventListener('click', function () { lancerRappelErreur(e.id, notion, e.matiere); });
+            bandeau.appendChild(b);
+        });
+        aRevoir.slice(0, 3).forEach(function (f) {
             const b = document.createElement('button');
             b.type = 'button';
             const titre = String(f.titre || 'Fiche');
@@ -8833,18 +8845,31 @@ function lancerRappelFiche(id, titre) {
     });
 }
 
+// ❖ Carnet d'erreurs (27/11/2026) : mini-quiz de 3 questions sur une notion ratée dans un devoir ; même mécanique que les fiches.
+function lancerRappelErreur(id, notion, matiere) {
+    const champ = document.getElementById('sas-user-input');
+    if (!champ) return;
+    const b = document.getElementById('bandeau-rappels');
+    if (b) b.remove();
+    window._rappelEnCours = { id: id, type: 'erreur' };
+    window._contexteReviser = '\n\n[CONSIGNE DE RAPPEL — ne la recopie pas] L’élève s’est trompé sur la notion « ' + notion.slice(0, 120) + ' »' + (matiere ? ' (' + matiere + ')' : '') + ' dans un devoir corrigé. Pose-lui EXACTEMENT 3 questions courtes sur cette notion, UNE SEULE à la fois, de difficulté progressive, et attends sa réponse avant de passer à la suivante. Après chaque réponse, corrige en une ou deux phrases, avec bienveillance. Après la 3e réponse, termine par une phrase d’encouragement, puis écris sur une ligne seule, exactement : Score : X/3 (X = nombre de bonnes réponses, entre 0 et 3). N’écris jamais cette ligne avant la fin.';
+    champ.value = 'Interroge-moi en 3 questions sur la notion « ' + String(notion || '').slice(0, 80) + ' » que j’ai ratée.';
+    sendSasMessage();
+}
+
 function traiterScoreRappel(bulle) {
     const r = window._rappelEnCours;
     if (!r) return;
     const m = /Score\s*:\s*([0-3])\s*\/\s*3/i.exec(bulle.textContent || '');
     if (!m) return;
     window._rappelEnCours = null;
-    appelRappels('/api/casier/rappel_resultat', { id: r.id, score: parseInt(m[1], 10) }).then(function (res) {
+    const estErreur = r.type === 'erreur';
+    appelRappels(estErreur ? '/api/casier/erreur_resultat' : '/api/casier/rappel_resultat', { id: r.id, score: parseInt(m[1], 10) }).then(function (res) {
         const d = res.donnees || {};
         if (!res.ok || d.status !== 'success') return;
         const note = document.createElement('div');
         note.style.cssText = 'margin-top:8px;font-size:12px;color:#6D28D9;font-weight:600;';
-        note.textContent = d.maitrisee ? '✅ Fiche maîtrisée, bravo !' : '⏰ Prochain rappel de cette fiche : ' + String(d.prochaine || '').split('-').reverse().join('/');
+        note.textContent = d.maitrisee ? (estErreur ? '✅ Notion maîtrisée, bravo !' : '✅ Fiche maîtrisée, bravo !') : '⏰ Prochain rappel ' + (estErreur ? 'de cette notion : ' : 'de cette fiche : ') + String(d.prochaine || '').split('-').reverse().join('/');
         bulle.appendChild(note);
     });
 }
@@ -8861,6 +8886,14 @@ function lancerRevisionFiche() {
     window._reviserFiche = null;
     const champ = document.getElementById('sas-user-input');
     if (!champ) return;
+    if (r.erreur_id) {
+        const notion = String(r.titre || ''); const matiere = String(r.matiere_libelle || '');
+        window._rappelEnCours = { id: r.erreur_id, type: 'erreur' };
+        window._contexteReviser = '\n\n[CONSIGNE DE RAPPEL — ne la recopie pas] L’élève s’est trompé sur la notion « ' + notion.slice(0, 120) + ' »' + (matiere ? ' (' + matiere + ')' : '') + ' dans un devoir corrigé. Pose-lui EXACTEMENT 3 questions courtes sur cette notion, UNE SEULE à la fois, de difficulté progressive, et attends sa réponse avant de passer à la suivante. Après chaque réponse, corrige en une ou deux phrases, avec bienveillance. Après la 3e réponse, termine par une phrase d’encouragement, puis écris sur une ligne seule, exactement : Score : X/3 (X = nombre de bonnes réponses, entre 0 et 3). N’écris jamais cette ligne avant la fin.';
+        champ.value = 'Interroge-moi en 3 questions sur la notion « ' + notion.slice(0, 80) + ' » que j’ai ratée.';
+        setTimeout(function () { try { sendSasMessage(); } catch (e) { /* jamais bloquant */ } }, 300);
+        return;
+    }
     window._contexteReviser = '\n\n[CONSIGNE DE RÉVISION — ne la recopie pas] L\u2019élève veut réviser avec sa fiche ci-dessous. Interroge-le sur cette fiche : pose UNE seule question à la fois, de la plus simple à la plus difficile, puis attends sa réponse. Corrige avec bienveillance, explique en une ou deux phrases, puis pose la question suivante. Après 5 questions, fais un petit bilan (points acquis, points à revoir). Ne réécris pas la fiche.\n[FICHE DE L\u2019ÉLÈVE]\n' + String(r.contenu || '').slice(0, 6000);
     champ.value = 'Interroge-moi sur ma fiche \u00ab ' + String(r.titre || 'de révision').slice(0, 80) + ' \u00bb, une question à la fois.';
     setTimeout(function () { try { sendSasMessage(); } catch (e) { /* jamais bloquant */ } }, 300);
