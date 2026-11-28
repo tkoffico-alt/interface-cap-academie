@@ -8977,7 +8977,7 @@ function lancerCalendrierRevision(ev) {
             corps = 'L’élève a ' + g.indef + ' de ' + lib + ' AUJOURD’HUI. Ne fais pas de calendrier. Propose-lui une révision éclair de 10 minutes : 3 questions courtes sur l’essentiel, une à la fois, avec correction bienveillante, puis un mot d’encouragement. ' + priorite;
         } else {
             corps = 'L’élève a ' + g.indef + ' de ' + lib + ' le ' + jourFr(dateEval) + ' (' + textePresDans(ev.jours) + '). Jours disponibles pour réviser : ' + jours.join(', ') + '. ' + priorite +
-                ' Écris directement un titre « Mon calendrier avant ' + g.def + ' de ' + lib + ' » puis les jours : UNE ligne par jour, chaque ligne = UNE notion + UNE action concrète (refaire un exercice, répondre à 3 questions, relire sa fiche) + une durée courte (10 à 20 minutes). Le dernier jour : se tester sans nouvelle notion et se reposer. ' +
+                ' Écris directement un titre « Mon calendrier avant ' + g.def + ' de ' + lib + ' » puis les jours : UNE ligne par jour, avec le nom du jour et la date en gras (par exemple **Samedi 28/11** : …), chaque ligne = UNE notion + UNE action concrète (refaire un exercice, répondre à 3 questions, relire sa fiche) + une durée courte (10 à 20 minutes). Le dernier jour : se tester sans nouvelle notion et se reposer. ' +
                 'Ni grand tableau, ni fiche de cours, ni longue explication. N’emploie jamais le mot « plan » : dis « calendrier ». Ne pose aucune question avant de donner le calendrier ; termine par une phrase d’encouragement et invite l’élève à dire quand il commence le premier jour.';
         }
         window._contexteReviser = '\n\n[CONSIGNE CALENDRIER DE RÉVISION — ne la recopie pas] ' + corps;
