@@ -211,6 +211,33 @@
       }));
     });
   }
+  /* ---------- Évaluations à venir (28/11/2026) ---------- */
+  var MAT_EVAL = { maths: 'Mathématiques', physique: 'Physique-Chimie', informatique: 'TICE', svt: 'SVT', francais: 'Français', philosophie: 'Philosophie', histoire_geo: 'Histoire-Géo', edhc: 'EDHC', anglais: 'Anglais', espagnol: 'Espagnol', allemand: 'Allemand', musique: 'Éducation musicale', arts_plastiques: 'Arts plastiques' };
+  function afficherEvaluations(liste) {
+    var ul = $('liste-eval'); ul.textContent = '';
+    (liste || []).forEach(function (e) {
+      var quand = e.jours <= 0 ? 'aujourd’hui' : (e.jours === 1 ? 'demain' : 'dans ' + e.jours + ' jours');
+      ul.appendChild(ligne((e.genre_libelle || 'Évaluation') + ' · ' + (MAT_EVAL[e.matiere] || e.libelle), dateCourte(e.date) + ' · ' + quand, 'Supprimer', function () {
+        appel('/evaluation_supprimer', { id: e.id }).then(function (res) { if (res.ok && res.donnees && res.donnees.status === 'success') afficherEvaluations(res.donnees.evaluations); });
+      }));
+    });
+  }
+  function initEvaluations() {
+    var sel = $('eval-matiere');
+    if (!sel.options.length) {
+      Object.keys(MAT_EVAL).forEach(function (k) { var o = document.createElement('option'); o.value = k; o.textContent = MAT_EVAL[k]; sel.appendChild(o); });
+      var d = new Date(); $('eval-date').min = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      $('eval-ajouter').addEventListener('click', function () {
+        var msg = $('eval-msg'); msg.textContent = '';
+        if (!$('eval-date').value) { msg.textContent = 'Choisis la date.'; return; }
+        appel('/evaluation_ajouter', { matiere: sel.value, genre: $('eval-genre').value, date: $('eval-date').value }).then(function (res) {
+          if (res.ok && res.donnees && res.donnees.status === 'success') { afficherEvaluations(res.donnees.evaluations); $('eval-date').value = ''; try { localStorage.removeItem('eduka_eval_masque'); } catch (x) { /* ignoré */ } }
+          else msg.textContent = (res.donnees && res.donnees.detail) ? String(res.donnees.detail) : 'Impossible d’enregistrer pour le moment.';
+        });
+      });
+    }
+    appel('/evaluations').then(function (res) { if (res.ok && res.donnees && res.donnees.status === 'success') afficherEvaluations(res.donnees.evaluations); });
+  }
   function chargerErreurs() {
     appel('/erreurs').then(function (res) { if (res.ok && res.donnees && res.donnees.status === 'success') afficherErreurs(res.donnees); });
   }
@@ -223,6 +250,7 @@
         bandeauHorsConnexion(false);
         afficherListe(res.donnees);
         chargerErreurs();
+        initEvaluations();
         precharger();
         return;
       }

@@ -1590,7 +1590,7 @@ function appliquerProfilEtEntrerDansEspace(classe, methode, stress) {
         try { lancerRevisionFiche(); } catch (e) { /* jamais bloquant */ }
         const schemaLance = !!window._schemaEnAttente;
         try { lancerQuestionSchema(); } catch (e) { /* jamais bloquant */ }
-        if (!revisionLancee && !schemaLance) { try { afficherRappelsRevision(); } catch (e) { /* jamais bloquant */ } }
+        if (!revisionLancee && !schemaLance) { try { afficherRappelsRevision(); } catch (e) { /* jamais bloquant */ } try { afficherBandeauEvaluations(); } catch (e) { /* jamais bloquant */ } }
     }
 }
 
@@ -8830,6 +8830,162 @@ function afficherRappelsRevision() {
     });
 }
 
+// ❖ CALENDRIER DE RÉVISION (28/11/2026) : l'élève déclare la date d'un devoir de classe ; le Sas lui propose alors un
+// « calendrier de révision » jour par jour (une notion + une action courte par jour). Aucune modification Dify :
+// la consigne est jointe au message (comme pour les rappels de fiches).
+const LIB_MATIERES_EVAL = { maths: 'Mathématiques', physique: 'Physique-Chimie', informatique: 'TICE', svt: 'SVT', francais: 'Français', philosophie: 'Philosophie', histoire_geo: 'Histoire-Géo', edhc: 'EDHC', anglais: 'Anglais', espagnol: 'Espagnol', allemand: 'Allemand', musique: 'Éducation musicale', arts_plastiques: 'Arts plastiques' };
+const LIB_GENRES_EVAL = { devoir: 'Devoir de classe', composition: 'Composition', interrogation: 'Interrogation' };
+
+const GENRE_TXT = { devoir: { indef: 'un devoir de classe', poss: 'mon devoir de classe', def: 'le devoir', maj: 'DEVOIR DE CLASSE' }, composition: { indef: 'une composition', poss: 'ma composition', def: 'la composition', maj: 'COMPOSITION' }, interrogation: { indef: 'une interrogation', poss: 'mon interrogation', def: 'l’interrogation', maj: 'INTERROGATION' } };
+
+function jourFr(d) {
+    try { return d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: '2-digit' }); } catch (e) { return d.toISOString().slice(0, 10); }
+}
+
+function textePresDans(jours) {
+    return jours <= 0 ? 'aujourd’hui' : (jours === 1 ? 'demain' : 'dans ' + jours + ' jours');
+}
+
+function afficherBandeauEvaluations() {
+    const ancien = document.getElementById('bandeau-evaluations');
+    if (ancien) ancien.remove();
+    const sceau = localStorage.getItem('eduka_sceau') || '';
+    if (!sceau || sceau.indexOf('ENS-') === 0) return;
+    appelRappels('/api/casier/evaluations', {}).then(function (res) {
+        const d = res.donnees || {};
+        if (!res.ok || d.status !== 'success') return;
+        const conteneur = document.getElementById('container-sas-custom');
+        const histo = document.getElementById('sas-chat-history');
+        if (!conteneur || !histo || document.getElementById('bandeau-evaluations')) return;
+        const toutes = d.evaluations || [];
+        const proches = toutes.filter(function (e) { return e.jours <= 10; }).slice(0, 2);
+        let masque = false;
+        try { const t = parseInt(localStorage.getItem('eduka_eval_masque') || '0', 10); masque = t && (Date.now() - t) < 7 * 86400000; } catch (e) { /* ignoré */ }
+        // Rien de proche : on invite une fois par semaine au plus, et seulement si l'élève n'a encore rien déclaré.
+        if (!proches.length && (toutes.length || masque)) return;
+        const bandeau = document.createElement('div');
+        bandeau.id = 'bandeau-evaluations';
+        bandeau.style.cssText = 'margin:8px 12px 0;padding:10px 14px;border-radius:14px;background:#EFF6FF;border:1px solid #93C5FD;color:#1E3A8A;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+        const btn = function (texte, couleur, action) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = texte;
+            b.style.cssText = 'padding:5px 12px;border-radius:999px;border:1px solid ' + couleur + ';background:' + couleur + ';color:#fff;font-weight:700;font-size:12px;cursor:pointer;';
+            b.addEventListener('click', action);
+            return b;
+        };
+        if (proches.length) {
+            proches.forEach(function (e) {
+                const ligne = document.createElement('span');
+                ligne.style.fontWeight = '700';
+                ligne.textContent = '📅 ' + e.genre_libelle + ' de ' + (LIB_MATIERES_EVAL[e.matiere] || e.libelle) + ' ' + textePresDans(e.jours);
+                bandeau.appendChild(ligne);
+                if (e.matiere === avatarActif) bandeau.appendChild(btn(e.jours <= 0 ? 'Révision éclair' : 'Mon calendrier', '#1D4ED8', function () { lancerCalendrierRevision(e); }));
+            });
+            bandeau.appendChild(btn('+ Autre date', '#64748B', function () { ouvrirAjoutEvaluation(); }));
+        } else {
+            const t = document.createElement('span');
+            t.style.fontWeight = '700';
+            t.textContent = '📅 Un devoir ou une composition bientôt ? Donne-moi la date, je te prépare un calendrier de révision.';
+            bandeau.appendChild(t);
+            bandeau.appendChild(btn('Ajouter la date', '#1D4ED8', function () { ouvrirAjoutEvaluation(); }));
+        }
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.textContent = '×';
+        x.title = 'Plus tard';
+        x.setAttribute('aria-label', 'Masquer');
+        x.style.cssText = 'margin-left:auto;border:none;background:transparent;color:#1E3A8A;font-size:18px;cursor:pointer;line-height:1;';
+        x.addEventListener('click', function () {
+            try { localStorage.setItem('eduka_eval_masque', String(Date.now())); } catch (e) { /* ignoré */ }
+            bandeau.remove();
+        });
+        bandeau.appendChild(x);
+        conteneur.insertBefore(bandeau, histo);
+    });
+}
+
+function ouvrirAjoutEvaluation() {
+    if (document.getElementById('voile-evaluation')) return;
+    const voile = document.createElement('div');
+    voile.id = 'voile-evaluation';
+    voile.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    const boite = document.createElement('div');
+    boite.style.cssText = 'background:#fff;color:#0F172A;border-radius:16px;padding:18px;max-width:340px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.35);font-size:14px;';
+    const champStyle = 'width:100%;padding:9px;border-radius:10px;border:1px solid #CBD5E1;font-size:14px;margin:4px 0 12px;background:#fff;color:#0F172A;box-sizing:border-box;';
+    const h = document.createElement('div');
+    h.style.cssText = 'font-weight:800;font-size:16px;margin-bottom:10px;';
+    h.textContent = '📅 Mon évaluation';
+    boite.appendChild(h);
+    const etiquette = function (t) { const l = document.createElement('label'); l.textContent = t; l.style.fontWeight = '600'; return l; };
+    const selMat = document.createElement('select'); selMat.style.cssText = champStyle;
+    Object.keys(LIB_MATIERES_EVAL).forEach(function (k) { const o = document.createElement('option'); o.value = k; o.textContent = LIB_MATIERES_EVAL[k]; selMat.appendChild(o); });
+    if (LIB_MATIERES_EVAL[avatarActif]) selMat.value = avatarActif;
+    const selGenre = document.createElement('select'); selGenre.style.cssText = champStyle;
+    Object.keys(LIB_GENRES_EVAL).forEach(function (k) { const o = document.createElement('option'); o.value = k; o.textContent = LIB_GENRES_EVAL[k]; selGenre.appendChild(o); });
+    const dateIn = document.createElement('input'); dateIn.type = 'date'; dateIn.style.cssText = champStyle;
+    const aujourdhui = new Date(); const iso = function (d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    dateIn.min = iso(aujourdhui);
+    const msg = document.createElement('div'); msg.style.cssText = 'color:#B91C1C;font-size:12px;min-height:16px;margin-bottom:6px;';
+    boite.appendChild(etiquette('Matière')); boite.appendChild(selMat);
+    boite.appendChild(etiquette('Type')); boite.appendChild(selGenre);
+    boite.appendChild(etiquette('Date')); boite.appendChild(dateIn);
+    boite.appendChild(msg);
+    const rang = document.createElement('div'); rang.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
+    const annuler = document.createElement('button'); annuler.type = 'button'; annuler.textContent = 'Annuler';
+    annuler.style.cssText = 'padding:8px 14px;border-radius:999px;border:1px solid #CBD5E1;background:#fff;color:#334155;font-weight:600;cursor:pointer;';
+    const ok = document.createElement('button'); ok.type = 'button'; ok.textContent = 'Enregistrer';
+    ok.style.cssText = 'padding:8px 16px;border-radius:999px;border:none;background:#1D4ED8;color:#fff;font-weight:700;cursor:pointer;';
+    annuler.addEventListener('click', function () { voile.remove(); });
+    ok.addEventListener('click', function () {
+        if (!dateIn.value) { msg.textContent = 'Choisis la date.'; return; }
+        ok.disabled = true;
+        appelRappels('/api/casier/evaluation_ajouter', { matiere: selMat.value, genre: selGenre.value, date: dateIn.value }).then(function (res) {
+            const d = res.donnees || {};
+            if (res.ok && d.status === 'success') {
+                voile.remove();
+                afficherBandeauEvaluations();
+            } else {
+                ok.disabled = false;
+                msg.textContent = (d && d.detail) ? String(d.detail) : 'Impossible d’enregistrer pour le moment.';
+            }
+        });
+    });
+    rang.appendChild(annuler); rang.appendChild(ok); boite.appendChild(rang);
+    voile.appendChild(boite);
+    voile.addEventListener('click', function (e) { if (e.target === voile) voile.remove(); });
+    document.body.appendChild(voile);
+}
+
+function lancerCalendrierRevision(ev) {
+    const champ = document.getElementById('sas-user-input');
+    if (!champ) return;
+    const lib = LIB_MATIERES_EVAL[ev.matiere] || ev.libelle || ev.matiere;
+    const dateEval = new Date(ev.date + 'T12:00:00');
+    const g = GENRE_TXT[ev.genre] || GENRE_TXT.devoir;
+    appelRappels('/api/casier/erreurs', {}).then(function (res) {
+        const notions = ((res.donnees || {}).erreurs || []).filter(function (e) { return !e.maitrisee && e.avatar === ev.matiere; })
+            .slice(0, 5).map(function (e) { return String(e.notion || '').slice(0, 90); });
+        const bandeau = document.getElementById('bandeau-evaluations');
+        if (bandeau) bandeau.remove();
+        const jours = [];
+        const debut = new Date(); debut.setHours(12, 0, 0, 0);
+        for (let i = 0; i < ev.jours && jours.length < 7; i++) { const j = new Date(debut.getTime() + i * 86400000); jours.push(jourFr(j)); }
+        const priorite = notions.length ? 'Notions ratées par l’élève, à travailler en priorité : ' + notions.join(' ; ') + '.' : 'Aucune notion ratée connue : appuie-toi sur sa mémoire de suivi (dernier chapitre, lacunes).';
+        let corps;
+        if (ev.jours <= 0) {
+            corps = 'L’élève a ' + g.indef + ' de ' + lib + ' AUJOURD’HUI. Ne fais pas de calendrier. Propose-lui une révision éclair de 10 minutes : 3 questions courtes sur l’essentiel, une à la fois, avec correction bienveillante, puis un mot d’encouragement. ' + priorite;
+        } else {
+            corps = 'L’élève a ' + g.indef + ' de ' + lib + ' le ' + jourFr(dateEval) + ' (' + textePresDans(ev.jours) + '). Jours disponibles pour réviser : ' + jours.join(', ') + '. ' + priorite +
+                ' Écris directement un titre « Mon calendrier avant ' + g.def + ' de ' + lib + ' » puis les jours : UNE ligne par jour, chaque ligne = UNE notion + UNE action concrète (refaire un exercice, répondre à 3 questions, relire sa fiche) + une durée courte (10 à 20 minutes). Le dernier jour : se tester sans nouvelle notion et se reposer. ' +
+                'Ni grand tableau, ni fiche de cours, ni longue explication. N’emploie jamais le mot « plan » : dis « calendrier ». Ne pose aucune question avant de donner le calendrier ; termine par une phrase d’encouragement et invite l’élève à dire quand il commence le premier jour.';
+        }
+        window._contexteReviser = '\n\n[CONSIGNE CALENDRIER DE RÉVISION — ne la recopie pas] ' + corps;
+        champ.value = ev.jours <= 0 ? 'Fais-moi une révision éclair pour ' + g.poss + ' de ' + lib + ' d’aujourd’hui.' : 'Prépare-moi mon calendrier de révision avant ' + g.poss + ' de ' + lib + ' du ' + jourFr(dateEval) + '.';
+        sendSasMessage();
+    });
+}
+
 function lancerRappelFiche(id, titre) {
     const champ = document.getElementById('sas-user-input');
     if (!champ) return;
@@ -8839,7 +8995,7 @@ function lancerRappelFiche(id, titre) {
         const b = document.getElementById('bandeau-rappels');
         if (b) b.remove();
         window._rappelEnCours = { id: id };
-        window._contexteReviser = '\n\n[CONSIGNE DE RAPPEL — ne la recopie pas] L’élève révise sa fiche ci-dessous avec un mini-quiz. Pose-lui EXACTEMENT 3 questions courtes sur cette fiche, UNE SEULE à la fois, et attends sa réponse avant de passer à la suivante. Après chaque réponse, corrige en une ou deux phrases, avec bienveillance. Après la 3e réponse, termine par une phrase d’encouragement, puis écris sur une ligne seule, exactement : Score : X/3 (X = nombre de bonnes réponses, entre 0 et 3). N’écris jamais cette ligne avant la fin.\n\nFICHE :\n' + String(d.contenu || '').slice(0, 6000);
+        window._contexteReviser = '\n\n[CONSIGNE DE RAPPEL — ne la recopie pas] L’élève révise sa fiche ci-dessous avec un mini-quiz. Pose-lui EXACTEMENT 3 questions courtes sur cette fiche, UNE SEULE à la fois, et attends sa réponse avant de passer à la suivante. Après chaque réponse, corrige en une ou deux phrases, avec bienveillance. Après la 3e réponse, termine par une phrase d’encouragement, puis écris sur une ligne seule, exactement : Score : X/3 (X = nombre de bonnes réponses, entre 0 et 3). N’écris jamais cette ligne avant d’avoir corrigé la 3e réponse, et n’ajoute AUCUNE question ni exercice après la ligne de score.\n\nFICHE :\n' + String(d.contenu || '').slice(0, 6000);
         champ.value = 'Interroge-moi en 3 questions sur ma fiche « ' + titre.slice(0, 80) + ' ».';
         sendSasMessage();
     });
